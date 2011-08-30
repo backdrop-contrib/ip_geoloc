@@ -1,0 +1,458 @@
+<?php
+
+/**
+ * @file
+ *
+ * Using a number of optional sources IP Geolocation retrieves and stores
+ * geographical and postal address information of your site visitors, based
+ * on their IP addresses.
+ * It stores this information in a form suitable for further processing and
+ * display via the Views module. Ready-to-uses views, blocks and maps are
+ * provided.
+ */
+
+define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
+
+/**
+ * Implements hook-help().
+ */
+function ip_geoloc_help($path, $arg) {
+  if ($path == 'admin/help#ip_geoloc') {
+    return t('Detailed information is on the <a href="!ip_geoloc">IP Geolocation project page</a> and in the <a href="!README">README</a> file',
+        array('!ip_geoloc' => url('http://drupal.org/project/ip_geoloc'), '!README' => url('sites/all/modules/ip_geoloc/README.txt')));
+  }
+}
+
+/**
+ * Implements hook_init().
+ *
+ * Due to the weight set in ip_geoloc.install this hook is called after all
+ * other hook_init() implementations have completed.
+ */
+function ip_geoloc_init() {
+
+  if (!isset($_SESSION['ip_geoloc'])) {
+    ip_geoloc_debug(t('Start of new IP Geolocation session.'));
+    $_SESSION['ip_geoloc'] = array();
+  }
+
+  if (!isset($_SESSION['smart_ip']['location'])) {
+    $_SESSION['smart_ip'] = array('location' => array());
+  }
+
+  if (isset($_SESSION['ip_geoloc']['last_position_check'])) {
+    $time_elapsed = time() - $_SESSION['ip_geoloc']['last_position_check'];
+    ip_geoloc_debug(t("%time_elapsed seconds elapsed since last current location update.", array('%time_elapsed' => $time_elapsed)));
+    $check_location = $time_elapsed >= variable_get('ip_geoloc_location_check_min_elapsed', 30);
+  }
+
+  require_once drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc_api.inc';
+
+  if (!empty($check_location) && variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+    // Insert some javascript to first retrieve the user's lat/long coords and
+    // then use Google Gears to reverse-geocode these coords into a street
+    // address. This is all done via client-side calls, so the Drupal server
+    // will not rake up any calls against its Google-imposed quotum,ie the
+    // OVER_QUERY_LIMIT.
+    // When done the javascript calls us back on the supplied menu callback,
+    // '/ip-geoloc-current-location', which receives the geolocation data
+    // via the $_POST variable and stores it in the $_SESSION.
+    // Note that at this point other modules may already have partially filled
+    // $_SESSION['smart_ip']['location'].
+    ip_geoloc_debug(t('Initiating service to locate current position and reverse-geocode address...'));
+    ip_geoloc_get_current_location('ip-geoloc-current-location');
+    // Indicate to other modules that further data is pending
+    unset($_SESSION['smart_ip']['location']['ip_address']);
+  };
+}
+
+/**
+ * Implements hook_exit().
+ *
+ * Store the reverse-geocoded location information (lat/long, street address)
+ * against the IP address.
+ */
+function ip_geoloc_exit() {
+
+  if (empty($_SESSION['ip_geoloc']['last_position_check']) ||
+    time() - $_SESSION['ip_geoloc']['last_position_check'] >= variable_get('ip_geoloc_location_check_min_elapsed', 30)) {
+
+    // See what GeoIP has to add (if enabled). It doesn't implement a hook, so
+    // have to call it directly.
+    ip_geoloc_handle_geoip_api($_SESSION['smart_ip']['location']);
+
+    // Give contributed modules a chance to add their 2 cents by implementing
+    // hook_get_ip_geolocation()
+    drupal_alter('get_ip_geolocation', $_SESSION['smart_ip']['location']);
+
+    $_SESSION['ip_geoloc']['last_position_check'] = time();
+  }
+  // ip_geoloc_store_location() does nothing, if supplied location is empty.
+  ip_geoloc_store_location($_SESSION['smart_ip']['location']);
+}
+
+/**
+ * Implements hook_menu().
+ *
+ * Defines new menu items.
+ */
+function ip_geoloc_menu() {
+  $items = array();
+  // Put the administrative settings under System on the Configuration page.
+  $items['admin/config/system/ip_geoloc'] = array(
+    'title' => 'IP Geolocation',
+    'description' => 'Configure how geolocation information is updated.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ip_geoloc_admin_configure'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ip_geoloc.admin.inc'
+  );
+  $items['ip-geoloc-current-location'] = array(
+    'page callback' => 'ip_geoloc_current_location_ajax_recipient',
+    'access arguments' => array('access content'),
+  );
+  return $items;
+}
+
+/**
+ * Data recipient for javascript function getLocation() (file:
+ * ip_geoloc_current_location.js) via menu callback /ip-geoloc-current-location,
+ * see function ip_geoloc_menu() above.
+ * Receives latitude, longitude, accuracy and address via the global $_POST
+ * variable from function getLocations(), which posts these through an AJAX
+ * call.
+ * @see ip_geoloc_current_location.js
+ */
+function ip_geoloc_current_location_ajax_recipient() {
+  foreach ($_POST as $key => $value) {
+    $_SESSION['smart_ip']['location'][check_plain($key)] = check_plain($value);
+  }
+  // We need to set the IP address in order for the data to be stored.
+  if (empty($_SESSION['smart_ip']['location']['ip_address'])) {
+    $_SESSION['smart_ip']['location']['ip_address'] = ip_address();
+  }
+  ip_geoloc_debug(t('IP Geolocaton: reverse-geocoding AJAX callback received: ') . ip_geoloc_pretty_print($_SESSION['smart_ip']['location']));
+}
+
+/**
+ * Go through all the IP addresses in the {accesslog} table (Statistics module).
+ * For each IP address not yet recorded in the {ip_geoloc} table, retrieve its
+ * geolocation data and store in {ip_geoloc}.
+ * This is a one-off process. Once synchronised the {ip_geoloc} table will lock
+ * step with the {accesslog} table.
+ * Returns the number of {accesslog} records processed or FALSE if no IP
+ * geolocation retrieval function was found.
+ *
+ * Note: modules supported for the backfill currently are:
+ *   Smart IP module
+ *   custom modules that implement hook_get_ip_geolocation()
+ */
+function ip_geoloc_sync_with_accesslog() {
+  drupal_get_messages(); // wipe previous message to avoid confusion
+
+  $geolocation_functions = module_implements('get_ip_geolocation');
+  if (empty($geolocation_functions)) {
+    if (!($use_smart_ip = module_exists('smart_ip'))) {
+      drupal_set_message(t('No module implements hook_get_ip_geolocation() and Smart IP is not enabled: cannot process.'), 'error');
+      return FALSE;
+    }
+  }
+  $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+
+  $batch_size = check_plain($_POST['ip_geoloc_sync_batch_size']); // from Configuration >> IP Geolocation form
+  if (empty($batch_size)) {
+    $batch_size = variable_get('ip_geoloc_sync_batch_size', 500);
+  }
+  $ips_to_be_processed = ip_geoloc_ips_to_be_synched();
+  if (count($ips_to_be_processed) > $batch_size) {
+    $ips_to_be_processed = array_slice($ips_to_be_processed, 0, $batch_size, TRUE);
+  }
+  $count = count($ips_to_be_processed);
+
+  $batch = array(
+    'operations' => array(array('_ip_geoloc_process_access_log', array($ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode))),
+    'title' => t('Processing next %count IP addresses from access log', array('%count' => $count)),
+    'progress_message' => t('Time elapsed: @elapsed. Time remaining: @estimate.'),
+    'error_message' => t('An error occurred while processing the access log.'),
+    'finished' => '_ip_geoloc_process_access_log_finished'
+  );
+  batch_set($batch);
+
+  return $count;
+}
+
+function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode, &$context) {
+  $sandbox = &$context['sandbox'];
+  if (!isset($context['sandbox']['progress'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = count($ips_to_be_processed);
+    $context['sandbox']['ips'] = $ips_to_be_processed;
+  }
+  $ip_address = array_shift($context['sandbox']['ips']);
+
+  if (empty($use_smart_ip)) {
+    // Allow contributed modules to do their thing, possibly calling
+    // smart_ip_get_location() if they so wish.
+    $location = array('ip_address' => $ip_address);
+    drupal_alter('get_ip_geolocation', $location);
+  }
+  else {
+    // Depending on the value of the variable 'smart_ip_use_ipinfodb_service'
+    // this will either use the IPInfoDb site (slow) or Smart IP's database,
+    // as created from the MaxMind CSV archive, after installation.
+    $location = smart_ip_get_location($ip_address);
+  }
+
+  if (!empty($use_google_to_reverse_geocode)) {
+    $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude']);
+    if (!empty($google_address)) {
+      ip_geoloc_flatten_google_address($google_address, $location);
+      // usleep(500000); // to avoid violating Google's OVER_QUERY_LIMIT
+    }
+  }
+  ip_geoloc_store_location($location);
+
+  // Update our progress information.
+  $context['sandbox']['progress']++;
+  // Store result for post-processing in the finished callback.
+  $context['results'][] = $ip_address;
+  // Provide to the batch engine an estimate of the level of completion so far.
+  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+}
+
+function _ip_geoloc_process_access_log_finished($success, $results, $operations, $elapsed) {
+  if ($success) {
+    drupal_set_message(t("%count new IP geolocation records compiled and stored in %elapsed-time.",
+      array('%count' => count($results), '%elapsed-time' => $elapsed)));
+  }
+  else {
+    drupal_set_message(t('An error occurred. Processing of the access log did not complete. Try again with a smaller batch size.'), 'error');
+    $message = format_plural(count($results), 'One IP address successfully processed: ', '@count IP addresses successfully processed: ');
+    $message .= theme('item_list', array('items' => $results));
+    drupal_set_message($message);
+  }
+}
+
+function ip_geoloc_erase_session() {
+  drupal_get_messages();
+  unset($_SESSION['ip_geoloc']);
+  unset($_SESSION['smart_ip']['location']);
+  unset($_SESSION['smart_ip']);
+  unset($_SESSION['device_geolocation']);
+  unset($_SESSION['device_geolocation_attempt']);
+  drupal_set_message(t('Geolocation data erased from session.'));
+}
+
+function ip_geoloc_erase_db() {
+  drupal_get_messages(); // wipe previous message to avoid confusion
+  $result = db_delete('ip_geoloc')->execute();
+}
+
+/*
+ *  Return an array of all IP addresses in the current access log that have not
+ *  yet had their geolocation data added to the ip_geoloc table.
+ */
+function ip_geoloc_ips_to_be_synched() {
+  if (!db_table_exists('accesslog')) {
+    return array();
+  }
+  $hostnames = db_query('SELECT DISTINCT hostname FROM {accesslog} ORDER BY aid DESC')->fetchCol('hostname');
+  $ip_geolocations = db_query('SELECT DISTINCT ip_address FROM {ip_geoloc}')->fetchCol('ip_address');
+  return array_diff($hostnames, $ip_geolocations);
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function ip_geoloc_block_info() {
+  $blocks['current_visitor_map'] = array(
+    'info' => t("Map centered on current visitor's location"),
+  );
+  $blocks['recent_visitors_map'] = array(
+    'info' => t('Map showing locations of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10))),
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function ip_geoloc_block_configure($delta = '') {
+  $form['ip_geoloc_' . $delta . '_div_style'] = array(
+    '#type' => 'textfield',
+    '#title' => t('CSS style attribute(s) applied to the HTML DIV element that is placeholding the map'),
+    '#default_value' => variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE),
+    '#description' => t('The default %default_style results in a map of 300 pixels high, with a width bounded by the element that contains it. Do not enter quotes or equal signs.',
+      array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
+  );
+  if ($delta == 'recent_visitors_map') {
+    $form['ip_geoloc_recent_visitors_map_number_of_visitors'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of recent visitor locations to show on the map.'),
+      '#default_value' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10),
+      '#description' => t('Must be greater than 0. Values greater than 20 are not recommended.')
+    );
+  }
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function ip_geoloc_block_save($delta = '', $edit = array()) {
+  variable_set('ip_geoloc_' . $delta . '_div_style', $edit['ip_geoloc_' . $delta . '_div_style']);
+  if ($delta == 'recent_visitors_map') {
+    variable_set('ip_geoloc_recent_visitors_map_number_of_visitors', $edit['ip_geoloc_recent_visitors_map_number_of_visitors']);
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function ip_geoloc_block_view($delta = '') {
+  $block = array();
+  $map_style = variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE);
+  switch ($delta) {
+    case 'current_visitor_map':
+      $block['subject'] = t('Your location');
+      $block['content'] = ip_geoloc_output_map_current_location('ip-geoloc-block-current-visitor-map', $map_style);
+      break;
+
+    case 'recent_visitors_map':
+      $block['subject'] = t('Recent visitors');
+      $how_many = variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10);
+      if ($how_many > 0) {
+        $locations = ip_geoloc_get_recent_visitor_locations($how_many);
+        $block['content'] = ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', $map_style);
+      }
+      break;
+  }
+  return $block;
+}
+
+function ip_geoloc_get_recent_visitor_locations($how_many) {
+  $result = db_query_range("SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY a.hostname ORDER BY last_visit DESC", 0, $how_many);
+  $locations = array();
+  $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
+  foreach ($result as $location) {
+    if (!isset($locations[$location->ip_address])) {
+      $location->last_visit = date($date_format, $location->last_visit);
+      $locations[$location->ip_address] = $location;
+    }
+  }
+  return $locations;
+}
+
+function ip_geoloc_pretty_print($location) {
+  $t = '';
+  foreach ($location as $label => $value) {
+    if (!empty($value)) {
+      $t .= "<strong>$label:</strong>&nbsp;$value&nbsp; ";
+    }
+  }
+  return empty($t) ? t('nothing') : $t;
+}
+
+function ip_geoloc_debug($message, $type = 'status') {
+  if (variable_get('ip_geoloc_debug', FAlSE) && user_is_logged_in()) {
+    drupal_set_message($message, $type);
+  }
+}
+
+/**
+ * Fleshes out the $ip_geoloc_address array based on the additional data
+ * provided in the $google_address array. This may involve tweaking of the
+ * 'latitude' and 'longitude' entries so that they remain consistent with the
+ * street address components.
+ *
+ * @param $google_address
+ * @param $ip_geoloc_address
+ * @return TRUE, unless $google_address or $ip_geoloc_address are empty
+ */
+function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
+  if (is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
+    ip_geoloc_debug(t('IP Geolocation: flattening Google address into IP Geoloc address'));
+    foreach($google_address['address_components'] as $component) {
+      $long_name = $component['long_name'];
+      if (!empty($long_name)) {
+        $type = $component['types'][0];
+        $ip_geoloc_address[$type] = $long_name;
+        if ($type == 'country' && !empty($component['short_name'])) {
+          $ip_geoloc_address['country_code'] = $component['short_name'];
+        }
+      }
+    }
+    $ip_geoloc_address['formatted_address'] = $google_address['formatted_address'];
+    // The following may be slightly different from the original lat,long passed
+    // into ip_geoloc_reverse_geocode().
+    $ip_geoloc_address['latitude']  = $google_address['geometry']['location']['lat'];
+    $ip_geoloc_address['longitude'] = $google_address['geometry']['location']['lng'];
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Implements hook_smart_ip_get_location_alter().
+ *
+ * Called from the bottom of smart_ip_get_location() when it has fleshed out
+ * the $location array as much as it can.
+ * Note that other modules may also implement this hook, so depending on their
+ * weight may have added their bits or are about to do so, after we're finished.
+ */
+function ip_geoloc_smart_ip_get_location_alter(&$location) {
+  ip_geoloc_debug(t('IP Geolocation: Smart IP retrieved ') . ip_geoloc_pretty_print($location));
+  if (empty($location['postal_code'])) {
+    $location['postal_code'] = $location['zip'];
+  }
+}
+
+/**
+ * Implements hook_device_geolocation_detector_ajax_alter().
+ *
+ * This is called from device_geolocation_detector_ajax(), the AJAX callback
+ * that receives in the $_POST array the address data from Google Geocoding.
+ * Note that other modules may also implement this hook, so depending on their
+ * weight may have added their bits or are about to do so, after we're finished.
+ */
+function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
+  // Device Geolocation does not retrieve formatted address, so erase it or we
+  // may end up with inconsistent data
+  unset($location['formatted_address']);
+  ip_geoloc_debug(t('IP Geolocation: Device Geolocation retrieved ') . ip_geoloc_pretty_print($location));
+}
+
+/**
+ * Module GeoIP API does not expose a hook, but it does expose an API.
+ *
+ * @param $location array to be updated, i.e. $_SESSION['smart_ip']['location'];
+ *   on entry the $location array, must have its $location['ip_address'] field
+ *   filled out
+ */
+function ip_geoloc_handle_geoip_api(&$location) {
+  if (module_exists('geoip')) {
+    $ip_address = empty($location['ip_address']) ? ip_address() : $location['ip_address'];
+    $geoip_location = (array) geoip_city($ip_address);
+    // Where different convert GeoIP names to our names (see D6 visitorinfo.module)
+    $geoip_location['country'] = $geoip_location['country_name'];
+    $geoip_location['region']  = $geoip_location['regionname']; // no underscore
+    unset($geoip_location['country_name']);
+    unset($geoip_location['regionname']);
+    // To overwrite or to merge, that's the question...
+    // $location = $geoip_location; // overwrite
+    $location = array_merge($geoip_location, $location);
+    $location['ip_address'] = $ip_address;
+  }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function ip_geoloc_views_api() {
+  return array(
+    'api' => views_api_version(),
+    'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
+  );
+}

@@ -1,0 +1,163 @@
+<?php
+
+/**
+ * @file
+ * Install and uninstall hooks for IP Geolocation.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function ip_geoloc_requirements($phase = 'runtime') {
+  $requirements = array();
+  // @todo Show which geolocation data retrieval module will be used or show
+  // warning if none installed
+  return $requirements;
+}
+
+/**
+ * Implements hook_install().
+ */
+function ip_geoloc_install() {
+  // Set high weight so our implementations of hook_init() and hook_exit() come
+  // after everyone else's
+  db_update('system')
+    ->fields(array('weight' => 10))
+    ->condition('name', 'ip_geoloc')
+    ->execute();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function ip_geoloc_uninstall() {
+  // Delete all ip_geoloc_* variables at once
+  db_query("DELETE FROM {variable} WHERE name LIKE 'ip_geoloc_%%'");
+}
+
+/**
+ * Implements hook_schema().
+ *
+ * Smart IP module provides:
+ *  IP address
+ *  Latitude/Longitude
+ *  Country
+ *  Country Code
+ *  Region
+ *  Region Code (usually empty for Australia)
+ *  City
+ *  ZIP (which we store under Postal Code)
+ *
+ * Device Geolocation module provides the above, plus
+ *  Postal Code
+ *  Locality (suburb)
+ *  Route (street)
+ *  Street Number
+ *  Administrative Area Level 1 (e.g. state or province)
+ *
+ * GeoIP City provides:
+ *  TBA
+ *
+ */
+function ip_geoloc_schema() {
+  $schema['ip_geoloc'] = array(
+    'description' => 'Store visitor IP addresses and geolocation information',
+      'fields' => array(
+        'id'          => array(
+        'description' => 'Unique id',
+        'type'        => 'serial',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+      ),
+      'ip_address' => array(
+        'description' => 'IP address',
+        'type'        => 'varchar',
+        'length'      => '32',
+        'not null'    => TRUE,
+      ),
+      'latitude' => array(
+        'description' => 'Latitude',
+        'type'        => 'float',
+        'size'        => 'big',
+        'not null'    => FALSE,
+      ),
+      'longitude' => array(
+        'description' => 'Longitude',
+        'type'        => 'float',
+        'size'        => 'big',
+        'not null'    => FALSE,
+      ),
+      'country' => array(
+        'description' => 'Country',
+        'type'        => 'varchar',
+        'length'      => 64,
+        'not null'    => FALSE,
+      ),
+      'country_code' => array(
+        'description' => 'ISO 3166 2-Character Country Code',
+        'type'        => 'varchar',
+        'length'      => 3,
+        'not null'    => FALSE,
+      ),
+      'region' => array(
+        'description' => 'Region',
+        'type'        => 'varchar',
+        'length'      => 64,
+        'not null'    => FALSE,
+      ),
+      'region_code' => array(
+        'description' => '2-Character Region Code',
+        'type'        => 'varchar',
+        'length'      => 3,
+        'not null'    => FALSE,
+      ),
+      'city' => array(
+        'description' => 'City',
+        'type'        => 'varchar',
+        'length'      => 64,
+        'not null'    => FALSE,
+      ),
+      'postal_code' => array(
+        'description' => 'Post code',
+        'type'        => 'varchar',
+        'length'      => 8,
+        'not null'    => FALSE,
+      ),
+      'locality' => array(
+        'description' => 'Suburb',
+        'type'        => 'varchar',
+        'length'      => 64,
+        'not null'    => FALSE,
+      ),
+      'route' => array(
+        'description' => 'Street',
+        'type'        => 'varchar',
+        'length'      => 64,
+        'not null'    => FALSE,
+       ),
+      'street_number' => array(
+        'description' => 'Street number',
+        'type'        => 'varchar',
+        'length'      => 32,
+        'not null'    => FALSE,
+       ),
+      'administrative_area_level_1' => array(
+        'description' => 'State or province',
+        'type'        => 'varchar',
+        'length'      => 64,
+        'not null'    => FALSE,
+       ),
+      'formatted_address' => array(
+        'description' => 'Address',
+        'type'        => 'varchar',
+        'length'      => 128,
+        'not null'    => FALSE,
+       ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'ip_address' => array('ip_address')
+    )
+  );
+  return $schema;
+}
