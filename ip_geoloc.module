@@ -211,9 +211,13 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
 
   if (!empty($use_google_to_reverse_geocode)) {
     $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude']);
-    if (!empty($google_address)) {
+    if (empty($google_address)) {
+      if (empty($location['formatted_address'])) {
+        $location['formatted_address'] = '-'; // so that it's stored
+      }
+    }
+    else {
       ip_geoloc_flatten_google_address($google_address, $location);
-      // usleep(500000); // to avoid violating Google's OVER_QUERY_LIMIT
     }
   }
   ip_geoloc_store_location($location);
@@ -224,7 +228,10 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
   $context['results'][] = "$ip_address: " . (empty($location['formatted_address']) ? '?' : $location['formatted_address']);
   // Provide to the batch engine an estimate of the level of completion so far.
   if ($sandbox['progress'] < $sandbox['max']) {
-    $context['finished'] = floor(10000 * $sandbox['progress'] / $sandbox['max']) / 10000;
+    // Note the addition of 100 in the formula below. This is to make sure that
+    // batch sizes of 200 or greater do not terminate prematurely.
+    // 199/200 = 0.995 ends up being rounded to 100% when it should be less.
+    $context['finished'] = floor(100 * $sandbox['progress'] / $sandbox['max']) / 100;
   }
 }
 
@@ -293,7 +300,8 @@ function ip_geoloc_diagnose() {
       $count = count(ip_geoloc_ips_to_be_synched());
       if ($count > 0) {
         drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database.", array('%count' => $count)), 'status', FALSE);
-      } else {
+      }
+      else {
         drupal_set_message(t("The geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
       }
      return $count;
@@ -413,7 +421,7 @@ function ip_geoloc_debug($message, $type = 'status') {
 function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
   if (is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
     ip_geoloc_debug(t('IP Geolocation: flattening Google address into IP Geoloc address'));
-    foreach($google_address['address_components'] as $component) {
+    foreach ($google_address['address_components'] as $component) {
       $long_name = $component['long_name'];
       if (!empty($long_name)) {
         $type = $component['types'][0];

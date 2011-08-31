@@ -9,8 +9,9 @@
 
 define('IP_GEOLOC_GOOGLE_GEARS_INIT', 'http://code.google.com/apis/gears/gears_init.js');
 define('IP_GEOLOC_GEO_JS', 'http://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js');
-define('IP_GEOLOC_GOOGLE_MAPS',     'http://maps.google.com/maps/api/js?sensor=false');
+define('IP_GEOLOC_GOOGLE_MAPS', 'http://maps.google.com/maps/api/js?sensor=false');
 define('IP_GEOLOC_GOOGLE_MAPS_GPS', 'http://maps.google.com/maps/api/js?sensor=true');
+define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
  * Store the supplied IP geolocation info on the database, replacing existing
@@ -35,7 +36,7 @@ function ip_geoloc_store_location($location) {
   }
   else {
     if (!isset($location['latitude']) || !isset($location['latitude'])) {
-      drupal_set_message(t('IP Geolocation: lat or long missing for IP address %ip', array('%ip' => $location['ip_address'])));
+      drupal_set_message(t('IP Geolocation: lat or long missing for IP address %ip (location still stored).', array('%ip' => $location['ip_address'])));
     }
     // See if this IP is already on the db
     $result = db_query("SELECT * FROM {ip_geoloc} WHERE ip_address = :ip", array(':ip' => $location['ip_address']));
@@ -200,7 +201,7 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
     drupal_set_message(t('IP Geolocation: empty lat/long -- cannot reverse-geocode to address.'), 'warning');
     return FALSE;
   }
-  $url = "http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=$latitude,$longitude";
+  $url = IP_GEOLOC_GOOGLE_MAPS_SERVER . "&latlng=$latitude,$longitude";
   $response = drupal_http_request($url);
   if (!empty($response->error)) {
     drupal_set_message(t('IP Geolocation: the HTTP request %url returned the following error (code @code): %error',

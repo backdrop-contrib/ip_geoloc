@@ -34,7 +34,6 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options'] = array(
     '#type' => 'fieldset',
     '#title' => 'Data collection options',
-    '#description' => t('')
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
@@ -58,9 +57,9 @@ function ip_geoloc_admin_configure() {
   );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Administrator (uid=1) only: detail execution progress with status messages.'),
+    '#title' => t('Detail execution progress with status messages.'),
     '#default_value' => variable_get('ip_geoloc_debug', FALSE),
-    '#description' => t('')
+    '#description' => t('This is for the administrator (uid=1) only.')
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_session'] = array(
     '#type' => 'submit',
