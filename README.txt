@@ -76,17 +76,16 @@ following function.
 <?php
 /*
  *  Implements hook_get_ip_geolocation().
- *  Note: when IP Geolocation calls this function the $location array will
- *  already be partially populated. At the very minimum it will contain
- *  $location['ip_address'], the IP address of the current visitor as a string,
- *  or the IP address of a past visitor when backfilling from the access log.
- *  Some other entries may have been provided by other enabled modules, e.g.
- *  Smart IP. You are free to overwrite whichever of the 13 entries you see fit.
  */
 function MYMODULE_get_ip_geolocation(&$location) {
+
+  if (empty($location['ip_address'])) {
+    return;
+  }
   // ... your code here to retrieve geolocation data ...
 
-  // Then fill out the location fields that IP Geolocation knows how to store.
+  // Then fill out some or all of the location fields that IP Geolocation knows
+  // how to store.
   $location['latitude'] =  ....;
   $location['longitude'] = ....;
   $location['country'] = ....;
@@ -108,14 +107,7 @@ partially fleshed out. If $location['ip_address'] is empty, this means that
 IP Geolocation is still waiting for more details to arrive from the Google
 reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then IP
 Geolocation does not expect any further details and will store the $location
-with your modifications (if any) on the IP Geolocation database. So you may
-want to put the following at the top of your MYMODULE_get_ip_geolocation()
-function:
-<?php
-  if (empty($location['ip_address']) {
-    return;
-  }
-?>
+with your modifications (if any) on the IP Geolocation database. 
 
 BACKGROUND: IP GEOLOCATION TECHNOLOGIES USED
 ============================================

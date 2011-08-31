@@ -3,15 +3,17 @@
 /**
  * @file
  *
- * Using a number of optional sources IP Geolocation retrieves and stores
- * geographical and postal address information of your site visitors, based
- * on their IP addresses.
- * It stores this information in a form suitable for further processing and
- * display via the Views module. Ready-to-uses views, blocks and maps are
- * provided.
+ * Using one or more of a number of optional sources IP Geolocation retrieves
+ * and stores geographical and postal address information of your site visitors,
+ * based on their IP addresses.
+ * It stores this information in a form suitable for further processing,
+ * reporting, exporting and display via the Views module.
+ * Ready-to-uses views, blocks and maps are provided. For programmers there is
+ * also an API.
  */
 
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
+define('IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL', 60);
 
 /**
  * Implements hook-help().
@@ -31,6 +33,9 @@ function ip_geoloc_help($path, $arg) {
  */
 function ip_geoloc_init() {
 
+  // require_once at top of this file caused issues with drupal_get_path().
+  require_once drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc_api.inc';
+
   if (!isset($_SESSION['ip_geoloc'])) {
     ip_geoloc_debug(t('Start of new IP Geolocation session.'));
     $_SESSION['ip_geoloc'] = array();
@@ -42,13 +47,14 @@ function ip_geoloc_init() {
 
   if (isset($_SESSION['ip_geoloc']['last_position_check'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['last_position_check'];
-    ip_geoloc_debug(t("%time_elapsed seconds elapsed since last current location update.", array('%time_elapsed' => $time_elapsed)));
-    $check_location = $time_elapsed >= variable_get('ip_geoloc_location_check_min_elapsed', 30);
+    if ($time_elapsed < IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL) {
+      ip_geoloc_debug(t("Next location update in %time seconds", array('%time' => IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL - $time_elapsed)));
+    }
+    $check_location = $time_elapsed >= variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL);
   }
 
-  require_once drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc_api.inc';
-
   if (!empty($check_location) && variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+    ip_geoloc_debug(t('Initiating service to locate current position and reverse-geocode address...'));
     // Insert some javascript to first retrieve the user's lat/long coords and
     // then use Google Gears to reverse-geocode these coords into a street
     // address. This is all done via client-side calls, so the Drupal server
@@ -59,8 +65,8 @@ function ip_geoloc_init() {
     // via the $_POST variable and stores it in the $_SESSION.
     // Note that at this point other modules may already have partially filled
     // $_SESSION['smart_ip']['location'].
-    ip_geoloc_debug(t('Initiating service to locate current position and reverse-geocode address...'));
     ip_geoloc_get_current_location('ip-geoloc-current-location');
+
     // Indicate to other modules that further data is pending
     unset($_SESSION['smart_ip']['location']['ip_address']);
   };
@@ -75,7 +81,7 @@ function ip_geoloc_init() {
 function ip_geoloc_exit() {
 
   if (empty($_SESSION['ip_geoloc']['last_position_check']) ||
-    time() - $_SESSION['ip_geoloc']['last_position_check'] >= variable_get('ip_geoloc_location_check_min_elapsed', 30)) {
+    time() - $_SESSION['ip_geoloc']['last_position_check'] >= variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL)) {
 
     // See what GeoIP has to add (if enabled). It doesn't implement a hook, so
     // have to call it directly.
@@ -183,12 +189,12 @@ function ip_geoloc_sync_with_accesslog() {
 
 function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode, &$context) {
   $sandbox = &$context['sandbox'];
-  if (!isset($context['sandbox']['progress'])) {
-    $context['sandbox']['progress'] = 0;
-    $context['sandbox']['max'] = count($ips_to_be_processed);
-    $context['sandbox']['ips'] = $ips_to_be_processed;
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['max'] = count($ips_to_be_processed);
+    $sandbox['ips'] = $ips_to_be_processed;
   }
-  $ip_address = array_shift($context['sandbox']['ips']);
+  $ip_address = array_shift($sandbox['ips']);
 
   if (empty($use_smart_ip)) {
     // Allow contributed modules to do their thing, possibly calling
@@ -198,8 +204,8 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
   }
   else {
     // Depending on the value of the variable 'smart_ip_use_ipinfodb_service'
-    // this will either use the IPInfoDb site (slow) or Smart IP's database,
-    // as created from the MaxMind CSV archive, after installation.
+    // this will either use the IPinfoDB web service or Smart IP's database, as
+    // created by importing the MaxMind CSV archive.
     $location = smart_ip_get_location($ip_address);
   }
 
@@ -213,12 +219,12 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
   ip_geoloc_store_location($location);
 
   // Update our progress information.
-  $context['sandbox']['progress']++;
-  // Store result for post-processing in the finished callback.
-  $context['results'][] = $ip_address;
+  $sandbox['progress']++;
+  // Store result for post-processing in the _finished callback.
+  $context['results'][] = "$ip_address: " . (empty($location['formatted_address']) ? '?' : $location['formatted_address']);
   // Provide to the batch engine an estimate of the level of completion so far.
-  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
-    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  if ($sandbox['progress'] < $sandbox['max']) {
+    $context['finished'] = floor(10000 * $sandbox['progress'] / $sandbox['max']) / 10000;
   }
 }
 
@@ -261,6 +267,39 @@ function ip_geoloc_ips_to_be_synched() {
   $hostnames = db_query('SELECT DISTINCT hostname FROM {accesslog} ORDER BY aid DESC')->fetchCol('hostname');
   $ip_geolocations = db_query('SELECT DISTINCT ip_address FROM {ip_geoloc}')->fetchCol('ip_address');
   return array_diff($hostnames, $ip_geolocations);
+}
+/**
+ * Reports on the installation status, in particular with respect to the
+ * system access log, which is required for visitor views and maps.
+ * @return TRUE, if all seems ok
+ */
+function ip_geoloc_diagnose() {
+  $geoloc_count = db_query('SELECT COUNT(DISTINCT ip_address) FROM {ip_geoloc}')->fetchField();
+  drupal_set_message(t("The geolocation database currently contains information for %geoloc_count IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
+
+  if (!db_table_exists('accesslog')) {
+    drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because the <strong>Statistics</strong> module is not installed. Views of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
+  }
+  elseif (!module_exists('statistics')) {
+    drupal_set_message(t('The <strong>Statistics</strong> module is not enabled. Views of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
+  }
+  else {
+    $ip_address_count = db_query('SELECT COUNT(DISTINCT hostname) FROM {accesslog}')->fetchField();
+    drupal_set_message(t("The system access log currently contains entries from %ip_address_count IP addresses.", array('%ip_address_count' => $ip_address_count)), 'status', FALSE);
+    if (!variable_get('statistics_enable_access_log', FALSE)) {
+      drupal_set_message(t('The <strong>Statistics</strong> module is enabled, but its system <strong>access log</strong> is not. Therefore all visitor Views are frozen in time and will not grow. The block "Map centered on current visitor\'s location" is not affected and should still display. You can enable the <strong>access log</strong> at <a href="/admin/config/system/statistics">Configuration >> Statistics</a>.'), 'warning');
+    }
+    else {
+      $count = count(ip_geoloc_ips_to_be_synched());
+      if ($count > 0) {
+        drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database.", array('%count' => $count)), 'status', FALSE);
+      } else {
+        drupal_set_message(t("The geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
+      }
+     return $count;
+    }
+  }
+  return -1;
 }
 
 /**
@@ -356,7 +395,7 @@ function ip_geoloc_pretty_print($location) {
 }
 
 function ip_geoloc_debug($message, $type = 'status') {
-  if (variable_get('ip_geoloc_debug', FAlSE) && user_is_logged_in()) {
+  if ($GLOBALS['user']->uid == 1 && variable_get('ip_geoloc_debug', FAlSE)) {
     drupal_set_message($message, $type);
   }
 }

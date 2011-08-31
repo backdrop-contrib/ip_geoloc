@@ -28,7 +28,7 @@ define('IP_GEOLOC_GOOGLE_MAPS_GPS', 'http://maps.google.com/maps/api/js?sensor=t
 function ip_geoloc_store_location($location) {
   $result = 0;
   if (empty($location['ip_address'])) {
-    ip_geoloc_debug('IP Geolocation: location does not contain IP address; location not stored.');
+    ip_geoloc_debug('IP Geolocation: location object does not contain IP address, so was not stored.');
   }
   else {
     if (!isset($location['latitude']) || !isset($location['latitude'])) {

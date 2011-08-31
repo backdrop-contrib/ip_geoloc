@@ -17,7 +17,7 @@ function ip_geoloc_views_default_views() {
    */
   $view = new view;
   $view->name = 'visitor_log';
-  $view->description = 'Shows for each IP address, no. visits, dates of first and last visits and a map.';
+  $view->description = 'Shows no. visits by IP address, as well as lat./long and address information.';
   $view->tag = 'default';
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log';
@@ -29,13 +29,13 @@ function ip_geoloc_views_default_views() {
   $handler = $view->new_display('default', 'Master', 'default');
   $handler->display->display_options['title'] = 'Visitor log';
   $handler->display->display_options['group_by'] = TRUE;
-  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
-  $handler->display->display_options['pager']['options']['items_per_page'] = '20';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '10';
   $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['pager']['options']['id'] = '0';
   $handler->display->display_options['pager']['options']['expose']['items_per_page_options_all'] = 0;
@@ -48,10 +48,9 @@ function ip_geoloc_views_default_views() {
     'timestamp' => 'timestamp',
     'latitude' => 'latitude',
     'longitude' => 'longitude',
-    'city' => 'city',
-    'administrative_area_level_1' => 'administrative_area_level_1',
-    'country' => 'country',
+    'formatted_address' => 'formatted_address',
     'php' => 'php',
+    'country' => 'country',
   );
   $handler->display->display_options['style_options']['default'] = 'timestamp';
   $handler->display->display_options['style_options']['info'] = array(
@@ -91,25 +90,19 @@ function ip_geoloc_views_default_views() {
       'align' => '',
       'separator' => '',
     ),
-    'city' => array(
-      'sortable' => 1,
-      'default_sort_order' => 'asc',
-      'align' => '',
-      'separator' => '',
-    ),
-    'administrative_area_level_1' => array(
-      'sortable' => 1,
-      'default_sort_order' => 'asc',
-      'align' => '',
-      'separator' => '',
-    ),
-    'country' => array(
+    'formatted_address' => array(
       'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
     ),
     'php' => array(
+      'align' => '',
+      'separator' => '',
+    ),
+    'country' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
     ),
@@ -124,11 +117,10 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['empty']['area']['field'] = 'area';
   $handler->display->display_options['empty']['area']['label'] = 'No results text';
   $handler->display->display_options['empty']['area']['empty'] = FALSE;
-  $handler->display->display_options['empty']['area']['content'] = 'No IP geolocation data found.
+  $handler->display->display_options['empty']['area']['content'] = '    No IP geolocation data found.
 
-    Either the <strong>Statistics</strong> module (core) is not installed or you haven\'t sync-ed the access log yet.
-    Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page to populate with a single click the IP geolocation database and hence this view.
-    ';
+      Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
+      Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
   $handler->display->display_options['empty']['area']['format'] = 'full_html';
   $handler->display->display_options['empty']['area']['tokenize'] = 0;
   /* Field: Access log: Hostname */
@@ -270,52 +262,32 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['fields']['longitude']['empty_zero'] = 0;
   $handler->display->display_options['fields']['longitude']['hide_alter_empty'] = 0;
   $handler->display->display_options['fields']['longitude']['format_plural'] = 0;
-  /* Field: IP geolocations: City */
-  $handler->display->display_options['fields']['city']['id'] = 'city';
-  $handler->display->display_options['fields']['city']['table'] = 'ip_geoloc';
-  $handler->display->display_options['fields']['city']['field'] = 'city';
-  $handler->display->display_options['fields']['city']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['absolute'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['external'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['replace_spaces'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['trim_whitespace'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['nl2br'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['city']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['city']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['city']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['city']['element_label_colon'] = 1;
-  $handler->display->display_options['fields']['city']['element_default_classes'] = 1;
-  $handler->display->display_options['fields']['city']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['city']['empty_zero'] = 0;
-  $handler->display->display_options['fields']['city']['hide_alter_empty'] = 0;
-  /* Field: IP geolocations: State */
-  $handler->display->display_options['fields']['administrative_area_level_1']['id'] = 'administrative_area_level_1';
-  $handler->display->display_options['fields']['administrative_area_level_1']['table'] = 'ip_geoloc';
-  $handler->display->display_options['fields']['administrative_area_level_1']['field'] = 'administrative_area_level_1';
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['absolute'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['external'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['replace_spaces'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['trim_whitespace'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['nl2br'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['element_label_colon'] = 1;
-  $handler->display->display_options['fields']['administrative_area_level_1']['element_default_classes'] = 1;
-  $handler->display->display_options['fields']['administrative_area_level_1']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['empty_zero'] = 0;
-  $handler->display->display_options['fields']['administrative_area_level_1']['hide_alter_empty'] = 0;
+  /* Field: IP geolocations: Address */
+  $handler->display->display_options['fields']['formatted_address']['id'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['formatted_address']['field'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['hide_alter_empty'] = 0;
   /* Field: IP geolocations: Country */
   $handler->display->display_options['fields']['country']['id'] = 'country';
   $handler->display->display_options['fields']['country']['table'] = 'ip_geoloc';
   $handler->display->display_options['fields']['country']['field'] = 'country';
+  $handler->display->display_options['fields']['country']['exclude'] = TRUE;
   $handler->display->display_options['fields']['country']['alter']['alter_text'] = 0;
   $handler->display->display_options['fields']['country']['alter']['make_link'] = 0;
   $handler->display->display_options['fields']['country']['alter']['absolute'] = 0;
@@ -357,8 +329,8 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['fields']['php']['hide_alter_empty'] = 0;
   $handler->display->display_options['fields']['php']['use_php_setup'] = 0;
   $handler->display->display_options['fields']['php']['php_output'] = '<?php
-    echo ip_geoloc_output_map($row->latitude, $row->longitude, \'ip-geoloc-map-\' . $row->hostname_1, \'height: 150px; width: 250px\') ;
-  ?>';
+      echo ip_geoloc_output_map($row->latitude, $row->longitude, \'ip-geoloc-map-\' . $row->hostname_1, \'height: 150px; width: 250px\') ;
+    ?>';
   $handler->display->display_options['fields']['php']['use_php_click_sortable'] = '0';
   $handler->display->display_options['fields']['php']['php_click_sortable'] = '';
 
@@ -369,6 +341,10 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'Visitor log';
   $handler->display->display_options['menu']['description'] = 'Displays no. visits per IP address with geolocation information.';
   $handler->display->display_options['menu']['weight'] = '0';
+
+  /* Display: Block */
+  $handler = $view->new_display('block', 'Block', 'block_1');
+  $handler->display->display_options['block_description'] = 'Visitor log';
   $translatables['visitor_log'] = array(
     t('Master'),
     t('Visitor log'),
@@ -382,11 +358,10 @@ function ip_geoloc_views_default_views() {
     t('- All -'),
     t('Offset'),
     t('No results text'),
-    t('No IP geolocation data found.
+    t('    No IP geolocation data found.
 
-    Either the <strong>Statistics</strong> module (core) is not installed or you haven\'t sync-ed the access log yet.
-    Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page to populate with a single click the IP geolocation database and hence this view.
-    '),
+      Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
+      Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.'),
     t('IP address'),
     t('No. visits'),
     t('First visited'),
@@ -395,11 +370,11 @@ function ip_geoloc_views_default_views() {
     t('.'),
     t(','),
     t('Longitude'),
-    t('City'),
-    t('State'),
+    t('Address'),
     t('Country'),
     t('Map'),
     t('Page'),
+    t('Block'),
   );
 
   $views[$view->name] = $view;

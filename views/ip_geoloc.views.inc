@@ -82,6 +82,24 @@ function ip_geoloc_views_data() {
     ),
   );
 
+  $data['ip_geoloc']['formatted_address'] = array(
+   'title' => t('Address'),
+   'help' => t('Address formatted as a string'),
+   'field' => array(
+     'handler' => 'views_handler_field',
+     'click sortable' => TRUE,
+   ),
+   'filter' => array(
+     'handler' => 'views_handler_filter_string',
+   ),
+   'argument' => array(
+     'handler' => 'views_handler_argument_string',
+   ),
+   'sort' => array(
+     'handler' => 'views_handler_sort',
+   ),
+  );
+
   $data['ip_geoloc']['country'] = array(
    'title' => t('Country'),
    'help' => t('Country'),
