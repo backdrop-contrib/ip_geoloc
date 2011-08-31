@@ -17,7 +17,7 @@ function ip_geoloc_views_default_views() {
    */
   $view = new view;
   $view->name = 'visitor_log';
-  $view->description = 'Shows IP and street addresses of recent visitors together visit counts and maps.';
+  $view->description = 'Shows IP and street addresses of recent visitors with visit counts and maps.';
   $view->tag = 'default';
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log';
@@ -339,7 +339,7 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['path'] = 'visitor-log';
   $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'Visitor log';
-  $handler->display->display_options['menu']['description'] = 'Shows IP and street addresses of recent visitors together visit counts and maps.';
+  $handler->display->display_options['menu']['description'] = 'Shows IP and street addresses of recent visitors with visit counts and maps.';
   $handler->display->display_options['menu']['weight'] = '0';
 
   /* Display: Block */

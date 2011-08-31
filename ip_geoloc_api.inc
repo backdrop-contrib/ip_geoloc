@@ -105,6 +105,7 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_style = '') {
   drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT);
   drupal_add_js(IP_GEOLOC_GEO_JS);
+//drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/geo.js');
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS);
   drupal_add_js(array('ip_geoloc_div_map' => $div_id), 'setting');
 
@@ -153,6 +154,7 @@ function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-m
 function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
   drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT);
   drupal_add_js(IP_GEOLOC_GEO_JS);
+//drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/geo.js');
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS);
   drupal_add_js(array('ip_geoloc_menu_callback' => $menu_callback), 'setting');
   // Add javascript to return user's (lat,long), accuracy and street address

@@ -7,7 +7,7 @@
        * and some non-conforming specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
-        geo_position_js.getCurrentPosition(getLocation, displayError, {enableHighAccuracy: true});
+        geo_position_js.getCurrentPosition(getLocation, displayLocationError, {enableHighAccuracy: true});
       }
       else {
         alert(Drupal.t("Error: geo_position_js is not available."));
@@ -49,7 +49,7 @@
         });
       }
 
-      function displayError(error) {
+      function displayLocationError(error) {
         switch (error.code) {
           case 1:
             text = Drupal.t("user denied permission to share location");
