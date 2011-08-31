@@ -30,6 +30,9 @@ function ip_geoloc_store_location($location) {
   if (empty($location['ip_address'])) {
     ip_geoloc_debug('IP Geolocation: location object does not contain IP address, so was not stored.');
   }
+  elseif (empty($location['formatted_address'])) {
+    ip_geoloc_debug('IP Geolocation: location object does not contain formatted address, so was not stored.');
+  }
   else {
     if (!isset($location['latitude']) || !isset($location['latitude'])) {
       drupal_set_message(t('IP Geolocation: lat or long missing for IP address %ip', array('%ip' => $location['ip_address'])));

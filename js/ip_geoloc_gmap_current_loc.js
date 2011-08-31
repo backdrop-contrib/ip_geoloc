@@ -22,8 +22,8 @@
       map = new google.maps.Map(document.getElementById(settings.ip_geoloc_div_map), mapOptions);
 
       function displayMap(position) {
-        crds = position.coords;
-        var center = new google.maps.LatLng(crds.latitude, crds.longitude);
+        var coords = position.coords;
+        var center = new google.maps.LatLng(coords.latitude, coords.longitude);
         map.setCenter(center);
         var marker = new google.maps.Marker({ map: map, position: center });
         new google.maps.Geocoder().geocode({'latLng': center}, function(response, status) {
@@ -34,7 +34,7 @@
             addressText = Drupal.t('IP Geolocation: Google address lookup failed with status code ') + status;
           }
           // (lat, long) and address are revealed when clicking marker
-          var latLongText = Drupal.t('lat.') + " " + crds.latitude + ", " + Drupal.t('long.') + " " + crds.longitude + "<br/>" + Drupal.t('accuracy') + " " + crds.accuracy + " m";
+          var latLongText = Drupal.t('lat.') + " " + coords.latitude + ", " + Drupal.t('long.') + " " + coords.longitude + "<br/>" + Drupal.t('accuracy') + " " + coords.accuracy + " m";
           var infoPopUp = new google.maps.InfoWindow({ content: addressText + "<br/>" + latLongText });
           google.maps.event.addListener(marker, "click", function() { infoPopUp.open(map, marker) });
         });
