@@ -17,7 +17,7 @@ function ip_geoloc_views_default_views() {
    */
   $view = new view;
   $view->name = 'visitor_log';
-  $view->description = 'Shows no. visits by IP address, as well as lat./long and address information.';
+  $view->description = 'Shows IP and street addresses of recent visitors together visit counts and maps.';
   $view->tag = 'default';
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log';
@@ -339,7 +339,7 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['path'] = 'visitor-log';
   $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'Visitor log';
-  $handler->display->display_options['menu']['description'] = 'Displays no. visits per IP address with geolocation information.';
+  $handler->display->display_options['menu']['description'] = 'Shows IP and street addresses of recent visitors together visit counts and maps.';
   $handler->display->display_options['menu']['weight'] = '0';
 
   /* Display: Block */
@@ -378,5 +378,155 @@ function ip_geoloc_views_default_views() {
   );
 
   $views[$view->name] = $view;
+
+  /*
+   * Visitor-log (lite)
+   */
+  $view = new view;
+  $view->name = 'visitor_log_lite';
+  $view->description = 'Shows IP and street addresses of recent visitors.';
+  $view->tag = 'default';
+  $view->base_table = 'accesslog';
+  $view->human_name = 'Visitor log (lite)';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Visitor log';
+  $handler->display->display_options['group_by'] = TRUE;
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['query_comment'] = FALSE;
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '20';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['style_plugin'] = 'table';
+  $handler->display->display_options['style_options']['columns'] = array(
+    'hostname_1' => 'hostname_1',
+    'timestamp' => 'timestamp',
+    'formatted_address' => 'formatted_address',
+  );
+  $handler->display->display_options['style_options']['default'] = 'timestamp';
+  $handler->display->display_options['style_options']['info'] = array(
+    'hostname_1' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+    ),
+    'timestamp' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'desc',
+      'align' => '',
+      'separator' => '',
+    ),
+    'formatted_address' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+    ),
+  );
+  $handler->display->display_options['style_options']['override'] = 1;
+  $handler->display->display_options['style_options']['sticky'] = 0;
+  $handler->display->display_options['style_options']['order'] = 'desc';
+  $handler->display->display_options['style_options']['empty_table'] = 0;
+  /* No results behavior: Global: Text area */
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = FALSE;
+  $handler->display->display_options['empty']['area']['content'] = ' No IP geolocation data found.
+
+        Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
+        Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
+  $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
+  $handler->display->display_options['empty']['area']['tokenize'] = 0;
+  /* Field: Access log: Hostname */
+  $handler->display->display_options['fields']['hostname_1']['id'] = 'hostname_1';
+  $handler->display->display_options['fields']['hostname_1']['table'] = 'accesslog';
+  $handler->display->display_options['fields']['hostname_1']['field'] = 'hostname';
+  $handler->display->display_options['fields']['hostname_1']['label'] = 'IP address';
+  $handler->display->display_options['fields']['hostname_1']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['hostname_1']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['hostname_1']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['hostname_1']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['hostname_1']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['hostname_1']['hide_alter_empty'] = 0;
+  /* Field: MAX(Access log: Timestamp) */
+  $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
+  $handler->display->display_options['fields']['timestamp']['table'] = 'accesslog';
+  $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
+  $handler->display->display_options['fields']['timestamp']['group_type'] = 'max';
+  $handler->display->display_options['fields']['timestamp']['label'] = 'Last visited';
+  $handler->display->display_options['fields']['timestamp']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['timestamp']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['timestamp']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['timestamp']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['timestamp']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['timestamp']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['timestamp']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['timestamp']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['timestamp']['hide_alter_empty'] = 0;
+  $handler->display->display_options['fields']['timestamp']['date_format'] = 'medium';
+  /* Field: IP geolocations: Address */
+  $handler->display->display_options['fields']['formatted_address']['id'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['formatted_address']['field'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['hide_alter_empty'] = 0;
+
+  /* Display: Page */
+  $handler = $view->new_display('page', 'Page', 'page');
+  $handler->display->display_options['path'] = 'visitor-log-lite';
+  $handler->display->display_options['menu']['type'] = 'normal';
+  $handler->display->display_options['menu']['title'] = 'Visitor log';
+  $handler->display->display_options['menu']['description'] = 'Shows IP and street addresses of recent visitors.';
+  $handler->display->display_options['menu']['weight'] = '0';
+
+  /* Display: Block */
+  $handler = $view->new_display('block', 'Block', 'block_1');
+  $handler->display->display_options['block_description'] = 'Visitor log (lite)';
+
+  $views[$view->name] = $view;
+
   return $views;
 }
