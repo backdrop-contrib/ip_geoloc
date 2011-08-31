@@ -109,60 +109,6 @@ reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then IP
 Geolocation does not expect any further details and will store the $location
 with your modifications (if any) on the IP Geolocation database. 
 
-BACKGROUND: IP GEOLOCATION TECHNOLOGIES USED
-============================================
-The Device Geolocation module that comes bundled with the Smart IP module
-uses a two-pronged approach to take advantage of the client device's lat/long
-locator.
-The first is the W3C Geolocation API.
-Common sources of geolocation information include the Global Positioning System
-(GPS) and location inferred from network signals such as IP address, WiFi and
-GSM/CDMA cell IDs, as well as user input.
-
-On desktops and laptops, the W3C Geolocation API works on all major browsers,
-except IE before version 9. On mobile devices, it works on Android and iPhone.
-
-In the Smart IP module suite the W3C Geolocation API is invoked from smart_ip
-modules/device_geolocation/device_geolocation.js. Basically if the browser
-implements the Geolocation API, it is called directly:
-
-  navigator.geolocation.getCurrentPosition(myPositionFunc, myErrorFunc);
-
-where myPositionFunc is a javascript function that will be passed a position
-object that contains position.coords.latitude and position.coords.longitude.
-
-If the Geolocation API is not implemented (e.g. older browsers), then the Device
-Geolocation submodule employs Google Gears to create the geolocation object and
-then uses it to obtain lat/long as before:
-
-  geolocation = google.gears.factory.create('beta.geolocation');
-  geolocation.getCurrentPosition(myPositionFunc, myErrorFunc);
-
-Inside its version of myPositionFunc, the Device Geolocation module employs the
-Google Geocoding library to translate the lat/long coordinates into address
-information that is passed back to the Drupal PHP code via the $_POST global
-variable.
-
-Google Geocoding returns more detailed address information than most. For
-example it usually includes street (route) and street number, postal code,
-locality (suburb) and administrative area level 1 (often corresponds to state).
-See http://code.google.com/apis/maps/documentation/geocoding/#ReverseGeocoding
-
-Smart IP (based on either the IPinfoDB web service or the downloadable CSV file
-from http://www.maxmind.com) is the final fallback if the above process fails.
-This ensures that you will always get some address information, even if your
-visitors decline to share their location when prompted by their browsers.
-
-IMPROVEMENTS ADDED BY IP GEOLOCATION
-====================================
-The IP Geolocation API takes the approach of the Device Geolocation module one
-step further: through the geo.js script it not only covers both the W3C
-Geolocation and Google Gears API's, it also supports a number of non-compliant
-devices like Blackberry, Palm and some Nokia's.
-See:
-o function ip_geoloc_get_current_location($menu_callback)
-o function ip_geoloc_output_map_current_location($div_id, $map_style)
-
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================
 Taken from: http://code.google.com/apis/maps/documentation/geocoding
@@ -176,7 +122,7 @@ If you exceed the 24-hour limit or otherwise abuse the service, the Geocoding
 API may stop working for you temporarily. If you continue to exceed this limit,
 your access to the Geocoding API may be blocked.
 
-Note: the Geocoding API may only be used in conjunction with a Google map; 
+Note: the Geocoding API may only be used in conjunction with a Google map;
 geocoding results without displaying them on a map is prohibited. For complete
 details on allowed usage, consult the Maps API Terms of Service License
 Restrictions."
