@@ -10,8 +10,11 @@
  */
 function ip_geoloc_requirements($phase = 'runtime') {
   $requirements = array();
-  // @todo Show which geolocation data retrieval module will be used or show
-  // warning if none installed
+  // @todo
+  $geolocation_functions = module_implements('get_ip_geolocation');
+  $use_smart_ip = module_exists('smart_ip'); // should be variable_get()
+  $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+
   return $requirements;
 }
 

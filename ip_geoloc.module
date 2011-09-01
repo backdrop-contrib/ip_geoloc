@@ -11,9 +11,13 @@
  * Ready-to-uses views, blocks and maps are provided. For programmers there is
  * also an API.
  */
+define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
 
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
-define('IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL', 60);
+define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
+define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disableDefaultUI":true, "zoom":1,  "zoomControl":true}');
+
+define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
 
 /**
  * Implements hook-help().
@@ -47,7 +51,7 @@ function ip_geoloc_init() {
 
   if (isset($_SESSION['ip_geoloc']['last_position_check'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['last_position_check'];
-    $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL);
+    $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
     if ($time_elapsed < $interval) {
       ip_geoloc_debug(t("Next location update in %time seconds", array('%time' => $interval - $time_elapsed)));
     }
@@ -82,7 +86,7 @@ function ip_geoloc_init() {
 function ip_geoloc_exit() {
 
   if (empty($_SESSION['ip_geoloc']['last_position_check']) ||
-    time() - $_SESSION['ip_geoloc']['last_position_check'] >= variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL)) {
+    time() - $_SESSION['ip_geoloc']['last_position_check'] >= variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL)) {
 
     // See what GeoIP has to add (if enabled). It doesn't implement a hook, so
     // have to call it directly.
@@ -239,10 +243,12 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
   }
 
   if (!empty($use_google_to_reverse_geocode)) {
+    // Use the Google web service
     $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude']);
     if (empty($google_address)) {
       if (empty($location['formatted_address'])) {
-        $location['formatted_address'] = '-'; // so that it's stored
+        // Just so that a record is created and the IP is taken off the list
+        $location['formatted_address'] = '-';
       }
     }
     else {
@@ -259,7 +265,7 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
   if ($sandbox['progress'] < $sandbox['max']) {
     // Note the addition of 100 in the formula below. This is to make sure that
     // batch sizes of 200 or greater do not terminate prematurely.
-    // 199/200 = 0.995 ends up being rounded to 100% when it should be less.
+    // E.g 199/200 = 0.995 ends up being rounded to 100% causing abort.
     $context['finished'] = floor(100 * $sandbox['progress'] / $sandbox['max']) / 100;
   }
 }
@@ -271,7 +277,7 @@ function _ip_geoloc_process_access_log_finished($success, $results, $operations,
   }
   else {
     drupal_set_message(t('An error occurred. Processing of the access log did not complete. Try again with a smaller batch size.'), 'error');
-    $message = format_plural(count($results), 'One IP address successfully processed: ', '@count IP addresses successfully processed: ');
+    $message = format_plural(count($results), 'One IP address successfully processed:', '@count IP addresses successfully processed:');
     $message .= theme('item_list', array('items' => $results));
     drupal_set_message($message);
   }
@@ -288,7 +294,7 @@ function ip_geoloc_erase_session() {
 }
 
 function ip_geoloc_erase_db() {
-  drupal_get_messages(); // wipe previous message to avoid confusion
+  drupal_get_messages(); // wipe previous messages to avoid confusion
   $result = db_delete('ip_geoloc')->execute();
 }
 
@@ -356,19 +362,42 @@ function ip_geoloc_block_info() {
  * Implements hook_block_configure().
  */
 function ip_geoloc_block_configure($delta = '') {
-  $form['ip_geoloc_' . $delta . '_div_style'] = array(
-    '#type' => 'textfield',
-    '#title' => t('CSS style attribute(s) applied to the HTML DIV element that is placeholding the map'),
-    '#default_value' => variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE),
-    '#description' => t('The default %default_style results in a map of 300 pixels high, with a width bounded by the element that contains it. Do not enter quotes or equal signs.',
-      array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
-  );
+  $form = array();
   if ($delta == 'recent_visitors_map') {
     $form['ip_geoloc_recent_visitors_map_number_of_visitors'] = array(
       '#type' => 'textfield',
       '#title' => t('Number of recent visitor locations to show on the map.'),
       '#default_value' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10),
       '#description' => t('Must be greater than 0. Values greater than 20 are not recommended.')
+    );
+  }
+  $form['ip_geoloc_' . $delta . '_div_style'] = array(
+    '#type' => 'textfield',
+    '#title' => t('CSS style attribute(s) applied to the HTML DIV element that is placeholding the map'),
+    '#default_value' => variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE),
+    '#description' => t('The default %default_style results in a map of 300 pixels high, with a width bounded by the element that contains it. Do not enter quotes or equal signs and make sure your quotes match.',
+      array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
+  );
+  if ($delta == 'current_visitor_map') {
+    $form['ip_geoloc_current_visitor_map_options'] = array(
+      '#type' => 'textfield',
+      '#size' => 120,
+      '#title' => t('Map options'),
+      '#default_value' => variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS),
+      '#description' => t("The default %default_options produces a street map zoomed in to level 15. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
+            array('%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
+                  '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+    );
+  }
+  elseif ($delta == 'recent_visitors_map') {
+    $form['ip_geoloc_recent_visitors_map_options'] = array(
+      '#type' => 'textfield',
+      '#size' => 120,
+      '#title' => t('Map options'),
+      '#default_value' => variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS),
+      '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
+            array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
+                  '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
     );
   }
   return $form;
@@ -379,9 +408,21 @@ function ip_geoloc_block_configure($delta = '') {
  */
 function ip_geoloc_block_save($delta = '', $edit = array()) {
   variable_set('ip_geoloc_' . $delta . '_div_style', $edit['ip_geoloc_' . $delta . '_div_style']);
-  if ($delta == 'recent_visitors_map') {
+  if ($delta == 'current_visitor_map') {
+    ip_geoloc_save_map_options('ip_geoloc_current_visitor_map_options', $edit['ip_geoloc_current_visitor_map_options']);
+  }
+  elseif ($delta == 'recent_visitors_map') {
+    ip_geoloc_save_map_options('ip_geoloc_recent_visitors_map_options', $edit['ip_geoloc_recent_visitors_map_options']);
     variable_set('ip_geoloc_recent_visitors_map_number_of_visitors', $edit['ip_geoloc_recent_visitors_map_number_of_visitors']);
   }
+}
+
+function ip_geoloc_save_map_options($var_name, $map_options) {
+  $map_options_decoded = drupal_json_decode($map_options);
+  if ($map_options_decoded == null) {
+    drupal_set_message(t("Sytax error in map options. These map options may not work: '%map_options'", array('%map_options' => $map_options)), 'warning');
+  }
+  variable_set($var_name, $map_options);
 }
 
 /**
@@ -393,7 +434,8 @@ function ip_geoloc_block_view($delta = '') {
   switch ($delta) {
     case 'current_visitor_map':
       $block['subject'] = t('Your location');
-      $block['content'] = ip_geoloc_output_map_current_location('ip-geoloc-block-current-visitor-map', $map_style);
+      $map_options = variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS);
+      $block['content'] = ip_geoloc_output_map_current_location('ip-geoloc-block-current-visitor-map', drupal_json_decode($map_options), $map_style);
       break;
 
     case 'recent_visitors_map':
@@ -401,7 +443,8 @@ function ip_geoloc_block_view($delta = '') {
       $how_many = variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10);
       if ($how_many > 0) {
         $locations = ip_geoloc_get_recent_visitor_locations($how_many);
-        $block['content'] = ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', $map_style);
+        $map_options = variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
+        $block['content'] = ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', drupal_json_decode($map_options), $map_style);
       }
       break;
   }

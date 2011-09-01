@@ -4,13 +4,11 @@
   Drupal.behaviors.addGMapMultiLocation = {
     attach: function (context, settings) {
 
-      var mapOptions = {
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        disableDefaultUI: true,
-        zoom: 2,
-        zoomControl: true
-      };
-      map = new google.maps.Map(document.getElementById(settings.ip_geoloc_div_map), mapOptions);
+      var mapOptions = settings.ip_geoloc_multi_location_map_options;
+      if (!mapOptions) {
+        mapOptions = { mapTypeId: google.maps.MapTypeId.ROADMAP, zoom: 2 };
+      }
+      var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
 
       var locations = settings.ip_geoloc_locations;
       var balloonTexts = [];

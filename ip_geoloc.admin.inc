@@ -44,7 +44,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
     '#type' => 'textfield',
     '#title' => t('Mininum elapsed time in seconds before geolocation data for the same user will be collected again.'),
-    '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL),
+    '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
     '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving.')
   );
 

@@ -106,12 +106,13 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  * @param $div_id, id of the div placeholder, can be anything as long as it's unique
  * @param $style, CSS style applied to the div, e.g "height:200px; width:300px"
  */
-function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_style = '') {
+function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_options = '', $map_style = '') {
   drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT);
   drupal_add_js(IP_GEOLOC_GEO_JS);
 //drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/geo.js');
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS);
-  drupal_add_js(array('ip_geoloc_div_map' => $div_id), 'setting');
+  drupal_add_js(array('ip_geoloc_current_location_map_div' => $div_id), 'setting');
+  drupal_add_js(array('ip_geoloc_current_location_map_options' => $map_options), 'setting');
 
   // Add javascript to retrieve user's lat,long and draw a gmap centered around it
   $js_file = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_current_loc.js';
@@ -130,15 +131,16 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
  * @param $div_id, id of the div placeholder, can be anything as long as it's unique
  * @param $style, CSS style applied to the div, e.g "height:250px; width:300px"
  */
-function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $style = '') {
+function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options, $map_style = '') {
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS);
   drupal_add_js(array('ip_geoloc_locations' => $locations), 'setting');
-  drupal_add_js(array('ip_geoloc_div_map' => $div_id), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_map_options' => $map_options), 'setting');
 
   $js_file = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js';
   drupal_add_js($js_file, array('weight' => 1));
 
-  $map_placeholder = "<div id='$div_id'" . (empty($style) ? '' : " style='$style'") . '></div>';
+  $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
 }
 

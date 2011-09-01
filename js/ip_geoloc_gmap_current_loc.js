@@ -5,14 +5,12 @@
     attach: function (context, settings) {
 
       // Start with a map canvas, then add marker and balloon with address info
-      // when the geo-position comes in
-      var mapOptions = {
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        disableDefaultUI: true,
-        zoom: 15,
-        zoomControl: true
-      };
-      var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_div_map), mapOptions);
+      // when the geo-position comes in.
+      var mapOptions = settings.ip_geoloc_current_location_map_options;
+      if (!mapOptions) {
+        mapOptions = { mapTypeId: google.maps.MapTypeId.ROADMAP, zoom: 15 };
+      }
+      var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_current_location_map_div), mapOptions);
     
       /* Use the geo.js unified API. This covers W3C Geolocation API, Google Gears
        * and some non-conforming specific devices like Palm and Blackberry.
