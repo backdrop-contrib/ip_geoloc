@@ -10,7 +10,15 @@
         geo_position_js.getCurrentPosition(getLocation, displayLocationError, {enableHighAccuracy: true});
       }
       else {
-        alert(Drupal.t("Error: geo_position_js is not available."));
+        var ip_geoloc_address = new Object;
+        ip_geoloc_address['error'] = Drupal.t('IP Geolocation: cannot accurately determine your location. Browser not supported:') + ' '  + navigator.userAgent;
+        // Pass error back to PHP 
+        $.ajax({
+          url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
+          type: 'POST',
+          dataType: 'json',
+          data: ip_geoloc_address
+        });
       }
 
       function getLocation(position) {
@@ -37,7 +45,7 @@
             //alert('Received address: ' + ip_geoloc_address['formatted_address']);
           }
           else {
-            alert(Drupal.t('IP Geolocation: Google address lookup failed with status code ') + status);
+            ip_geoloc_address['error'] = Drupal.t('IP Geolocation: Google address lookup failed with status code') + ' ' + status;
           }
           // Pass lat/long, accuracy and address back to Drupal
           $.ajax({

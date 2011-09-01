@@ -3,6 +3,17 @@
 
   Drupal.behaviors.addGMapCurrentLocation = {
     attach: function (context, settings) {
+
+      // Start with a map canvas, then add marker and balloon with address info
+      // when the geo-position comes in
+      var mapOptions = {
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        disableDefaultUI: true,
+        zoom: 15,
+        zoomControl: true
+      };
+      var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_div_map), mapOptions);
+    
       /* Use the geo.js unified API. This covers W3C Geolocation API, Google Gears
        * and some non-conforming specific devices like Palm and Blackberry.
        */
@@ -10,16 +21,10 @@
         geo_position_js.getCurrentPosition(displayMap, displayMapError, {enableHighAccuracy: true});
       }
       else {
-        alert(Drupal.t("Error: geo_position_js is not available."));
+        // Don't pop up annoying alert. Just show blank map of the world.
+        map.setZoom(0);
+        map.setCenter(new google.maps.LatLng(0, 0));
       }
-
-      var mapOptions = {
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        disableDefaultUI: true,
-        zoom: 15,
-        zoomControl: true
-      };
-      map = new google.maps.Map(document.getElementById(settings.ip_geoloc_div_map), mapOptions);
 
       function displayMap(position) {
         var coords = position.coords;

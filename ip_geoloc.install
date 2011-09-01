@@ -48,13 +48,6 @@ function ip_geoloc_uninstall() {
  *  City
  *  ZIP (which we store under Postal Code)
  *
- * Device Geolocation module provides the above, plus
- *  Postal Code
- *  Locality (suburb)
- *  Route (street)
- *  Street Number
- *  Administrative Area Level 1 (e.g. state or province)
- *
  * GeoIP City provides:
  *  TBA
  *
@@ -120,7 +113,7 @@ function ip_geoloc_schema() {
       'postal_code' => array(
         'description' => 'Post code',
         'type'        => 'varchar',
-        'length'      => 8,
+        'length'      => 12,
         'not null'    => FALSE,
       ),
       'locality' => array(

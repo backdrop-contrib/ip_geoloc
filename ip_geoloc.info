@@ -1,5 +1,5 @@
 name = IP Geolocation
-description = Extracts geolocation information based on IP addresses and device locator hardware and reports on this via configurable maps, blocks and Views.
+description = Extracts geolocation information based on IP addresses and device locator hardware and reports on this via configurable maps and views.
 package = Location
 core = 7.x
 ; List files that contain classes or interfaces

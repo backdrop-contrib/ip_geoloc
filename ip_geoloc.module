@@ -47,10 +47,11 @@ function ip_geoloc_init() {
 
   if (isset($_SESSION['ip_geoloc']['last_position_check'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['last_position_check'];
-    if ($time_elapsed < IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL) {
-      ip_geoloc_debug(t("Next location update in %time seconds", array('%time' => IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL - $time_elapsed)));
+    $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL);
+    if ($time_elapsed < $interval) {
+      ip_geoloc_debug(t("Next location update in %time seconds", array('%time' => $interval - $time_elapsed)));
     }
-    $check_location = $time_elapsed >= variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_MAP_LOCATION_CHECK_INTERVAL);
+    $check_location = $time_elapsed >= $interval;
   }
 
   if (!empty($check_location) && variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
@@ -130,14 +131,42 @@ function ip_geoloc_menu() {
  * @see ip_geoloc_current_location.js
  */
 function ip_geoloc_current_location_ajax_recipient() {
-  foreach ($_POST as $key => $value) {
-    $_SESSION['smart_ip']['location'][check_plain($key)] = check_plain($value);
+  $location = &$_SESSION['smart_ip']['location'];
+  if (isset($_POST['error'])) {
+    // Device/browser not supported or Google geocode error.
+    ip_geoloc_debug(check_plain($_POST['error']));
+    if (module_exists('smart_ip')) {
+      $location = smart_ip_get_location(ip_address());
+      ip_geoloc_format_address($location);
+    }
+  }
+  else {
+    foreach ($_POST as $key => $value) {
+      $location[check_plain($key)] = check_plain($value);
+    }
   }
   // We need to set the IP address in order for the data to be stored.
-  if (empty($_SESSION['smart_ip']['location']['ip_address'])) {
-    $_SESSION['smart_ip']['location']['ip_address'] = ip_address();
+  if (empty($location['ip_address'])) {
+    $location['ip_address'] = ip_address();
   }
-  ip_geoloc_debug(t('IP Geolocaton: reverse-geocoding AJAX callback received: ') . ip_geoloc_pretty_print($_SESSION['smart_ip']['location']));
+  ip_geoloc_debug(t('IP Geolocaton: reverse-geocoding AJAX callback received') . ': ' . ip_geoloc_pretty_print($location));
+}
+
+/**
+ * This is a poor substitute as it doesn't take local format conventions into
+ * account. Luckily this is only called as a fallback when lat/long could not
+ * be established or the Google geocode function returned an error.
+ * @param $location
+ */
+function ip_geoloc_format_address(&$location) {
+  $location['formatted_address'] = $location['city'];
+  if (!empty($location['region'])) {
+    $location['formatted_address'] .= ' ' . $location['region'];
+  }
+  if (!empty($location['postal_code']) && $location['postal_code'] != '-') {
+    $location['formatted_address'] .= ' ' . $location['postal_code'] . ',';
+  }
+  $location['formatted_address'] .= ' ' . $location['country'];
 }
 
 /**
