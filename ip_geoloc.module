@@ -119,8 +119,10 @@ function ip_geoloc_menu() {
     'file' => 'ip_geoloc.admin.inc'
   );
   $items['ip-geoloc-current-location'] = array(
+    'title' => 'Current location recipient',
     'page callback' => 'ip_geoloc_current_location_ajax_recipient',
     'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
