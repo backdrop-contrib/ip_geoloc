@@ -45,7 +45,7 @@
             //alert('Received address: ' + ip_geoloc_address['formatted_address']);
           }
           else {
-            ip_geoloc_address['error'] = Drupal.t('IP Geolocation: Google address lookup failed with status code') + ' ' + status;
+            ip_geoloc_address['error'] = Drupal.t('IP Geolocation, getLocation(): Google address lookup failed with status code') + ' ' + status;
           }
           // Pass lat/long, accuracy and address back to Drupal
           $.ajax({

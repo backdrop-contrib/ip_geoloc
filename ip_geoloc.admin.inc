@@ -41,6 +41,12 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', TRUE),
     '#description' => t('For present and future visitors this is done via the client-side version of the Maps API. For the upload of historic visitor location data the server-side version of the Maps API is used. Note that Google may impose a limit on the daily number of API calls coming from the same machine.')
   );
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Employ Smart IP as a backup.',
+    '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),
+    '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined us access to their location) or the Google Maps API address lookup failed or was not employed through the tick box above.')
+  );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
     '#type' => 'textfield',
     '#title' => t('Mininum elapsed time in seconds before geolocation data for the same user will be collected again.'),
@@ -59,7 +65,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'checkbox',
     '#title' => t('Detail execution progress with status messages.'),
     '#default_value' => variable_get('ip_geoloc_debug', FALSE),
-    '#description' => t('This is for the administrator (uid=1) only.')
+    '#description' => t('The above tick box applies to the administrator (uid=1) only.')
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_session'] = array(
     '#type' => 'submit',

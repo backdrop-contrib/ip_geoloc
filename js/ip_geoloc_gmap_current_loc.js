@@ -34,7 +34,7 @@
             addressText = response[0]['formatted_address'];
           }
           else {
-            addressText = Drupal.t('IP Geolocation: Google address lookup failed with status code ') + status;
+            addressText = Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code ') + status;
           }
           // (lat, long) and address are revealed when clicking marker
           var latLongText = Drupal.t('lat.') + " " + coords.latitude + ", " + Drupal.t('long.') + " " + coords.longitude + "<br/>" + Drupal.t('accuracy') + " " + coords.accuracy + " m";

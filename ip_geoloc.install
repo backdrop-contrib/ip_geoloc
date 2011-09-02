@@ -12,7 +12,11 @@ function ip_geoloc_requirements($phase = 'runtime') {
   $requirements = array();
   // @todo
   $geolocation_functions = module_implements('get_ip_geolocation');
-  $use_smart_ip = module_exists('smart_ip'); // should be variable_get()
+    if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
+      if (!module_exists('smart_ip')) {
+        ip_geoloc_debug(t('IP Geolocation: Smart IP configured as a backup in case the address lookup fails. However Smart IP is not enabled.'));
+      }
+    }
   $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
 
   return $requirements;
