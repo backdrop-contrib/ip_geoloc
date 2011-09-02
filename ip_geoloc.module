@@ -15,7 +15,7 @@ define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
 
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
 define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
-define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disableDefaultUI":true, "zoom":1,  "zoomControl":true}');
+define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disableDefaultUI":true, "zoom":2,  "zoomControl":true}');
 
 define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
 
@@ -346,9 +346,11 @@ function ip_geoloc_diagnose() {
       drupal_set_message(t('The <strong>Statistics</strong> module is enabled, but its system <strong>access log</strong> is not. Therefore all visitor Views are frozen in time and will not grow. The block "Map centered on current visitor\'s location" is not affected and should still display. You can enable the <strong>access log</strong> at <a href="/admin/config/system/statistics">Configuration >> Statistics</a>.'), 'warning');
     }
     else {
-      $count = count(ip_geoloc_ips_to_be_synched());
+      $non_synched_ips = ip_geoloc_ips_to_be_synched();
+      $count = count($non_synched_ips);
       if ($count > 0) {
-        drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database.", array('%count' => $count)), 'status', FALSE);
+        drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database. These are the most recent ones: %ips",
+          array('%count' => $count, '%ips' => implode(' ', $non_synched_ips))), 'status', FALSE);
       }
       else {
         drupal_set_message(t("The geolocation database is up to date and in sync with the system access log."), 'status', FALSE);

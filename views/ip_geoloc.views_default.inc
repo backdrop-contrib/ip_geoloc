@@ -22,7 +22,7 @@ function ip_geoloc_views_default_views() {
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log';
   $view->core = 7;
-  $view->api_version = '3.0-alpha1';
+  $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
@@ -119,8 +119,8 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['empty']['area']['empty'] = FALSE;
   $handler->display->display_options['empty']['area']['content'] = '    No IP geolocation data found.
 
-      Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
-      Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
+        Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
+        Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
   $handler->display->display_options['empty']['area']['format'] = 'full_html';
   $handler->display->display_options['empty']['area']['tokenize'] = 0;
   /* Field: Access log: Hostname */
@@ -329,15 +329,14 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['fields']['php']['hide_alter_empty'] = 0;
   $handler->display->display_options['fields']['php']['use_php_setup'] = 0;
   $handler->display->display_options['fields']['php']['php_output'] = '<?php
-      echo ip_geoloc_output_map($row->latitude, $row->longitude, \'ip-geoloc-map-\' . $row->hostname_1, \'height: 150px; width: 250px\') ;
-    ?>';
+        echo ip_geoloc_output_map($row->latitude, $row->longitude, \'ip-geoloc-map-\' . $row->hostname_1, \'height: 150px; width: 250px\') ;
+      ?>';
   $handler->display->display_options['fields']['php']['use_php_click_sortable'] = '0';
   $handler->display->display_options['fields']['php']['php_click_sortable'] = '';
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['path'] = 'visitor-log';
-  $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'Visitor log';
   $handler->display->display_options['menu']['description'] = 'Shows IP and street addresses of recent visitors with visit counts and maps.';
   $handler->display->display_options['menu']['weight'] = '0';
@@ -345,37 +344,6 @@ function ip_geoloc_views_default_views() {
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block_1');
   $handler->display->display_options['block_description'] = 'Visitor log';
-  $translatables['visitor_log'] = array(
-    t('Master'),
-    t('Visitor log'),
-    t('more'),
-    t('Apply'),
-    t('Reset'),
-    t('Sort by'),
-    t('Asc'),
-    t('Desc'),
-    t('Items per page'),
-    t('- All -'),
-    t('Offset'),
-    t('No results text'),
-    t('    No IP geolocation data found.
-
-      Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
-      Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.'),
-    t('IP address'),
-    t('No. visits'),
-    t('First visited'),
-    t('Last visited'),
-    t('Latitude'),
-    t('.'),
-    t(','),
-    t('Longitude'),
-    t('Address'),
-    t('Country'),
-    t('Map'),
-    t('Page'),
-    t('Block'),
-  );
 
   $views[$view->name] = $view;
 
@@ -517,7 +485,6 @@ function ip_geoloc_views_default_views() {
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['path'] = 'visitor-log-lite';
-  $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'Visitor log';
   $handler->display->display_options['menu']['description'] = 'Shows IP and street addresses of recent visitors.';
   $handler->display->display_options['menu']['weight'] = '0';
