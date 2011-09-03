@@ -145,9 +145,9 @@ function ip_geoloc_current_location_ajax_recipient() {
   $location = &$_SESSION['smart_ip']['location'];
   if (isset($_POST['error'])) {
     // Device/browser does not support getCurrentPosition() or Google reverse-geocode error.
-    $error = 'IP Geolocation, ' + ip_address() + ': ';
+    $error = ip_address() . ': ' . check_plain($_POST['error']);
     watchdog('IP Geolocation', $error, NULL, WATCHDOG_NOTICE);
-    ip_geoloc_debug(check_plain($error));
+    ip_geoloc_debug('IP Geolocation, ' . $error);
     ip_geoloc_use_smart_ip_if_enabled($location);
   }
   else {

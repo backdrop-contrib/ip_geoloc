@@ -72,8 +72,8 @@
             text = Drupal.t("unknown error");
         }
         var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('getCurrentPosition() returned error code') + error.code + ': ' + text + '. ' + navigator.userAgent;
-        // Pass error back to PHP 
+        ip_geoloc_address['error'] = Drupal.t('getCurrentPosition() returned error code') + ' ' + error.code + ': ' + text + '. ' + navigator.userAgent;
+        // Pass error back to PHP rather than alert(ip_geoloc_address['error']);
         $.ajax({
           url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
           type: 'POST',
