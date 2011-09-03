@@ -11,7 +11,7 @@
       }
       else {
         var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('IP Geolocation: cannot accurately determine your location. Browser not supported:') + ' '  + navigator.userAgent;
+        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine your location. Browser not supported:') + ' '  + navigator.userAgent;
         // Pass error back to PHP 
         $.ajax({
           url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
@@ -38,14 +38,14 @@
                 var type = component.types[0];
                 ip_geoloc_address[type] = component.long_name;
                 if (type == 'country' && component.short_name != null) {
-                  ip_geoloc_address['short_name'] = component.short_name;
+                  ip_geoloc_address['country_code'] = component.short_name;
                 }
               }
             }
             //alert('Received address: ' + ip_geoloc_address['formatted_address']);
           }
           else {
-            ip_geoloc_address['error'] = Drupal.t('IP Geolocation, getLocation(): Google address lookup failed with status code') + ' ' + status;
+            ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code') + ' ' + status;
           }
           // Pass lat/long, accuracy and address back to Drupal
           $.ajax({

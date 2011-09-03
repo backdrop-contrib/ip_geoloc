@@ -57,7 +57,7 @@
           default:
             text = Drupal.t("unknown error");
         }
-        alert("IP Geolocation: getCurrentPosition() returned error code " + error.code + ": " + text);
+        alert("IP Geolocation, current location map: getCurrentPosition() returned error code " + error.code + ": " + text);
       }
     }
   }

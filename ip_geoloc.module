@@ -144,8 +144,10 @@ function ip_geoloc_menu() {
 function ip_geoloc_current_location_ajax_recipient() {
   $location = &$_SESSION['smart_ip']['location'];
   if (isset($_POST['error'])) {
-    // Device/browser not supported or Google reverse-geocode error.
-    ip_geoloc_debug(check_plain($_POST['error']));
+    // Device/browser does not support getCurrentPosition() or Google reverse-geocode error.
+    $error = 'IP Geolocation, ' + ip_address() + ': ';
+    watchdog('IP Geolocation', $error, NULL, WATCHDOG_NOTICE);
+    ip_geoloc_debug(check_plain($error));
     ip_geoloc_use_smart_ip_if_enabled($location);
   }
   else {
@@ -350,7 +352,7 @@ function ip_geoloc_diagnose() {
       $count = count($non_synched_ips);
       if ($count > 0) {
         drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database. These are the most recent ones: %ips",
-          array('%count' => $count, '%ips' => implode(' ', $non_synched_ips))), 'status', FALSE);
+          array('%count' => $count, '%ips' => implode(' ', array_slice($non_synched_ips, 0, 10, TRUE)))), 'status', FALSE);
       }
       else {
         drupal_set_message(t("The geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
