@@ -46,7 +46,7 @@
       function displayMapError(error) {
         switch (error.code) {
           case 1:
-            text = Drupal.t("user denied permission to share location");
+            text = Drupal.t("user declined to share location");
             break;
           case 2:
             text = Drupal.t("position unavailable (connection lost?)");

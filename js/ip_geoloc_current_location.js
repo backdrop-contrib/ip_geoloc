@@ -11,7 +11,7 @@
       }
       else {
         var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine your location. Browser not supported:') + ' '  + navigator.userAgent;
+        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine your location. Browser not supported to getCurrentPosition():') + ' '  + navigator.userAgent;
         // Pass error back to PHP 
         $.ajax({
           url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
@@ -60,7 +60,7 @@
       function displayLocationError(error) {
         switch (error.code) {
           case 1:
-            text = Drupal.t("user denied permission to share location");
+            text = Drupal.t("user declined to share location");
             break;
           case 2:
             text = Drupal.t("position unavailable (connection lost?)");
@@ -71,7 +71,15 @@
           default:
             text = Drupal.t("unknown error");
         }
-        alert("IP Geolocation: getCurrentPosition() returned error code " + error.code + ": " + text);
+        var ip_geoloc_address = new Object;
+        ip_geoloc_address['error'] = Drupal.t('getCurrentPosition() returned error code') + error.code + ': ' + text + '. ' + navigator.userAgent;
+        // Pass error back to PHP 
+        $.ajax({
+          url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
+          type: 'POST',
+          dataType: 'json',
+          data: ip_geoloc_address
+        });
       }
 
     }
