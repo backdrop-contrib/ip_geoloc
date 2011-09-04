@@ -11,7 +11,7 @@
       }
       else {
         var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine your location. Browser not supported to getCurrentPosition():') + ' '  + navigator.userAgent;
+        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine your location. Browser does not support getCurrentPosition():') + ' '  + navigator.userAgent;
         // Pass error back to PHP 
         $.ajax({
           url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,

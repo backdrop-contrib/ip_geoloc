@@ -43,7 +43,7 @@ function ip_geoloc_store_location($location) {
     $db_location = $result->fetchAssoc();
 
     if ($db_location == FALSE) { // New entry, insert
-      ip_geoloc_debug(t('Adding new info to geolocaton db: ') . ip_geoloc_pretty_print($location));
+      ip_geoloc_debug(t('IP Geolocaton: adding new record to db: ') . ip_geoloc_pretty_print($location));
       $result = drupal_write_record('ip_geoloc', $location);
     }
     else {
@@ -63,12 +63,13 @@ function ip_geoloc_store_location($location) {
       $empty_location['administrative_area_level_1'] = '';
       $empty_location['formatted_address'] = '';
       $full_location = array_merge($empty_location, $location);
-      ip_geoloc_debug(t('Updating geolocation db with: ') . ip_geoloc_pretty_print($full_location));
+      ip_geoloc_debug(t('IP Geolocation: updating db with: ') . ip_geoloc_pretty_print($full_location));
       $result = drupal_write_record('ip_geoloc', $full_location, 'id');
     }
     if ($result === FALSE) {
       drupal_set_message(t('IP Geolocation: could not update geolocation information for IP address %ip', array('%ip' => $location['ip_address'])), 'warning');
     }
+    $location['ip_address'] = NULL; // don't store again until set
   }
   return $result;
 }
