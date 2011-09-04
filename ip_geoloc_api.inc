@@ -43,7 +43,7 @@ function ip_geoloc_store_location($location) {
     $db_location = $result->fetchAssoc();
 
     if ($db_location == FALSE) { // New entry, insert
-      ip_geoloc_debug(t('IP Geolocaton: adding new record to db: ') . ip_geoloc_pretty_print($location));
+      ip_geoloc_debug(t('IP Geolocaton: adding new record to db: !location', array('!location' =>ip_geoloc_pretty_print($full_location))));
       $result = drupal_write_record('ip_geoloc', $location);
     }
     else {
@@ -63,11 +63,11 @@ function ip_geoloc_store_location($location) {
       $empty_location['administrative_area_level_1'] = '';
       $empty_location['formatted_address'] = '';
       $full_location = array_merge($empty_location, $location);
-      ip_geoloc_debug(t('IP Geolocation: updating db with: ') . ip_geoloc_pretty_print($full_location));
+      ip_geoloc_debug(t('IP Geolocation: updating db with: !location', array('!location' =>ip_geoloc_pretty_print($full_location))));
       $result = drupal_write_record('ip_geoloc', $full_location, 'id');
     }
     if ($result === FALSE) {
-      drupal_set_message(t('IP Geolocation: could not update geolocation information for IP address %ip', array('%ip' => $location['ip_address'])), 'warning');
+      drupal_set_message(t('IP Geolocation: could not update geolocation information for IP address %ip', array('%ip' => $location['ip_address'])), 'error');
     }
     $location['ip_address'] = NULL; // don't store again until set
   }
@@ -77,6 +77,7 @@ function ip_geoloc_store_location($location) {
 /**
  * Outputs an HTML div placeholder into which will be injected a map of the
  * area around the supplied lat,long coordinates.
+ * Handy for use in Views.
  *
  * @param $latitude,  string or double, e.g. "-37.87" or -37.87
  * @param $longitude, string or double, e.g. "144.98" or 144.98
@@ -84,11 +85,12 @@ function ip_geoloc_store_location($location) {
  * @param $style, CSS style applied to the div, e.g "height:250px; width:300px"
  */
 function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', $style = '') {
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS);
-
-  // Add javascript to produce map centered around ($latitidue, $longitude)
-  $js_file = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap.js';
-  drupal_add_js($js_file, array('weight' => 1));
+  $javascript_files = drupal_add_js();
+  if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
+    // Don't add non-GPS version when GPS version is already there
+    drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
+  }
+  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap.js');
 
   $script_code = "displayGMap($latitude, $longitude, '$div_id');";
   drupal_add_js($script_code, array('type' => 'inline', 'scope' => 'footer'));
@@ -108,16 +110,14 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  * @param $style, CSS style applied to the div, e.g "height:200px; width:300px"
  */
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_options = '', $map_style = '') {
-  drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT);
-  drupal_add_js(IP_GEOLOC_GEO_JS);
-//drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/geo.js');
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS);
+  $js_options = array('group' => JS_LIBRARY);
+  drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT, $js_options);
+  drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
+  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
+  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_current_loc.js');
+
   drupal_add_js(array('ip_geoloc_current_location_map_div' => $div_id), 'setting');
   drupal_add_js(array('ip_geoloc_current_location_map_options' => $map_options), 'setting');
-
-  // Add javascript to retrieve user's lat,long and draw a gmap centered around it
-  $js_file = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_current_loc.js';
-  drupal_add_js($js_file, array('weight' => 1));
 
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
@@ -133,13 +133,16 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
  * @param $style, CSS style applied to the div, e.g "height:250px; width:300px"
  */
 function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options, $map_style = '') {
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS);
+  $javascript_files = drupal_add_js();
+  if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
+    // Don't add non-GPS version when GPS version is already there
+    drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
+  }
+  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js');
+
   drupal_add_js(array('ip_geoloc_locations' => $locations), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_map_options' => $map_options), 'setting');
-
-  $js_file = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js';
-  drupal_add_js($js_file, array('weight' => 1));
 
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
@@ -159,14 +162,13 @@ function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-m
  * See ip_geoloc_current_location_ajax_recipient() for a simple example.
  */
 function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
-  drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT);
-  drupal_add_js(IP_GEOLOC_GEO_JS);
-//drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/geo.js');
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS);
+  $js_options = array('group' => JS_LIBRARY);
+  drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT, $js_options);
+  drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
+  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
+  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
+
   drupal_add_js(array('ip_geoloc_menu_callback' => $menu_callback), 'setting');
-  // Add javascript to return user's (lat,long), accuracy and street address
-  $js_file = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js';
-  drupal_add_js($js_file, array('weight' => 1));
 }
 
 /**
@@ -184,17 +186,15 @@ function ip_geoloc_get_address($latitude, $longitude) {
 }
 
 /**
- * Uses the Google webservice to retrieve address information based on
- * supplied (lat, long) coordinates.
+ * Uses the Google webservice to retrieve address information based on the
+ * supplied lat/long coordinates.
  * Effectively makes calls of this form:
  * http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=-37.87,144.98
  *
  * CALLER BEWARE:
  * This is a server-side call. If you want to call this function repeatedly,
- * remeber that Google imposes a limit of 2500 calls per 24hr and 20 calls per
- * second.
- * So for bulk address generation, put a sleep(1) before each repeat or you are
- * likely to face an OVER_QUERY_LIMIT response.
+ * remeber that Google imposes a limit of 2500 calls per 24hr. It may return an
+ * OVER_QUERY_LIMIT response.
  *
  * @param $latitude,  string or double, e.g. "-37.87" or -37.87
  * @param $longitude, string or double, e.g. "144.98" or 144.98
@@ -218,7 +218,7 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
     return FALSE;
   }
   if ($data['status'] == 'ZERO_RESULTS' || !isset($data['results'][0])) {
-    drupal_set_message(t('IP Geolocation: The @protocol request %url succeeded, but returned no results.',
+    drupal_set_message(t('IP Geolocation: the @protocol request %url succeeded, but returned no results.',
       array('@protocol' => $response->protocol, '%url' => $url)), 'warning');
     return FALSE;
   }

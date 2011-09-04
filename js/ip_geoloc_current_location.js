@@ -4,14 +4,14 @@
   Drupal.behaviors.addCurrentLocation = {
     attach: function (context, settings) {
       /* Use the geo.js unified API. This covers W3C Geolocation API, Google Gears
-       * and some non-conforming specific devices like Palm and Blackberry.
+       * and some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
         geo_position_js.getCurrentPosition(getLocation, displayLocationError, {enableHighAccuracy: true});
       }
       else {
         var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine your location. Browser does not support getCurrentPosition():') + ' '  + navigator.userAgent;
+        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine visitor location. Browser does not support getCurrentPosition(): @browser', { '@browser': navigator.userAgent });
         // Pass error back to PHP 
         $.ajax({
           url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
@@ -42,10 +42,10 @@
                 }
               }
             }
-            //alert('Received address: ' + ip_geoloc_address['formatted_address']);
+            //alert(Drupal.t('Received address: @address', { '@address': ip_geoloc_address['formatted_address'] }));
           }
           else {
-            ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code') + ' ' + status;
+            ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
           }
           // Pass lat/long, accuracy and address back to Drupal
           $.ajax({
@@ -60,19 +60,19 @@
       function displayLocationError(error) {
         switch (error.code) {
           case 1:
-            text = Drupal.t("user declined to share location");
+            text = Drupal.t('user declined to share location');
             break;
           case 2:
-            text = Drupal.t("position unavailable (connection lost?)");
+            text = Drupal.t('position unavailable (connection lost?)');
             break;
           case 3:
-            text = Drupal.t("timeout");
+            text = Drupal.t('timeout');
             break;
           default:
-            text = Drupal.t("unknown error");
+            text = Drupal.t('unknown error');
         }
         var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('getCurrentPosition() returned error code') + ' ' + error.code + ': ' + text + '. ' + navigator.userAgent;
+        ip_geoloc_address['error'] = Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error code !code: !text. @browser', {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
         // Pass error back to PHP rather than alert(ip_geoloc_address['error']);
         $.ajax({
           url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,

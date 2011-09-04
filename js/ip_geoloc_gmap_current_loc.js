@@ -13,7 +13,7 @@
       var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_current_location_map_div), mapOptions);
     
       /* Use the geo.js unified API. This covers W3C Geolocation API, Google Gears
-       * and some non-conforming specific devices like Palm and Blackberry.
+       * and some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
         geo_position_js.getCurrentPosition(displayMap, displayMapError, {enableHighAccuracy: true});
@@ -34,11 +34,12 @@
             addressText = response[0]['formatted_address'];
           }
           else {
-            addressText = Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code ') + status;
+            addressText = Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code !code.', { '!code': status });
           }
-          // (lat, long) and address are revealed when clicking marker
-          var latLongText = Drupal.t('lat.') + " " + coords.latitude + ", " + Drupal.t('long.') + " " + coords.longitude + "<br/>" + Drupal.t('accuracy') + " " + coords.accuracy + " m";
-          var infoPopUp = new google.maps.InfoWindow({ content: addressText + "<br/>" + latLongText });
+          // lat/long and address are revealed when clicking marker
+          var latLongText = Drupal.t('lat. !lat, long. !long', { '!lat': coords.latitude, '!long': coords.longitude }) + '<br/>'
+            + Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
+          var infoPopUp = new google.maps.InfoWindow({ content: addressText + '<br/>' + latLongText });
           google.maps.event.addListener(marker, "click", function() { infoPopUp.open(map, marker) });
         });
       }
@@ -46,18 +47,18 @@
       function displayMapError(error) {
         switch (error.code) {
           case 1:
-            text = Drupal.t("user declined to share location");
+            text = Drupal.t('user declined to share location');
             break;
           case 2:
-            text = Drupal.t("position unavailable (connection lost?)");
+            text = Drupal.t('position unavailable (connection lost?)');
             break;
           case 3:
-            text = Drupal.t("timeout");
+            text = Drupal.t('timeout');
             break;
           default:
-            text = Drupal.t("unknown error");
+            text = Drupal.t('unknown error');
         }
-        alert("IP Geolocation, current location map: getCurrentPosition() returned error code " + error.code + ": " + text);
+        alert(Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error code !code: !text', {'!code': error.code, '!text': text}));
       }
     }
   }

@@ -9,15 +9,25 @@
  * Implements hook_requirements().
  */
 function ip_geoloc_requirements($phase = 'runtime') {
-  $requirements = array();
-  // @todo
-  $geolocation_functions = module_implements('get_ip_geolocation');
-    if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
-      if (!module_exists('smart_ip')) {
-        ip_geoloc_debug(t('IP Geolocation: Smart IP configured as a backup in case the address lookup fails. However Smart IP is not enabled.'));
-      }
+  $t = get_t();
+  $requirements = array('ip_geoloc' => array());
+
+  $geolocation_methods = array();
+  if (variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+    $geolocation_methods[] = $t('Google Maps reverse-geocode');
+  }
+  if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
+    if (module_exists('smart_ip')) {
+      $geolocation_methods[] = 'Smart IP';
     }
-  $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+    else {
+      $requirements['ip_geoloc']['severity'] = REQUIREMENT_WARNING;
+      $requirements['ip_geoloc']['description'] = $t('Smart IP configured as a backup in case the Google Maps reverse-geocode fails. However Smart IP is not enabled.');
+    }
+  }
+
+  $requirements['ip_geoloc']['title'] = $t('IP Geolocation data collection methods employed');
+  $requirements['ip_geoloc']['value'] = implode(', ', array_merge($geolocation_methods, module_implements('get_ip_geolocation')));
 
   return $requirements;
 }
@@ -134,25 +144,25 @@ function ip_geoloc_schema() {
         'type'        => 'varchar',
         'length'      => 64,
         'not null'    => FALSE,
-       ),
+      ),
       'street_number' => array(
         'description' => 'Street number',
         'type'        => 'varchar',
         'length'      => 32,
         'not null'    => FALSE,
-       ),
+      ),
       'administrative_area_level_1' => array(
         'description' => 'State or province',
         'type'        => 'varchar',
         'length'      => 64,
         'not null'    => FALSE,
-       ),
+      ),
       'formatted_address' => array(
         'description' => 'Address',
         'type'        => 'varchar',
         'length'      => 128,
         'not null'    => FALSE,
-       ),
+      ),
     ),
     'primary key' => array('id'),
     'indexes' => array(
