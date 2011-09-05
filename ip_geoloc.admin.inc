@@ -45,7 +45,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'checkbox',
     '#title' => 'Employ Smart IP as a backup.',
     '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),
-    '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined to share their location) or the Google Maps API address lookup failed or was not employed through the tick box above.')
+    '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.')
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
     '#type' => 'textfield',

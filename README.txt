@@ -25,7 +25,7 @@ method). Just enable your favorite module and you're away. The following modules
 are supported as IP-to-lat/long data sources:
 o Smart IP
 o GeoIP API (note: port of this module to D7 is in progress)
-o any module that implements hook_get_ip_geolocation($location). See the
+o any module that implements hook_get_ip_geolocation_alter($location). See the
   programmer's section below for details.
 
 You may enable more than one of the above at the same time, so that if one
@@ -49,9 +49,9 @@ o for sorting, reporting and exporting purposes: a number of configurable views
   small map (one per IP address), page visit counts, first and last visits etc;
   naturally being views you can add, remove and rearrange columns as you wish
 o for programmers: an API to retrieve lat/long and address information and to
-  generate maps; also a hook, hook_get_ip_geolocation(), to insert your own
-  geolocation data retrieval function, if you so wish -- see the FOR PROGRAMMERS
-  section below.
+  generate maps; also a hook, hook_get_ip_geolocation_alter(), to insert your
+  own geolocation data retrieval function, if you so wish -- see the FOR
+  PROGRAMMERS section below.
 
 INSTALLATION & CONFIGURATION
 ============================
@@ -75,9 +75,9 @@ In your module, let's call it MYMODULE, all you have to do is flesh out the
 following function.
 <?php
 /*
- *  Implements hook_get_ip_geolocation().
+ *  Implements hook_get_ip_geolocation_alter().
  */
-function MYMODULE_get_ip_geolocation(&$location) {
+function MYMODULE_get_ip_geolocation_alter(&$location) {
 
   if (empty($location['ip_address'])) {
     return;
@@ -107,7 +107,8 @@ partially fleshed out. If $location['ip_address'] is empty, this means that
 IP Geolocation is still waiting for more details to arrive from the Google
 reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then IP
 Geolocation does not expect any further details and will store the $location
-with your modifications (if any) on the IP Geolocation database. 
+with your modifications (if any) on the IP Geolocation database. You must set
+$location['formatted_address'] in order for the location to be stored.
 
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================

@@ -71,11 +71,18 @@ function ip_geoloc_init() {
       unset($_SESSION['ip_geoloc']['location']);
       ip_geoloc_get_current_location('ip-geoloc-current-location');
     }
-    elseif (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
-      ip_geoloc_debug(t('IP Geolocation: calling Smart IP to retrieve lat/long and address.'));
+    else {
       $location['ip_address'] = ip_address();
-      // Note this is a synchronous call, no callback involoved.
-      ip_geoloc_use_smart_ip_if_enabled($location);
+      if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
+        ip_geoloc_debug(t('IP Geolocation: calling Smart IP to retrieve lat/long and address.'));
+        // Note this is a synchronous call, no callback involoved.
+        ip_geoloc_use_smart_ip_if_enabled($location);
+      }
+      elseif (module_exists('ipgeo')) {
+        // See what GeoIP has to add (if enabled). Synchronous call, returns
+        // immediately.
+        ip_geoloc_handle_geoip_api($location);
+      }
     }
   };
 }
@@ -90,19 +97,10 @@ function ip_geoloc_exit() {
 
   $location = &$_SESSION['ip_geoloc']['location'];
 
-  if (empty($_SESSION['ip_geoloc']['last_position_check']) ||
-    time() - $_SESSION['ip_geoloc']['last_position_check'] >= variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL)) {
+  // Give contributed modules a chance to add their 2 cents by implementing
+  // hook_get_ip_geolocation_alter()
+  drupal_alter('get_ip_geolocation', $location);
 
-    // See what GeoIP has to add (if enabled). It doesn't implement a hook, so
-    // have to call it directly.
-    ip_geoloc_handle_geoip_api($location);
-
-    // Give contributed modules a chance to add their 2 cents by implementing
-    // hook_get_ip_geolocation()
-    drupal_alter('get_ip_geolocation', $location);
-
-    $_SESSION['ip_geoloc']['last_position_check'] = time();
-  }
   // ip_geoloc_store_location() does nothing, if supplied IP address is empty.
   if (ip_geoloc_store_location($location) > 0) {
     $location['ip_address'] = NULL; // if successfully stored, don't store again
@@ -207,16 +205,16 @@ function ip_geoloc_format_address(&$location) {
  *
  * Note: modules supported for the backfill currently are:
  *   Smart IP module;
- *   custom modules that implement hook_get_ip_geolocation().
+ *   custom modules that implement hook_get_ip_geolocation_alter().
  */
 function ip_geoloc_sync_with_accesslog() {
   drupal_get_messages(); // wipe previous message to avoid confusion
 
-  $geolocation_functions = module_implements('get_ip_geolocation');
+  $geolocation_functions = module_implements('get_ip_geolocation_alter');
   if (empty($geolocation_functions)) {
     $use_smart_ip = module_exists('smart_ip');
     if (!$use_smart_ip) {
-      drupal_set_message(t('No module implements hook_get_ip_geolocation() and Smart IP is not enabled: cannot process.'), 'error');
+      drupal_set_message(t('No module implements hook_get_ip_geolocation_alter() and Smart IP is not enabled: cannot process.'), 'error');
       return FALSE;
     }
   }
@@ -570,22 +568,18 @@ function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
 /**
  * Module GeoIP API does not expose a hook, but it does expose an API.
  *
- * @param $location array to be updated
+ * @param $location array to be updated, assumes ['ip_address'] filled out
  */
 function ip_geoloc_handle_geoip_api(&$location) {
-  if (module_exists('geoip')) {
-    $ip_address = empty($location['ip_address']) ? ip_address() : $location['ip_address'];
-    $geoip_location = (array) geoip_city($ip_address);
-    // Where different convert GeoIP names to our names (see D6 visitorinfo.module)
-    $geoip_location['country'] = $geoip_location['country_name'];
-    $geoip_location['region']  = $geoip_location['regionname']; // no underscore
-    unset($geoip_location['country_name']);
-    unset($geoip_location['regionname']);
-    // To overwrite or to merge, that's the question...
-    // $location = $geoip_location; // overwrite
-    $location = array_merge($geoip_location, $location);
-    $location['ip_address'] = $ip_address;
-  }
+  $geoip_location = (array) geoip_city($location['ip_address']);
+  // Where different convert GeoIP names to our names (see D6 visitorinfo.module)
+  $geoip_location['country'] = $geoip_location['country_name'];
+  $geoip_location['region']  = $geoip_location['regionname']; // no underscore
+  unset($geoip_location['country_name']);
+  unset($geoip_location['regionname']);
+  // To overwrite or to merge, that's the question...
+  // $location = array_merge($geoip_location, $location);
+  $location = $geoip_location; // overwrite
 }
 
 /**
