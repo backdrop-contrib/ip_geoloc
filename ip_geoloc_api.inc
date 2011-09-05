@@ -43,7 +43,7 @@ function ip_geoloc_store_location($location) {
     $db_location = $result->fetchAssoc();
 
     if ($db_location == FALSE) { // New entry, insert
-      ip_geoloc_debug(t('IP Geolocaton: adding new record to db: !location', array('!location' =>ip_geoloc_pretty_print($full_location))));
+      ip_geoloc_debug(t('IP Geolocaton: adding new record to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))));
       $result = drupal_write_record('ip_geoloc', $location);
     }
     else {
@@ -63,7 +63,7 @@ function ip_geoloc_store_location($location) {
       $empty_location['administrative_area_level_1'] = '';
       $empty_location['formatted_address'] = '';
       $full_location = array_merge($empty_location, $location);
-      ip_geoloc_debug(t('IP Geolocation: updating db with: !location', array('!location' =>ip_geoloc_pretty_print($full_location))));
+      ip_geoloc_debug(t('IP Geolocation: updating db with: !location', array('!location' => ip_geoloc_pretty_print($full_location))));
       $result = drupal_write_record('ip_geoloc', $full_location, 'id');
     }
     if ($result === FALSE) {
@@ -84,7 +84,7 @@ function ip_geoloc_store_location($location) {
  * @param $div_id, id of the div placeholder, can be anything as long as it's unique
  * @param $style, CSS style applied to the div, e.g "height:250px; width:300px"
  */
-function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', $style = '') {
+function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', $style = '', $balloon_text = '') {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
     // Don't add non-GPS version when GPS version is already there
@@ -92,7 +92,7 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap.js');
 
-  $script_code = "displayGMap($latitude, $longitude, '$div_id');";
+  $script_code = "displayGMap($latitude, $longitude, '$div_id', '$balloon_text');";
   drupal_add_js($script_code, array('type' => 'inline', 'scope' => 'footer'));
 
   $map_placeholder = "<div id='$div_id'" . (empty($style) ? '' : " style='$style'") . '></div>';

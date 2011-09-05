@@ -15,16 +15,24 @@
       var i = 0;
       for (ip in locations) {
         var position = new google.maps.LatLng(locations[ip].latitude, locations[ip].longitude);
-        if (i++ == 0) { // use to first, i.e. most recent, visitor to center the map
+        if (++i == 1) { // use to first, i.e. most recent, visitor to center the map
           map.setCenter(position);
-          marker = new google.maps.Marker({ map: map, position: position, title: Drupal.t('Visitor #') + i + ': ' + Drupal.t('you?') });
-        } else {
-          marker = new google.maps.Marker({ map: map, position: position, title: Drupal.t('Visitor #') + i });
+          mouseOverText = Drupal.t('Latest visitor - you?');
         }
-        balloonTexts['LL' + position] = Drupal.t('IP address: ') + ip + '<br/>' + locations[ip].formatted_address + '<br/>'
-          + Drupal.t('#visits: ') + locations[ip].visit_count + ', ' + Drupal.t('last visit: ') + locations[ip].last_visit;
+        else {
+          mouseOverText = Drupal.t('Visitor #@i', { '@i': i });
+        }
+        marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
+        balloonTexts['LL' + position] = 
+          Drupal.t('IP address: @ip', { '@ip':  ip }) + '<br/>' +
+          locations[ip].formatted_address + '<br/>' +
+          Drupal.t('#visits: @count, last visit: @date', { '@count': locations[ip].visit_count, '@date': locations[ip].last_visit });
+        //var content = "Lat/long: " + event.latLng + "<br/>" + balloonTexts['LL' + event.latLng]
         google.maps.event.addListener(marker, 'click',  function(event) {
-          new google.maps.InfoWindow({ content: "Lat/long: " + event.latLng + "<br/>" + balloonTexts['LL' + event.latLng], position: event.latLng }).open(map);
+          new google.maps.InfoWindow({ 
+            content: Drupal.t('Lat/long: @latLong', { '@latLong': event.latLng }) + '<br/>' + balloonTexts['LL' + event.latLng], 
+            position: event.latLng 
+          }).open(map);
         });
       }
 

@@ -40,7 +40,7 @@
           var latLongText = Drupal.t('lat. !lat, long. !long', { '!lat': coords.latitude, '!long': coords.longitude }) + '<br/>'
             + Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
           var infoPopUp = new google.maps.InfoWindow({ content: addressText + '<br/>' + latLongText });
-          google.maps.event.addListener(marker, "click", function() { infoPopUp.open(map, marker) });
+          google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) });
         });
       }
 
