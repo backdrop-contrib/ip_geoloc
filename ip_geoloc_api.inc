@@ -43,7 +43,7 @@ function ip_geoloc_store_location($location) {
     $db_location = $result->fetchAssoc();
 
     if ($db_location == FALSE) { // New entry, insert
-      ip_geoloc_debug(t('IP Geolocaton: adding new record to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))));
+      ip_geoloc_debug(t('IP Geolocaton: adding new record to db: !location', array('!location' => ip_geoloc_pretty_print($location))));
       $result = drupal_write_record('ip_geoloc', $location);
     }
     else {
