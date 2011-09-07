@@ -87,7 +87,7 @@ function ip_geoloc_store_location($location) {
 function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', $style = '', $balloon_text = '') {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
-    // Don't add non-GPS version when GPS version is already there
+    // Only add non-GPS version when GPS version is already there
     drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap.js');
@@ -135,7 +135,7 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
 function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options, $map_style = '') {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
-    // Don't add non-GPS version when GPS version is already there
+    // Only add non-GPS version when GPS version is already there
     drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js');

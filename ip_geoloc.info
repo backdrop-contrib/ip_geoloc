@@ -2,7 +2,4 @@ name = IP Geolocation
 description = Extracts geolocation information based on IP addresses and device locator hardware and reports on this via configurable maps and views.
 package = Location
 core = 7.x
-; List files that contain classes or interfaces
-; files[] = views/ip_geoloc_handler_field_....inc
-
-version = "7.x-1.x-dev"
+; version = "7.x-1.x-dev"

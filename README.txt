@@ -24,7 +24,7 @@ future visitor data we recommended to use IP Geolocation's built-in collection
 method). Just enable your favorite module and you're away. The following modules
 are supported as IP-to-lat/long data sources:
 o Smart IP
-o GeoIP API (note: port of this module to D7 is in progress)
+o GeoIP API
 o any module that implements hook_get_ip_geolocation_alter($location). See the
   programmer's section below for details.
 
@@ -56,10 +56,9 @@ o for programmers: an API to retrieve lat/long and address information and to
 INSTALLATION & CONFIGURATION
 ============================
 Pick your geolocation data source module from the ones listed in the 
-introduction and follow the instructions for that module. Smart IP and Device
-Geolocation do not require you to install any additional files, but you may have
-to request a free key from the data provider, which will be sent to you by
-return email.
+introduction and follow the instructions for that module. Smart IP does not
+require you to install any additional files, but you may have to request a free
+key from the data provider, which will be sent to you by return email.
 Apart from that you really don't have to do much at all to configure IP 
 Geolocation. It figures out itself which geolocation data module(s) it is
 dealing with. Visit the Configuration >> IP Geolocation page and you'll find
@@ -112,7 +111,7 @@ $location['formatted_address'] in order for the location to be stored.
 
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================
-Taken from: http://code.google.com/apis/maps/documentation/geocoding
+Taken from http://code.google.com/apis/maps/documentation/geocoding :
 
 "Use of the Google Geocoding API is subject to a query limit of 2500 geolocation
 requests per day. (Users of Google Maps API Premier may perform up to 100,000

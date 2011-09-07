@@ -80,3 +80,40 @@ function ip_geoloc_admin_configure() {
 
   return system_settings_form($form);
 }
+
+/**
+ * Reports on the configuration status, in particular with respect to the system
+ * access log, which is required for visitor views and maps.
+ * @return -1, if there's a problem, count of IP addresses not stored otherwise
+ */
+function ip_geoloc_diagnose() {
+  $geoloc_count = db_query('SELECT COUNT(DISTINCT ip_address) FROM {ip_geoloc}')->fetchField();
+  drupal_set_message(t("The geolocation database currently contains information for %geoloc_count IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
+
+  if (!db_table_exists('accesslog')) {
+    drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because the <strong>Statistics</strong> module is not installed. Views of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
+  }
+  elseif (!module_exists('statistics')) {
+    drupal_set_message(t('The <strong>Statistics</strong> module is not enabled. Views of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
+  }
+  else {
+    $ip_address_count = db_query('SELECT COUNT(DISTINCT hostname) FROM {accesslog}')->fetchField();
+    drupal_set_message(t("The system access log currently contains entries from %ip_address_count IP addresses.", array('%ip_address_count' => $ip_address_count)), 'status', FALSE);
+    if (!variable_get('statistics_enable_access_log', FALSE)) {
+      drupal_set_message(t('The <strong>Statistics</strong> module is enabled, but its system <strong>access log</strong> is not. Therefore all visitor Views are frozen in time and will not grow. The block "Map centered on current visitor\'s location" is not affected and should still display. You can enable the <strong>access log</strong> at <a href="/admin/config/system/statistics">Configuration >> Statistics</a>.'), 'warning');
+    }
+    else {
+      $non_synched_ips = ip_geoloc_ips_to_be_synched();
+      $count = count($non_synched_ips);
+      if ($count > 0) {
+        drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database. These are the most recent ones: %ips",
+          array('%count' => $count, '%ips' => implode(', ', array_slice($non_synched_ips, 0, 10, TRUE)))), 'status', FALSE);
+      }
+      else {
+        drupal_set_message(t("The geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
+      }
+      return $count;
+    }
+  }
+  return -1;
+}

@@ -19,6 +19,9 @@ define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disabl
 
 define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
 
+require_once 'ip_geoloc_api.inc';
+require_once 'ip_geoloc_blocks.inc';
+
 /**
  * Implements hook-help().
  */
@@ -37,9 +40,6 @@ function ip_geoloc_help($path, $arg) {
  * other hook_init() implementations have completed.
  */
 function ip_geoloc_init() {
-
-  // require_once at top of this file caused issues with drupal_get_path().
-  require_once drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc_api.inc';
 
   if (!isset($_SESSION['ip_geoloc'])) {
     ip_geoloc_debug(t('Start of new IP Geolocation session.'));
@@ -85,7 +85,7 @@ function ip_geoloc_init() {
         ip_geoloc_debug(t('IP Geolocation: calling GeoIP API to retrieve lat/long and address based on IP.'));
         $location['ip_address'] = ip_address();
         // See what the GeoIP API file lookup produces. Returns immediately.
-        ip_geoloc_handle_geoip_api($location);
+        ip_geoloc_use_geoip_api($location);
       }
     }
     // Give contributed modules a chance to add their 2 cents by implementing
@@ -107,9 +107,7 @@ function ip_geoloc_init() {
  * against the IP address.
  *
 function ip_geoloc_exit() {
-
   $location = &$_SESSION['ip_geoloc']['location'];
-  // ip_geoloc_store_location() does nothing, if supplied IP address is empty.
   if (ip_geoloc_store_location($location) > 0) {
     $location['ip_address'] = NULL; // if successfully stored, don't store again
   }
@@ -160,7 +158,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     $error = $location['ip_address'] . ': ' . check_plain($_POST['error']) . ' -- ';
     $result = ip_geoloc_use_smart_ip_if_enabled($location);
     if (!$result && module_exists('geoip')) {
-      ip_geoloc_handle_geoip_api($location);
+      ip_geoloc_use_geoip_api($location);
       $error .= t('GeoIP API fallback produced: %address', array('%address' => $location['formatted_address']));
     }
     else {
@@ -192,7 +190,25 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
 }
 
 /**
- * This is a poor substitute as it doesn't take local format conventions into
+ * Module GeoIP API does not expose a hook, but it does expose an API.
+ *
+ * @param $location array to be updated, assumes ['ip_address'] filled out
+ */
+function ip_geoloc_use_geoip_api(&$location) {
+  $geoip_location = (array) geoip_city($location['ip_address']);
+  if (!empty($geoip_location)) {
+    // Where different convert GeoIP names to our equivalents
+    $geoip_location['country'] = $geoip_location['country_name'];
+    unset($geoip_location['country_name']);
+    $location = array_merge($geoip_location, $location);
+    ip_geoloc_format_address($location);
+  }
+  ip_geoloc_debug(t('IP Geolocation: GeoIP API retrieved: !location', array('!location' => ip_geoloc_pretty_print($location))));
+}
+
+
+/**
+ * This is a poorman's version as it doesn't take local format conventions into
  * account. Luckily this is only called as a fallback when lat/long could not
  * be established or the Google reverse-geocode function returned an error.
  * @param $location
@@ -219,7 +235,8 @@ function ip_geoloc_format_address(&$location) {
  * geolocation retrieval function was found.
  *
  * Note: modules supported for the backfill currently are:
- *   Smart IP module;
+ *   Smart IP module
+ *   GeoIP API module
  *   custom modules that implement hook_get_ip_geolocation_alter().
  */
 function ip_geoloc_sync_with_accesslog() {
@@ -261,7 +278,7 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
 
   if (empty($use_smart_ip)) {
     if (module_exists('geoip')) {
-      ip_geoloc_handle_geoip_api($location);
+      ip_geoloc_use_geoip_api($location);
     }
   }
   else {
@@ -337,167 +354,12 @@ function ip_geoloc_ips_to_be_synched() {
   $ip_geolocations = db_query('SELECT DISTINCT ip_address FROM {ip_geoloc}')->fetchCol('ip_address');
   return array_diff($hostnames, $ip_geolocations);
 }
-/**
- * Reports on the installation status, in particular with respect to the
- * system access log, which is required for visitor views and maps.
- * @return TRUE, if all seems ok
- */
-function ip_geoloc_diagnose() {
-  $geoloc_count = db_query('SELECT COUNT(DISTINCT ip_address) FROM {ip_geoloc}')->fetchField();
-  drupal_set_message(t("The geolocation database currently contains information for %geoloc_count IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
-
-  if (!db_table_exists('accesslog')) {
-    drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because the <strong>Statistics</strong> module is not installed. Views of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
-  }
-  elseif (!module_exists('statistics')) {
-    drupal_set_message(t('The <strong>Statistics</strong> module is not enabled. Views of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
-  }
-  else {
-    $ip_address_count = db_query('SELECT COUNT(DISTINCT hostname) FROM {accesslog}')->fetchField();
-    drupal_set_message(t("The system access log currently contains entries from %ip_address_count IP addresses.", array('%ip_address_count' => $ip_address_count)), 'status', FALSE);
-    if (!variable_get('statistics_enable_access_log', FALSE)) {
-      drupal_set_message(t('The <strong>Statistics</strong> module is enabled, but its system <strong>access log</strong> is not. Therefore all visitor Views are frozen in time and will not grow. The block "Map centered on current visitor\'s location" is not affected and should still display. You can enable the <strong>access log</strong> at <a href="/admin/config/system/statistics">Configuration >> Statistics</a>.'), 'warning');
-    }
-    else {
-      $non_synched_ips = ip_geoloc_ips_to_be_synched();
-      $count = count($non_synched_ips);
-      if ($count > 0) {
-        drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database. These are the most recent ones: %ips",
-          array('%count' => $count, '%ips' => implode(', ', array_slice($non_synched_ips, 0, 10, TRUE)))), 'status', FALSE);
-      }
-      else {
-        drupal_set_message(t("The geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
-      }
-      return $count;
-    }
-  }
-  return -1;
-}
-
-/**
- * Implements hook_block_info().
- */
-function ip_geoloc_block_info() {
-  $blocks['current_visitor_map'] = array(
-    'info' => t("Map centered on current visitor's location"),
-  );
-  $blocks['recent_visitors_map'] = array(
-    'info' => t('Map showing locations of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10))),
-  );
-  return $blocks;
-}
-
-/**
- * Implements hook_block_configure().
- */
-function ip_geoloc_block_configure($delta = '') {
-  $form = array();
-  if ($delta == 'recent_visitors_map') {
-    $form['ip_geoloc_recent_visitors_map_number_of_visitors'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Number of recent visitor locations to show on the map.'),
-      '#default_value' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10),
-      '#description' => t('Must be greater than 0. Values greater than 20 are not recommended.')
-    );
-  }
-  $form['ip_geoloc_' . $delta . '_div_style'] = array(
-    '#type' => 'textfield',
-    '#title' => t('CSS style attribute(s) applied to the HTML DIV element that is placeholding the map'),
-    '#default_value' => variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE),
-    '#description' => t('The default %default_style results in a map of 300 pixels high, with a width bounded by the element that contains it. Do not enter quotes or equal signs and make sure your quotes match.',
-      array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
-  );
-  if ($delta == 'current_visitor_map') {
-    $form['ip_geoloc_current_visitor_map_options'] = array(
-      '#type' => 'textfield',
-      '#size' => 120,
-      '#title' => t('Map options'),
-      '#default_value' => variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS),
-      '#description' => t("The default %default_options produces a street map zoomed in to level 15. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-            array('%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
-                  '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
-    );
-  }
-  elseif ($delta == 'recent_visitors_map') {
-    $form['ip_geoloc_recent_visitors_map_options'] = array(
-      '#type' => 'textfield',
-      '#size' => 120,
-      '#title' => t('Map options'),
-      '#default_value' => variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS),
-      '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-            array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
-                  '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
-    );
-  }
-  return $form;
-}
-
-/**
- * Implements hook_block_save().
- */
-function ip_geoloc_block_save($delta = '', $edit = array()) {
-  variable_set('ip_geoloc_' . $delta . '_div_style', $edit['ip_geoloc_' . $delta . '_div_style']);
-  if ($delta == 'current_visitor_map') {
-    ip_geoloc_save_map_options('ip_geoloc_current_visitor_map_options', $edit['ip_geoloc_current_visitor_map_options']);
-  }
-  elseif ($delta == 'recent_visitors_map') {
-    ip_geoloc_save_map_options('ip_geoloc_recent_visitors_map_options', $edit['ip_geoloc_recent_visitors_map_options']);
-    variable_set('ip_geoloc_recent_visitors_map_number_of_visitors', $edit['ip_geoloc_recent_visitors_map_number_of_visitors']);
-  }
-}
-
-function ip_geoloc_save_map_options($var_name, $map_options) {
-  $map_options_decoded = drupal_json_decode($map_options);
-  if ($map_options_decoded == NULL) {
-    drupal_set_message(t("Sytax error in map options. These map options may not work: '%map_options'", array('%map_options' => $map_options)), 'warning');
-  }
-  variable_set($var_name, $map_options);
-}
-
-/**
- * Implements hook_block_view().
- */
-function ip_geoloc_block_view($delta = '') {
-  $block = array();
-  $map_style = variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE);
-  switch ($delta) {
-    case 'current_visitor_map':
-      $block['subject'] = t('Your location');
-      $map_options = variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS);
-      $block['content'] = ip_geoloc_output_map_current_location('ip-geoloc-block-current-visitor-map', drupal_json_decode($map_options), $map_style);
-      break;
-
-    case 'recent_visitors_map':
-      $block['subject'] = t('Recent visitors');
-      $how_many = variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10);
-      if ($how_many > 0) {
-        $locations = ip_geoloc_get_recent_visitor_locations($how_many);
-        $map_options = variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
-        $block['content'] = ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', drupal_json_decode($map_options), $map_style);
-      }
-      break;
-  }
-  return $block;
-}
-
-function ip_geoloc_get_recent_visitor_locations($how_many) {
-  $result = db_query_range("SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY a.hostname ORDER BY last_visit DESC", 0, $how_many);
-  $locations = array();
-  $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
-  foreach ($result as $location) {
-    if (!isset($locations[$location->ip_address])) {
-      $location->last_visit = date($date_format, $location->last_visit);
-      $locations[$location->ip_address] = $location;
-    }
-  }
-  return $locations;
-}
 
 function ip_geoloc_pretty_print($location) {
   $t = '';
   foreach ($location as $label => $value) {
     if (!empty($value)) {
-      $t .= "<strong>$label:</strong>&nbsp;$value&nbsp; ";
+      $t .= "$label:&nbsp;<strong>$value</strong>&nbsp; ";
     }
   }
   return empty($t) ? t('nothing') : $t;
@@ -571,23 +433,6 @@ function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
   // may end up with inconsistent data
   // unset($location['formatted_address']);
   ip_geoloc_debug(t('IP Geolocation: Device Geolocation retrieved: !location', array('!location' => ip_geoloc_pretty_print($location))));
-}
-
-/**
- * Module GeoIP API does not expose a hook, but it does expose an API.
- *
- * @param $location array to be updated, assumes ['ip_address'] filled out
- */
-function ip_geoloc_handle_geoip_api(&$location) {
-  $geoip_location = (array) geoip_city($location['ip_address']);
-  if (!empty($geoip_location)) {
-    // Where different convert GeoIP names to our equivalents
-    $geoip_location['country'] = $geoip_location['country_name'];
-    unset($geoip_location['country_name']);
-    $location = array_merge($geoip_location, $location);
-    ip_geoloc_format_address($location);
-  }
-  ip_geoloc_debug(t('IP Geolocation: GeoIP API retrieved: !location', array('!location' => ip_geoloc_pretty_print($location))));
 }
 
 /**
