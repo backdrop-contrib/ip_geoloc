@@ -34,10 +34,12 @@
             addressText = response[0]['formatted_address'];
           }
           else {
-            addressText = Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code !code.', { '!code': status });
+            alert(Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code !code.', { '!code': status }));
           }
           // lat/long and address are revealed when clicking marker
-          var latLongText = Drupal.t('lat. !lat, long. !long', { '!lat': coords.latitude, '!long': coords.longitude }) + '<br/>'
+          var lat  = coords.latitude.toString().substr(0, 8);
+          var long = coords.longitude.toString().substr(0, 8);
+          var latLongText = Drupal.t('lat. !lat, long. !long', { '!lat': lat, '!long': long }) + '<br/>'
             + Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
           var infoPopUp = new google.maps.InfoWindow({ content: addressText + '<br/>' + latLongText });
           google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) });

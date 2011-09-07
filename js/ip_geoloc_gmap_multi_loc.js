@@ -29,8 +29,10 @@
           Drupal.t('#visits: @count, last visit: @date', { '@count': locations[ip].visit_count, '@date': locations[ip].last_visit });
         //var content = "Lat/long: " + event.latLng + "<br/>" + balloonTexts['LL' + event.latLng]
         google.maps.event.addListener(marker, 'click',  function(event) {
-          new google.maps.InfoWindow({ 
-            content: Drupal.t('Lat/long: @latLong', { '@latLong': event.latLng }) + '<br/>' + balloonTexts['LL' + event.latLng], 
+          var lat  = event.latLng.lat().toString().substr(0, 8);
+          var long = event.latLng.lng().toString().substr(0, 8);
+          new google.maps.InfoWindow({
+            content: Drupal.t('Lat/long: @lat/@long', { '@lat': lat, '@long': long }) + '<br/>' + balloonTexts['LL' + event.latLng], 
             position: event.latLng 
           }).open(map);
         });
