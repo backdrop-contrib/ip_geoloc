@@ -34,6 +34,10 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['exposed_form']['options']['sort_asc_label'] = 'Chronological';
+  $handler->display->display_options['exposed_form']['options']['sort_desc_label'] = 'Reverse chronological';
+  $handler->display->display_options['exposed_form']['options']['autosubmit'] = 0;
+  $handler->display->display_options['exposed_form']['options']['autosubmit_hide'] = 1;
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '10';
   $handler->display->display_options['pager']['options']['offset'] = '0';
@@ -333,6 +337,19 @@ function ip_geoloc_views_default_views() {
         ?>';
   $handler->display->display_options['fields']['php']['use_php_click_sortable'] = '0';
   $handler->display->display_options['fields']['php']['php_click_sortable'] = '';
+  /* Filter criterion: Date range */
+  $handler->display->display_options['filters']['timestamp']['id'] = 'timestamp';
+  $handler->display->display_options['filters']['timestamp']['table'] = 'accesslog';
+  $handler->display->display_options['filters']['timestamp']['field'] = 'timestamp';
+  $handler->display->display_options['filters']['timestamp']['ui_name'] = 'Date range';
+  $handler->display->display_options['filters']['timestamp']['operator'] = 'between';
+  $handler->display->display_options['filters']['timestamp']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['timestamp']['expose']['operator_id'] = 'timestamp_op';
+  $handler->display->display_options['filters']['timestamp']['expose']['label'] = 'Date range between';
+  $handler->display->display_options['filters']['timestamp']['expose']['operator'] = 'timestamp_op';
+  $handler->display->display_options['filters']['timestamp']['expose']['identifier'] = 'timestamp';
+  $handler->display->display_options['filters']['timestamp']['expose']['remember'] = 1;
+  $handler->display->display_options['filters']['timestamp']['expose']['multiple'] = FALSE;
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
@@ -410,10 +427,33 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['empty']['area']['empty'] = FALSE;
   $handler->display->display_options['empty']['area']['content'] = ' No IP geolocation data found.
 
-        Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
-        Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
+          Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
+          Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
   $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
   $handler->display->display_options['empty']['area']['tokenize'] = 0;
+  /* Field: Global: View result counter */
+  $handler->display->display_options['fields']['counter']['id'] = 'counter';
+  $handler->display->display_options['fields']['counter']['table'] = 'views';
+  $handler->display->display_options['fields']['counter']['field'] = 'counter';
+  $handler->display->display_options['fields']['counter']['label'] = '#';
+  $handler->display->display_options['fields']['counter']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['counter']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['counter']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['counter']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['counter']['element_label_colon'] = 0;
+  $handler->display->display_options['fields']['counter']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['counter']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['counter']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['counter']['hide_alter_empty'] = 0;
+  $handler->display->display_options['fields']['counter']['counter_start'] = '1';
   /* Field: Access log: Hostname */
   $handler->display->display_options['fields']['hostname_1']['id'] = 'hostname_1';
   $handler->display->display_options['fields']['hostname_1']['table'] = 'accesslog';
