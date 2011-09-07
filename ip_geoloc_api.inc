@@ -8,10 +8,10 @@
  */
 
 define('IP_GEOLOC_GEO_JS', 'http://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 14 uncompressed
-define('IP_GEOLOC_GOOGLE_GEARS_INIT', 'http://code.google.com/apis/gears/gears_init.js'); // size 4K uncompressed
-define('IP_GEOLOC_GOOGLE_MAPS',       'http://maps.google.com/maps/api/js?sensor=false'); // size 5k
-define('IP_GEOLOC_GOOGLE_MAPS_GPS',   'http://maps.google.com/maps/api/js?sensor=true');  // size 5k
-define('IP_GEOLOC_GOOGLE_MAPS_SERVER','http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
+define('IP_GEOLOC_GOOGLE_GEARS_INIT',  'http://code.google.com/apis/gears/gears_init.js'); // size 4K uncompressed
+define('IP_GEOLOC_GOOGLE_MAPS',        'http://maps.google.com/maps/api/js?sensor=false'); // size 5k
+define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'http://maps.google.com/maps/api/js?sensor=true');  // size 5k
+define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
  * Store the supplied IP geolocation info on the database, replacing existing
