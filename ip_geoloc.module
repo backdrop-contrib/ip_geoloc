@@ -400,7 +400,7 @@ function ip_geoloc_pretty_print($location) {
   $t = '';
   foreach ($location as $label => $value) {
     if (!empty($value)) {
-      $t .= "$label:&nbsp;<strong>$value</strong>&nbsp; ";
+      $t .= check_plain($label) . ":&nbsp;<strong>" . check_plain($value) . "</strong>&nbsp; ";
     }
   }
   return empty($t) ? t('nothing') : $t;
