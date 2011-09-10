@@ -40,14 +40,13 @@ function ip_geoloc_store_location($location) {
     }
     // See if this IP is already on the db
     $result = db_query("SELECT * FROM {ip_geoloc} WHERE ip_address = :ip", array(':ip' => $location['ip_address']));
-    $db_location = $result->fetchAssoc();
+    $existing_location = $result->fetchAssoc();
 
-    if ($db_location == FALSE) { // New entry, insert
+    if ($existing_location == FALSE) { // New entry, insert
       ip_geoloc_debug(t('IP Geolocaton: adding new record to db: !location', array('!location' => ip_geoloc_pretty_print($location))));
-      $result = drupal_write_record('ip_geoloc', $location);
+      $full_location = &$location;
     }
     else {
-      $location['id'] = $db_location['id'];
       // When updating, drupal_write_record() does not erase fields not present in $location
       $empty_location['latitude'] = '';
       $empty_location['longitude'] = '';
@@ -62,12 +61,20 @@ function ip_geoloc_store_location($location) {
       $empty_location['postal_code'] = '';
       $empty_location['administrative_area_level_1'] = '';
       $empty_location['formatted_address'] = '';
+      $location['id'] = $existing_location['id'];
       $full_location = array_merge($empty_location, $location);
       ip_geoloc_debug(t('IP Geolocation: updating db with: !location', array('!location' => ip_geoloc_pretty_print($full_location))));
-      $result = drupal_write_record('ip_geoloc', $full_location, 'id');
+    }
+    $result = FALSE;
+    try {
+      $result = drupal_write_record('ip_geoloc', $full_location, $existing_location ? array('id') : array());
+    }
+    catch (PDOException $e) {
+      // May happen when a fields contains illegal characters
+      drupal_set_message($e->getMessage(), 'error');
     }
     if ($result === FALSE) {
-      drupal_set_message(t('IP Geolocation: could not update geolocation information for IP address %ip', array('%ip' => $location['ip_address'])), 'error');
+      drupal_set_message(t('IP Geolocation: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
     }
     $location['ip_address'] = NULL; // don't store again until set
   }
@@ -153,13 +160,13 @@ function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-m
  * location, as well as the formatted address (a single string) reverse-geocoded
  * from the lat/long.
  *
- * Note: this is done via an asynchronous javascript call, so the result may not
- * yet be available on return from this function, hence the $menu_callback
- * argument. Upon page load the included javascript will, when ready, instigate
- * an AJAX call to the $menu_callback, which should call the function that
- * retrieves the return lat/long and address values from the $_POST variable.
+ * Note: this is done via an asynchronous javascript call, so the result is not
+ * immediately available on return from this function, hence the $menu_callback.
+ * Upon page load the included javascript will, when ready, instigate an AJAX
+ * call to the $menu_callback, which should invoke a function to retrieve the
+ * lat/long and address values from the $_POST variable.
  *
- * See ip_geoloc_current_location_ajax_recipient() for a simple example.
+ * See ip_geoloc_current_location_ajax_recipient() for an example.
  */
 function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
   $js_options = array('group' => JS_LIBRARY);

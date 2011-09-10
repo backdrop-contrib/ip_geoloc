@@ -3,6 +3,9 @@
 
   Drupal.behaviors.addCurrentLocation = {
     attach: function (context, settings) {
+
+      var callback_url = Drupal.settings.basePath + settings.ip_geoloc_menu_callback;
+
       /* Use the geo.js unified API. This covers W3C Geolocation API, Google Gears
        * and some specific devices like Palm and Blackberry.
        */
@@ -10,15 +13,9 @@
         geo_position_js.getCurrentPosition(getLocation, displayLocationError, {enableHighAccuracy: true, timeout: 5000});
       }
       else {
-        var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('Cannot accurately determine visitor location. Browser does not support getCurrentPosition(): @browser', { '@browser': navigator.userAgent });
-        // Pass error back to PHP 
-        $.ajax({
-          url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
-          type: 'POST',
-          dataType: 'json',
-          data: ip_geoloc_address
-        });
+        var data = new Object;
+        data['error'] = Drupal.t('Cannot accurately determine visitor location. Browser does not support getCurrentPosition(): @browser', { '@browser': navigator.userAgent });
+        callback_php(callback_url, data);
       }
 
       function getLocation(position) {
@@ -48,12 +45,7 @@
             ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
           }
           // Pass lat/long, accuracy and address back to Drupal
-          $.ajax({
-            url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
-            type: 'POST',
-            dataType: 'json',
-            data: ip_geoloc_address
-          });
+          callback_php(callback_url, ip_geoloc_address);
         });
       }
 
@@ -71,17 +63,30 @@
           default:
             text = Drupal.t('unknown error');
         }
-        var ip_geoloc_address = new Object;
-        ip_geoloc_address['error'] = Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error code !code: !text. @browser', {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
-        // Pass error back to PHP rather than alert(ip_geoloc_address['error']);
+        var data = new Object;
+        data['error'] = Drupal.t('getCurrentPosition() returned error code !code: !text. @browser', {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
+        // Pass error back to PHP rather than alert();
+        callback_php(callback_url, data);
+      }
+ 
+      function callback_php(callback_url, data) {
         $.ajax({
-          url: Drupal.settings.basePath + settings.ip_geoloc_menu_callback,
+          url: callback_url,
           type: 'POST',
           dataType: 'json',
-          data: ip_geoloc_address
+          data: data,
+          success: function () {
+          },
+          error: function (http) {
+            if (http.status > 0) {
+              alert(Drupal.t('IP Geolocation: an HTTP error @status occurred.', { '@status': http.status }));
+            }
+          },
+          complete: function() {
+          }
         });
       }
-
+ 
     }
   }
 })(jQuery);

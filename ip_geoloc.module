@@ -47,11 +47,19 @@ function ip_geoloc_init() {
   }
   $location = &$_SESSION['ip_geoloc']['location'];
 
+  if (isset($_SESSION['ip_geoloc']['position_pending_since'])) {
+    $time_elapsed = time() - $_SESSION['ip_geoloc']['position_pending_since'];
+    ip_geoloc_debug(t('IP Geolocation: location info now pending for %seconds seconds.', array('%seconds' => $time_elapsed)));
+    if ($time_elapsed > 5) {
+      watchdog('IP Geolocation', 'Position pending for over %seconds seconds', array('%seconds' => $time_elapsed), WATCHDOG_NOTICE);
+    }
+  }
+
   if (isset($_SESSION['ip_geoloc']['last_position_check'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['last_position_check'];
     $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
-    if ($time_elapsed < $interval) {
-      ip_geoloc_debug(t('IP Geolocation: next update in %time seconds.', array('%time' => $interval - $time_elapsed)));
+    if ($time_elapsed <= $interval) {
+      ip_geoloc_debug(t('IP Geolocation: next update in %seconds seconds.', array('%seconds' => $interval - $time_elapsed)));
     }
     $check_location = $time_elapsed >= $interval;
   }
@@ -64,7 +72,7 @@ function ip_geoloc_init() {
     $_SESSION['ip_geoloc']['location'] = array();
     if (variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
       // Insert some javascript to first retrieve the user's lat/long coords and
-      // then use Google Gears to reverse-geocode these coords into a street
+      // then use Google Maps API to reverse-geocode these coords into a street
       // address. This is all done via client-side calls, so the Drupal server
       // will not rake up any calls against its Google-imposed quotum,ie the
       // OVER_QUERY_LIMIT.
@@ -73,6 +81,7 @@ function ip_geoloc_init() {
       // via the $_POST variable and stores it in $_SESSION['ip_geoloc'].
       ip_geoloc_debug(t('IP Geolocation: initiating services to locate current position and reverse-geocode address...'));
       ip_geoloc_get_current_location('ip-geoloc-current-location');
+      $_SESSION['ip_geoloc']['position_pending_since'] = time();
     }
     else {
       if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
@@ -87,6 +96,7 @@ function ip_geoloc_init() {
         // See what the GeoIP API file lookup produces. Returns immediately.
         ip_geoloc_use_geoip_api($location);
       }
+      unset($_SESSION['ip_geoloc']['position_pending_since']);
     }
     // Give contributed modules a chance to add their 2 cents by implementing
     // hook_get_ip_geolocation_alter()
@@ -99,20 +109,6 @@ function ip_geoloc_init() {
     $location['ip_address'] = NULL; // if successfully stored, don't store again
   }
 }
-
-/**
- * Implements hook_exit().
- *
- * Store the reverse-geocoded location information (lat/long, street address)
- * against the IP address.
- *
-function ip_geoloc_exit() {
-  $location = &$_SESSION['ip_geoloc']['location'];
-  if (ip_geoloc_store_location($location) > 0) {
-    $location['ip_address'] = NULL; // if successfully stored, don't store again
-  }
-}
- */
 
 /**
  * Implements hook_menu().
@@ -149,13 +145,20 @@ function ip_geoloc_menu() {
  * @see ip_geoloc_current_location.js
  */
 function ip_geoloc_current_location_ajax_recipient() {
+  unset($_SESSION['ip_geoloc']['position_pending_since']);
+
+  if (empty($_POST)) {
+    watchdog('IP Geolocation', 'No POST data in /ip-geoloc-current-location callback', NULL, WATCHDOG_ERROR);
+    return;
+  }
+
   $location = &$_SESSION['ip_geoloc']['location'];
   // Need to set IP address for Smart IP, GeoIP and for the data to be stored.
   $location['ip_address'] = ip_address();
 
   if (isset($_POST['error'])) {
     // Device/browser does not support getCurrentPosition() or Google reverse-geocode error.
-    $error = $location['ip_address'] . ': ' . check_plain($_POST['error']) . ' -- ';
+    $error = check_plain($_POST['error']) . ' -- ';
     $result = ip_geoloc_use_smart_ip_if_enabled($location);
     if (!$result && module_exists('geoip')) {
       ip_geoloc_use_geoip_api($location);
@@ -167,13 +170,16 @@ function ip_geoloc_current_location_ajax_recipient() {
         : t('Smart IP not enabled, so no backup address.');
     }
     watchdog('IP Geolocation', $error, NULL, WATCHDOG_NOTICE);
-    ip_geoloc_debug('IP Geolocation: ' . $error);
+    ip_geoloc_debug('IP Geolocation, ' . $location['ip_address'] . ': ' . $error);
   }
   else {
     foreach ($_POST as $key => $value) {
       $location[check_plain($key)] = check_plain($value);
     }
     ip_geoloc_debug(t('IP Geolocaton: Google reverse-geocoding callback received: !location', array('!location' => ip_geoloc_pretty_print($location))));
+  }
+  if (ip_geoloc_store_location($location) > 0) {
+    $location['ip_address'] = NULL; // if successfully stored, don't store again
   }
 }
 
@@ -223,6 +229,39 @@ function ip_geoloc_format_address(&$location) {
   }
   $location['formatted_address'] .= ' ' . $location['country'];
   $location['formatted_address'] = trim($location['formatted_address']);
+}
+
+/**
+ * Fleshes out the $ip_geoloc_address array based on the additional data
+ * provided in the $google_address array. This may involve tweaking of the
+ * 'latitude' and 'longitude' entries so that they remain consistent with the
+ * street address components.
+ *
+ * @param $google_address
+ * @param $ip_geoloc_address
+ * @return TRUE, unless $google_address or $ip_geoloc_address are empty
+ */
+function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
+  if (is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
+    //ip_geoloc_debug(t('IP Geolocation: flattening Google address into IP Geolocation address...'));
+    foreach ($google_address['address_components'] as $component) {
+      $long_name = $component['long_name'];
+      if (!empty($long_name)) {
+        $type = $component['types'][0];
+        $ip_geoloc_address[$type] = $long_name;
+        if ($type == 'country' && !empty($component['short_name'])) {
+          $ip_geoloc_address['country_code'] = $component['short_name'];
+        }
+      }
+    }
+    $ip_geoloc_address['formatted_address'] = $google_address['formatted_address'];
+    // The following may be slightly different from the original lat,long passed
+    // into ip_geoloc_reverse_geocode().
+    $ip_geoloc_address['latitude']  = $google_address['geometry']['location']['lat'];
+    $ip_geoloc_address['longitude'] = $google_address['geometry']['location']['lng'];
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
@@ -283,7 +322,7 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
   }
   else {
     // Depending on the value of the variable 'smart_ip_use_ipinfodb_service'
-    // this will either use the IPinfoDB web service or Smart IP's database, as
+    // this will either use the IPInfoDB web service or Smart IP's database, as
     // created by importing the MaxMind CSV archive.
     $location = smart_ip_get_location($location['ip_address']);
   }
@@ -303,7 +342,9 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
     // Just so that a record is created and the IP is taken off the list
     $location['formatted_address'] = '-';
   }
-  ip_geoloc_store_location($location);
+  if (ip_geoloc_store_location($location) === FALSE) {
+    return;
+  }
 
   // Update our progress information.
   $sandbox['progress']++;
@@ -324,7 +365,7 @@ function _ip_geoloc_process_access_log_finished($success, $results, $operations,
       array('%count' => count($results), '%elapsed-time' => $elapsed)));
   }
   else {
-    drupal_set_message(t('An error occurred. Processing of the access log did not complete. Try again with a smaller batch size.'), 'error');
+    drupal_set_message(t('An error occurred. Processing of the access log did not complete.'), 'error');
     $message = format_plural(count($results), 'One IP address successfully processed:', '@count IP addresses successfully processed:');
     $message .= theme('item_list', array('items' => $results));
     drupal_set_message($message);
@@ -372,36 +413,13 @@ function ip_geoloc_debug($message, $type = 'status') {
 }
 
 /**
- * Fleshes out the $ip_geoloc_address array based on the additional data
- * provided in the $google_address array. This may involve tweaking of the
- * 'latitude' and 'longitude' entries so that they remain consistent with the
- * street address components.
- *
- * @param $google_address
- * @param $ip_geoloc_address
- * @return TRUE, unless $google_address or $ip_geoloc_address are empty
+ * Implements hook_views_api().
  */
-function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
-  if (is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
-    //ip_geoloc_debug(t('IP Geolocation: flattening Google address into IP Geolocation address...'));
-    foreach ($google_address['address_components'] as $component) {
-      $long_name = $component['long_name'];
-      if (!empty($long_name)) {
-        $type = $component['types'][0];
-        $ip_geoloc_address[$type] = $long_name;
-        if ($type == 'country' && !empty($component['short_name'])) {
-          $ip_geoloc_address['country_code'] = $component['short_name'];
-        }
-      }
-    }
-    $ip_geoloc_address['formatted_address'] = $google_address['formatted_address'];
-    // The following may be slightly different from the original lat,long passed
-    // into ip_geoloc_reverse_geocode().
-    $ip_geoloc_address['latitude']  = $google_address['geometry']['location']['lat'];
-    $ip_geoloc_address['longitude'] = $google_address['geometry']['location']['lng'];
-    return TRUE;
-  }
-  return FALSE;
+function ip_geoloc_views_api() {
+  return array(
+    'api' => views_api_version(),
+    'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
+  );
 }
 
 /**
@@ -409,8 +427,7 @@ function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) 
  *
  * Called from the bottom of smart_ip_get_location() when it has fleshed out
  * the $location array as much as it can.
- * Note that other modules may also implement this hook, so depending on their
- * weight may have added their bits or are about to do so, after we're finished.
+ * @obsolete
  */
 function ip_geoloc_smart_ip_get_location_alter(&$location) {
   if (empty($location['postal_code'])) {
@@ -424,23 +441,9 @@ function ip_geoloc_smart_ip_get_location_alter(&$location) {
  * Implements hook_device_geolocation_detector_ajax_alter().
  *
  * This is called from device_geolocation_detector_ajax(), the AJAX callback
- * that receives in the $_POST array the address data from Google Geocoding.
- * Note that other modules may also implement this hook, so depending on their
- * weight may have added their bits or are about to do so, after we're finished.
+ * that receives in the $_POST array the address data from Google geocoding.
+ * @obsolete
  */
 function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
-  // Device Geolocation does not retrieve formatted address, so erase it or we
-  // may end up with inconsistent data
-  // unset($location['formatted_address']);
   ip_geoloc_debug(t('IP Geolocation: Device Geolocation retrieved: !location', array('!location' => ip_geoloc_pretty_print($location))));
-}
-
-/**
- * Implements hook_views_api().
- */
-function ip_geoloc_views_api() {
-  return array(
-    'api' => views_api_version(),
-    'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
-  );
 }

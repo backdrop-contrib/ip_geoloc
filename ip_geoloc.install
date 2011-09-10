@@ -29,6 +29,7 @@ function ip_geoloc_requirements($phase = 'runtime') {
     $geolocation_methods[] = 'GeoIP API';
   }
   $geolocation_methods = array_merge($geolocation_methods, module_implements('get_ip_geolocation_alter'));
+
   $requirements['ip_geoloc']['title'] = $t('IP Geolocation data collection methods employed');
   $requirements['ip_geoloc']['value'] = implode(', ', $geolocation_methods);
   if (empty($geolocation_methods)) {

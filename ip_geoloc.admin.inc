@@ -14,8 +14,8 @@ function ip_geoloc_admin_configure() {
     // Form for sync-ing the geolocation table with the system accesslog
     $form['ip_geoloc_db_options'] = array(
       '#type' => 'fieldset',
-      '#title' => 'Update geolocation database using past visitor IP addresses from system access log',
-      '#description'  => t('You can update the geolocation database in batches by pressing the button below. As a rough guide, count on a 1 minute wait for every 100 IP addresses. Add another 2 minutes per 100 IP addresses if you ticked the option to employ the Google Maps API to reverse-geocode to street addresses. If your server interrupts the process you can continue from where it stopped by refreshing this page and pressing the button again. You will not lose any data.')
+      '#title' => 'Update geolocation database using past visitor IP addresses from the system access log',
+      '#description'  => t('You can update the geolocation database in batches by pressing the button below. As a rough guide, count on a 1 minute wait for every 100 IP addresses, when executing a web service like IPInfoDB, as employed by Smart IP. Add another 2 minutes per 100 IP addresses if you ticked the option to employ the Google Maps API to reverse-geocode to street addresses. If your server interrupts the process you can continue from where it stopped by refreshing this page and pressing the button again. You will not lose any data.')
     );
     $form['ip_geoloc_db_options']['ip_geoloc_sync_with_accesslog'] = array(
       '#type' => 'submit',
