@@ -49,9 +49,10 @@ function ip_geoloc_init() {
 
   if (isset($_SESSION['ip_geoloc']['position_pending_since'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['position_pending_since'];
-    ip_geoloc_debug(t('IP Geolocation: location info now pending for %seconds seconds.', array('%seconds' => $time_elapsed)));
-    if ($time_elapsed > 5) {
-      watchdog('IP Geolocation', 'Position pending for over %seconds seconds', array('%seconds' => $time_elapsed), WATCHDOG_NOTICE);
+    ip_geoloc_debug(t('IP Geolocation: location info is now pending for %seconds seconds.', array('%seconds' => $time_elapsed)));
+    if ($time_elapsed > 10) {
+      watchdog('IP Geolocation', '%ip: location callback is now pending for %seconds seconds',
+        array('%ip' => $location['ip_address'], '%seconds' => $time_elapsed), WATCHDOG_NOTICE);
     }
   }
 
