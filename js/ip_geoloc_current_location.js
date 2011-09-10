@@ -64,7 +64,7 @@
             text = Drupal.t('unknown error');
         }
         var data = new Object;
-        data['error'] = Drupal.t('getCurrentPosition() returned error code !code: !text. @browser', {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
+        data['error'] = Drupal.t('getCurrentPosition() returned error !code: !text. @browser', {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
         // Pass error back to PHP rather than alert();
         callback_php(callback_url, data);
       }
@@ -78,7 +78,7 @@
           success: function () {
           },
           error: function (http) {
-            if (http.status > 0) {
+            if (http.status > 0 && http.status != 200) {
               alert(Drupal.t('IP Geolocation: an HTTP error @status occurred.', { '@status': http.status }));
             }
           },
