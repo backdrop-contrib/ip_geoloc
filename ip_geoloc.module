@@ -12,6 +12,7 @@
  * also an API.
  */
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
+define('IP_GEOLOC_CALLBACK_TIMEOUT', 30);
 
 require_once 'ip_geoloc_api.inc';
 require_once 'ip_geoloc_blocks.inc';
@@ -28,6 +29,31 @@ function ip_geoloc_help($path, $arg) {
 }
 
 /**
+ * Implements hook_menu().
+ *
+ * Defines new menu items.
+ */
+function ip_geoloc_menu() {
+  $items = array();
+  // Put the administrative settings under System on the Configuration page.
+  $items['admin/config/system/ip_geoloc'] = array(
+    'title' => 'IP Geolocation',
+    'description' => 'Configure how geolocation information is updated.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ip_geoloc_admin_configure'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ip_geoloc.admin.inc'
+  );
+  $items['ip-geoloc-current-location'] = array(
+    'title' => 'Current location recipient',
+    'page callback' => 'ip_geoloc_current_location_ajax_recipient',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
  * Implements hook_init().
  *
  * Due to the weight set in ip_geoloc.install this hook is called after all
@@ -36,7 +62,6 @@ function ip_geoloc_help($path, $arg) {
 function ip_geoloc_init() {
 
   if (!isset($_SESSION['ip_geoloc'])) {
-    ip_geoloc_debug(t('Start of new IP Geolocation session.'));
     $_SESSION['ip_geoloc'] = array('location' => array());
   }
   $location = &$_SESSION['ip_geoloc']['location'];
@@ -44,7 +69,7 @@ function ip_geoloc_init() {
   if (isset($_SESSION['ip_geoloc']['position_pending_since'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['position_pending_since'];
     ip_geoloc_debug(t('IP Geolocation: location info now pending for %seconds seconds.', array('%seconds' => $time_elapsed)));
-    if ($time_elapsed > 20) {
+    if ($time_elapsed > IP_GEOLOC_CALLBACK_TIMEOUT) {
       if (!ip_geoloc_use_smart_ip_if_enabled($location) && !ip_geoloc_use_geoip_api_if_enabled($location)) {
         ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
       }
@@ -97,31 +122,6 @@ function ip_geoloc_init() {
 }
 
 /**
- * Implements hook_menu().
- *
- * Defines new menu items.
- */
-function ip_geoloc_menu() {
-  $items = array();
-  // Put the administrative settings under System on the Configuration page.
-  $items['admin/config/system/ip_geoloc'] = array(
-    'title' => 'IP Geolocation',
-    'description' => 'Configure how geolocation information is updated.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ip_geoloc_admin_configure'),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ip_geoloc.admin.inc'
-  );
-  $items['ip-geoloc-current-location'] = array(
-    'title' => 'Current location recipient',
-    'page callback' => 'ip_geoloc_current_location_ajax_recipient',
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-  );
-  return $items;
-}
-
-/**
  * Data recipient for javascript function getLocation() (file:
  * ip_geoloc_current_location.js) via menu callback /ip-geoloc-current-location,
  * see function ip_geoloc_menu() above.
@@ -131,8 +131,6 @@ function ip_geoloc_menu() {
  * @see ip_geoloc_current_location.js
  */
 function ip_geoloc_current_location_ajax_recipient() {
-  $time_elapsed = time() - $_SESSION['ip_geoloc']['position_pending_since'];
-  unset($_SESSION['ip_geoloc']['position_pending_since']);
 
   $location = &$_SESSION['ip_geoloc']['location'];
   $location['ip_address'] = ip_address();
@@ -153,9 +151,12 @@ function ip_geoloc_current_location_ajax_recipient() {
     foreach ($_POST as $key => $value) {
       $location[check_plain($key)] = check_plain($value);
     }
+    $time_elapsed = isset($_SESSION['ip_geoloc']['position_pending_since'])
+      ? time() - $_SESSION['ip_geoloc']['position_pending_since'] : t('many, many');
     ip_geoloc_debug(t('IP Geolocaton: Google reverse-geocoding callback received after %seconds seconds: !location',
       array('%seconds' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
   }
+  unset($_SESSION['ip_geoloc']['position_pending_since']);
 
   if (ip_geoloc_store_location($location) !== FALSE) {
     $location['ip_address'] = NULL; // if successfully stored, don't store again
