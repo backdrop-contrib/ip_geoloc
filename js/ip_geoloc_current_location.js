@@ -10,7 +10,7 @@
        * and some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
-        geo_position_js.getCurrentPosition(getLocation, displayLocationError, {enableHighAccuracy: true, timeout: 5000});
+        geo_position_js.getCurrentPosition(getLocation, displayLocationError, {enableHighAccuracy: true, timeout: 20000});
       }
       else {
         var data = new Object;

@@ -14,12 +14,12 @@ define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'http://maps.google.com/maps/api/js?senso
 define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
- * Store the supplied IP geolocation info on the database, replacing existing
- * info only if the new info has more detail or when forced by the system
- * variable ip_geoloc_refresh_at_new_session.
+ * Store the supplied IP geolocation info on the database, overwriting any
+ * existing info for the IP address in question.
  *
  * @param $location, array with up to 13 location info fields; must at least
- *   contain a non-empty $location['ip_address'] for anything to happen
+ *   contain a non-empty $location['ip_address'] and a non-empty
+ *   $location['formatted_address'] for anything to happen
  * @return
  *   0, when no insert or update was necessary
  *   SAVED_NEW (=1), when a new location record was inserted into the db
@@ -27,12 +27,13 @@ define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geoc
  *   FALSE, when a db insert or db update failed
  */
 function ip_geoloc_store_location($location) {
+  // Give contributed modules a chance to add their 2 cents by implementing
+  // hook_get_ip_geolocation_alter()
+  drupal_alter('get_ip_geolocation', $location);
+
   $result = 0;
-  if (empty($location['ip_address'])) {
-    ip_geoloc_debug('IP Geolocation: location object does not contain IP address, so was not stored.');
-  }
-  elseif (empty($location['formatted_address'])) {
-    ip_geoloc_debug('IP Geolocation: location object does not contain formatted address, so was not stored.');
+  if (empty($location['ip_address']) || empty($location['formatted_address'])) {
+    ip_geoloc_debug('IP Geolocation: location object must contain both IP address and formatted address -- not stored.');
   }
   else {
     if (!isset($location['latitude']) || !isset($location['latitude'])) {
@@ -76,7 +77,6 @@ function ip_geoloc_store_location($location) {
     if ($result === FALSE) {
       drupal_set_message(t('IP Geolocation: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
     }
-    $location['ip_address'] = NULL; // don't store again until set
   }
   return $result;
 }
@@ -114,7 +114,8 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  * accuracy of the position shown.
  *
  * @param $div_id, id of the div placeholder, can be anything as long as it's unique
- * @param $style, CSS style applied to the div, e.g "height:200px; width:300px"
+ * @param $map_options, as a JSON string e.g '{"mapTypeId":"roadmap", "zoom":15}'
+ * @param $map_style, CSS style applied to the div, e.g "height:200px; width:300px"
  */
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_options = '', $map_style = '') {
   $js_options = array('group' => JS_LIBRARY);
@@ -137,9 +138,10 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
  * @param $locations, array of location objects each containing lat/long pair
  *   and infoText to appear when the marker is clicked
  * @param $div_id, id of the div placeholder, can be anything as long as it's unique
- * @param $style, CSS style applied to the div, e.g "height:250px; width:300px"
+ * @param $map_options, as a JSON string, .e.g '{"mapTypeId":"roadmap", "zoom":15}'
+ * @param $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
  */
-function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options, $map_style = '') {
+function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options = '', $map_style = '') {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
     // Only add non-GPS version when GPS version is already there

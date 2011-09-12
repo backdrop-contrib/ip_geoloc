@@ -4,6 +4,11 @@
  * @file
  * Blocks available in IP Geolocation.
  */
+define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
+define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
+define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disableDefaultUI":true, "zoom":2,  "zoomControl":true}');
+
+define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
 
 /**
  * Implements hook_block_info().
