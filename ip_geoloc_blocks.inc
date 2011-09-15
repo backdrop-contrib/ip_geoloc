@@ -25,7 +25,7 @@ function ip_geoloc_block_info() {
   );
   $blocks['address_lookup'] = array(
     'info' => t('Address lookup based on IP'),
-    'cache' => DRUPAL_CACHE_GLOBAL
+    'cache' => DRUPAL_NO_CACHE
   );
   return $blocks;
 }
@@ -159,7 +159,7 @@ function ip_geoloc_address_lookup($form, &$form_state) {
   $last_visit = isset($form_state['storage']['last_visit']) ? $form_state['storage']['last_visit'] : '';
   $formatted_address = isset($form_state['storage']['formatted_address']) ? $form_state['storage']['formatted_address'] : '';
   if (!empty($last_visit) || !empty($formatted_address)) {
-    $suffix = '<div id="ip_geoloc_address_lookup">' . $formatted_address . (empty($last_visit) ? '' : "<br/>$last_visit") . '</div>';
+    $prefix = '<div class="ip_geoloc_address_lookup">' . $formatted_address . (empty($last_visit) ? '' : "<br/>$last_visit") . '</div>';
   }
   $form['ip_address'] = array(
     '#type' => 'textfield',
@@ -167,35 +167,40 @@ function ip_geoloc_address_lookup($form, &$form_state) {
     '#default_value' => '',
     '#size' => 16,
     '#required' => FALSE,
-    '#suffix' => isset($suffix) ? $suffix : NULL
+    '#prefix' => isset($prefix) ? $prefix : NULL
   );
-  $form['store'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('If found, store on IP Geolocation database for quick reference.'),
-    '#default_value' => FALSE
-  );
+  if (user_access('administer site configuration')) {
+    $form['store'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('If found, store on IP Geolocation database for quick reference.'),
+      '#default_value' => FALSE
+    );
+  }
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Lookup'),
-    '#submit' => array('ip_geoloc_lookup'),
+    '#submit' => array('ip_geoloc_lookup')
   );
   return $form;
 }
 
 function ip_geoloc_lookup($form, &$form_state) {
-  $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), $form_state['values']['store']);
-  $last_visit = db_query('SELECT MAX(timestamp) FROM {accesslog} WHERE hostname = :ip_address', array(':ip_address' => $location['ip_address']))->fetchField();
-  if ($last_visit) {
-    $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
-    $last_visit = date($date_format, $last_visit);
-    $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
+  $store = !empty($form_state['values']['store']);
+  $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), $store);
+  if (db_table_exists('accesslog')) {
+    $last_visit = db_query('SELECT MAX(timestamp) FROM {accesslog} WHERE hostname = :ip_address', array(':ip_address' => $location['ip_address']))->fetchField();
+    if ($last_visit) {
+      $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
+      $last_visit = date($date_format, $last_visit);
+      $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
+    }
+    else {
+      $form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
+    }
   }
-  else {
-    $form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
-  }
-  if (isset($location['formatted_address'])) {
-    $form_state['storage']['formatted_address'] = t('<strong>Address:</strong> %address', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address']));
-  }
+  $form_state['storage']['formatted_address'] = isset($location['formatted_address'])
+    ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address']))
+    : '';
   $form_state['rebuild'] = TRUE; // to preserve entered values and storage array
 }
 
