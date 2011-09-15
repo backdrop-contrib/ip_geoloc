@@ -49,9 +49,10 @@ function ip_geoloc_admin_configure() {
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
     '#type' => 'textfield',
+    '#size' => 10,
     '#title' => t('Mininum elapsed time in seconds before geolocation data for the same user will be collected again.'),
     '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
-    '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving.')
+    '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to stop repeat location collection.')
   );
 
   $form['ip_geoloc_advanced'] = array(
@@ -91,10 +92,10 @@ function ip_geoloc_diagnose() {
   drupal_set_message(t("The geolocation database currently contains information for %geoloc_count IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
 
   if (!db_table_exists('accesslog')) {
-    drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because the <strong>Statistics</strong> module is not installed. Views of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
+    drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because the <strong>Statistics</strong> module is not installed. Views and maps of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
   }
   elseif (!module_exists('statistics')) {
-    drupal_set_message(t('The <strong>Statistics</strong> module is not enabled. Views of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
+    drupal_set_message(t('The <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
   }
   else {
     $ip_address_count = db_query('SELECT COUNT(DISTINCT hostname) FROM {accesslog}')->fetchField();
@@ -116,4 +117,129 @@ function ip_geoloc_diagnose() {
     }
   }
   return -1;
+}
+
+/**
+ * Go through all the IP addresses in the {accesslog} table (Statistics module).
+ * For each IP address not yet recorded in the {ip_geoloc} table, retrieve its
+ * geolocation data and store in {ip_geoloc}.
+ * This is a one-off process. Once synchronised the {ip_geoloc} table will lock
+ * step with the {accesslog} table.
+ * Returns the number of {accesslog} records processed or FALSE if no IP
+ * geolocation retrieval function was found.
+ *
+ * Note: modules supported for the backfill currently are:
+ *   Smart IP module
+ *   GeoIP API module
+ *   custom modules that implement hook_get_ip_geolocation_alter().
+ */
+function ip_geoloc_sync_with_accesslog() {
+  drupal_get_messages(); // wipe previous message to avoid confusion
+
+  $use_smart_ip = variable_get('ip_geoloc_smart_ip_as_backup', TRUE) && module_exists('smart_ip');
+  $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+
+  $batch_size = check_plain($_POST['ip_geoloc_sync_batch_size']); // from Configuration >> IP Geolocation form
+  if (empty($batch_size)) {
+    $batch_size = variable_get('ip_geoloc_sync_batch_size', 500);
+  }
+  $ips_to_be_processed = ip_geoloc_ips_to_be_synched();
+  if (count($ips_to_be_processed) > $batch_size) {
+    $ips_to_be_processed = array_slice($ips_to_be_processed, 0, $batch_size, TRUE);
+  }
+  $count = count($ips_to_be_processed);
+
+  $batch = array(
+    'operations' => array(array('_ip_geoloc_process_access_log', array($ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode))),
+    'title' => t('Processing next %count IP addresses from access log', array('%count' => $count)),
+    'progress_message' => t('Time elapsed: @elapsed. Time remaining: @estimate.'),
+    'error_message' => t('An error occurred while processing the access log.'),
+    'finished' => '_ip_geoloc_process_access_log_finished'
+  );
+  batch_set($batch);
+  return $count;
+}
+
+/*
+ *  Return an array of all IP addresses in the current access log that have not
+ *  yet had their geolocation data added to the ip_geoloc table.
+ */
+function ip_geoloc_ips_to_be_synched() {
+  if (!db_table_exists('accesslog')) {
+    return array();
+  }
+  $hostnames = db_query('SELECT DISTINCT hostname FROM {accesslog} ORDER BY aid DESC')->fetchCol('hostname');
+  $ip_geolocations = db_query('SELECT DISTINCT ip_address FROM {ip_geoloc}')->fetchCol('ip_address');
+  return array_diff($hostnames, $ip_geolocations);
+}
+
+
+function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode, &$context) {
+  $sandbox = &$context['sandbox'];
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['max'] = count($ips_to_be_processed);
+    $sandbox['ips'] = $ips_to_be_processed;
+  }
+  $location = array('ip_address' => array_shift($sandbox['ips']));
+
+  if ($use_smart_ip) {
+    // Depending on the value of the variable 'smart_ip_use_ipinfodb_service'
+    // this will either use the IPInfoDB web service or Smart IP's database, as
+    // created by importing the MaxMind CSV archive.
+    $location = smart_ip_get_location($location['ip_address']);
+  }
+  else {
+    ip_geoloc_use_geoip_api_if_enabled($location);
+  }
+  // Now that we have lat/long we can reverse-geocode the postal address
+  if ($use_google_to_reverse_geocode) {
+    // Use the Google web service
+    $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude']);
+    ip_geoloc_flatten_google_address($google_address, $location);
+  }
+
+  if (empty($location['formatted_address'])) {
+    // Just so that a record is created and the IP is taken off the list
+    $location['formatted_address'] = '-';
+  }
+  if (ip_geoloc_store_location($location) === FALSE) {
+    return;
+  }
+
+  // Update our progress information.
+  $sandbox['progress']++;
+  // Store result for post-processing in the _finished callback.
+  $context['results'][] = $location['ip_address'] . ': ' . (empty($location['formatted_address']) ? '?' : $location['formatted_address']);
+  // Provide to the batch engine an estimate of the level of completion so far.
+  if ($sandbox['progress'] < $sandbox['max']) {
+    // Note the addition of 100 in the formula below. This is to make sure that
+    // batch sizes of 200 or greater do not terminate prematurely.
+    // E.g 199/200 = 0.995 ends up being rounded to 100% causing abort.
+    $context['finished'] = floor(100 * $sandbox['progress'] / $sandbox['max']) / 100;
+  }
+}
+
+function _ip_geoloc_process_access_log_finished($success, $results, $operations, $elapsed) {
+  if ($success) {
+    drupal_set_message(t("%count new IP geolocation records compiled and stored in %elapsed-time.",
+      array('%count' => count($results), '%elapsed-time' => $elapsed)));
+  }
+  else {
+    drupal_set_message(t('An error occurred. Processing of the access log did not complete.'), 'error');
+    $message = format_plural(count($results), 'One IP address successfully processed:', '@count IP addresses successfully processed:');
+    $message .= theme('item_list', array('items' => $results));
+    drupal_set_message($message);
+  }
+}
+
+function ip_geoloc_erase_session() {
+  drupal_get_messages();
+  unset($_SESSION['ip_geoloc']);
+  drupal_set_message(t('Geolocation data erased from session.'));
+}
+
+function ip_geoloc_erase_db() {
+  drupal_get_messages(); // wipe previous messages to avoid confusion
+  $result = db_delete('ip_geoloc')->execute();
 }

@@ -7,7 +7,7 @@
  * Reusable functions that may be called from other modules.
  */
 
-define('IP_GEOLOC_GEO_JS', 'http://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 14 uncompressed
+define('IP_GEOLOC_GEO_JS', 'http://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 14k uncompressed
 define('IP_GEOLOC_GOOGLE_GEARS_INIT',  'http://code.google.com/apis/gears/gears_init.js'); // size 4K uncompressed
 define('IP_GEOLOC_GOOGLE_MAPS',        'http://maps.google.com/maps/api/js?sensor=false'); // size 5k
 define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'http://maps.google.com/maps/api/js?sensor=true');  // size 5k
@@ -33,14 +33,14 @@ function ip_geoloc_store_location($location) {
 
   $result = 0;
   if (empty($location['ip_address']) || empty($location['formatted_address'])) {
-    ip_geoloc_debug('IP Geolocation: location object must contain both IP address and formatted address -- not stored.');
+    //ip_geoloc_debug('IP Geolocation: location object must contain both IP address and formatted address -- not stored.');
   }
   else {
     if (!isset($location['latitude']) || !isset($location['latitude'])) {
       drupal_set_message(t('IP Geolocation: lat or long missing for IP address %ip (location still stored).', array('%ip' => $location['ip_address'])));
     }
     // See if this IP is already on the db
-    $result = db_query("SELECT * FROM {ip_geoloc} WHERE ip_address = :ip", array(':ip' => $location['ip_address']));
+    $result = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip', array(':ip' => $location['ip_address']));
     $existing_location = $result->fetchAssoc();
 
     if ($existing_location == FALSE) { // New entry, insert
@@ -158,16 +158,15 @@ function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-m
 }
 
 /**
- * Places in $_POST the latitude, longitude and accuracy of the user's current
- * location, as well as the formatted address (a single string) reverse-geocoded
- * from the lat/long.
+ * Places in $_POST the latitude, longitude and accuracy of the visitor's
+ * current location, as well as the formatted address (a single string)
+ * reverse-geocode from the lat/long.
  *
  * Note: this is done via an asynchronous javascript call, so the result is not
  * immediately available on return from this function, hence the $menu_callback.
  * Upon page load the included javascript will, when ready, instigate an AJAX
  * call to the $menu_callback, which should invoke a function to retrieve the
  * lat/long and address values from the $_POST variable.
- *
  * See ip_geoloc_current_location_ajax_recipient() for an example.
  */
 function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
@@ -178,6 +177,43 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
   drupal_add_js(array('ip_geoloc_menu_callback' => $menu_callback), 'setting');
+}
+
+/**
+ * Does a lookup in IP Geolocation's own database to see if the supplied IP
+ * address has visited already and if so returns their location details (as an
+ * array). If the IP address is not yet in the IP Geolocation database, then
+ * retrieve lat/long using either Smart or GeoIP API (if enabled) and reverse-
+ * geocode the lat/long (if the Google Maps service is enabled) into a location.
+ * If the second argument is TRUE, then store the new location.
+ *
+ * @param $ip_address, defaults to current visitor's IP address
+ * @param $store_if_new, store new location on the IP Geolocation db
+ * @return location as an array or FALSE if the IP address is
+ *   not on the db AND could not be reverse-geocoded
+ */
+function ip_geoloc_get_location_by_ip($ip_address = NULL, $store_if_new = TRUE) {
+  if (empty($ip_address)) {
+    $ip_address = ip_address();
+  }
+  $location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => $ip_address))->fetchAssoc();
+  if (!$location) {
+    $location = array('ip_address' => $ip_address);
+    if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
+      if (variable_get('ip_geoloc_google_to_reverse_geocode', TRUE) && isset($location['latitude']) && isset($location['longitude'])) {
+        $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude']);
+        if (ip_geoloc_flatten_google_address($google_address, $location)) {
+          if ($store_if_new) {
+            ip_geoloc_store_location($location);
+          }
+          else {
+            drupal_alter('get_ip_geolocation', $location);
+          }
+        }
+      }
+    }
+  }
+  return $location;
 }
 
 /**

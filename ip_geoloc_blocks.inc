@@ -4,6 +4,7 @@
  * @file
  * Blocks available in IP Geolocation.
  */
+
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
 define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
 define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disableDefaultUI":true, "zoom":2,  "zoomControl":true}');
@@ -16,9 +17,15 @@ define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation
 function ip_geoloc_block_info() {
   $blocks['current_visitor_map'] = array(
     'info' => t("Map centered on current visitor's location"),
+    'cache' => DRUPAL_NO_CACHE
   );
   $blocks['recent_visitors_map'] = array(
     'info' => t('Map showing locations of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10))),
+    'cache' => DRUPAL_NO_CACHE
+  );
+  $blocks['address_lookup'] = array(
+    'info' => t('Address lookup based on IP'),
+    'cache' => DRUPAL_CACHE_GLOBAL
   );
   return $blocks;
 }
@@ -28,6 +35,9 @@ function ip_geoloc_block_info() {
  */
 function ip_geoloc_block_configure($delta = '') {
   $form = array();
+  if ($delta == 'address_lookup') {
+    return $form;
+  }
   if ($delta == 'recent_visitors_map') {
     $form['ip_geoloc_recent_visitors_map_number_of_visitors'] = array(
       '#type' => 'textfield',
@@ -82,14 +92,6 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
   }
 }
 
-function ip_geoloc_save_map_options($var_name, $map_options) {
-  $map_options_decoded = drupal_json_decode($map_options);
-  if ($map_options_decoded == NULL) {
-    drupal_set_message(t("Sytax error in map options. These map options may not work: '%map_options'", array('%map_options' => $map_options)), 'warning');
-  }
-  variable_set($var_name, $map_options);
-}
-
 /**
  * Implements hook_block_view().
  */
@@ -97,6 +99,7 @@ function ip_geoloc_block_view($delta = '') {
   $block = array();
   $map_style = variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE);
   switch ($delta) {
+
     case 'current_visitor_map':
       $block['subject'] = t('Your location');
       $map_options = variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS);
@@ -109,22 +112,90 @@ function ip_geoloc_block_view($delta = '') {
       if ($how_many > 0) {
         $locations = ip_geoloc_get_recent_visitor_locations($how_many);
         $map_options = variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
-        $block['content'] = ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', drupal_json_decode($map_options), $map_style);
+        $block['content'] = empty($locations)
+          ? t('No recent visitors available to map.')
+          : ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', drupal_json_decode($map_options), $map_style);
       }
+      break;
+
+    case 'address_lookup':
+      $block['subject'] = t('Address lookup');
+      $block['content'] = drupal_get_form('ip_geoloc_address_lookup');
       break;
   }
   return $block;
 }
 
+function ip_geoloc_save_map_options($var_name, $map_options) {
+  $map_options_decoded = drupal_json_decode($map_options);
+  if ($map_options_decoded == NULL) {
+    drupal_set_message(t("Sytax error in map options. These map options may not work: '%map_options'", array('%map_options' => $map_options)), 'warning');
+  }
+  variable_set($var_name, $map_options);
+}
+
 function ip_geoloc_get_recent_visitor_locations($how_many) {
-  $result = db_query_range("SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY a.hostname ORDER BY last_visit DESC", 0, $how_many);
   $locations = array();
-  $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
-  foreach ($result as $location) {
-    if (!isset($locations[$location->ip_address])) {
-      $location->last_visit = date($date_format, $location->last_visit);
-      $locations[$location->ip_address] = $location;
+  if (db_table_exists('accesslog')) {
+    $result = db_query_range("SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY a.hostname ORDER BY last_visit DESC", 0, $how_many);
+    $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
+    foreach ($result as $location) {
+      if (!isset($locations[$location->ip_address])) {
+        $location->last_visit = date($date_format, $location->last_visit);
+        $locations[$location->ip_address] = $location;
+      }
     }
   }
   return $locations;
 }
+
+/**
+ * Generates a simple form for collecting the IP address to be reverse-geocoded
+ * into a street address.
+ *
+ * @ingroup forms
+ */
+function ip_geoloc_address_lookup($form, &$form_state) {
+  $last_visit = isset($form_state['storage']['last_visit']) ? $form_state['storage']['last_visit'] : '';
+  $formatted_address = isset($form_state['storage']['formatted_address']) ? $form_state['storage']['formatted_address'] : '';
+  if (!empty($last_visit) || !empty($formatted_address)) {
+    $suffix = '<div id="ip_geoloc_address_lookup">' . $formatted_address . (empty($last_visit) ? '' : "<br/>$last_visit") . '</div>';
+  }
+  $form['ip_address'] = array(
+    '#type' => 'textfield',
+    '#title' => t('IP address'),
+    '#default_value' => '',
+    '#size' => 16,
+    '#required' => FALSE,
+    '#suffix' => isset($suffix) ? $suffix : NULL
+  );
+  $form['store'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('If found, store on IP Geolocation database for quick reference.'),
+    '#default_value' => FALSE
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Lookup'),
+    '#submit' => array('ip_geoloc_lookup'),
+  );
+  return $form;
+}
+
+function ip_geoloc_lookup($form, &$form_state) {
+  $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), $form_state['values']['store']);
+  $last_visit = db_query('SELECT MAX(timestamp) FROM {accesslog} WHERE hostname = :ip_address', array(':ip_address' => $location['ip_address']))->fetchField();
+  if ($last_visit) {
+    $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
+    $last_visit = date($date_format, $last_visit);
+    $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
+  }
+  else {
+    $form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
+  }
+  if (isset($location['formatted_address'])) {
+    $form_state['storage']['formatted_address'] = t('<strong>Address:</strong> %address', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address']));
+  }
+  $form_state['rebuild'] = TRUE; // to preserve entered values and storage array
+}
+

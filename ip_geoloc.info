@@ -1,5 +1,5 @@
 name = IP Geolocation
-description = Extract geolocation information based on IP address lookups and/or locator hardware and report via maps and views.
+description = Extract geolocation information based on IP address and/or locator hardware and report via maps and views.
 package = Location
 core = 7.x
 configure = admin/config/system/ip_geoloc

@@ -22,7 +22,7 @@ function ip_geoloc_requirements($phase = 'runtime') {
     }
     else {
       $requirements['ip_geoloc']['severity'] = REQUIREMENT_WARNING;
-      $requirements['ip_geoloc']['description'] = $t('Smart IP configured as a backup in case the Google Maps reverse-geocode fails. However Smart IP is not enabled.');
+      $requirements['ip_geoloc']['description'] = $t('Smart IP is configured as a backup in case the Google Maps reverse-geocode fails. However the Smart IP module is not enabled.');
     }
   }
   elseif (module_exists('geoip')) {
