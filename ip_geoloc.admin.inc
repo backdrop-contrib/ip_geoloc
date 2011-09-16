@@ -92,7 +92,7 @@ function ip_geoloc_diagnose() {
   drupal_set_message(t("The geolocation database currently contains information for %geoloc_count IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
 
   if (!db_table_exists('accesslog')) {
-    drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because the <strong>Statistics</strong> module is not installed. Views and maps of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
+    drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because core\'s <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
   }
   elseif (!module_exists('statistics')) {
     drupal_set_message(t('The <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
@@ -150,6 +150,7 @@ function ip_geoloc_sync_with_accesslog() {
   $count = count($ips_to_be_processed);
 
   $batch = array(
+    'file' => drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc.admin.inc',
     'operations' => array(array('_ip_geoloc_process_access_log', array($ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode))),
     'title' => t('Processing next %count IP addresses from access log', array('%count' => $count)),
     'progress_message' => t('Time elapsed: @elapsed. Time remaining: @estimate.'),
@@ -173,6 +174,16 @@ function ip_geoloc_ips_to_be_synched() {
   return array_diff($hostnames, $ip_geolocations);
 }
 
+function ip_geoloc_erase_session() {
+  drupal_get_messages();
+  unset($_SESSION['ip_geoloc']);
+  drupal_set_message(t('Geolocation data erased from session.'));
+}
+
+function ip_geoloc_erase_db() {
+  drupal_get_messages(); // wipe previous messages to avoid confusion
+  $result = db_delete('ip_geoloc')->execute();
+}
 
 function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode, &$context) {
   $sandbox = &$context['sandbox'];
@@ -181,6 +192,7 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
     $sandbox['max'] = count($ips_to_be_processed);
     $sandbox['ips'] = $ips_to_be_processed;
   }
+
   $location = array('ip_address' => array_shift($sandbox['ips']));
 
   if ($use_smart_ip) {
@@ -233,13 +245,3 @@ function _ip_geoloc_process_access_log_finished($success, $results, $operations,
   }
 }
 
-function ip_geoloc_erase_session() {
-  drupal_get_messages();
-  unset($_SESSION['ip_geoloc']);
-  drupal_set_message(t('Geolocation data erased from session.'));
-}
-
-function ip_geoloc_erase_db() {
-  drupal_get_messages(); // wipe previous messages to avoid confusion
-  $result = db_delete('ip_geoloc')->execute();
-}
