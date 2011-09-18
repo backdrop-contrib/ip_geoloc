@@ -21,7 +21,6 @@ require_once 'ip_geoloc_blocks.inc';
  * Implements hook-help().
  */
 function ip_geoloc_help($path, $arg) {
-  global $base_path;
   if ($path == 'admin/help#ip_geoloc') {
     return t('Detailed information is on the <a href="!ip_geoloc">IP Geolocation project page</a> and in the <a href="!README">README</a> file',
         array('!ip_geoloc' => url('http://drupal.org/project/ip_geoloc'), '!README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt')));
@@ -58,20 +57,19 @@ function ip_geoloc_menu() {
  *
  * Due to the weight set in ip_geoloc.install this hook is called after all
  * other hook_init() implementations have completed.
+ * This hook_init()'s are called as the last step in _drupal_bootstrap_full(),
+ * file includes/common.inc
+ * Note that the {accesslog} is updated in statistics_exit(), so normally after
+ * this hook.
  */
 function ip_geoloc_init() {
 
-  if (!isset($_SESSION['ip_geoloc'])) {
+  if (!isset($_SESSION['ip_geoloc'])) { // new session
     $_SESSION['ip_geoloc'] = array('location' => array());
-    // This is to make sure that we have at least some location information in
-    // the session right from the first click. This is important when making
-    // decisions like the display of themes or pricing based on country or city.
-    if (variable_get('ip_geoloc_google_to_reverse_geocode', TRUE) && !ip_geoloc_use_smart_ip_if_enabled($_SESSION['ip_geoloc']['location'])) {
-      ip_geoloc_use_geoip_api_if_enabled($_SESSION['ip_geoloc']['location']);
-    }
   }
   $location = &$_SESSION['ip_geoloc']['location'];
 
+  // Check timeout on Google reverse-geocode service, if enabled.
   if (isset($_SESSION['ip_geoloc']['position_pending_since'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['position_pending_since'];
     ip_geoloc_debug(t('IP Geolocation: location info now pending for %seconds seconds.', array('%seconds' => $time_elapsed)));
@@ -85,6 +83,7 @@ function ip_geoloc_init() {
     }
   }
 
+  $check_location = TRUE;
   $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
   if ($interval == 0) {
     $check_location = FALSE;
@@ -96,14 +95,23 @@ function ip_geoloc_init() {
     }
     $check_location = $time_elapsed >= $interval;
   }
-  else {
-    $check_location = TRUE;
-  }
 
   if ($check_location) {
-    // Erase old result, indicating that further data is pending:
+    // Avoid mixing of previous and new location data by erasing location array.
     $_SESSION['ip_geoloc']['location'] = array();
-    if (variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+
+    // If we're employing Google to reverse-geocode, then still make sure we
+    // have (some) location data immediately upon first click of the session,
+    // rather than waiting for the callback, as it may never arrive.
+    $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+    if (!$use_google_to_reverse_geocode || !isset($_SESSION['ip_geoloc']['last_position_check'])) {
+      // 2 calls below are synchronous, fleshing out $location on return.
+      if (!ip_geoloc_use_smart_ip_if_enabled($location) && !ip_geoloc_use_geoip_api_if_enabled($location)) {
+        ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
+      }
+      unset($_SESSION['ip_geoloc']['position_pending_since']);
+    }
+    if ($use_google_to_reverse_geocode) {
       // Insert some javascript to first retrieve the user's lat/long coords and
       // then use Google Maps API to reverse-geocode these coords into a street
       // address. This is all done via client-side calls, so the Drupal server
@@ -116,14 +124,9 @@ function ip_geoloc_init() {
       ip_geoloc_get_current_location('ip-geoloc-current-location');
       $_SESSION['ip_geoloc']['position_pending_since'] = time();
     }
-    else {
-      if (!ip_geoloc_use_smart_ip_if_enabled($location) && !ip_geoloc_use_geoip_api_if_enabled($location)) {
-        ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
-      }
-      unset($_SESSION['ip_geoloc']['position_pending_since']);
-    }
     $_SESSION['ip_geoloc']['last_position_check'] = time();
   };
+
   // ip_geoloc_store_location() does nothing, if supplied IP address is empty.
   if (ip_geoloc_store_location($location) !== FALSE) {
     $location['ip_address'] = NULL; // if successfully stored, don't store again
@@ -247,8 +250,7 @@ function ip_geoloc_format_address(&$location) {
  * @return TRUE, unless $google_address or $ip_geoloc_address are empty
  */
 function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
-  if (!empty($google_address) && is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
-    //ip_geoloc_debug(t('IP Geolocation: flattening Google address into IP Geolocation address...'));
+  if (is_array($google_address) && is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
     foreach ($google_address['address_components'] as $component) {
       $long_name = $component['long_name'];
       if (!empty($long_name)) {

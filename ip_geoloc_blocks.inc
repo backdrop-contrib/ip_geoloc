@@ -82,6 +82,9 @@ function ip_geoloc_block_configure($delta = '') {
  * Implements hook_block_save().
  */
 function ip_geoloc_block_save($delta = '', $edit = array()) {
+  if ($delta == 'address_lookup') {
+    return;
+  }
   variable_set('ip_geoloc_' . $delta . '_div_style', $edit['ip_geoloc_' . $delta . '_div_style']);
   if ($delta == 'current_visitor_map') {
     ip_geoloc_save_map_options('ip_geoloc_current_visitor_map_options', $edit['ip_geoloc_current_visitor_map_options']);
@@ -119,7 +122,7 @@ function ip_geoloc_block_view($delta = '') {
       break;
 
     case 'address_lookup':
-      $block['subject'] = t('Address lookup');
+      $block['subject'] = t('Global address lookup');
       $block['content'] = drupal_get_form('ip_geoloc_address_lookup');
       break;
   }
@@ -186,7 +189,7 @@ function ip_geoloc_address_lookup($form, &$form_state) {
 
 function ip_geoloc_lookup($form, &$form_state) {
   $store = !empty($form_state['values']['store']);
-  $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), $store);
+  $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), TRUE, $store);
   if (db_table_exists('accesslog')) {
     $last_visit = db_query('SELECT MAX(timestamp) FROM {accesslog} WHERE hostname = :ip_address', array(':ip_address' => $location['ip_address']))->fetchField();
     if ($last_visit) {
@@ -195,7 +198,7 @@ function ip_geoloc_lookup($form, &$form_state) {
       $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
     }
     else {
-      $form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
+    //$form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
     }
   }
   $form_state['storage']['formatted_address'] = isset($location['formatted_address'])

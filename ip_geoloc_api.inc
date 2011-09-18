@@ -180,36 +180,46 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
 }
 
 /**
- * Does a lookup in IP Geolocation's own database to see if the supplied IP
+ * Performs a lookup in IP Geolocation's own database to see if the supplied IP
  * address has visited already and if so returns their location details (as an
  * array). If the IP address is not yet in the IP Geolocation database, then
- * retrieve lat/long using either Smart or GeoIP API (if enabled) and reverse-
+ * retrieve lat/long using either Smart IP or GeoIP API (if enabled) and reverse-
  * geocode the lat/long (if the Google Maps service is enabled) into a location.
  * If the second argument is TRUE, then store the new location.
  *
- * @param $ip_address, defaults to current visitor's IP address
- * @param $store_if_new, store new location on the IP Geolocation db
- * @return location as an array or FALSE if the IP address is
- *   not on the db AND could not be reverse-geocoded
+ * @param $ip_address; note if you're looking for location data for the current
+ *   visitor look in $_SESSION['ip_geoloc']['location']
+ * @param $resample, if set to TRUE and the supplied IP address is already on
+ *   the db, ignore the existing location data and retrieve the latest
+ * @param $store, if TRUE, store the new or resampled location on the db
+ * @param $reverse_geocode, applies only when the supplied IP address is not yet
+ *   on the database or $resample=TRUE; use TRUE, FALSE or NULL; TRUE will
+ *   produce greater detail in the location returned; if NULL or omitted the
+ *   value is taken from the tick box on the IP Geolocation configuration page
+ * @return location as an array
  */
-function ip_geoloc_get_location_by_ip($ip_address = NULL, $store_if_new = TRUE) {
-  if (empty($ip_address)) {
-    $ip_address = ip_address();
-  }
-  $location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => $ip_address))->fetchAssoc();
-  if (!$location) {
+function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = FALSE, $reverse_geocode = NULL) {
+  $location = $resample ? NULL : db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => $ip_address))->fetchAssoc();
+  if (empty($location)) {
     $location = array('ip_address' => $ip_address);
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-      if (variable_get('ip_geoloc_google_to_reverse_geocode', TRUE) && isset($location['latitude']) && isset($location['longitude'])) {
-        $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude']);
-        if (ip_geoloc_flatten_google_address($google_address, $location)) {
-          if ($store_if_new) {
-            ip_geoloc_store_location($location);
-          }
-          else {
-            drupal_alter('get_ip_geolocation', $location);
-          }
+      if (!isset($reverse_geocode)) {
+        $reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+      }
+      if ($reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
+        if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
+          // Should we clear out whatever Smart IP or GeoIP put in the $location
+          // to avoid fields contradicting eachother? Eg. Google normally
+          // returns 'locality', whereas Smart IP and GeoIP return 'city'.
+          // $location = array('ip_address' => $ip_address);
+          ip_geoloc_flatten_google_address($google_address, $location);
         }
+      }
+      if ($store) {
+        ip_geoloc_store_location($location);
+      }
+      else {
+        drupal_alter('get_ip_geolocation', $location);
       }
     }
   }
@@ -226,8 +236,8 @@ function ip_geoloc_get_location_by_ip($ip_address = NULL, $store_if_new = TRUE) 
  * @param $longitude, string or double, e.g. "144.98" or 144.98
  */
 function ip_geoloc_get_address($latitude, $longitude) {
-  $google_address = ip_geoloc_reverse_geocode($latitidue, $longitude);
-  return isset($google_address['formatted_address']) ? $google_address['formatted_address'] : '';
+  return $google_address = ip_geoloc_reverse_geocode($latitidue, $longitude)
+    ? $google_address['formatted_address'] : '';
 }
 
 /**
@@ -246,9 +256,10 @@ function ip_geoloc_get_address($latitude, $longitude) {
  */
 function ip_geoloc_reverse_geocode($latitude, $longitude) {
   if (empty($latitude) || empty($latitude)) {
-    drupal_set_message(t('IP Geolocation: empty lat/long -- cannot reverse-geocode to address.'), 'warning');
+    drupal_set_message(t('IP Geolocation: did not receive lat/long -- cannot reverse-geocode to address.'), 'warning');
     return FALSE;
   }
+  $query_start = microtime(TRUE);
   $url = IP_GEOLOC_GOOGLE_MAPS_SERVER . "&latlng=$latitude,$longitude";
   $response = drupal_http_request($url);
   if (!empty($response->error)) {
@@ -278,8 +289,11 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
       array('@lat' => $latitude, '@long' => $longitude)), 'warning');
   }
   else {
-    ip_geoloc_debug(t('IP Geolocation: (@lat, @long) was reverse-geocoded to %address',
-      array('@lat' => $latitude, '@long' => $longitude, '%address' => $google_address['formatted_address'])));
+    ip_geoloc_debug(t('IP Geolocation: (@lat, @long) was reverse-geocoded in %ms ms to %address', array(
+      '@lat' => $latitude, '@long' => $longitude,
+      '%ms' => round(1000 * (microtime(TRUE) - $query_start)),
+      '%address' => $google_address['formatted_address']
+    )));
   }
   return $google_address;
 }

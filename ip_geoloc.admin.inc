@@ -14,7 +14,7 @@ function ip_geoloc_admin_configure() {
     // Form for sync-ing the geolocation table with the system accesslog
     $form['ip_geoloc_db_options'] = array(
       '#type' => 'fieldset',
-      '#title' => 'Update geolocation database using past visitor IP addresses from the system access log',
+      '#title' => t('Update geolocation database using past visitor IP addresses from the system access log'),
       '#description'  => t('You can update the geolocation database in batches by pressing the button below. As a rough guide, count on a 1 minute wait for every 100 IP addresses, when executing a web service like IPInfoDB, as employed by Smart IP. Add another 2 minutes per 100 IP addresses if you ticked the option to employ the Google Maps API to reverse-geocode to street addresses. If your server interrupts the process you can continue from where it stopped by refreshing this page and pressing the button again. You will not lose any data.')
     );
     $form['ip_geoloc_db_options']['ip_geoloc_sync_with_accesslog'] = array(
@@ -25,7 +25,7 @@ function ip_geoloc_admin_configure() {
     $form['ip_geoloc_db_options']['ip_geoloc_sync_batch_size'] = array(
       '#type' => 'textfield',
       '#size' => 4,
-      '#title' => 'Batch size',
+      '#title' => t('Batch size'),
       '#default_value'  => variable_get('ip_geoloc_sync_batch_size', 500),
       '#description' => t('To change the default batch size, press "Save configuration".')
     );
@@ -33,17 +33,17 @@ function ip_geoloc_admin_configure() {
 
   $form['ip_geoloc_data_collection_options'] = array(
     '#type' => 'fieldset',
-    '#title' => 'Data collection options',
+    '#title' => t('Data collection options'),
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Employ the Google Maps API to reverse-geocode lat/long coordinates to street addresses.',
+    '#title' => t('Employ the Google Maps API to reverse-geocode lat/long coordinates to street addresses.'),
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', TRUE),
     '#description' => t('For present and future visitors this is done via the client-side version of the Maps API. For the upload of historic visitor location data the server-side version of the Maps API is used. Note that Google may impose a limit on the daily number of API calls coming from the same machine.')
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Employ Smart IP as a backup to the Google Maps API and to load historic lat/long coordinates.',
+    '#title' => t('Employ Smart IP as a backup to the Google Maps API and to load historic lat/long coordinates.'),
     '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),
     '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="http://drupal.org/project/geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.')
   );
@@ -59,8 +59,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => 'Advanced options',
-    '#description' => t('')
+    '#title' => t('Advanced options'),
   );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
     '#type' => 'checkbox',
@@ -192,8 +191,8 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
     $sandbox['max'] = count($ips_to_be_processed);
     $sandbox['ips'] = $ips_to_be_processed;
   }
-
-  $location = array('ip_address' => array_shift($sandbox['ips']));
+  $ip_address = array_shift($sandbox['ips']);
+  $location = array('ip_address' => $ip_address);
 
   if ($use_smart_ip) {
     // Depending on the value of the variable 'smart_ip_use_ipinfodb_service'
@@ -204,10 +203,14 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
   else {
     ip_geoloc_use_geoip_api_if_enabled($location);
   }
-  // Now that we have lat/long we can reverse-geocode the postal address
-  if ($use_google_to_reverse_geocode) {
-    // Use the Google web service
-    $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude']);
+  // Now that we have lat/long we can reverse-geocode to the postal address
+  if ($use_google_to_reverse_geocode && $google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
+    // To avoid fields contradicting eachother, should we clear out, rather
+    // than merge with whatever Smart IP or GeoIP put in the $location?
+    // For example Google normally returns 'locality', whereas and Smart IP and
+    // GeoIP return 'city' instead. Similarly 'administrative_area_level_1' vs
+    // 'region'.
+    // $location = array('ip_address' => $ip_address);
     ip_geoloc_flatten_google_address($google_address, $location);
   }
 
