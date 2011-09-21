@@ -256,44 +256,54 @@ function ip_geoloc_get_address($latitude, $longitude) {
  */
 function ip_geoloc_reverse_geocode($latitude, $longitude) {
   if (empty($latitude) || empty($latitude)) {
-    drupal_set_message(t('IP Geolocation: did not receive lat/long -- cannot reverse-geocode to address.'), 'warning');
+    drupal_set_message(t('IP Geolocation: cannot reverse-geocode to address as no lat/long was specified.'), 'warning');
     return FALSE;
   }
   $query_start = microtime(TRUE);
   $url = IP_GEOLOC_GOOGLE_MAPS_SERVER . "&latlng=$latitude,$longitude";
   $response = drupal_http_request($url);
   if (!empty($response->error)) {
-    drupal_set_message(t('IP Geolocation: the HTTP request %url returned the following error (code @code): %error',
-      array('%url' => $url, '@code' => $response->code, '%error' => $response->error)), 'error');
+    $msg_args = array('%url' => $url, '@code' => $response->code, '%error' => $response->error);
+    drupal_set_message(t('IP Geolocation: the HTTP request %url returned the following error (code @code): %error.', $msg_args), 'error');
+    watchdog('IP Geolocation', 'Error (code @code): %error. Request: %url', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   $data = drupal_json_decode($response->data);
   if ($data['status'] == 'OVER_QUERY_LIMIT') {
-    drupal_set_message(t('IP Geolocation: the request %url succeeded, but Google says you are over your query limit.',
-      array('%url' => $url)), 'warning');
+    $msg_args = array('%url' => $url);
+    if (user_access('administer site configuration')) {
+      drupal_set_message(t('IP Geolocation: Server is over its query limit. Request: %url', $msg_args), 'error');
+    }
+    watchdog('IP Geolocation', 'Server is over its query limit. Request: %url', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   if ($data['status'] == 'ZERO_RESULTS' || !isset($data['results'][0])) {
-    drupal_set_message(t('IP Geolocation: the @protocol request %url succeeded, but returned no results.',
-      array('@protocol' => $response->protocol, '%url' => $url)), 'warning');
+    $msg_args = array('@protocol' => $response->protocol, '%url' => $url);
+    drupal_set_message(t('IP Geolocation: the @protocol request %url succeeded, but returned no results.', $msg_args), 'warning');
+    watchdog('IP Geolocation', 'No results from @protocol request %url.', $msg_args, WATCHDOG_WARNING);
     return FALSE;
   }
   if ($data['status'] != 'OK') {
-    drupal_set_message(t('IP Geolocation: something went wrong with request %url',
-      array('%url' => $url)), 'error');
+    $msg_args = array('%url' => $url, '%error' => $data['status']);
+    drupal_set_message(t('IP Geolocation: unknown error %error. Request: %url..', $msg_args), 'error');
+    watchdog('IP Geolocation', 'Unknown error %error. Request: %url.', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   $google_address = $data['results'][0];
   if (empty($google_address['formatted_address'])) {
-    ip_geoloc_debug(t('IP Geolocation: (@lat, @long) could not be reverse-geocoded to a street address.',
-      array('@lat' => $latitude, '@long' => $longitude)), 'warning');
+    $msg_args = array('@lat' => $latitude, '@long' => $longitude);
+    ip_geoloc_debug(t('IP Geolocation: (@lat, @long) could not be reverse-geocoded to a street address.', $msg_args), 'warning');
+    watchdog('IP Geolocation', '(@lat, @long) could not be reverse-geocoded to a street address..', $msg_args, WATCHDOG_WARNING);
   }
   else {
-    ip_geoloc_debug(t('IP Geolocation: (@lat, @long) was reverse-geocoded in %ms ms to %address', array(
+    $ms = round(1000 * (microtime(TRUE) - $query_start));
+    $msg_args = array(
       '@lat' => $latitude, '@long' => $longitude,
-      '%ms' => round(1000 * (microtime(TRUE) - $query_start)),
+      '%ms' => $ms,
       '%address' => $google_address['formatted_address']
-    )));
+    );
+    ip_geoloc_debug(t('IP Geolocation: %address reverse-geocoded from (@lat, @long) in %ms ms.', $msg_args));
+    watchdog('IP Geolocation', '%address reverse-geocoded from (@lat, @long) in %ms ms.', $msg_args, WATCHDOG_INFO);
   }
   return $google_address;
 }

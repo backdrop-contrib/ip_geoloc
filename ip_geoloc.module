@@ -12,7 +12,7 @@
  * also an API.
  */
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
-define('IP_GEOLOC_CALLBACK_TIMEOUT', 30);
+define('IP_GEOLOC_CALLBACK_TIMEOUT', 60);
 
 require_once 'ip_geoloc_api.inc';
 require_once 'ip_geoloc_blocks.inc';
@@ -70,38 +70,32 @@ function ip_geoloc_init() {
   }
   $location = &$_SESSION['ip_geoloc']['location'];
 
-  $check_location = TRUE;
-  $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
-  if ($interval == 0) {
-    $check_location = FALSE;
-  }
-  elseif (isset($_SESSION['ip_geoloc']['last_position_check'])) {
-    $time_elapsed = time() - $_SESSION['ip_geoloc']['last_position_check'];
-    if ($time_elapsed < $interval) {
-      ip_geoloc_debug(t('IP Geolocation: next update in %seconds seconds.', array('%seconds' => $interval - $time_elapsed)));
-      $check_location = FALSE;
-    }
-  }
-
-  $reverse_geocode_timeout = reverse_geocode_timeout();
+  $reverse_geocode_client_timeout = ip_geoloc_reverse_geocode_timeout();
 
   // Sample location when due or as soon as a reverse_geocode timeout is detected.
-  if ($check_location || $reverse_geocode_timeout) {
+  if (ip_geoloc_check_location() || $reverse_geocode_client_timeout) {
     // Avoid mixing of previous and new location data by erasing location.
     $_SESSION['ip_geoloc']['location'] = array();
 
     $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
 
-    // If we're employing Google to reverse-geocode, then still make sure we
-    // have (some) location data immediately upon first click of the session (ie
-    // $_SESSION['ip_geoloc']['last_position_check'] not set), as the callback
-    // may never arrive or arrive very late.
-    if (!$use_google_to_reverse_geocode || $reverse_geocode_timeout || !isset($_SESSION['ip_geoloc']['last_position_check'])) {
-      // 2 calls below are synchronous, $location filled immediately on return.
+    // Handle first click of the session (ie $_SESSION['ip_geoloc']['last_position_check'] not set)
+    // as well as client timeout fallback, using Smart IP, GeoIP API and
+    // server-side version of Google Maps reverse-geocode service.
+    if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || !isset($_SESSION['ip_geoloc']['last_position_check'])) {
+      // 3 calls below are synchronous, $location filled immediately on return.
       if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-        if ($reverse_geocode_timeout) {
-          watchdog('IP Geolocation', 'Location callback timeout (was pending for %seconds seconds). Fallback produced: %address.',
-            array('%seconds' => $reverse_geocode_timeout, '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''), WATCHDOG_NOTICE);
+        if ($use_google_to_reverse_geocode) {
+          // (Re)initialise street address details. These are based on the IP,
+          // so reflect the server location, not the browser location.
+          if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
+            // $location = array('ip_address' => $ip_address);
+            ip_geoloc_flatten_google_address($google_address, $location);
+          }
+        }
+        if ($reverse_geocode_client_timeout) {
+          watchdog('IP Geolocation', 'Location timeout (waited %seconds seconds). Fallback: %address.',
+            array('%seconds' => $reverse_geocode_client_timeout, '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''), WATCHDOG_NOTICE);
         }
       } else {
         ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
@@ -117,7 +111,10 @@ function ip_geoloc_init() {
       // OVER_QUERY_LIMIT.
       // When done the javascript calls us back on the supplied menu callback,
       // '/ip-geoloc-current-location', which receives the geolocation data
-      // via the $_POST variable and stores it in $_SESSION['ip_geoloc'].
+      // from the Google Maps call via the $_POST variable and stores it in
+      // $_SESSION['ip_geoloc'].
+      // Naturally all of this will only work if the browser has javascript
+      // enabled.
       ip_geoloc_debug(t('IP Geolocation: initiating services to locate current position and reverse-geocode address...'));
       ip_geoloc_get_current_location('ip-geoloc-current-location');
       $_SESSION['ip_geoloc']['position_pending_since'] = time();
@@ -148,13 +145,19 @@ function ip_geoloc_current_location_ajax_recipient() {
   $location = array('ip_address' => ip_address());
 
   if (isset($_POST['error'])) {
-    // Device/browser does not support getCurrentPosition(), timeout or Google reverse-geocode error.
+    // Device/browser does not support getCurrentPosition(), timeout, or Google reverse-geocode error.
     $error = check_plain($_POST['error']) . ' -- ';
-    if (!ip_geoloc_use_smart_ip_if_enabled($location) && !ip_geoloc_use_geoip_api_if_enabled($location)) {
-      $error .= t('Smart IP and GeoIP API fallbacks NOT enabled.');
+    if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
+      // (Re)initialise street address details. These are based on the IP,
+      // so reflect the server location, not the browser location.
+      if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
+        // $location = array('ip_address' => $ip_address);
+        ip_geoloc_flatten_google_address($google_address, $location);
+      }
+      $error .= t('Fallback: %address', array('%address' => $location['formatted_address']));
     }
     else {
-      $error .= t('Fallback produced: %address', array('%address' => $location['formatted_address']));
+      $error .= t('Smart IP and GeoIP API fallbacks NOT enabled.');
     }
     watchdog('IP Geolocation', $error, NULL, WATCHDOG_NOTICE);
     ip_geoloc_debug('IP Geolocation, ' . $location['ip_address'] . ': ' . $error);
@@ -165,6 +168,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     }
     $time_elapsed = isset($_SESSION['ip_geoloc']['position_pending_since'])
       ? time() - $_SESSION['ip_geoloc']['position_pending_since'] : t('many, many');
+    watchdog('IP Geolocation', 'Location %address, received after %seconds seconds.',  array('%address' => $location['formatted_address'], '%seconds' => $time_elapsed), WATCHDOG_INFO);
     ip_geoloc_debug(t('IP Geolocaton: Google reverse-geocoding callback received after %seconds seconds: !location',
       array('%seconds' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
   }
@@ -221,11 +225,30 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
 }
 
 /**
+ * Return whether a the visitor's location is due for an update, i.e. whether
+ * more than a configurable number of seconds have elapsed.
+ */
+function ip_geoloc_check_location() {
+  $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
+  if ($interval == 0) {
+    return FALSE;
+  }
+  if (isset($_SESSION['ip_geoloc']['last_position_check'])) {
+    $time_elapsed = time() - $_SESSION['ip_geoloc']['last_position_check'];
+    if ($time_elapsed < $interval) {
+      ip_geoloc_debug(t('IP Geolocation: next update in %seconds seconds.', array('%seconds' => $interval - $time_elapsed)));
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+/**
  * Handle timeout of the Google Maps reverse-geocode callback, if enabled.
  * Based on $_SESSION['ip_geoloc']['position_pending_since'] being set to the
  * current time when the service was initiated.
  */
-function reverse_geocode_timeout() {
+function ip_geoloc_reverse_geocode_timeout() {
   if (isset($_SESSION['ip_geoloc']['position_pending_since'])) {
     $time_elapsed = time() - $_SESSION['ip_geoloc']['position_pending_since'];
     ip_geoloc_debug(t('IP Geolocation: location info now pending for %seconds seconds.', array('%seconds' => $time_elapsed)));
