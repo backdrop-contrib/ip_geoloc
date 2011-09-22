@@ -140,7 +140,7 @@ function ip_geoloc_save_map_options($var_name, $map_options) {
 function ip_geoloc_get_recent_visitor_locations($how_many) {
   $locations = array();
   if (db_table_exists('accesslog')) {
-    $result = db_query_range("SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i LEFT JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY a.hostname ORDER BY last_visit DESC", 0, $how_many);
+    $result = db_query_range("SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i LEFT JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY i.ip_address ORDER BY last_visit DESC", 0, $how_many);
     $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
     foreach ($result as $location) {
       if (!isset($locations[$location->ip_address])) {
