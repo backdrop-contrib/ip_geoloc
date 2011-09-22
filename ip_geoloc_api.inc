@@ -296,14 +296,14 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
     watchdog('IP Geolocation', '(@lat, @long) could not be reverse-geocoded to a street address..', $msg_args, WATCHDOG_WARNING);
   }
   else {
-    $ms = round(1000 * (microtime(TRUE) - $query_start));
+    $sec = number_format(microtime(TRUE) - $query_start, 1);
     $msg_args = array(
       '@lat' => $latitude, '@long' => $longitude,
-      '%ms' => $ms,
+      '%sec' => $sec,
       '%address' => $google_address['formatted_address']
     );
-    ip_geoloc_debug(t('IP Geolocation: %address reverse-geocoded from (@lat, @long) in %ms ms.', $msg_args));
-    watchdog('IP Geolocation', '%address reverse-geocoded from (@lat, @long) in %ms ms.', $msg_args, WATCHDOG_INFO);
+    ip_geoloc_debug(t('IP Geolocation: %address reverse-geocoded from (@lat, @long) in %sec s.', $msg_args));
+    watchdog('IP Geolocation', '%address reverse-geocoded from (@lat, @long) in %sec s.', $msg_args, WATCHDOG_INFO);
   }
   return $google_address;
 }

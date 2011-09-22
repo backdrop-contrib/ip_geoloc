@@ -118,7 +118,7 @@ function ip_geoloc_init() {
       // enabled.
       ip_geoloc_debug(t('IP Geolocation: initiating services to locate current position and reverse-geocode address...'));
       ip_geoloc_get_current_location('ip-geoloc-current-location');
-      $_SESSION['ip_geoloc']['position_pending_since'] = time();
+      $_SESSION['ip_geoloc']['position_pending_since'] = microtime(TRUE);
     }
 
     $_SESSION['ip_geoloc']['last_position_check'] = time();
@@ -168,10 +168,10 @@ function ip_geoloc_current_location_ajax_recipient() {
       $location[check_plain($key)] = check_plain($value);
     }
     $time_elapsed = isset($_SESSION['ip_geoloc']['position_pending_since'])
-      ? time() - $_SESSION['ip_geoloc']['position_pending_since'] : t('many, many');
-    watchdog('IP Geolocation', 'Location %address, received after %seconds seconds.',  array('%address' => $location['formatted_address'], '%seconds' => $time_elapsed), WATCHDOG_INFO);
-    ip_geoloc_debug(t('IP Geolocaton: Google reverse-geocoding callback received after %seconds seconds: !location',
-      array('%seconds' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
+      ? number_format(microtime(TRUE) - $_SESSION['ip_geoloc']['position_pending_since'], 1) : t('many, many');
+    watchdog('IP Geolocation', 'Browser @ %address, received after %sec seconds.',  array('%address' => $location['formatted_address'], '%sec' => $time_elapsed), WATCHDOG_INFO);
+    ip_geoloc_debug(t('IP Geolocaton: global position and reverse-geocoding callback received after %sec seconds: !location',
+      array('%sec' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
   }
   unset($_SESSION['ip_geoloc']['position_pending_since']);
 
@@ -251,8 +251,8 @@ function ip_geoloc_check_location() {
  */
 function ip_geoloc_reverse_geocode_timeout() {
   if (isset($_SESSION['ip_geoloc']['position_pending_since'])) {
-    $time_elapsed = time() - $_SESSION['ip_geoloc']['position_pending_since'];
-    ip_geoloc_debug(t('IP Geolocation: location info now pending for %seconds seconds.', array('%seconds' => $time_elapsed)));
+    $time_elapsed = microtime(TRUE) - $_SESSION['ip_geoloc']['position_pending_since'];
+    ip_geoloc_debug(t('IP Geolocation: location info now pending for %sec s.', array('%sec' => number_format($time_elapsed, 1))));
     if ($time_elapsed > IP_GEOLOC_CALLBACK_TIMEOUT) {
       return $time_elapsed;
     }

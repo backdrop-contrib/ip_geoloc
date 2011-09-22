@@ -140,15 +140,16 @@ function ip_geoloc_save_map_options($var_name, $map_options) {
 function ip_geoloc_get_recent_visitor_locations($how_many) {
   $locations = array();
   if (db_table_exists('accesslog')) {
-    $result = db_query_range("SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i LEFT JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY i.ip_address ORDER BY last_visit DESC", 0, $how_many);
+    // A LEFT JOIN would also pick up new IP addresses that are about to be
+    // inserted into the {accesslog} during execution of hook_exit().
+    // However a LEFT JOIN in this query can easily make it 100 times slower
+    // than the INNER JOIN used below and would only be relevant for the very
+    // first click from a new IP address or in the case where the IP address was
+    // removed from the {accesslog}.
+    $result = db_query_range('SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY i.ip_address ORDER BY last_visit DESC', 0, $how_many);
     $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
     foreach ($result as $location) {
       if (!isset($locations[$location->ip_address])) {
-        // Because {ip_geoloc} is updated during hook_init() while {accesslog}
-        // is not updated until hook_exit() it is possible that upon first
-        // visit from a new IP address visit_count and last_visit are still
-        // empty when this function is called.
-        // The same happens when {accesslog} is erased, but {ip_geoloc} is not.
         $location->visit_count = empty($location->visit_count) ? '?' : $location->visit_count;
         $location->last_visit = empty($location->last_visit) ? '?' : date($date_format, $location->last_visit);
         $locations[$location->ip_address] = $location;
