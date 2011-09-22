@@ -85,9 +85,9 @@ function ip_geoloc_init() {
     if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || !isset($_SESSION['ip_geoloc']['last_position_check'])) {
       // 3 calls below are synchronous, $location filled immediately on return.
       if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-        if ($use_google_to_reverse_geocode) {
+        if ($use_google_to_reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
           // (Re)initialise street address details. These are based on the IP,
-          // so reflect the server location, not the browser location.
+          // so reflect the provider location, not the browser location.
           if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
             // $location = array('ip_address' => $ip_address);
             ip_geoloc_flatten_google_address($google_address, $location);
@@ -149,7 +149,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     $error = check_plain($_POST['error']) . ' -- ';
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
       // (Re)initialise street address details. These are based on the IP,
-      // so reflect the server location, not the browser location.
+      // so reflect the internet provider location, not the browser location.
       if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
         // $location = array('ip_address' => $ip_address);
         ip_geoloc_flatten_google_address($google_address, $location);
@@ -215,7 +215,7 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
   $geoip_location = (array) geoip_city($location['ip_address']);
   if (!empty($geoip_location)) {
     // Where different convert GeoIP names to our equivalents
-    $geoip_location['country'] = $geoip_location['country_name'];
+    $geoip_location['country'] = isset($geoip_location['country_name']) ? $geoip_location['country_name'] : '';
     unset($geoip_location['country_name']);
     $location = array_merge($geoip_location, $location);
     ip_geoloc_format_address($location);
@@ -266,7 +266,7 @@ function ip_geoloc_reverse_geocode_timeout() {
  * @param $location
  */
 function ip_geoloc_format_address(&$location) {
-  $location['formatted_address'] = $location['city'];
+  $location['formatted_address'] = isset($location['city']) ? $location['city'] : '';
   if (!empty($location['region'])) {
     $location['formatted_address'] .= ' ' . $location['region'];
   }
