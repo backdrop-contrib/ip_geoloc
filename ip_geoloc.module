@@ -97,7 +97,8 @@ function ip_geoloc_init() {
           watchdog('IP Geolocation', 'Location timeout (waited %seconds seconds). Fallback: %address.',
             array('%seconds' => $reverse_geocode_client_timeout, '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''), WATCHDOG_NOTICE);
         }
-      } else {
+      }
+      else {
         ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
       }
       unset($_SESSION['ip_geoloc']['position_pending_since']);
