@@ -94,8 +94,10 @@ function ip_geoloc_init() {
           }
         }
         if ($reverse_geocode_client_timeout) {
-          watchdog('IP Geolocation', 'Location timeout (waited %seconds seconds). Fallback: %address.',
-            array('%seconds' => $reverse_geocode_client_timeout, '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''), WATCHDOG_NOTICE);
+          watchdog('IP Geolocation', 'Location timeout (waited %sec s). Fallback: %address.', array(
+            '%sec' => number_format($reverse_geocode_client_timeout, 1),
+            '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''),
+            WATCHDOG_NOTICE);
         }
       }
       else {
