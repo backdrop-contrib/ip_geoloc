@@ -339,6 +339,13 @@ function ip_geoloc_views_api() {
 }
 
 /**
+ * Implements hook_library_alter().
+ */
+function ip_geoloc_library_alter(&$libraries, $module) {
+  return;
+}
+
+/**
  * Implements hook_smart_ip_get_location_alter().
  *
  * Called from the bottom of smart_ip_get_location() when it has fleshed out
