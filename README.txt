@@ -1,106 +1,122 @@
 
-DESCRIPTION
-===========
-The IP Geolocation module provides ready-to-use views, blocks and maps of
-your site's visitor locations, based on their IP addresses.
-
-IP Geolocation is therefore different from modules like Location and GMap, which
-are about allowing users to enter lat/long coordinates or postal address
-information for content and user profiles and then mapping those.
-
-IP Geolocation takes advantage of its own simple database layer for efficient
-customisable reporting of your visitors' locations, both past and present.
-The reporting capability (through Views) raises IP Geolocation above other
-modules operating in this space. For instance, using IP Geolocation you can
-display (through tables and/or maps) where in the world your visitors came from
-and how many visited during what period of time.
-Globe coordinates (i.e. lat/long), maps and postal addresses may be displayed,
-often down to street granularity. All this going back to the day your site was
-launched!
-
-IP Geolocation takes advantage of existing tried-and-tested contributed modules
-to pull in visitor geolocation data, especially historic data (for present and
-future visitor data we recommended to use IP Geolocation's built-in collection
-method). Just enable your favorite module and you're away. The following modules
-are supported as IP-to-lat/long data sources:
-o Smart IP
-o GeoIP API
-o any module that implements hook_get_ip_geolocation_alter($location). See the
-  programmer's section below for details.
-
-You may enable more than one of the above at the same time, so that if one
-module is unable to provide all the geolocation details for a certain IP
-address, another one may add to it.
-
-You do not need to register for any API keys, except when you use Smart IP to
-back-fill your visitor history using the web service provided by
-www.ipinfodb.com. The API key required on the Smart IP configuration page is
-free and is sent to you immediately by return email after applying at
-http://ipinfodb.com/register.php
-
-So what's in the box?
-o a block displaying a map with marked locations of your most recent, say, 20
-  visitors; each marker when clicked reveals in a balloon that visitor's IP
-  address, full postal address (including suburb, street and number), number of
-  page visits and date & times of the most recent visit
-o for sorting, reporting and exporting purposes: a number of configurable views
-  displaying ordered lists of for instance ip addresses that visitied your site,
-  optionally grouped by country, with for each detailed address information, a
-  small map (one per IP address), page visit counts, first and last visits etc;
-  naturally being views you can add, remove and rearrange columns as you wish
-o for programmers: an API to retrieve lat/long and address information and to
-  generate maps; also a hook, hook_get_ip_geolocation_alter(), to insert your
-  own geolocation data retrieval function, if you so wish -- see the FOR
-  PROGRAMMERS section below.
+IP GEOLOCATION
+==============
+This documentation concentrates on the installation and configuration of the
+IP Geolocation module. A full description of the module and its features can be
+found at http://drupal.org/project/ip_geoloc.
 
 INSTALLATION & CONFIGURATION
 ============================
-Pick your geolocation data source module from the ones listed in the
-introduction and follow the instructions for that module. Smart IP does not
-require you to install any additional files, but you may have to request a free
-key from the data provider, which will be sent to you by return email.
-Apart from that you really don't have to do much at all to configure IP
-Geolocation. It figures out itself which geolocation data module(s) it is
-dealing with. Visit the Configuration >> IP Geolocation page and you'll find
-that the configuration options available are very much self-explanatory.
 
-Further info may be found at the module's project page and issue queue, see
-http://drupal.org/project/ip_geoloc
+A. Present and future: reporting and mapping of location information about
+guests visiting after you enabled IP Geolocation
+
+1. Install and enable like any other module, use Drush if you wish. Remain
+connected to the internet.
+
+2. Make sure the core Statistics module is enabled. Then at Configuration >>
+Statistics, section System, verify that the access log is enabled. Select the
+"Discard access logs older than" option as you please. "Never" is good.
+
+3. Visit the IP Geolocation configuration page at Configuration >> IP
+Geolocation. If you don't see any errors or warnings (usually yellow) you're
+good to proceed. Don't worry about any of the configuration options for now,
+the defaults are fine.
+
+4. At Structure >> Blocks put the block "Map showing locations of 10 most recent
+visitors" in the content region of all or a selected page. View the page. That
+marker represents you (or your service provider). Clicking the marker reveals
+more details.
+
+5. Enable the Views and Views PHP (http://drupal.org/project/views_php) modules.
+Then have a look at Structure >> Views for a couple of handy Views, e.g. the
+"Visitor log", which shows for each IP address that visited, its street address,
+as well as a local map. Or "Visitor log (lite)", which combines nicely when put
+on the same page with the "Map showing locations of 10 most recent visitors".
+Modify these views as you please.
+
+
+B. Historic data: location info about visits to your site from way back when
+
+Note, that this step relies on you having had the Statistics module enabled
+before you installed IP Geolocation, as the access log is used as the source of
+IP addresses that have visited your site previously.
+There are a couple of options here. Use either http://drupal.org/project/smart_ip
+and the IPinfoDB web service it uses, or http://drupal.org/project/geoip, which
+takes its data from a file you download for free.
+
+1a. If you decide to employ Smart IP....
+Install and enable Smart IP. There is no need to enable the Device Geolocation
+submodule as IP Geolocation already has that funtionality, plus more. At
+Configuration >> Smart IP you'll find two options to upload historic lat/long
+data. The one using the IPinfoDB web service is probably the quickest. The API
+key required on the Smart IP configuration page is free and is sent to you
+immediately by return email after you have filled out the short form at
+http://ipinfodb.com/register.php. On the Smart IP configuration page perform an
+IP lookup to verify that the key is correct.
+
+1b. If you decide to employ GeoIP instead of Smart IP...
+Download and enable the module. Then download and uncompress
+http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz and place
+it in sites/all/libraries/geoip. Go to the GeoIP configuration page and type
+the name of the file you've just downloaded, GeoLiteCity.dat. Save. That should
+be it.
+
+2. With either Smart IP or GeoIP configured, visit Configuration >> IP Geolocation.
+Tick the check boxes as appropriate.
+
+3. On the same page, start a small batch import of, say, size 10. Data for the
+most recent visitors will be loaded first, so you don't have to complete the
+import to check it's all working. For instance, the block "Map showing locations
+of 10 most recent visitors" should now show more markers.
+
+4. Go back the Configuration >> IP Geolocation and complete the import process
+with a larger batch size until the IP Geolocation database is up to date with
+the access log. It will automatically remain in synch from now on.
+
 
 FOR PROGRAMMERS
 ===============
-Hooking your own gelocation data provider into IP Geolocation is very simple.
+First of all, check out file ip_geoloc_api.inc for a number of useful utility
+functions for creating maps and markers, calculating distances between locations
+etc. All functions are documented and should be straightforward to use.
+
+Secondly, if you want to hook your own gelocation data provider into IP
+Geolocation, then you can -- it's simple.
 In your module, let's call it MYMODULE, all you have to do is flesh out the
 following function.
+
 <?php
-/*
- *  Implements hook_get_ip_geolocation_alter().
- */
-function MYMODULE_get_ip_geolocation_alter(&$location) {
+  /*
+   *  Implements hook_get_ip_geolocation_alter().
+   */
+  function MYMODULE_get_ip_geolocation_alter(&$location) {
 
-  if (empty($location['ip_address'])) {
-    return;
+    if (empty($location['ip_address'])) {
+      return;
+    }
+    // ... your code here to retrieve geolocation data ...
+
+    $location['provider'] = 'MYMODULE';
+
+    // Then fill out some or all of the location fields that IP Geolocation
+    // knows how to store.
+    $location['latitude'] =  ....;
+    $location['longitude'] = ....;
+    $location['country'] = ....;
+    $location['country_code'] = ....;
+    $location['region'] = ....;
+    $location['region_code'] = ....;
+    $location['city'] = ... ;
+    $location['locality'] = ....; // eg suburb
+    $location['route'] = ....;     // eg street
+    $location['street_number'] = ....;
+    $location['postal_code'] = ....; // eg ZIP
+    $location['administrative_area_level_1'] = ....; // eg state or province
+    $location['formatted_address'] = ....; // address as a human-readible string
   }
-  // ... your code here to retrieve geolocation data ...
-
-  // Then fill out some or all of the location fields that IP Geolocation knows
-  // how to store.
-  $location['provider'] = 'MYMODULE';
-  $location['latitude'] =  ....;
-  $location['longitude'] = ....;
-  $location['country'] = ....;
-  $location['country_code'] = ....;
-  $location['region'] = ....;
-  $location['region_code'] = ....;
-  $location['city'] = ... ;
-  $location['locality'] = ....; // eg suburb
-  $location['route'] = ....;     // eg street
-  $location['street_number'] = ....;
-  $location['postal_code'] = ....; // eg ZIP
-  $location['administrative_area_level_1'] = ....; // eg state or province
-  $location['formatted_address'] = ....; // address as a human-readible string
-}
 ?>
+
 That's all!
 Note that when IP Geolocation calls this function the $location object may be
 partially fleshed out. If $location['ip_address'] is empty, this means that
@@ -109,6 +125,7 @@ reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then IP
 Geolocation does not expect any further details and will store the $location
 with your modifications (if any) on the IP Geolocation database. You must set
 $location['formatted_address'] in order for the location to be stored.
+
 
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================
@@ -130,4 +147,4 @@ Restrictions."
 
 AUTHOR
 ======
-Rik de Boer, Melbourne, Australia.
+Rik de Boer of flink dot com dot au, Melbourne, Australia.
