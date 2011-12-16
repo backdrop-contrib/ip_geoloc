@@ -29,11 +29,11 @@ o any module that implements hook_get_ip_geolocation_alter($location). See the
   programmer's section below for details.
 
 You may enable more than one of the above at the same time, so that if one
-module is unable to provide all the geolocation details for a certain IP 
+module is unable to provide all the geolocation details for a certain IP
 address, another one may add to it.
 
 You do not need to register for any API keys, except when you use Smart IP to
-back-fill your visitor history using the web service provided by 
+back-fill your visitor history using the web service provided by
 www.ipinfodb.com. The API key required on the Smart IP configuration page is
 free and is sent to you immediately by return email after applying at
 http://ipinfodb.com/register.php
@@ -44,7 +44,7 @@ o a block displaying a map with marked locations of your most recent, say, 20
   address, full postal address (including suburb, street and number), number of
   page visits and date & times of the most recent visit
 o for sorting, reporting and exporting purposes: a number of configurable views
-  displaying ordered lists of for instance ip addresses that visitied your site, 
+  displaying ordered lists of for instance ip addresses that visitied your site,
   optionally grouped by country, with for each detailed address information, a
   small map (one per IP address), page visit counts, first and last visits etc;
   naturally being views you can add, remove and rearrange columns as you wish
@@ -55,11 +55,11 @@ o for programmers: an API to retrieve lat/long and address information and to
 
 INSTALLATION & CONFIGURATION
 ============================
-Pick your geolocation data source module from the ones listed in the 
+Pick your geolocation data source module from the ones listed in the
 introduction and follow the instructions for that module. Smart IP does not
 require you to install any additional files, but you may have to request a free
 key from the data provider, which will be sent to you by return email.
-Apart from that you really don't have to do much at all to configure IP 
+Apart from that you really don't have to do much at all to configure IP
 Geolocation. It figures out itself which geolocation data module(s) it is
 dealing with. Visit the Configuration >> IP Geolocation page and you'll find
 that the configuration options available are very much self-explanatory.
@@ -85,6 +85,7 @@ function MYMODULE_get_ip_geolocation_alter(&$location) {
 
   // Then fill out some or all of the location fields that IP Geolocation knows
   // how to store.
+  $location['provider'] = 'MYMODULE';
   $location['latitude'] =  ....;
   $location['longitude'] = ....;
   $location['country'] = ....;
@@ -94,7 +95,7 @@ function MYMODULE_get_ip_geolocation_alter(&$location) {
   $location['city'] = ... ;
   $location['locality'] = ....; // eg suburb
   $location['route'] = ....;     // eg street
-  $location['street_number'] = ....; 
+  $location['street_number'] = ....;
   $location['postal_code'] = ....; // eg ZIP
   $location['administrative_area_level_1'] = ....; // eg state or province
   $location['formatted_address'] = ....; // address as a human-readible string
@@ -118,7 +119,7 @@ requests per day. (Users of Google Maps API Premier may perform up to 100,000
 requests per day.) This limit is enforced to prevent abuse and/or repurposing of
 the Geocoding API, and this limit may be changed in the future without notice.
 Additionally, we enforce a request rate limit to prevent abuse of the service.
-If you exceed the 24-hour limit or otherwise abuse the service, the Geocoding 
+If you exceed the 24-hour limit or otherwise abuse the service, the Geocoding
 API may stop working for you temporarily. If you continue to exceed this limit,
 your access to the Geocoding API may be blocked.
 

@@ -307,3 +307,68 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
   }
   return $google_address;
 }
+
+/**
+ * Returns the distance (in meters) between two points on the earth's surface.
+ * The points are defined by their lat/long coordinates. If the second point is
+ * omitted, the current visitor's location is used, as taken from their session
+ * data.
+ *
+ * @param array $location1, must contain 'latitude' and 'longitude' keys and
+ *   values
+ * @param $location2, if an array, must contain 'latitude' and 'longitude' keys
+ *   and values, otherwise defaults to $_SESSION['ip_geoloc']['location']
+ * @return float, distance in meters.
+ */
+function ip_geoloc_distance($location, $ref_location = 'current visitor') {
+  if (!is_array($ref_location) && !empty($_SESSION) && is_array($_SESSION['ip_geoloc']['location'])) {
+    $ref_location = $_SESSION['ip_geoloc']['location'];
+  }
+  if (is_numeric($location['longitude']) && is_numeric($location['latitude']) && is_numeric($ref_location['longitude']) && is_numeric($ref_location['latitude'])) {
+    return ip_geoloc_earth_distance($location['longitude'], $location['latitude'], $ref_location['longitude'], $ref_location['latitude']);
+  }
+  return '?';
+}
+
+/**
+ * Returns the distance between two points on the earth's surface. The points
+ * are defined by their lat/long coordinates.
+ * Gratefully copied from the http://drupal.org/project/location module, thus
+ * ensuring compatibility.
+ *
+ * @param $longitude1
+ * @param $latitude1
+ * @param $longitude2
+ * @param $latitude2
+ * @return distance in meters
+ * @see http://en.wikipedia.org/wiki/Great-circle_distance which appears to
+ *   use a slightly different algorithm
+ */
+function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitude2) {
+  $long1 = deg2rad($longitude1);
+  $lat1  = deg2rad($latitude1);
+  $long2 = deg2rad($longitude2);
+  $lat2  = deg2rad($latitude2);
+  $radius = ip_geoloc_earth_radius(($latitude1 + $latitude2) / 2);
+  $cosangle = cos($lat1)*cos($lat2) * (cos($long1)*cos($long2) + sin($long1)*sin($long2)) + sin($lat1)*sin($lat2);
+  return acos($cosangle) * $radius;
+}
+
+function ip_geoloc_earth_radius($latitude) {
+  $lat = deg2rad($latitude);
+  $x = cos($lat)/ip_geoloc_earth_radius_semimajor();
+  $y = sin($lat)/ip_geoloc_earth_radius_semiminor();
+  return 1.0 / (sqrt($x*$x + $y*$y));
+}
+
+function ip_geoloc_earth_radius_semimajor() {
+  return 6378137.0;
+}
+
+function ip_geoloc_earth_radius_semiminor() {
+  return (ip_geoloc_earth_radius_semimajor() * (1.0 - ip_geoloc_earth_flattening()));
+}
+
+function ip_geoloc_earth_flattening() {
+  return (1.0/298.257223563);
+}

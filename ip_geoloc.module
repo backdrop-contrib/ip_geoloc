@@ -74,8 +74,11 @@ function ip_geoloc_init() {
 
   // Sample location when due or as soon as a reverse_geocode timeout is detected.
   if (ip_geoloc_check_location() || $reverse_geocode_client_timeout) {
-    // Avoid mixing of previous and new location data by erasing location.
-    $_SESSION['ip_geoloc']['location'] = array();
+    // To avoid mixing of previous (eg. Smart IP) location fields and new (ie.
+    // Google) location fields we could clear out $_SESSION['ip_geoloc']['location'].
+    // However this will mean that any code relying on $_SESSION['ip_geoloc']['location']
+    // (for instance a PHP snippet for block visibility) will be face erased
+    // location data and behave incorrectly.
 
     $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
 
@@ -145,7 +148,7 @@ function ip_geoloc_current_location_ajax_recipient() {
 
   $location = &$_SESSION['ip_geoloc']['location'];
   // Erase location data previously collected
-  $location = array('ip_address' => ip_address());
+  $location = array('provider' => 'google', 'ip_address' => ip_address());
 
   if (isset($_POST['error'])) {
     // Device/browser does not support getCurrentPosition(), timeout, or Google reverse-geocode error.
@@ -154,7 +157,6 @@ function ip_geoloc_current_location_ajax_recipient() {
       // (Re)initialise street address details. These are based on the IP,
       // so reflect the internet provider location, not the browser location.
       if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
-        // $location = array('ip_address' => $ip_address);
         ip_geoloc_flatten_google_address($google_address, $location);
       }
       $error .= t('Fallback: %address', array('%address' => $location['formatted_address']));
@@ -169,6 +171,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     foreach ($_POST as $key => $value) {
       $location[check_plain($key)] = check_plain($value);
     }
+
     $time_elapsed = isset($_SESSION['ip_geoloc']['position_pending_since'])
       ? number_format(microtime(TRUE) - $_SESSION['ip_geoloc']['position_pending_since'], 1) : t('many, many');
     watchdog('IP Geolocation', 'Browser @ %address, received after %sec seconds.',  array('%address' => $location['formatted_address'], '%sec' => $time_elapsed), WATCHDOG_INFO);
@@ -191,6 +194,7 @@ function ip_geoloc_current_location_ajax_recipient() {
  *   user's IP address will be used
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
+  $location['provider'] = 'smart_ip';
   if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
     if (module_exists('smart_ip')) {
       if (empty($location['ip_address'])) {
@@ -212,6 +216,7 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
   if (!module_exists('geoip')) {
     return FALSE;
   }
+  $location['provider'] = 'geoip';
   if (empty($location['ip_address'])) {
     $location['ip_address'] = ip_address();
   }
@@ -292,6 +297,7 @@ function ip_geoloc_format_address(&$location) {
  */
 function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
   if (is_array($google_address) && is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
+    $ip_geoloc_address['provider'] = 'google';
     foreach ($google_address['address_components'] as $component) {
       $long_name = $component['long_name'];
       if (!empty($long_name)) {

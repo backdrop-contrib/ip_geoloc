@@ -14,8 +14,8 @@ function ip_geoloc_admin_configure() {
     // Form for sync-ing the geolocation table with the system accesslog
     $form['ip_geoloc_db_options'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Update geolocation database using past visitor IP addresses from the system access log'),
-      '#description'  => t('You can update the geolocation database in batches by pressing the button below. As a rough guide, count on a 1 minute wait for every 100 IP addresses, when executing a web service like IPInfoDB, as employed by Smart IP. Add another 2 minutes per 100 IP addresses if you ticked the option to employ the Google Maps API to reverse-geocode to street addresses. If your server interrupts the process you can continue from where it stopped by refreshing this page and pressing the button again. You will not lose any data.')
+      '#title' => t('Update IP geolocation database using past visitor IP addresses from the system access log'),
+      '#description'  => t('You can update the IP geolocation database in batches by pressing the button below. As a rough guide, count on a 1 minute wait for every 100 IP addresses, when executing a web service like IPInfoDB, as employed by Smart IP. Add another 2 minutes per 100 IP addresses if you ticked the option to employ the Google Maps API to reverse-geocode to street addresses. If your server interrupts the process you can continue from where it stopped by refreshing this page and pressing the button again. You will not lose any data.')
     );
     $form['ip_geoloc_db_options']['ip_geoloc_sync_with_accesslog'] = array(
       '#type' => 'submit',
@@ -74,7 +74,7 @@ function ip_geoloc_admin_configure() {
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_db'] = array(
     '#type' => 'submit',
-    '#value' => t('Erase entire geolocation database now'),
+    '#value' => t('Erase entire IP geolocation database now'),
     '#submit' => array('ip_geoloc_erase_db'),
   );
 
@@ -88,7 +88,7 @@ function ip_geoloc_admin_configure() {
  */
 function ip_geoloc_diagnose() {
   $geoloc_count = db_query('SELECT COUNT(DISTINCT ip_address) FROM {ip_geoloc}')->fetchField();
-  drupal_set_message(t("The geolocation database currently contains information for %geoloc_count IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
+  drupal_set_message(t("The IP geolocation database currently contains information for %geoloc_count visited IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
 
   if (!db_table_exists('accesslog')) {
     drupal_set_message(t('The <strong>accesslog</strong> database table does not exist, probably because core\'s <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The block "Map centered on current visitor\'s location" is not affected and should still display.'), 'warning');
@@ -106,11 +106,11 @@ function ip_geoloc_diagnose() {
       $non_synched_ips = ip_geoloc_ips_to_be_synched();
       $count = count($non_synched_ips);
       if ($count > 0) {
-        drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the geolocation database. These are the most recent ones: %ips",
+        drupal_set_message(t("%count IP addresses in the system access log currently have no associated lat/long or address information on the IP geolocation database. These are the most recent ones: %ips",
           array('%count' => $count, '%ips' => implode(', ', array_slice($non_synched_ips, 0, 10, TRUE)))), 'status', FALSE);
       }
       else {
-        drupal_set_message(t("The geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
+        drupal_set_message(t("The IP geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
       }
       return $count;
     }
