@@ -84,7 +84,8 @@ function ip_geoloc_admin_configure() {
 /**
  * Reports on the configuration status, in particular with respect to the system
  * access log, which is required for visitor views and maps.
- * @return -1, if there's a problem, count of IP addresses not stored otherwise
+ *
+ *   @return -1, if there's a problem, count of IP addresses not stored otherwise
  */
 function ip_geoloc_diagnose() {
   $geoloc_count = db_query('SELECT COUNT(DISTINCT ip_address) FROM {ip_geoloc}')->fetchField();

@@ -43,7 +43,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'textfield',
       '#title' => t('Number of recent visitor locations to show on the map.'),
       '#default_value' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10),
-      '#description' => t('Must be greater than 0. Values greater than 20 are not recommended.')
+      '#description' => t('Must be greater than 0. Values greater than 25 are not recommended.')
     );
   }
   $form['ip_geoloc_' . $delta . '_div_style'] = array(
@@ -205,7 +205,7 @@ function ip_geoloc_lookup($form, &$form_state) {
       $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
     }
     else {
-    //$form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
+      // $form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
     }
   }
   $form_state['storage']['formatted_address'] = isset($location['formatted_address'])

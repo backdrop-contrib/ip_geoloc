@@ -81,6 +81,8 @@ function ip_geoloc_uninstall() {
  * GeoIP City provides:
  *  TBA
  *
+ * Goolge provides:
+ *  TBA
  */
 function ip_geoloc_schema() {
   $schema['ip_geoloc'] = array(

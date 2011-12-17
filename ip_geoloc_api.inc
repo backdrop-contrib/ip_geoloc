@@ -17,14 +17,14 @@ define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geoc
  * Store the supplied IP geolocation info on the database, overwriting any
  * existing info for the IP address in question.
  *
- * @param $location, array with up to 13 location info fields; must at least
- *   contain a non-empty $location['ip_address'] and a non-empty
- *   $location['formatted_address'] for anything to happen
- * @return
- *   0, when no insert or update was necessary
- *   SAVED_NEW (=1), when a new location record was inserted into the db
- *   SAVED_UPDATED (=2), when an existing location record was updated
- *   FALSE, when a db insert or db update failed
+ *   @param $location, array with up to 13 location info fields; must at least
+ *     contain a non-empty $location['ip_address'] and a non-empty
+ *     $location['formatted_address'] for anything to happen
+ *   @return
+ *     0, when no insert or update was necessary
+ *     SAVED_NEW (=1), when a new location record was inserted into the db
+ *     SAVED_UPDATED (=2), when an existing location record was updated
+ *     FALSE, when a db insert or db update failed
  */
 function ip_geoloc_store_location($location) {
   // Give contributed modules a chance to add their 2 cents by implementing
@@ -33,7 +33,7 @@ function ip_geoloc_store_location($location) {
 
   $result = 0;
   if (empty($location['ip_address']) || empty($location['formatted_address'])) {
-    //ip_geoloc_debug('IP Geolocation: location object must contain both IP address and formatted address -- not stored.');
+    // ip_geoloc_debug('IP Geolocation: location object must contain both IP address and formatted address -- not stored.');
   }
   else {
     if (!isset($location['latitude']) || !isset($location['latitude'])) {
@@ -86,10 +86,11 @@ function ip_geoloc_store_location($location) {
  * area around the supplied lat,long coordinates.
  * Handy for use in Views.
  *
- * @param $latitude,  string or double, e.g. "-37.87" or -37.87
- * @param $longitude, string or double, e.g. "144.98" or 144.98
- * @param $div_id, id of the div placeholder, can be anything as long as it's unique
- * @param $style, CSS style applied to the div, e.g "height:250px; width:300px"
+ *   @param latitude,  string or double, e.g. "-37.87" or -37.87
+ *   @param longitude, string or double, e.g. "144.98" or 144.98
+ *   @param div_id, id of the div placeholder, can be anything as long as it's
+ *     unique
+ *   @param style, CSS style applied to the div, e.g "height:250px; width:300px"
  */
 function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', $style = '', $balloon_text = '') {
   $javascript_files = drupal_add_js();
@@ -113,9 +114,12 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  * reveals latitude and longitude, as well as the street address and the
  * accuracy of the position shown.
  *
- * @param $div_id, id of the div placeholder, can be anything as long as it's unique
- * @param $map_options, as a JSON string e.g '{"mapTypeId":"roadmap", "zoom":15}'
- * @param $map_style, CSS style applied to the div, e.g "height:200px; width:300px"
+ *   @param div_id, id of the div placeholder, can be anything as long as it's
+ *     unique
+ *   @param map_options, as a JSON string e.g
+ *     '{"mapTypeId":"roadmap", "zoom":15}'
+ *   @param map_style, CSS style applied to the div, e.g
+ *     "height:200px; width:300px"
  */
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_options = '', $map_style = '') {
   $js_options = array('group' => JS_LIBRARY);
@@ -135,11 +139,14 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
  * Outputs an HTML div placeholder into which will be injected a multi-location
  * map, its locations supplied as an array of lat,long coordinates.
  *
- * @param $locations, array of location objects each containing lat/long pair
- *   and infoText to appear when the marker is clicked
- * @param $div_id, id of the div placeholder, can be anything as long as it's unique
- * @param $map_options, as a JSON string, .e.g '{"mapTypeId":"roadmap", "zoom":15}'
- * @param $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
+ *   @param $locations, array of location objects each containing lat/long pair
+ *     and infoText to appear when the marker is clicked
+ *   @param $div_id, id of the div placeholder, can be anything as long as it'
+ *     unique
+ *   @param $map_options, as a JSON string, .e.g
+ *    '{"mapTypeId":"roadmap", "zoom":15}'
+ *   @param $map_style, CSS style applied to the div, e.g
+ *    "height:250px; width:300px"
  */
 function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options = '', $map_style = '') {
   $javascript_files = drupal_add_js();
@@ -183,20 +190,20 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
  * Performs a lookup in IP Geolocation's own database to see if the supplied IP
  * address has visited already and if so returns their location details (as an
  * array). If the IP address is not yet in the IP Geolocation database, then
- * retrieve lat/long using either Smart IP or GeoIP API (if enabled) and reverse-
- * geocode the lat/long (if the Google Maps service is enabled) into a location.
- * If the second argument is TRUE, then store the new location.
+ * retrieve lat/long using either Smart IP or GeoIP API (if enabled) and
+ * reverse-geocode the lat/long (if the Google Maps service is enabled) into a
+ * location. If the second argument is TRUE, then store the new location.
  *
- * @param $ip_address; note if you're looking for location data for the current
- *   visitor look in $_SESSION['ip_geoloc']['location']
- * @param $resample, if set to TRUE and the supplied IP address is already on
- *   the db, ignore the existing location data and retrieve the latest
- * @param $store, if TRUE, store the new or resampled location on the db
- * @param $reverse_geocode, applies only when the supplied IP address is not yet
- *   on the database or $resample=TRUE; use TRUE, FALSE or NULL; TRUE will
- *   produce greater detail in the location returned; if NULL or omitted the
- *   value is taken from the tick box on the IP Geolocation configuration page
- * @return location as an array
+ *   @param $ip_address; note if you're looking for location data for the
+ *     current visitor look in $_SESSION['ip_geoloc']['location']
+ *   @param $resample, if set to TRUE and the supplied IP address is already on
+ *     the db, ignore the existing location data and retrieve the latest
+ *   @param $store, if TRUE, store the new or resampled location on the db
+ *   @param $reverse_geocode, applies only when the supplied IP address is not
+ *     yet on the database or $resample=TRUE; use TRUE, FALSE or NULL; TRUE will
+ *     produce greater detail in the location returned; if NULL or omitted the
+ *     value is taken from the tick box on the IP Geolocation configuration page
+ *   @return location as an array
  */
 function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = FALSE, $reverse_geocode = NULL) {
   $location = $resample ? NULL : db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => $ip_address))->fetchAssoc();
@@ -232,8 +239,8 @@ function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = F
  *
  * See the CALLER BEWARE note at ip_geoloc_reverse_geocode().
  *
- * @param $latitude,  string or double, e.g. "-37.87" or -37.87
- * @param $longitude, string or double, e.g. "144.98" or 144.98
+ *   @param latitude,  string or double, e.g. "-37.87" or -37.87
+ *   @param longitude, string or double, e.g. "144.98" or 144.98
  */
 function ip_geoloc_get_address($latitude, $longitude) {
   return $google_address = ip_geoloc_reverse_geocode($latitidue, $longitude)
@@ -251,8 +258,8 @@ function ip_geoloc_get_address($latitude, $longitude) {
  * remeber that Google imposes a limit of 2500 calls per 24hr. It may return an
  * OVER_QUERY_LIMIT response.
  *
- * @param $latitude,  string or double, e.g. "-37.87" or -37.87
- * @param $longitude, string or double, e.g. "144.98" or 144.98
+ *   @param latitude,  string or double, e.g. "-37.87" or -37.87
+ *   @param longitude, string or double, e.g. "144.98" or 144.98
  */
 function ip_geoloc_reverse_geocode($latitude, $longitude) {
   if (empty($latitude) || empty($latitude)) {
@@ -314,11 +321,11 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
  * omitted, the current visitor's location is used, as taken from their session
  * data.
  *
- * @param array $location1, must contain 'latitude' and 'longitude' keys and
- *   values
- * @param $location2, if an array, must contain 'latitude' and 'longitude' keys
- *   and values, otherwise defaults to $_SESSION['ip_geoloc']['location']
- * @return float, distance in meters.
+ *   @param array $location1, must contain 'latitude' and 'longitude' keys and
+ *     values
+ *   @param $location2, if an array, must contain 'latitude' and 'longitude' keys
+ *     and values, otherwise defaults to $_SESSION['ip_geoloc']['location']
+ *   @return float, distance in meters.
  */
 function ip_geoloc_distance($location, $ref_location = 'current visitor') {
   if (!is_array($ref_location) && !empty($_SESSION) && is_array($_SESSION['ip_geoloc']['location'])) {
@@ -336,13 +343,13 @@ function ip_geoloc_distance($location, $ref_location = 'current visitor') {
  * Gratefully copied from the http://drupal.org/project/location module, thus
  * ensuring compatibility.
  *
- * @param $longitude1
- * @param $latitude1
- * @param $longitude2
- * @param $latitude2
- * @return distance in meters
- * @see http://en.wikipedia.org/wiki/Great-circle_distance which appears to
- *   use a slightly different algorithm
+ *   @param longitude1
+ *   @param latitude1
+ *   @param longitude2
+ *   @param latitude2
+ *   @return distance in meters
+ *   @see http://en.wikipedia.org/wiki/Great-circle_distance, which appears to
+ *     use a slightly different algorithm
  */
 function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitude2) {
   $long1 = deg2rad($longitude1);
