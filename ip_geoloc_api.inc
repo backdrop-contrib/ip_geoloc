@@ -14,8 +14,9 @@ define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'http://maps.google.com/maps/api/js?senso
 define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
- * Store the supplied IP geolocation info on the database, overwriting any
- * existing info for the IP address in question.
+ * Store the supplied IP geolocation info on the database.
+ *
+ * This will overwrite any existing info for the IP address in question.
  *
  * @param
  *   $location, array with up to 13 location info fields; must at least
@@ -73,7 +74,7 @@ function ip_geoloc_store_location($location) {
     }
     catch (PDOException $e) {
       // May happen when a fields contains illegal characters
-      drupal_set_message($e->getMessage(), 'error');
+      drupal_set_message(check_plain($e->getMessage()), 'error');
     }
     if ($result === FALSE) {
       drupal_set_message(t('IP Geolocation: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
@@ -83,8 +84,9 @@ function ip_geoloc_store_location($location) {
 }
 
 /**
- * Outputs an HTML div placeholder into which will be injected a map of the
- * area around the supplied lat,long coordinates.
+ * Outputs an HTML div placeholder into which will be injected a map.
+ *
+ * The map is centered on the supplied lat,long coordinates.
  * Handy for use in Views.
  *
  * @param
@@ -112,11 +114,11 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
 }
 
 /**
- * Outputs an HTML div placeholder into which is injected a map of the area
- * around the visitor's current location.
- * The map contains a marker for the current location, which when clicked
- * reveals latitude and longitude, as well as the street address and the
- * accuracy of the position shown.
+ * Outputs an HTML div placeholder into which is injected a map.
+ *
+ * The map is centered on the visitor's current location and features a position
+ * marker, which when clicked reveals latitude and longitude, as well as the
+ * street address and the accuracy of the position shown.
  *
  * @param
  *   div_id, id of the div placeholder, can be anything as long as it's unique
@@ -199,9 +201,11 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
  * reverse-geocode the lat/long (if the Google Maps service is enabled) into a
  * location. If the second argument is TRUE, then store the new location.
  *
- * @param $ip_address; note if you're looking for location data for the
- *   current visitor look in $_SESSION['ip_geoloc']['location']
- * @param $resample, if set to TRUE and the supplied IP address is already on
+ * @param
+ *   $ip_address; note if you're looking for location data for the current
+ *   visitor look in $_SESSION['ip_geoloc']['location']
+ * @param
+ *   $resample, if set to TRUE and the supplied IP address is already on
  *   the db, ignore the existing location data and retrieve the latest
  * @param
  *   $store, if TRUE, store the new or resampled location on the db
@@ -351,10 +355,12 @@ function ip_geoloc_distance($location, $ref_location = 'current visitor') {
 }
 
 /**
- * Returns the distance between two points on the earth's surface. The points
- * are defined by their lat/long coordinates.
+ * Returns the distance between two points on the earth's surface.
+ *
+ * The points are defined by their lat/long coordinates.
+ *
  * Gratefully copied from the http://drupal.org/project/location module, thus
- * ensuring compatibility.
+ * ensuring compatibility of results.
  *
  *  @param
  *    longitude1
@@ -368,7 +374,7 @@ function ip_geoloc_distance($location, $ref_location = 'current visitor') {
  *   distance in meters
  *
  *  @see http://en.wikipedia.org/wiki/Great-circle_distance
- *     The above article appears to use a slightly different algorithm.
+ *    This article appears to use a slightly different algorithm.
  */
 function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitude2) {
   $long1 = deg2rad($longitude1);

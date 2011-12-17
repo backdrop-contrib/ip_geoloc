@@ -136,9 +136,10 @@ function ip_geoloc_init() {
 }
 
 /**
- * Data recipient for javascript function getLocation() (file:
- * ip_geoloc_current_location.js) via menu callback /ip-geoloc-current-location,
- * see function ip_geoloc_menu() above.
+ * Data recipient for javascript function getLocation().
+ *
+ * Comes in via menu callback /ip-geoloc-current-location, see function
+ * ip_geoloc_menu() above.
  * Receives latitude, longitude, accuracy and address via the global $_POST
  * variable from function getLocations(), which posts these through an AJAX
  * call.
@@ -187,11 +188,14 @@ function ip_geoloc_current_location_ajax_recipient() {
 
 /**
  * Use Smart IP (if enabled) to retrieve lat/long and address info.
+ *
  * Note that smart_ip_get_location() will invoke
  * hook_smart_ip_get_location_alter($location), which we use to format the
  * address.
- *   @param $location, if $location['ip_address'] isn't filled out the current
- *     user's IP address will be used
+ *
+ * @param
+ *   $location, if $location['ip_address'] isn't filled out the current user's
+ *   IP address will be used
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
   $location['provider'] = 'smart_ip';
@@ -205,7 +209,7 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
     }
     ip_geoloc_debug(t('IP Geolocation: Smart IP configured as a backup, but is not enabled.'));
   }
-//$location['formatted_address'] = '';
+// $location['formatted_address'] = '';
   return FALSE;
 }
 
@@ -268,10 +272,14 @@ function ip_geoloc_reverse_geocode_timeout() {
 }
 
 /**
- * This is a poorman's version as it doesn't take local format conventions into
- * account. Luckily this is only called as a fallback when lat/long could not
- * be established or the Google reverse-geocode function returned an error.
- *   @param location object
+ * Poorman's address formatter.
+ *
+ * It doesn't take local format conventions into account. Luckily this is only
+ * called as a fallback when lat/long could not be established or the Google
+ * reverse-geocode function returned an error.
+ *
+ * @param
+ *   location object
  */
 function ip_geoloc_format_address(&$location) {
   $location['formatted_address'] = isset($location['city']) ? $location['city'] : '';
@@ -291,9 +299,12 @@ function ip_geoloc_format_address(&$location) {
  * 'latitude' and 'longitude' entries so that they remain consistent with the
  * street address components.
  *
- *   @param google_address
- *   @param $ip_geoloc_address
- *   @return TRUE, unless $google_address or $ip_geoloc_address are empty
+ * @param
+ *   google_address
+ * @param
+ *   ip_geoloc_address
+ * @return
+ *   TRUE, unless google_address or ip_geoloc_address are empty
  */
 function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
   if (is_array($google_address) && is_array($google_address['address_components']) && is_array($ip_geoloc_address)) {
