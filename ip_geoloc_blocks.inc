@@ -60,8 +60,8 @@ function ip_geoloc_block_configure($delta = '') {
       '#title' => t('Map options'),
       '#default_value' => variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS),
       '#description' => t("The default %default_options produces a street map zoomed in to level 15. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-            array('%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
-                  '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+        array('%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
+              '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
     );
   }
   elseif ($delta == 'recent_visitors_map') {
@@ -71,8 +71,8 @@ function ip_geoloc_block_configure($delta = '') {
       '#title' => t('Map options'),
       '#default_value' => variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS),
       '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-            array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
-                  '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+        array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
+              '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
     );
   }
   return $form;
@@ -141,17 +141,16 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
   $locations = array();
   if (db_table_exists('accesslog')) {
     // A LEFT JOIN would also pick up new IP addresses that are about to be
-    // inserted into the {accesslog} during execution of hook_exit().
+    // inserted into the {accesslog}.
     // However a LEFT JOIN in this query can easily make it 100 times slower
     // than the INNER JOIN used below and would only be relevant for the very
     // first click from a new IP address or in the case where the IP address was
     // removed from the {accesslog}.
     $result = db_query_range('SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY i.ip_address ORDER BY last_visit DESC', 0, $how_many);
-    $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
     foreach ($result as $location) {
       if (!isset($locations[$location->ip_address])) {
         $location->visit_count = empty($location->visit_count) ? '?' : $location->visit_count;
-        $location->last_visit = empty($location->last_visit) ? '?' : date($date_format, $location->last_visit);
+        $location->last_visit  = empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short');
         $locations[$location->ip_address] = $location;
       }
     }
@@ -160,8 +159,7 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
 }
 
 /**
- * Generates a simple form for collecting the IP address to be reverse-geocoded
- * into a street address.
+ * Generates a simple form for collecting the IP address to be reverse-geocoded.
  *
  * @ingroup forms
  */
@@ -200,8 +198,7 @@ function ip_geoloc_lookup($form, &$form_state) {
   if (db_table_exists('accesslog')) {
     $last_visit = db_query('SELECT MAX(timestamp) FROM {accesslog} WHERE hostname = :ip_address', array(':ip_address' => $location['ip_address']))->fetchField();
     if ($last_visit) {
-      $date_format = variable_get('date_format_short', 'm/d/Y - H:i');
-      $last_visit = date($date_format, $last_visit);
+      $last_visit = format_date($last_visit, 'short');
       $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
     }
     else {

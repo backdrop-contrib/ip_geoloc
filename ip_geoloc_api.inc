@@ -68,13 +68,13 @@ function ip_geoloc_store_location($location) {
       $full_location = array_merge($empty_location, $location);
       ip_geoloc_debug(t('IP Geolocation: updating db with: !location', array('!location' => ip_geoloc_pretty_print($full_location))));
     }
-    $result = FALSE;
     try {
       $result = drupal_write_record('ip_geoloc', $full_location, $existing_location ? array('id') : array());
     }
     catch (PDOException $e) {
       // May happen when a fields contains illegal characters
       drupal_set_message(check_plain($e->getMessage()), 'error');
+      $result = FALSE;
     }
     if ($result === FALSE) {
       drupal_set_message(t('IP Geolocation: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
@@ -142,8 +142,9 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
 }
 
 /**
- * Outputs an HTML div placeholder into which will be injected a multi-location
- * map, its locations supplied as an array of lat,long coordinates.
+ * Outputs an HTML div placeholder into which will be injected a map.
+ *
+ * The locations to be mapped are supplied as an array of lat,long coordinates.
  *
  * @param
  *   $locations, array of location objects each containing lat/long pair
@@ -172,9 +173,10 @@ function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-m
 }
 
 /**
- * Places in $_POST the latitude, longitude and accuracy of the visitor's
- * current location, as well as the formatted address (a single string)
- * reverse-geocode from the lat/long.
+ * Places in $_POST the lat/long and accuracy of the visitor's current location.
+ *
+ * Also outputs the formatted address (a single string) reverse-geocoded from
+ * the lat/long.
  *
  * Note: this is done via an asynchronous javascript call, so the result is not
  * immediately available on return from this function, hence the $menu_callback.
@@ -194,6 +196,8 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
 }
 
 /**
+ * Returns the location details associated with the supplied IP address.
+ *
  * Performs a lookup in IP Geolocation's own database to see if the supplied IP
  * address has visited already and if so returns their location details (as an
  * array). If the IP address is not yet in the IP Geolocation database, then
@@ -264,7 +268,7 @@ function ip_geoloc_get_address($latitude, $longitude) {
  * Uses the Google webservice to retrieve address information based on lat/long.
  *
  * Effectively makes calls of this form:
- * http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=-37.87,144.98
+ * http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=-37,144
  *
  * CALLER BEWARE:
  * This is a server-side call. If you want to call this function repeatedly,
@@ -332,6 +336,7 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
 
 /**
  * Returns the distance (in meters) between two points on the earth's surface.
+ *
  * The points are defined by their lat/long coordinates. If the second point is
  * omitted, the current visitor's location is used, as taken from their session
  * data.

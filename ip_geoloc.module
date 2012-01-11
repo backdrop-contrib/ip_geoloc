@@ -22,8 +22,10 @@ require_once 'ip_geoloc_blocks.inc';
  */
 function ip_geoloc_help($path, $arg) {
   if ($path == 'admin/help#ip_geoloc') {
-    return t('Detailed information is on the <a href="!ip_geoloc">IP Geolocation project page</a> and in the <a href="!README">README</a> file',
-        array('!ip_geoloc' => url('http://drupal.org/project/ip_geoloc'), '!README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt')));
+    return t('Detailed information is on the <a href="!ip_geoloc">IP Geolocation project page</a> and in the <a href="!README">README</a> file', array(
+      '!ip_geoloc' => url('http://drupal.org/project/ip_geoloc'),
+      '!README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt')
+    ));
   }
 }
 
@@ -237,8 +239,10 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
 }
 
 /**
- * Return whether a the visitor's location is due for an update, i.e. whether
- * more than a configurable number of seconds have elapsed.
+ * Return whether a the visitor's location is due for an update.
+ *
+ * An update is due when more than a configurable number of seconds have
+ * elapsed.
  */
 function ip_geoloc_check_location() {
   $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
@@ -257,8 +261,9 @@ function ip_geoloc_check_location() {
 
 /**
  * Handle timeout of the Google Maps reverse-geocode callback, if enabled.
- * Based on $_SESSION['ip_geoloc']['position_pending_since'] being set to the
- * current time when the service was initiated.
+ *
+ * This is based on $_SESSION['ip_geoloc']['position_pending_since'] being set
+ * to the current time when the service was initiated.
  */
 function ip_geoloc_reverse_geocode_timeout() {
   if (isset($_SESSION['ip_geoloc']['position_pending_since'])) {
@@ -294,10 +299,11 @@ function ip_geoloc_format_address(&$location) {
 }
 
 /**
- * Fleshes out the $ip_geoloc_address array based on the additional data
- * provided in the $google_address array. This may involve tweaking of the
- * 'latitude' and 'longitude' entries so that they remain consistent with the
- * street address components.
+ * Fleshes out the $ip_geoloc_address array.
+ *
+ * This is based on the additional data provided in the $google_address array.
+ * This may involve tweaking of the 'latitude' and 'longitude' entries so that
+ * they remain consistent with the street address components.
  *
  * @param
  *   google_address
@@ -340,7 +346,7 @@ function ip_geoloc_pretty_print($location) {
 }
 
 function ip_geoloc_debug($message, $type = 'status') {
-  if ($GLOBALS['user']->uid == 1 && variable_get('ip_geoloc_debug', FAlSE)) {
+  if ($GLOBALS['user']->uid == 1 && variable_get('ip_geoloc_debug', FALSE)) {
     drupal_set_message($message, $type);
   }
 }
