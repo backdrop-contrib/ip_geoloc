@@ -5,5 +5,5 @@ core = 7.x
 configure = admin/config/system/ip_geoloc
 ; There are no programmatic dependencies but the following modules are highly
 ; recommended to realise a rich feature set: Statistics (core), Views, 
-; Views-PHP and one of Smart IP or GeoIP API
-; version = "7.x-1.x-dev"
+; Views-PHP and one of Smart IP or GeoIP API.
+version = "7.x-1.x-dev"
