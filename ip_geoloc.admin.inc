@@ -41,11 +41,13 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', TRUE),
     '#description' => t('For present and future visitors this is done via the client-side version of the Maps API. For the upload of historic visitor location data the server-side version of the Maps API is used. Note that Google may impose a limit on the daily number of API calls coming from the same machine.')
   );
-  $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
+  $form['ip_geoloc_data_collection_options']['ip_geolo_smart_ip_as_backup'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ Smart IP as a backup to the Google Maps API and to load historic lat/long coordinates.'),
     '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),
-    '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="http://drupal.org/project/geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.')
+    '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
+      '@geoip' => url('http://drupal.org/project/geoip')
+    ))
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
     '#type' => 'textfield',

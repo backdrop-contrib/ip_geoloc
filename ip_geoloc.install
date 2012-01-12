@@ -49,7 +49,7 @@ function ip_geoloc_requirements($phase = 'runtime') {
  * Implements hook_install().
  */
 function ip_geoloc_install() {
-  // Set high weight so our implementation of hook_init() comes last
+  // Set high weight so our implementation of hook init comes last.
   db_update('system')
     ->fields(array('weight' => 10))
     ->condition('name', 'ip_geoloc')
