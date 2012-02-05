@@ -38,7 +38,7 @@ function ip_geoloc_store_location($location) {
     // ip_geoloc_debug('IP Geolocation: location object must contain both IP address and formatted address -- not stored.');
   }
   else {
-    if (!isset($location['latitude']) || !isset($location['latitude'])) {
+    if ($location['ip_address'] != '127.0.0.1' && (!isset($location['latitude']) || !isset($location['latitude']))) {
       drupal_set_message(t('IP Geolocation: lat or long missing for IP address %ip (location still stored).', array('%ip' => $location['ip_address'])));
     }
     // See if this IP is already on the db
