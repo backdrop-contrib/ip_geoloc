@@ -23,17 +23,20 @@
           mouseOverText = Drupal.t('Visitor #@i', { '@i': i });
         }
         marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
-        balloonTexts['LL' + position] = 
+        balloonTexts['LL' + position] =
           Drupal.t('IP address: @ip', { '@ip':  ip }) + '<br/>' +
-          locations[ip].formatted_address + '<br/>' +
-          Drupal.t('#visits: @count, last visit: @date', { '@count': locations[ip].visit_count, '@date': locations[ip].last_visit });
-        //var content = "Lat/long: " + event.latLng + "<br/>" + balloonTexts['LL' + event.latLng]
+          locations[ip].formatted_address + '<br/>';
+
+        if (locations[ip].last_visit) {
+          balloonTexts['LL' + position] += Drupal.t('#visits: @count, last visit: @date', { '@count': locations[ip].visit_count, '@date': locations[ip].last_visit });
+        }
+
         google.maps.event.addListener(marker, 'click',  function(event) {
-          var lat  = event.latLng.lat().toFixed(4);
-          var long = event.latLng.lng().toFixed(4);
+          var lat = event.latLng.lat().toFixed(4);
+          var lng = event.latLng.lng().toFixed(4);
           new google.maps.InfoWindow({
-            content: Drupal.t('Lat/long: @lat/@long', { '@lat': lat, '@long': long }) + '<br/>' + balloonTexts['LL' + event.latLng], 
-            position: event.latLng 
+            content: Drupal.t('Lat/long: @lat/@long', { '@lat': lat, '@long': lng }) + '<br/>' + balloonTexts['LL' + event.latLng],
+            position: event.latLng
           }).open(map);
         });
       }

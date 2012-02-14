@@ -148,7 +148,8 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
  *
  * @param
  *   $locations, array of location objects each containing lat/long pair
- *   and infoText to appear when the marker is clicked
+ *   and optionally address, visit count and last visit to appear when the
+ *   marker is clicked
  * @param
  *   $div_id, id of the div placeholder, can be anything as long as it's unique
  * @param
