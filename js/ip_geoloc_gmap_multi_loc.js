@@ -16,6 +16,7 @@
         map.setZoom(0);
         map.setCenter(new google.maps.LatLng(0, 0));
       }
+   
       var balloonTexts = [];
       var i = 0;
       for (key in locations) {

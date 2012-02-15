@@ -15,12 +15,27 @@ function ip_geoloc_views_data() {
   );
 
   $data['ip_geoloc']['table']['join'] = array(
+    // Make all of our fields instantly available in an Access Log view.
     // ip_geoloc.ip_address connects to accesslog.hostname
     'accesslog' => array(
       'left_field' => 'hostname',
       'field' => 'ip_address',
       'type' => 'INNER'
     ),
+    // Make all of our fields instantly available in an Orders view.
+    // ip_geoloc.ip_address connects to commerce_order.hostname
+    'commerce_order' => array(
+      'left_field' => 'hostname',
+      'field' => 'ip_address',
+      'type' => 'INNER'
+    ),
+    // Make all of our fields instantly available in an Order Revisions view.
+    // ip_geoloc.ip_address connects to commerce_order_revision.revision_hostname
+    'commerce_order_revision' => array(
+      'left_field' => 'revision_hostname',
+      'field' => 'ip_address',
+      'type' => 'INNER'
+    )
   );
 
   $data['ip_geoloc']['ip_address'] = array(

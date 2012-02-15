@@ -28,7 +28,7 @@ function ip_geoloc_block_info() {
     'cache' => DRUPAL_NO_CACHE
   );
   if (!module_exists('views')) {
-    $blocks['map_of_view']['info'] .= '<strong> ('. t('requires Views module') . ')</strong>';
+    $blocks['map_of_view']['info'] .= '<em> ('. t('requires Views module') . ')</em>';
   }
   $blocks['address_lookup'] = array(
     'info' => t('Address lookup based on IP'),
@@ -98,7 +98,7 @@ function ip_geoloc_block_configure($delta = '') {
         '#title' => t('Choose a view to populate the map appearing in this block'),
         '#default_value' => variable_get('ip_geoloc_view_for_map'),
         '#options' => $views,
-        '#description' => t('The view must output fields labeled <strong>hostname, latitude</strong> and <strong>longitude</strong>.<br/>Remaining fields in the view will be added to pop up in balloons when map markers are clicked.')
+        '#description' => t('The view must output fields labeled <strong>latitude</strong> and <strong>longitude</strong>.<br/>Remaining fields in the view will be added to pop up in balloons when map markers are clicked.')
       );
       $form['ip_geoloc_map_of_view_options'] = array(
         '#type' => 'textfield',
@@ -200,6 +200,7 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
     // removed from the {accesslog}.
     $result = db_query_range('SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY i.ip_address ORDER BY last_visit DESC', 0, $how_many);
     foreach ($result as $location) {
+      // Prevent older IP address locations overwriting the latest location.
       if (!isset($locations[$location->ip_address])) {
         $loc_rendered = new stdClass();
         $loc_rendered->latitude = $location->latitude;
@@ -209,7 +210,7 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
          . t('#visits') . ' ' . (empty($location->visit_count) ? '?' : $location->visit_count)
          . ', '. t('last visit') . ' ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
         // $loc-rendered->balloonText = filter_xss($loc_rendered->balloonText);
-        $locations[] = $loc_rendered;
+        $locations[$location->ip_address] = $loc_rendered;
       }
     }
   }
@@ -282,11 +283,14 @@ function ip_geoloc_get_names_of_views_suitable_for_maps() {
     $required_field_names = array('longitude', 'latitude');
     foreach (views_get_all_views() as $view) {
       foreach ($required_field_names as $field_name_or_label) {
-        if (!_ip_geoloc_find_view_field($view, $field_name_or_label)) {
+        $all_found = _ip_geoloc_find_real_field($view, $field_name_or_label);
+        if (!$all_found) {
           break;
         }
       }
-      $views[$view->name] = empty($view->human_name) ? $view->name : $view->human_name;
+      if ($all_found) {
+        $views[$view->name] = empty($view->human_name) ? $view->name : $view->human_name;
+      }
     }
   }
   return $views;
@@ -312,14 +316,31 @@ function ip_geoloc_get_view_output($view_id) {
   $view->init_display();
   $view->pre_execute();
   $view->execute();
+  // At this point we'll have access to the raw data, but for the marker
+  // balloons we want rendered data...that is semi-rendered, not with all
+  // the HTML tags around it.... There does not seem to be a suitable
+  // interception point...
+  // After $view->render, $view->display_handler->output contains the HTML
+  // rendered output, not just the content of each field...
+  // Where do we get that?
+  $view->render();
 
   foreach ($view->result as $row) {
     $row = (array)$row;
+    foreach ($row as $key => $value) {
+      if (is_array($value) || strpos($key, 'field') !== FALSE) {
+        unset($row[$key]);
+      }
+    }
 
     $location = new stdClass();
-    $location->latitude  = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'latitude'));
-    $location->longitude = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'longitude'));
-    // Remaining field values go into balloon
+    $location->balloonText = '';
+    $location->latitude  = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_real_field($view, 'latitude'));
+    $location->longitude = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_real_field($view, 'longitude'));
+
+    // Remaining field values go into balloon.
+    // I have yet to find a way to get the semi-rendered field values in...
+
     $location->balloonText = implode('<br/>', $row);
 
     $locations[] = $location;
@@ -327,7 +348,7 @@ function ip_geoloc_get_view_output($view_id) {
   return $locations;
 }
 
-function _ip_geoloc_find_view_field($view, $field_name_or_label) {
+function _ip_geoloc_find_real_field($view, $field_name_or_label) {
   if (isset($view->display['default']->display_options['fields'])) {
     $fields = $view->display['default']->display_options['fields'];
     $field_names = array();
@@ -350,3 +371,4 @@ function _ip_geoloc_find_row_field_value(&$row, $field_name) {
   }
   return NULL;
 }
+
