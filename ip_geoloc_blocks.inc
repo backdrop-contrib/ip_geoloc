@@ -23,6 +23,13 @@ function ip_geoloc_block_info() {
     'info' => t('Map showing locations of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10))),
     'cache' => DRUPAL_NO_CACHE
   );
+  $blocks['map_of_view'] = array(
+    'info' =>  t('Map of view output'),
+    'cache' => DRUPAL_NO_CACHE
+  );
+  if (!module_exists('views')) {
+    $blocks['map_of_view']['info'] .= '<strong> ('. t('requires Views module') . ')</strong>';
+  }
   $blocks['address_lookup'] = array(
     'info' => t('Address lookup based on IP'),
     'cache' => DRUPAL_NO_CACHE
@@ -53,27 +60,56 @@ function ip_geoloc_block_configure($delta = '') {
     '#description' => t('The default %default_style results in a map of 300 pixels high, with a width bounded by the element that contains it. Do not enter quotes or equal signs and make sure your quotes match.',
       array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
   );
-  if ($delta == 'current_visitor_map') {
-    $form['ip_geoloc_current_visitor_map_options'] = array(
-      '#type' => 'textfield',
-      '#size' => 120,
-      '#title' => t('Map options'),
-      '#default_value' => variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS),
-      '#description' => t("The default %default_options produces a street map zoomed in to level 15. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-        array('%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
-              '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
-    );
-  }
-  elseif ($delta == 'recent_visitors_map') {
-    $form['ip_geoloc_recent_visitors_map_options'] = array(
-      '#type' => 'textfield',
-      '#size' => 120,
-      '#title' => t('Map options'),
-      '#default_value' => variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS),
-      '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-        array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
-              '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
-    );
+
+  switch ($delta) {
+
+    case 'current_visitor_map':
+      $form['ip_geoloc_current_visitor_map_options'] = array(
+        '#type' => 'textfield',
+        '#size' => 120,
+        '#title' => t('Map options'),
+        '#default_value' => variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS),
+        '#description' => t("The default %default_options produces a street map zoomed in to level 15. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
+          array('%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
+                '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+      );
+      break;
+
+    case 'recent_visitors_map':
+      $form['ip_geoloc_recent_visitors_map_options'] = array(
+        '#type' => 'textfield',
+        '#size' => 120,
+        '#title' => t('Map options'),
+        '#default_value' => variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS),
+        '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
+          array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
+                '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+      );
+      break;
+
+    case 'map_of_view':
+      $views = array_merge(
+        array('' => t('- None -')),
+        ip_geoloc_get_names_of_views_suitable_for_maps()
+      );
+      asort($views);
+      $form['ip_geoloc_view_for_map'] = array(
+        '#type' => 'select',
+        '#title' => t('Choose a view to populate the map appearing in this block'),
+        '#default_value' => variable_get('ip_geoloc_view_for_map'),
+        '#options' => $views,
+        '#description' => t('The view must output fields labeled <strong>hostname, latitude</strong> and <strong>longitude</strong>.<br/>Remaining fields in the view will be added to pop up in balloons when map markers are clicked.')
+      );
+      $form['ip_geoloc_map_of_view_options'] = array(
+        '#type' => 'textfield',
+        '#size' => 120,
+        '#title' => t('Map options'),
+        '#default_value' => variable_get('ip_geoloc_map_of_view_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS),
+        '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
+          array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
+                '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+      );
+      break;
   }
   return $form;
 }
@@ -85,13 +121,19 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
   if ($delta == 'address_lookup') {
     return;
   }
+  // Save options common to all maps
   variable_set('ip_geoloc_' . $delta . '_div_style', $edit['ip_geoloc_' . $delta . '_div_style']);
-  if ($delta == 'current_visitor_map') {
-    ip_geoloc_save_map_options('ip_geoloc_current_visitor_map_options', $edit['ip_geoloc_current_visitor_map_options']);
-  }
-  elseif ($delta == 'recent_visitors_map') {
-    ip_geoloc_save_map_options('ip_geoloc_recent_visitors_map_options', $edit['ip_geoloc_recent_visitors_map_options']);
-    variable_set('ip_geoloc_recent_visitors_map_number_of_visitors', $edit['ip_geoloc_recent_visitors_map_number_of_visitors']);
+  ip_geoloc_save_map_options('ip_geoloc_' . $delta . '_options', $edit['ip_geoloc_' . $delta . '_options']);
+
+  switch ($delta) {
+
+    case 'recent_visitors_map':
+      variable_set('ip_geoloc_recent_visitors_map_number_of_visitors', $edit['ip_geoloc_recent_visitors_map_number_of_visitors']);
+      break;
+
+    case 'map_of_view':
+      variable_set('ip_geoloc_view_for_map', $edit['ip_geoloc_view_for_map']);
+      break;
   }
 }
 
@@ -101,6 +143,7 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
 function ip_geoloc_block_view($delta = '') {
   $block = array();
   $map_style = variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE);
+
   switch ($delta) {
 
     case 'current_visitor_map':
@@ -115,9 +158,18 @@ function ip_geoloc_block_view($delta = '') {
       if ($how_many > 0) {
         $locations = ip_geoloc_get_recent_visitor_locations($how_many);
         $map_options = variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
-        $block['content'] = empty($locations)
-          ? t('No recent visitors available to map.')
-          : ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', drupal_json_decode($map_options), $map_style);
+        $block['content'] = ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-recent-visitors-map', drupal_json_decode($map_options), $map_style);
+      }
+      break;
+
+    case 'map_of_view':
+      if (module_exists('views')) {
+        $locations = ip_geoloc_get_view_output(variable_get('ip_geoloc_view_for_map'));
+        $map_options = variable_get('ip_geoloc_recent_map_of_view_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
+        $block['content'] = ip_geoloc_output_map_multi_locations($locations, 'ip-geoloc-block-map-of-view', drupal_json_decode($map_options), $map_style);
+      }
+      else {
+        $block['content'] = t('Views module must be enabled to show map of a view.');
       }
       break;
 
@@ -149,8 +201,9 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
     $result = db_query_range('SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY i.ip_address ORDER BY last_visit DESC', 0, $how_many);
     foreach ($result as $location) {
       if (!isset($locations[$location->ip_address])) {
-        $location->visit_count = empty($location->visit_count) ? '?' : $location->visit_count;
-        $location->last_visit  = empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short');
+        $location->balloonText = $location->formatted_address . '<br/>'
+         . t('#visits') . ': ' . (empty($location->visit_count) ? '?' : $location->visit_count)
+         . ', '. t('last visit') . ': ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
         $locations[$location->ip_address] = $location;
       }
     }
@@ -211,3 +264,90 @@ function ip_geoloc_lookup($form, &$form_state) {
   $form_state['rebuild'] = TRUE; // to preserve entered values and storage array
 }
 
+/**
+ * Returns names of all views (whether enabled or disabled) that have
+ * "Show: Fields" (as opposed to "Show: Content") set AND have the 'latitude'
+ * and 'longitude' fields.
+ *
+ * @return array of View names, indexed by their machine names.
+ */
+function ip_geoloc_get_names_of_views_suitable_for_maps() {
+  $views = array();
+  if (module_exists('views')) {
+    $required_field_names = array('longitude', 'latitude');
+    foreach (views_get_all_views() as $view) {
+      foreach ($required_field_names as $field_name_or_label) {
+        if (!_ip_geoloc_find_view_field($view, $field_name_or_label)) {
+          break;
+        }
+      }
+      $views[$view->name] = empty($view->human_name) ? $view->name : $view->human_name;
+    }
+  }
+  return $views;
+}
+
+/**
+ * Executes the view by the supplied name and transfers the raw output to an
+ * array of locations ready to be mapped.
+ *
+ * @param $view_id
+ *
+ * @return
+ *   array of locations to be passed to ip_geoloc_output_map_multi_locations().
+ */
+function ip_geoloc_get_view_output($view_id) {
+
+  $locations = array();
+
+  $view = views_get_view($view_id);
+  if (!is_object($view)) {
+    return $locations;
+  }
+  $view->init_display();
+  $view->pre_execute();
+  $view->execute();
+
+  foreach ($view->result as $row) {
+    $row = (array)$row;
+    $hostname = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'hostname'));
+
+    $location = new stdClass();
+    $location->latitude  = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'latitude'));
+    $location->longitude = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'longitude'));
+    // Remaining fields go into balloon
+    $location->balloonText = implode('<br/>', $row);
+
+    if (empty($hostname)) {
+      $locations[] = $location;
+    }
+    else {
+      $locations[$hostname] = $location;
+    }
+  }
+  return $locations;
+}
+
+function _ip_geoloc_find_view_field($view, $field_name_or_label) {
+  if (isset($view->display['default']->display_options['fields'])) {
+    $fields = $view->display['default']->display_options['fields'];
+    $field_names = array();
+    foreach ($fields as $field_name => $field) {
+      if ($field_name == $field_name_or_label || (isset($field['label']) && $field['label'] == $field_name_or_label)) {
+        return $field_name;
+      }
+    }
+  }
+  return FALSE;
+}
+
+function _ip_geoloc_find_row_field_value(&$row, $field_name) {
+  foreach ($row as $table_field_name => $value) {
+    $last_ = strrpos($table_field_name, '_');
+    if (drupal_substr($table_field_name, $last_ + 1) == $field_name) {
+      unset($row[$table_field_name]);
+      return $value;
+    }
+  }
+  return NULL;
+}

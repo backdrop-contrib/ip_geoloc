@@ -11,11 +11,17 @@
       var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
 
       var locations = settings.ip_geoloc_locations;
+      if (locations.length == 0) {
+        // Don't pop up annoying alert. Just show blank map of the world.
+        map.setZoom(0);
+        map.setCenter(new google.maps.LatLng(0, 0));
+      }
+
       var balloonTexts = [];
       var i = 0;
       for (ip in locations) {
         var position = new google.maps.LatLng(locations[ip].latitude, locations[ip].longitude);
-        if (++i == 1) { // use to first, i.e. most recent, visitor to center the map
+        if (++i == 1) { // use the first, i.e. most recent, visitor to center the map
           map.setCenter(position);
           mouseOverText = Drupal.t('Latest visitor - you?');
         }
@@ -23,19 +29,19 @@
           mouseOverText = Drupal.t('Visitor #@i', { '@i': i });
         }
         marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
-        balloonTexts['LL' + position] =
-          Drupal.t('IP address: @ip', { '@ip':  ip }) + '<br/>' +
-          locations[ip].formatted_address + '<br/>';
 
-        if (locations[ip].last_visit) {
-          balloonTexts['LL' + position] += Drupal.t('#visits: @count, last visit: @date', { '@count': locations[ip].visit_count, '@date': locations[ip].last_visit });
+        balloonTexts['LL' + position] = Drupal.t('IP address: @ip', { '@ip':  ip })
+         + '<br/>' + Drupal.t('Lat/long: @lat/@lng', {
+          '@lat': locations[ip].latitude, // @todo? fix to 4 decimals?
+          '@lng': locations[ip].longitude });
+
+        if (locations[ip].balloonText) {
+          balloonTexts['LL' + position] += '<br/>' + locations[ip].balloonText;
         }
 
         google.maps.event.addListener(marker, 'click',  function(event) {
-          var lat = event.latLng.lat().toFixed(4);
-          var lng = event.latLng.lng().toFixed(4);
           new google.maps.InfoWindow({
-            content: Drupal.t('Lat/long: @lat/@long', { '@lat': lat, '@long': lng }) + '<br/>' + balloonTexts['LL' + event.latLng],
+            content: balloonTexts['LL' + event.latLng],
             position: event.latLng
           }).open(map);
         });
