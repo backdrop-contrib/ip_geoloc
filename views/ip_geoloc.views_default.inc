@@ -18,7 +18,7 @@ function ip_geoloc_views_default_views() {
   $view = new view;
   $view->name = 'visitor_log';
   $view->description = 'Shows IP and street addresses of recent visitors with visit counts and maps.';
-  $view->tag = 'default';
+  $view->tag = 'ip_geoloc';
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log';
   $view->core = 7;
@@ -370,7 +370,7 @@ function ip_geoloc_views_default_views() {
   $view = new view;
   $view->name = 'visitor_log_lite';
   $view->description = 'Shows IP and street addresses of recent visitors.';
-  $view->tag = 'default';
+  $view->tag = 'ip_geoloc';
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log (lite)';
   $view->core = 7;
@@ -540,7 +540,7 @@ function ip_geoloc_views_default_views() {
   $view = new view;
   $view->name = 'order_locations';
   $view->description = '';
-  $view->tag = 'default';
+  $view->tag = 'ip_geoloc';
   $view->base_table = 'commerce_order';
   $view->human_name = 'Order Locations';
   $view->core = 7;
