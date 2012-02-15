@@ -16,11 +16,10 @@
         map.setZoom(0);
         map.setCenter(new google.maps.LatLng(0, 0));
       }
-
       var balloonTexts = [];
       var i = 0;
-      for (ip in locations) {
-        var position = new google.maps.LatLng(locations[ip].latitude, locations[ip].longitude);
+      for (key in locations) {
+        var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
         if (++i == 1) { // use the first, i.e. most recent, visitor to center the map
           map.setCenter(position);
           mouseOverText = Drupal.t('Latest visitor - you?');
@@ -30,13 +29,12 @@
         }
         marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
 
-        balloonTexts['LL' + position] = Drupal.t('IP address: @ip', { '@ip':  ip })
-         + '<br/>' + Drupal.t('Lat/long: @lat/@lng', {
-          '@lat': locations[ip].latitude, // @todo? fix to 4 decimals?
-          '@lng': locations[ip].longitude });
+        balloonTexts['LL' + position] = Drupal.t('Lat/long @lat/@lng', {
+          '@lat': locations[key].latitude, // @todo fux to 4 decimals?
+          '@lng': locations[key].longitude });
 
-        if (locations[ip].balloonText) {
-          balloonTexts['LL' + position] += '<br/>' + locations[ip].balloonText;
+        if (locations[key].balloonText) {
+          balloonTexts['LL' + position] += '<br/>' + locations[key].balloonText;
         }
 
         google.maps.event.addListener(marker, 'click',  function(event) {
@@ -46,7 +44,6 @@
           }).open(map);
         });
       }
-
     }
   }
 })(jQuery);

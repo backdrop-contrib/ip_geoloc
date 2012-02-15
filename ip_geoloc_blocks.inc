@@ -201,10 +201,15 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
     $result = db_query_range('SELECT DISTINCT ip_address, latitude, longitude, formatted_address, COUNT(a.timestamp) AS visit_count, MAX(a.timestamp) AS last_visit FROM {ip_geoloc} i INNER JOIN {accesslog} a ON i.ip_address = a.hostname GROUP BY i.ip_address ORDER BY last_visit DESC', 0, $how_many);
     foreach ($result as $location) {
       if (!isset($locations[$location->ip_address])) {
-        $location->balloonText = $location->formatted_address . '<br/>'
-         . t('#visits') . ': ' . (empty($location->visit_count) ? '?' : $location->visit_count)
-         . ', '. t('last visit') . ': ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
-        $locations[$location->ip_address] = $location;
+        $loc_rendered = new stdClass();
+        $loc_rendered->latitude = $location->latitude;
+        $loc_rendered->longitude = $location->longitude;
+        $loc_rendered->balloonText = t('IP address') . ' ' . $location->ip_address . '<br/>'
+         . $location->formatted_address . '<br/>'
+         . t('#visits') . ' ' . (empty($location->visit_count) ? '?' : $location->visit_count)
+         . ', '. t('last visit') . ' ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
+        // $loc-rendered->balloonText = filter_xss($loc_rendered->balloonText);
+        $locations[] = $loc_rendered;
       }
     }
   }
@@ -310,20 +315,14 @@ function ip_geoloc_get_view_output($view_id) {
 
   foreach ($view->result as $row) {
     $row = (array)$row;
-    $hostname = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'hostname'));
 
     $location = new stdClass();
     $location->latitude  = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'latitude'));
     $location->longitude = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_view_field($view, 'longitude'));
-    // Remaining fields go into balloon
+    // Remaining field values go into balloon
     $location->balloonText = implode('<br/>', $row);
 
-    if (empty($hostname)) {
-      $locations[] = $location;
-    }
-    else {
-      $locations[$hostname] = $location;
-    }
+    $locations[] = $location;
   }
   return $locations;
 }
