@@ -535,5 +535,128 @@ function ip_geoloc_views_default_views() {
 
   $views[$view->name] = $view;
 
+  /* View Order Locations */
+
+  $view = new view;
+  $view->name = 'order_locations';
+  $view->description = '';
+  $view->tag = 'default';
+  $view->base_table = 'commerce_order';
+  $view->human_name = 'Order Locations';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Order Locations';
+  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['query_comment'] = FALSE;
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['style_plugin'] = 'table';
+  /* Field: Commerce Order: Order state */
+  $handler->display->display_options['fields']['state']['id'] = 'state';
+  $handler->display->display_options['fields']['state']['table'] = 'commerce_order';
+  $handler->display->display_options['fields']['state']['field'] = 'state';
+  $handler->display->display_options['fields']['state']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['state']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['state']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['state']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['state']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['state']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['state']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['state']['hide_alter_empty'] = 1;
+  /* Field: IP geolocations: Address */
+  $handler->display->display_options['fields']['formatted_address']['id'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['formatted_address']['field'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['hide_alter_empty'] = 1;
+  /* Field: IP geolocations: Latitude */
+  $handler->display->display_options['fields']['latitude']['id'] = 'latitude';
+  $handler->display->display_options['fields']['latitude']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['latitude']['field'] = 'latitude';
+  $handler->display->display_options['fields']['latitude']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['latitude']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['latitude']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['latitude']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['latitude']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['latitude']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['latitude']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['latitude']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['latitude']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['latitude']['format_plural'] = 0;
+  /* Field: IP geolocations: Longitude */
+  $handler->display->display_options['fields']['longitude']['id'] = 'longitude';
+  $handler->display->display_options['fields']['longitude']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['longitude']['field'] = 'longitude';
+  $handler->display->display_options['fields']['longitude']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['longitude']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['longitude']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['longitude']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['longitude']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['longitude']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['longitude']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['longitude']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['longitude']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['longitude']['format_plural'] = 0;
+  /* Filter criterion: Commerce Order: Order state */
+  $handler->display->display_options['filters']['state']['id'] = 'state';
+  $handler->display->display_options['filters']['state']['table'] = 'commerce_order';
+  $handler->display->display_options['filters']['state']['field'] = 'state';
+  $handler->display->display_options['filters']['state']['value'] = array(
+    'pending' => 'pending',
+    'completed' => 'completed',
+  );
+
+  /* Display: Page */
+  $handler = $view->new_display('page', 'Page', 'page');
+  $handler->display->display_options['path'] = 'order-locations';
+
+  $views[$view->name] = $view;
+
   return $views;
 }

@@ -317,13 +317,12 @@ function ip_geoloc_get_view_output($view_id) {
   $view->pre_execute();
   $view->execute();
   // At this point we'll have access to the raw data, but for the marker
-  // balloons we want rendered data...that is semi-rendered, not with all
-  // the HTML tags around it.... There does not seem to be a suitable
-  // interception point...
+  // balloons we want semi-rendered, not with all the HTML tags around it.
+  // There does not seem to be a suitable interception point...
   // After $view->render, $view->display_handler->output contains the HTML
-  // rendered output, not just the content of each field...
+  // rendered output, not just the rendered base content of each field...
   // Where do we get that?
-  $view->render();
+  // $view->render();
 
   foreach ($view->result as $row) {
     $row = (array)$row;
@@ -339,7 +338,7 @@ function ip_geoloc_get_view_output($view_id) {
     $location->longitude = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_real_field($view, 'longitude'));
 
     // Remaining field values go into balloon.
-    // I have yet to find a way to get the semi-rendered field values in...
+    // I have yet to find a way to obtain the semi-rendered field values...
 
     $location->balloonText = implode('<br/>', $row);
 
