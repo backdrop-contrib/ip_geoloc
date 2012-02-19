@@ -24,7 +24,7 @@ function ip_geoloc_block_info() {
     'cache' => DRUPAL_NO_CACHE
   );
   $blocks['map_of_view'] = array(
-    'info' =>  t('Map of view output'),
+    'info' =>  t('Map of view'),
     'cache' => DRUPAL_NO_CACHE
   );
   if (!module_exists('views')) {
@@ -272,18 +272,17 @@ function ip_geoloc_lookup($form, &$form_state) {
 
 /**
  * Returns names of all views (whether enabled or disabled) that have
- * "Show: Fields" (as opposed to "Show: Content") set AND have the 'latitude'
- * and 'longitude' fields.
+ * 'latitude' and 'longitude' fields, or fields re-labelled as such.
  *
  * @return array of View names, indexed by their machine names.
  */
 function ip_geoloc_get_names_of_views_suitable_for_maps() {
   $views = array();
   if (module_exists('views')) {
-    $required_field_names = array('longitude', 'latitude');
+    $required_field_names = array('latitude', 'longitude');
     foreach (views_get_all_views() as $view) {
       foreach ($required_field_names as $field_name_or_label) {
-        $all_found = _ip_geoloc_find_real_field($view, $field_name_or_label);
+        $all_found = _ip_geoloc_find_real_field_name($view, $field_name_or_label);
         if (!$all_found) {
           break;
         }
@@ -297,8 +296,8 @@ function ip_geoloc_get_names_of_views_suitable_for_maps() {
 }
 
 /**
- * Executes the view by the supplied name and transfers the raw output to an
- * array of locations ready to be mapped.
+ * Executes the view by the supplied name and transfers the semie-rendered
+ * output to an array of locations ready to be mapped, with marker balloons.
  *
  * @param $view_id
  *
@@ -316,38 +315,37 @@ function ip_geoloc_get_view_output($view_id) {
   $view->init_display();
   $view->pre_execute();
   $view->execute();
-  // At this point we'll have access to the raw data, but for the marker
-  // balloons we want semi-rendered, not with all the HTML tags around it.
-  // There does not seem to be a suitable interception point...
-  // After $view->render, $view->display_handler->output contains the HTML
-  // rendered output, not just the rendered base content of each field...
-  // Where do we get that?
-  // $view->render();
+  // At this point we'll have access to the raw data via $view->result.
+  // However for the marker balloons we want semi-rendered, including token
+  // substitutions, but without all the HTML tags around it.
+  // After $view->render(), $view->style_plugin->rendered_fields contains what
+  // we need.
+  $view->render();
 
-  foreach ($view->result as $row) {
-    $row = (array)$row;
-    foreach ($row as $key => $value) {
-      if (is_array($value) || strpos($key, 'field') !== FALSE) {
-        unset($row[$key]);
+  if (!empty($view->style_plugin->rendered_fields)) {
+    $latitude_real_field_name  = _ip_geoloc_find_real_field_name($view, 'latitude');
+    $longitude_real_field_name = _ip_geoloc_find_real_field_name($view, 'longitude');
+
+    foreach ($view->style_plugin->rendered_fields as $row) {
+      $location = new stdClass();
+      $location->latitude  = $row[$latitude_real_field_name];
+      $location->longitude = $row[$longitude_real_field_name];
+
+      if (!empty($location->latitude) && !empty($location->longitude)) {
+        unset($row[$latitude_real_field_name]);
+        unset($row[$longitude_real_field_name]);
+
+        // Remaining rendered values on the row go into balloon.
+        $location->balloonText = implode('<br/>', array_values($row));
+
+        $locations[] = $location;
       }
     }
-
-    $location = new stdClass();
-    $location->balloonText = '';
-    $location->latitude  = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_real_field($view, 'latitude'));
-    $location->longitude = _ip_geoloc_find_row_field_value($row, _ip_geoloc_find_real_field($view, 'longitude'));
-
-    // Remaining field values go into balloon.
-    // I have yet to find a way to obtain the semi-rendered field values...
-
-    $location->balloonText = implode('<br/>', $row);
-
-    $locations[] = $location;
   }
   return $locations;
 }
 
-function _ip_geoloc_find_real_field($view, $field_name_or_label) {
+function _ip_geoloc_find_real_field_name($view, $field_name_or_label) {
   if (isset($view->display['default']->display_options['fields'])) {
     $fields = $view->display['default']->display_options['fields'];
     $field_names = array();
@@ -359,15 +357,3 @@ function _ip_geoloc_find_real_field($view, $field_name_or_label) {
   }
   return FALSE;
 }
-
-function _ip_geoloc_find_row_field_value(&$row, $field_name) {
-  foreach ($row as $table_field_name => $value) {
-    $last_ = strrpos($table_field_name, '_');
-    if (drupal_substr($table_field_name, $last_ + 1) == $field_name) {
-      unset($row[$table_field_name]);
-      return $value;
-    }
-  }
-  return NULL;
-}
-

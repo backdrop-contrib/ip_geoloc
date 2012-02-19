@@ -41,7 +41,7 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', TRUE),
     '#description' => t('For present and future visitors this is done via the client-side version of the Maps API. For the upload of historic visitor location data the server-side version of the Maps API is used. Note that Google may impose a limit on the daily number of API calls coming from the same machine.')
   );
-  $form['ip_geoloc_data_collection_options']['ip_geolo_smart_ip_as_backup'] = array(
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ Smart IP as a backup to the Google Maps API and to load historic lat/long coordinates.'),
     '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),

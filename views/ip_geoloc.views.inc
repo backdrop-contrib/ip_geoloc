@@ -27,14 +27,14 @@ function ip_geoloc_views_data() {
     'commerce_order' => array(
       'left_field' => 'hostname',
       'field' => 'ip_address',
-      'type' => 'INNER'
+      'type' => 'LEFT'
     ),
     // Make all of our fields instantly available in an Order Revisions view.
     // ip_geoloc.ip_address connects to commerce_order_revision.revision_hostname
     'commerce_order_revision' => array(
       'left_field' => 'revision_hostname',
       'field' => 'ip_address',
-      'type' => 'INNER'
+      'type' => 'LEFT'
     )
   );
 

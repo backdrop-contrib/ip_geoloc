@@ -536,7 +536,6 @@ function ip_geoloc_views_default_views() {
   $views[$view->name] = $view;
 
   /* View Order Locations */
-
   $view = new view;
   $view->name = 'order_locations';
   $view->description = '';
@@ -555,13 +554,83 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '50';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['style_plugin'] = 'table';
+  /* Field: IP geolocations: IP address */
+  $handler->display->display_options['fields']['ip_address']['id'] = 'ip_address';
+  $handler->display->display_options['fields']['ip_address']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['ip_address']['field'] = 'ip_address';
+  $handler->display->display_options['fields']['ip_address']['alter']['alter_text'] = 1;
+  $handler->display->display_options['fields']['ip_address']['alter']['text'] = 'IP: [ip_address]';
+  $handler->display->display_options['fields']['ip_address']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['ip_address']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['ip_address']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['ip_address']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['ip_address']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['ip_address']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['ip_address']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['ip_address']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['ip_address']['hide_alter_empty'] = 1;
+  /* Field: Commerce Order: Order number */
+  $handler->display->display_options['fields']['order_number']['id'] = 'order_number';
+  $handler->display->display_options['fields']['order_number']['table'] = 'commerce_order';
+  $handler->display->display_options['fields']['order_number']['field'] = 'order_number';
+  $handler->display->display_options['fields']['order_number']['alter']['alter_text'] = 1;
+  $handler->display->display_options['fields']['order_number']['alter']['text'] = 'Order #[order_number]';
+  $handler->display->display_options['fields']['order_number']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['order_number']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['order_number']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['order_number']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['order_number']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['order_number']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['order_number']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['order_number']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['order_number']['hide_alter_empty'] = 1;
+  /* Field: Commerce Order: Created date */
+  $handler->display->display_options['fields']['created']['id'] = 'created';
+  $handler->display->display_options['fields']['created']['table'] = 'commerce_order';
+  $handler->display->display_options['fields']['created']['field'] = 'created';
+  $handler->display->display_options['fields']['created']['alter']['alter_text'] = 1;
+  $handler->display->display_options['fields']['created']['alter']['text'] = 'Order placed: [created]';
+  $handler->display->display_options['fields']['created']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['created']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['created']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['created']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['created']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['created']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['created']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['created']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['created']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['created']['date_format'] = 'medium';
   /* Field: Commerce Order: Order state */
   $handler->display->display_options['fields']['state']['id'] = 'state';
   $handler->display->display_options['fields']['state']['table'] = 'commerce_order';
   $handler->display->display_options['fields']['state']['field'] = 'state';
-  $handler->display->display_options['fields']['state']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['state']['alter']['alter_text'] = 1;
+  $handler->display->display_options['fields']['state']['alter']['text'] = 'Order state: [state]';
   $handler->display->display_options['fields']['state']['alter']['make_link'] = 0;
   $handler->display->display_options['fields']['state']['alter']['absolute'] = 0;
   $handler->display->display_options['fields']['state']['alter']['external'] = 0;
@@ -643,14 +712,25 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['fields']['longitude']['empty_zero'] = 0;
   $handler->display->display_options['fields']['longitude']['hide_alter_empty'] = 1;
   $handler->display->display_options['fields']['longitude']['format_plural'] = 0;
+  /* Sort criterion: Commerce Order: Order ID */
+  $handler->display->display_options['sorts']['order_id']['id'] = 'order_id';
+  $handler->display->display_options['sorts']['order_id']['table'] = 'commerce_order';
+  $handler->display->display_options['sorts']['order_id']['field'] = 'order_id';
+  $handler->display->display_options['sorts']['order_id']['order'] = 'DESC';
   /* Filter criterion: Commerce Order: Order state */
   $handler->display->display_options['filters']['state']['id'] = 'state';
   $handler->display->display_options['filters']['state']['table'] = 'commerce_order';
   $handler->display->display_options['filters']['state']['field'] = 'state';
   $handler->display->display_options['filters']['state']['value'] = array(
+    'checkout' => 'checkout',
     'pending' => 'pending',
     'completed' => 'completed',
   );
+  $handler->display->display_options['filters']['state']['expose']['operator_id'] = 'state_op';
+  $handler->display->display_options['filters']['state']['expose']['label'] = 'Order state';
+  $handler->display->display_options['filters']['state']['expose']['operator'] = 'state_op';
+  $handler->display->display_options['filters']['state']['expose']['identifier'] = 'state';
+  $handler->display->display_options['filters']['state']['expose']['reduce'] = 0;
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
