@@ -535,7 +535,7 @@ function ip_geoloc_views_default_views() {
 
   $views[$view->name] = $view;
 
-  /* View Order Locations */
+  /* View Order Locations formatted as a map with marker balloons. */
   $view = new view;
   $view->name = 'order_locations';
   $view->description = '';
@@ -557,7 +557,7 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['pager']['type'] = 'some';
   $handler->display->display_options['pager']['options']['items_per_page'] = '50';
   $handler->display->display_options['pager']['options']['offset'] = '0';
-  $handler->display->display_options['style_plugin'] = 'table';
+  $handler->display->display_options['style_plugin'] = 'ip_geoloc_map';
   /* Field: IP geolocations: IP address */
   $handler->display->display_options['fields']['ip_address']['id'] = 'ip_address';
   $handler->display->display_options['fields']['ip_address']['table'] = 'ip_geoloc';
@@ -651,7 +651,9 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['fields']['formatted_address']['id'] = 'formatted_address';
   $handler->display->display_options['fields']['formatted_address']['table'] = 'ip_geoloc';
   $handler->display->display_options['fields']['formatted_address']['field'] = 'formatted_address';
-  $handler->display->display_options['fields']['formatted_address']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['formatted_address']['alter']['alter_text'] = 1;
+  $handler->display->display_options['fields']['formatted_address']['alter']['text'] = 'Address:
+  [formatted_address]';
   $handler->display->display_options['fields']['formatted_address']['alter']['make_link'] = 0;
   $handler->display->display_options['fields']['formatted_address']['alter']['absolute'] = 0;
   $handler->display->display_options['fields']['formatted_address']['alter']['external'] = 0;
@@ -717,20 +719,55 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['sorts']['order_id']['table'] = 'commerce_order';
   $handler->display->display_options['sorts']['order_id']['field'] = 'order_id';
   $handler->display->display_options['sorts']['order_id']['order'] = 'DESC';
+  /* Contextual filter: Commerce Order: Created year + month */
+  $handler->display->display_options['arguments']['created_year_month']['id'] = 'created_year_month';
+  $handler->display->display_options['arguments']['created_year_month']['table'] = 'commerce_order';
+  $handler->display->display_options['arguments']['created_year_month']['field'] = 'created_year_month';
+  $handler->display->display_options['arguments']['created_year_month']['default_action'] = 'default';
+  $handler->display->display_options['arguments']['created_year_month']['default_argument_type'] = 'global_filter_field';
+  $handler->display->display_options['arguments']['created_year_month']['default_argument_skip_url'] = 0;
+  $handler->display->display_options['arguments']['created_year_month']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['created_year_month']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['created_year_month']['summary_options']['items_per_page'] = '25';
   /* Filter criterion: Commerce Order: Order state */
   $handler->display->display_options['filters']['state']['id'] = 'state';
   $handler->display->display_options['filters']['state']['table'] = 'commerce_order';
   $handler->display->display_options['filters']['state']['field'] = 'state';
   $handler->display->display_options['filters']['state']['value'] = array(
+    'canceled' => 'canceled',
+    'cart' => 'cart',
     'checkout' => 'checkout',
     'pending' => 'pending',
     'completed' => 'completed',
   );
+  $handler->display->display_options['filters']['state']['exposed'] = TRUE;
   $handler->display->display_options['filters']['state']['expose']['operator_id'] = 'state_op';
   $handler->display->display_options['filters']['state']['expose']['label'] = 'Order state';
   $handler->display->display_options['filters']['state']['expose']['operator'] = 'state_op';
   $handler->display->display_options['filters']['state']['expose']['identifier'] = 'state';
   $handler->display->display_options['filters']['state']['expose']['reduce'] = 0;
+  /* Filter criterion: IP geolocations: Country */
+  $handler->display->display_options['filters']['country']['id'] = 'country';
+  $handler->display->display_options['filters']['country']['table'] = 'ip_geoloc';
+  $handler->display->display_options['filters']['country']['field'] = 'country';
+  $handler->display->display_options['filters']['country']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['country']['expose']['operator_id'] = 'country_op';
+  $handler->display->display_options['filters']['country']['expose']['label'] = 'Country';
+  $handler->display->display_options['filters']['country']['expose']['operator'] = 'country_op';
+  $handler->display->display_options['filters']['country']['expose']['identifier'] = 'country';
+  $handler->display->display_options['filters']['country']['expose']['required'] = 0;
+  $handler->display->display_options['filters']['country']['expose']['multiple'] = FALSE;
+  /* Filter criterion: Commerce Order: Created date */
+  $handler->display->display_options['filters']['created']['id'] = 'created';
+  $handler->display->display_options['filters']['created']['table'] = 'commerce_order';
+  $handler->display->display_options['filters']['created']['field'] = 'created';
+  $handler->display->display_options['filters']['created']['operator'] = '>=';
+  $handler->display->display_options['filters']['created']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['created']['expose']['operator_id'] = 'created_op';
+  $handler->display->display_options['filters']['created']['expose']['label'] = 'Created date';
+  $handler->display->display_options['filters']['created']['expose']['operator'] = 'created_op';
+  $handler->display->display_options['filters']['created']['expose']['identifier'] = 'created';
+  $handler->display->display_options['filters']['created']['expose']['multiple'] = FALSE;
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
