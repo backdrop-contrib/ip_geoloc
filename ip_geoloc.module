@@ -399,3 +399,4 @@ function ip_geoloc_smart_ip_get_location_alter(&$location) {
 function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
   ip_geoloc_debug(t('IP Geolocation: Device Geolocation retrieved: !location', array('!location' => ip_geoloc_pretty_print($location))));
 }
+

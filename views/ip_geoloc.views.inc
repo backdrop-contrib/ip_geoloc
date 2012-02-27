@@ -55,7 +55,7 @@ function ip_geoloc_views_data() {
       'handler' => 'views_handler_sort',
     )
   );
- 
+
   $data['ip_geoloc']['latitude'] = array(
     'title' => t('Latitude'),
     'help' => t('Latitude'),
@@ -303,11 +303,11 @@ function ip_geoloc_views_plugins() {
         'theme' => 'ip_geoloc_map',
         'theme path' => $path . '/views',
         'uses fields' => TRUE,
-        'uses options' => TRUE,
+        'uses options' => TRUE, // map style and map options
         'uses grouping' => FALSE,
         'uses row plugin' => FALSE,
         'type' => 'normal',
-        'even empty' => TRUE,
+        'even empty' => TRUE, // render output, even if empty
       )
     )
   );
