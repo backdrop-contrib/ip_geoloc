@@ -7,10 +7,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
    */
   function option_definition() {
     $options = parent::option_definition();
-    $options['ip_geoloc_map_of_view_div_style'] = array(
-      'default' => variable_get('ip_geoloc_map_of_view_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE));
-    $options['ip_geoloc_map_of_view_options'] = array(
-      'default' => variable_get('ip_geoloc_map_of_view_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS));
+    $options['ip_geoloc_map_of_view_div_style'] = array('default' => '');
+    $options['ip_geoloc_map_of_view_options'] = array('default' => '');
     return $options;
   }
 
@@ -21,7 +19,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 150,
       '#default_value' => $this->options['ip_geoloc_map_of_view_div_style'],
-      '#description' => t('The default %default_style results in a map of 300 pixels high, with a width bounded by the element that contains it. Separate options with semi-colons. Do not enter quotes or equal signs.',
+      '#description' => t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.',
         array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
     );
     $form['ip_geoloc_map_of_view_options'] = array(
@@ -29,7 +27,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 150,
       '#default_value' => $this->options['ip_geoloc_map_of_view_options'],
-      '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.", array(
+      '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.", array(
         '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
         '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
     );
@@ -45,10 +43,11 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   function render($result) {
 
     if (!empty($this->view->live_preview)) {
-      return t('The preview function is incompatible with the map format so cannot be used. Please visit the display page or block to see the results.');
+      return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
     }
 
     // Do token substitutions, render timestamps etc, all the pre-theming stuff.
+    // Exclude lat/long from this.
     unset($this->view->field['latitude']);
     unset($this->view->field['longitude']);
     $this->render_fields($result);
@@ -66,15 +65,15 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
         $locations[] = $location;
       }
     }
-    $map_options = variable_get('ip_geoloc_map_of_view_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
-    $map_style = variable_get('ip_geoloc_map_of_view_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE);
+    $map_options = $this->options['ip_geoloc_map_of_view_options'];
+    $map_style = $this->options['ip_geoloc_map_of_view_div_style'];
 
     $output = theme(array('ip_geoloc_map'), array(
       'locations' => $locations,
       'div_id' => 'ip-geoloc-map-of-view',
-      'map_options' => $map_options,
-      'map_style' => $map_style,
-      'view' => clone($this->view)
+      'map_options' => empty($map_options) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $map_options,
+      'map_style' => empty($map_style) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : $map_style,
+      'view' => $this->view
     ));
     return $output;
   }
