@@ -7,8 +7,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
    */
   function option_definition() {
     $options = parent::option_definition();
-    $options['ip_geoloc_map_of_view_div_style'] = array('default' => '');
-    $options['ip_geoloc_map_of_view_options'] = array('default' => '');
+    $options['ip_geoloc_map_of_view_div_style']  = array('default' => '');
+    $options['ip_geoloc_map_of_view_options']    = array('default' => '');
+    $options['ip_geoloc_views_plugin_latitude']  = array('default' => 'ip_geoloc_latitude');
+    $options['ip_geoloc_views_plugin_longitude'] = array('default' => 'ip_geoloc_longitude');
     return $options;
   }
 
@@ -17,7 +19,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $form['ip_geoloc_map_of_view_div_style'] = array(
       '#title' => t('Map style (CSS attributes)'),
       '#type' => 'textfield',
-      '#size' => 150,
+      '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_map_of_view_div_style'],
       '#description' => t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.',
         array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
@@ -25,11 +27,25 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $form['ip_geoloc_map_of_view_options'] = array(
       '#title' => t('Map options'),
       '#type' => 'textfield',
-      '#size' => 150,
+      '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_map_of_view_options'],
       '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.", array(
         '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
         '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+    );
+    $form['ip_geoloc_views_plugin_latitude'] = array(
+      '#title' => t('Name of latitude field in Views query'),
+      '#type' => 'textfield',
+      '#size' => 127,
+      '#default_value' => $this->options['ip_geoloc_views_plugin_latitude'],
+      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are using relationships, in which case you may have to prefix this name with the relevant table names, delimited by underscores.')
+    );
+    $form['ip_geoloc_views_plugin_longitude'] = array(
+      '#title' => t('Name of longitude field in Views query'),
+      '#type' => 'textfield',
+      '#size' => 127,
+      '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
+      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are using relationships, in which case you may have to prefix this name with the relevant table names, delimited by underscores.')
     );
   }
 
@@ -52,12 +68,22 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     unset($this->view->field['longitude']);
     $this->render_fields($result);
 
+    $latitude  = trim($this->options['ip_geoloc_views_plugin_latitude']);
+    $longitude = trim($this->options['ip_geoloc_views_plugin_longitude']);
+
+    if(empty($latitude)) {
+      $latitude = 'ip_geoloc_latitude';
+    }
+    if(empty($longitude)) {
+      $longitude = 'ip_geoloc_longitude';
+    }
+
     $locations = array();
     foreach ($result as $i => $row) {
       if (!empty($row->ip_geoloc_latitude) && !empty($row->ip_geoloc_longitude)) {
         $location = new stdClass();
-        $location->latitude  = $row->ip_geoloc_latitude;
-        $location->longitude = $row->ip_geoloc_longitude;
+        $location->latitude  = $row->{$latitude};
+        $location->longitude = $row->{$longitude};
         if (!empty($this->rendered_fields)) {
           // Remaining row values go into the balloon
           $location->balloonText = implode('<br/>', $this->rendered_fields[$i]);
