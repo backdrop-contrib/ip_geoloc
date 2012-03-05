@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * @file
+ * ip_geoloc_theme.inc
+ *
+ * Registers themes and defines template preprocess functions for these themes.
+ */
+
+/**
  * Implements hook_theme().
  *
  * Register the theme hooks available in this module, with their arguments.

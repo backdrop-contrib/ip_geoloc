@@ -22,7 +22,7 @@ function ip_geoloc_block_info() {
     'cache' => DRUPAL_NO_CACHE
   );
   if (!module_exists('views')) {
-    $blocks['map_of_view']['info'] .= '<em> ('. t('requires Views module') . ')</em>';
+    $blocks['map_of_view']['info'] .= '<em> (' . t('requires Views module') . ')</em>';
   }
   $blocks['address_lookup'] = array(
     'info' => t('Address lookup based on IP'),
@@ -218,7 +218,7 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
         $loc_rendered->balloonText = t('IP address') . ' ' . $location->ip_address . '<br/>'
          . $location->formatted_address . '<br/>'
          . t('#visits') . ' ' . (empty($location->visit_count) ? '?' : $location->visit_count)
-         . ', '. t('last visit') . ' ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
+         . ', ' . t('last visit') . ' ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
         // $loc-rendered->balloonText = filter_xss($loc_rendered->balloonText);
         $locations[$location->ip_address] = $loc_rendered;
       }

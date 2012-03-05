@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @file
+ * ip_geoloc_plugin_style_map.inc
+ *
+ * Views Style plugin extension.
+ */
 class ip_geoloc_plugin_style_map extends views_plugin_style {
 
   /**
@@ -71,10 +77,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $latitude  = trim($this->options['ip_geoloc_views_plugin_latitude']);
     $longitude = trim($this->options['ip_geoloc_views_plugin_longitude']);
 
-    if(empty($latitude)) {
+    if (empty($latitude)) {
       $latitude = 'ip_geoloc_latitude';
     }
-    if(empty($longitude)) {
+    if (empty($longitude)) {
       $longitude = 'ip_geoloc_longitude';
     }
 

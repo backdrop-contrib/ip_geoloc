@@ -535,7 +535,7 @@ function ip_geoloc_views_default_views() {
 
   $views[$view->name] = $view;
 
-  
+
   /* View Order Locations formatted as a map with marker balloons. */
   $view = new view;
   $view->name = 'order_locations';
