@@ -170,7 +170,7 @@ function ip_geoloc_block_view($delta = '') {
     case 'map_of_view':
       if (module_exists('views')) {
         $locations = ip_geoloc_get_view_output(variable_get('ip_geoloc_view_for_map'));
-        $map_options = variable_get('ip_geoloc_recent_map_of_view_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
+        $map_options = variable_get('ip_geoloc_map_of_view_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
         $block['content'] = theme(array('ip_geoloc_map'), array(
           'locations' => $locations,
           'div_id' => 'ip-geoloc-block-map-of-view',

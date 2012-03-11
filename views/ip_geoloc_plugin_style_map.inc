@@ -86,7 +86,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
 
     $locations = array();
     foreach ($result as $i => $row) {
-      if (!empty($row->ip_geoloc_latitude) && !empty($row->ip_geoloc_longitude)) {
+      if (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
         $location = new stdClass();
         $location->latitude  = $row->{$latitude};
         $location->longitude = $row->{$longitude};
