@@ -123,8 +123,8 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['empty']['area']['empty'] = FALSE;
   $handler->display->display_options['empty']['area']['content'] = '    No IP geolocation data found.
 
-          Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
-          Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
+            Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
+            Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.';
   $handler->display->display_options['empty']['area']['format'] = 'full_html';
   $handler->display->display_options['empty']['area']['tokenize'] = 0;
   /* Field: Access log: Hostname */
@@ -333,8 +333,8 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['fields']['php']['hide_alter_empty'] = 0;
   $handler->display->display_options['fields']['php']['use_php_setup'] = 0;
   $handler->display->display_options['fields']['php']['php_output'] = '<?php
-          echo ip_geoloc_output_map($row->latitude, $row->longitude, \'ip-geoloc-map-\' . $row->hostname_1, \'height: 150px; width: 250px\', $row->formatted_address) ;
-        ?>';
+            echo ip_geoloc_output_map($row->latitude, $row->longitude, \'ip-geoloc-map-\' . $row->hostname_1, \'height: 150px; width: 250px\', $row->formatted_address) ;
+          ?>';
   $handler->display->display_options['fields']['php']['use_php_click_sortable'] = '0';
   $handler->display->display_options['fields']['php']['php_click_sortable'] = '';
   /* Filter criterion: Date range */
@@ -343,6 +343,9 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['filters']['timestamp']['field'] = 'timestamp';
   $handler->display->display_options['filters']['timestamp']['ui_name'] = 'Date range';
   $handler->display->display_options['filters']['timestamp']['operator'] = 'between';
+  $handler->display->display_options['filters']['timestamp']['value']['min'] = '-6 months';
+  $handler->display->display_options['filters']['timestamp']['value']['max'] = 'now';
+  $handler->display->display_options['filters']['timestamp']['value']['type'] = 'offset';
   $handler->display->display_options['filters']['timestamp']['exposed'] = TRUE;
   $handler->display->display_options['filters']['timestamp']['expose']['operator_id'] = 'timestamp_op';
   $handler->display->display_options['filters']['timestamp']['expose']['label'] = 'Date range between';
@@ -361,7 +364,38 @@ function ip_geoloc_views_default_views() {
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block_1');
   $handler->display->display_options['block_description'] = 'Visitor log';
+  $translatables['visitor_log'] = array(
+    t('Master'),
+    t('Visitor log'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Chronological'),
+    t('Reverse chronological'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('No results text'),
+    t('    No IP geolocation data found.
 
+            Either the core <strong>Statistics</strong> module is not enabled or there is no data in the <strong>access log</strong>.
+            Please visit the <a href="/admin/config/system/ip_geoloc">Configuration >> IP Geolocation</a> page for more diagnostics.'),
+    t('IP address'),
+    t('No. visits'),
+    t('First visited'),
+    t('Last visited'),
+    t('Latitude'),
+    t('.'),
+    t(','),
+    t('Longitude'),
+    t('Address'),
+    t('Country'),
+    t('Map'),
+    t('Date range between'),
+    t('Page'),
+    t('Block'),
+  );
   $views[$view->name] = $view;
 
   /*
