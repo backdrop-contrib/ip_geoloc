@@ -44,14 +44,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_latitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.')
+      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the Latitude is stored in a Text field, then enter the field\'s machine name here.')
     );
     $form['ip_geoloc_views_plugin_longitude'] = array(
       '#title' => t('Name of longitude field in Views query'),
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.')
+      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the Longitude is stored in a Text field, then enter the field\'s machine name here.')
     );
   }
 
@@ -68,12 +68,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
     }
 
-    // Do token substitutions, render timestamps etc, all the pre-theming stuff.
-    // Exclude lat/long from this.
-    unset($this->view->field['latitude']);
-    unset($this->view->field['longitude']);
-    $this->render_fields($result);
-
     $latitude  = trim($this->options['ip_geoloc_views_plugin_latitude']);
     $longitude = trim($this->options['ip_geoloc_views_plugin_longitude']);
 
@@ -84,16 +78,36 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       $longitude = 'ip_geoloc_longitude';
     }
 
+    // Do token substitutions, render timestamps etc, all the pre-theming stuff.
+    // Exclude lat/long from this.
+    unset($this->view->field[$latitude]);
+    unset($this->view->field[$longitude]);
+    $this->render_fields($result);
+
     $locations = array();
     foreach ($result as $i => $row) {
-      if (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
-        $location = new stdClass();
+      $location = new stdClass();
+      $row_has_location = TRUE;
+      // First look for $latitude and $longitude as field values:
+      if (!empty($row->{'field_' . $latitude}[0]['raw']['value']) && !empty($row->{'field_' . $longitude}[0]['raw']['value'])) {
+
+        // If latitude and longitude are text fields, then their values will be
+        // inside some arrays - $row->{latitude}[0]['raw']['value'].
+        $location->latitude  = $row->{'field_' . $latitude}[0]['raw']['value'];
+        $location->longitude = $row->{'field_' . $longitude}[0]['raw']['value'];
+      }
+      elseif (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
+        
+        // Standard ip_geoloc fields: values are $row->{$latitude} and $row->{$longitude}
         $location->latitude  = $row->{$latitude};
         $location->longitude = $row->{$longitude};
-        if (!empty($this->rendered_fields)) {
-          // Remaining row values go into the balloon
-          $location->balloonText = implode('<br/>', $this->rendered_fields[$i]);
-        }
+      }
+      else {
+        $row_has_location = FALSE;
+      }
+      if ($row_has_location && !empty($this->rendered_fields)) {
+        // Remaining row values go into the balloon
+        $location->balloonText = implode('<br/>', $this->rendered_fields[$i]);
         $locations[] = $location;
       }
     }
@@ -127,7 +141,30 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       foreach ($result as $i => $row) {
         $this->view->row_index = $i; // God knows why we need this...
         foreach ($field_ids as $field_id) {
-          $this->rendered_fields[$i][$field_id] = $this->view->field[$field_id]->theme($row);
+          // add the field label if it's provided
+          $label = $this->view->field[$field_id]->label();
+          $element = '';
+          $close_element = '';
+          if ($label) {
+            $label_type = $this->view->field[$field_id]->options['element_label_type'];
+            if ($label_type) {
+              $label_type = check_plain($label_type);
+              $element = '<' . $label_type;
+              $label_class = $this->view->field[$field_id]->options['element_label_class'];
+              if ($label_class) {
+                $element .= ' class="' . check_plain($label_class) . '"';
+              }
+              $element .= '>';
+              $close_element = '</' . $label_type . '>';
+            }
+            if ($this->view->field[$field_id]->options['element_label_colon']) {
+              $label .= ': ';
+            }
+            $this->rendered_fields[$i][$field_id] = $element . $label . $close_element . ' ' . $this->view->field[$field_id]->theme($row);
+          } // otherwise render with no label
+          else {
+            $this->rendered_fields[$i][$field_id] = $this->view->field[$field_id]->theme($row);
+          }
         }
         //$this->row_tokens[$i] = $this->view->field[$field_id]->get_render_tokens(array());
       }

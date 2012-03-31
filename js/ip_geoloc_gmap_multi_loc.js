@@ -23,7 +23,7 @@
         var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
         if (++i == 1) { // use the first, i.e. most recent, visitor to center the map
           map.setCenter(position);
-          mouseOverText = Drupal.t('Latest visitor - you?');
+          mouseOverText = Drupal.t('Latest Visitor');
         }
         else {
           mouseOverText = Drupal.t('Visitor #@i', { '@i': i });
