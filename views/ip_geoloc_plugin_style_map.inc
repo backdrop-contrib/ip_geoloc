@@ -44,14 +44,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_latitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the Latitude is stored in a Text field, then enter the field\'s machine name here.')
+      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the latitude is stored in a <strong>text</strong> field, then enter the field\'s machine name here.')
     );
     $form['ip_geoloc_views_plugin_longitude'] = array(
       '#title' => t('Name of longitude field in Views query'),
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the Longitude is stored in a Text field, then enter the field\'s machine name here.')
+      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the longitude is stored in a <strong>text</strong> field, then enter the field\'s machine name here.')
     );
   }
 
@@ -97,7 +97,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
         $location->longitude = $row->{'field_' . $longitude}[0]['raw']['value'];
       }
       elseif (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
-        
+
         // Standard ip_geoloc fields: values are $row->{$latitude} and $row->{$longitude}
         $location->latitude  = $row->{$latitude};
         $location->longitude = $row->{$longitude};
