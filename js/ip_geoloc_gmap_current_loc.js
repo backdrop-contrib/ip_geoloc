@@ -60,7 +60,7 @@
           default:
             text = Drupal.t('unknown error');
         }
-        alert(Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error !code: !text', {'!code': error.code, '!text': text}));
+      //alert(Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error !code: !text', {'!code': error.code, '!text': text}));
       }
     }
   }

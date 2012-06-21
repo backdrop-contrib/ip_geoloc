@@ -44,22 +44,23 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_latitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the latitude is stored in a <strong>text</strong> field, then enter the field\'s machine name here.')
+      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong> module enter <strong>field_myname</strong>')
     );
     $form['ip_geoloc_views_plugin_longitude'] = array(
       '#title' => t('Name of longitude field in Views query'),
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table names, delimited by underscores.  If the longitude is stored in a <strong>text</strong> field, then enter the field\'s machine name here.')
+      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a vewi based on the <strong>Location</strong> module, use <strong>location_longitude</strong>. If the longitude is stored in a <strong>text field</strong>, then enter the field\'s machine name here, e.g. when using the <strong>Geofield</strong> module enter what you entered above for latitude.')
     );
   }
 
   /**
-   * Transform the View result in a list of maker locations and render as a map.
+   * Transform the View result in a list of marker locations and render these on
+   * a map.
    *
    * @param type $result
-   *   This is superfluous, same as $this->view->result.
+   *   This parameter appears to be superfluous, same as $this->view->result.
    *
    */
   function render($result) {
@@ -75,7 +76,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       $latitude = 'ip_geoloc_latitude';
     }
     if (empty($longitude)) {
-      $longitude = 'ip_geoloc_longitude';
+      $longitude = ($latitude == 'ip_geoloc_latitude') ? 'ip_geoloc_longitude' : $latitude; // for Geofield
     }
 
     // Do token substitutions, render timestamps etc, all the pre-theming stuff.
@@ -88,26 +89,34 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     foreach ($result as $i => $row) {
       $location = new stdClass();
       $row_has_location = TRUE;
-      // First look for $latitude and $longitude as field values:
-      if (!empty($row->{'field_' . $latitude}[0]['raw']['value']) && !empty($row->{'field_' . $longitude}[0]['raw']['value'])) {
+      // First look for $latitude and $longitude as node field values:
+      if (!empty($row->{'field_' . $latitude}[0]['raw']) && !empty($row->{'field_' . $longitude}[0]['raw'])) {
 
-        // If latitude and longitude are text fields, then their values will be
-        // inside some arrays - $row->{latitude}[0]['raw']['value'].
-        $location->latitude  = $row->{'field_' . $latitude}[0]['raw']['value'];
-        $location->longitude = $row->{'field_' . $longitude}[0]['raw']['value'];
+        // When a View is based on Geofield module lat/long are in
+        // field_<field_name>[0]['raw']['lat'] and field_<field_name>[0]['raw']['lon']
+        if (isset($row->{'field_' . $latitude}[0]['raw']['lat'])) {
+          $location->latitude  = $row->{'field_' . $latitude }[0]['raw']['lat'];
+          $location->longitude = $row->{'field_' . $longitude}[0]['raw']['lon'];
+        }
+        else {
+          // Otherwise field values tend to be inside [0]['raw']['value']:
+          $location->latitude  = $row->{'field_' . $latitude }[0]['raw']['value'];
+          $location->longitude = $row->{'field_' . $longitude}[0]['raw']['value'];
+        }
       }
       elseif (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
-
-        // Standard ip_geoloc fields: values are $row->{$latitude} and $row->{$longitude}
+        // Standard table fields: values are $row->{$latitude} and $row->{$longitude}
         $location->latitude  = $row->{$latitude};
         $location->longitude = $row->{$longitude};
       }
       else {
         $row_has_location = FALSE;
       }
-      if ($row_has_location && !empty($this->rendered_fields)) {
+      if ($row_has_location) {
         // Remaining row values go into the balloon
-        $location->balloonText = implode('<br/>', $this->rendered_fields[$i]);
+        if (!empty($this->rendered_fields[$i])) {
+          $location->balloonText = implode('<br/>', $this->rendered_fields[$i]);
+        }
         $locations[] = $location;
       }
     }
