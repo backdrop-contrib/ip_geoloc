@@ -8,44 +8,63 @@
       if (!mapOptions) {
         mapOptions = { mapTypeId: google.maps.MapTypeId.ROADMAP, zoom: 2 };
       }
-      var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
+      map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
 
+      // Centere the map on the user's real location, using the geo.js unified API.
+      centerSet = false;
+      if (geo_position_js.init()) {
+        geo_position_js.getCurrentPosition(setMapCenterAndMarker, handlePositionError, {enableHighAccuracy: true});
+      }
       var locations = settings.ip_geoloc_locations;
-      if (locations.length == 0) {
+      if (!centerSet && locations.length == 0) {
         // Don't pop up annoying alert. Just show blank map of the world.
         map.setZoom(0);
         map.setCenter(new google.maps.LatLng(0, 0));
       }
-   
-      var balloonTexts = [];
-      var i = 0;
-      for (key in locations) {
+
+      var i = 1;
+      for (var key in locations) {
+        var mouseOverText = Drupal.t('Location #@i', { '@i': i++ });
         var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
-        if (++i == 1) { // use the first, i.e. most recent, visitor to center the map
+        if (!centerSet) {
+          // If visitor location could not be determined, center map on first
+          // location, if there is one.
           map.setCenter(position);
-          mouseOverText = Drupal.t('Latest Visitor');
+          centerSet = true;
         }
-        else {
-          mouseOverText = Drupal.t('Visitor #@i', { '@i': i });
-        }
+
         marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
-
-        balloonTexts['LL' + position] = Drupal.t('Lat/long @lat/@lng', {
-          '@lat': locations[key].latitude, // @todo fux to 4 decimals?
-          '@lng': locations[key].longitude });
-
-        if (locations[key].balloonText) {
-          balloonTexts['LL' + position] += '<br/>' + locations[key].balloonText;
-        }
 
         google.maps.event.addListener(marker, 'click',  function(event) {
           new google.maps.InfoWindow({
-            content: balloonTexts['LL' + event.latLng],
+            content: locations[key].balloonText,
             position: event.latLng
           }).open(map);
         });
       }
+
+      function setMapCenterAndMarker(visitor_position) {
+        var center = new google.maps.LatLng(visitor_position.coords.latitude, visitor_position.coords.longitude);
+        var balloonText = Drupal.t('Your current position');
+        map.setCenter(center);
+        centerSet = true;
+
+        var pinColor = "00EE00";
+        var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + pinColor,
+          new google.maps.Size(21, 34), new google.maps.Point(0,0), new google.maps.Point(10, 34));
+
+        centerMarker = new google.maps.Marker({ icon: pinImage, map: map, position: center, title: balloonText });
+        google.maps.event.addListener(centerMarker, 'click',  function(event) {
+          new google.maps.InfoWindow({
+            content: balloonText,
+            position: event.latLng
+          }).open(map);
+        });
+      }
+
+      function handlePositionError(error) {
+        alert(Drupal.t('IP Geolocation, multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
+      }
     }
   }
 })(jQuery);
-

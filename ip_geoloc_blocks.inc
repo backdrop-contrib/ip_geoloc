@@ -158,7 +158,7 @@ function ip_geoloc_block_view($delta = '') {
       if ($how_many > 0) {
         $locations = ip_geoloc_get_recent_visitor_locations($how_many);
         $map_options = variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);
-        $block['content'] = theme(array('ip_geoloc_map'), array(
+        $block['content'] = theme(array('ip_geoloc_visitor_map'), array(
           'locations' => $locations,
           'div_id' => 'ip-geoloc-block-recent-visitors-map',
           'map_options' => $map_options,

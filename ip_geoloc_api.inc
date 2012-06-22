@@ -163,7 +163,44 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
  * @param
  *   $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
  */
-function ip_geoloc_output_map_multi_locations($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options = NULL, $map_style = NULL) {
+function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options = NULL, $map_style = NULL) {
+  $javascript_files = drupal_add_js();
+  if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
+    // Only add non-GPS version when GPS version is already there
+    drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
+  }
+  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_visitor.js');
+  if (!isset($map_options)) {
+    $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
+  }
+  if (!isset($map_style)) {
+    $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;
+  }
+  drupal_add_js(array('ip_geoloc_locations' => $locations), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options)), 'setting');
+
+  $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
+  return $map_placeholder;
+}
+
+/**
+ * Outputs an HTML div placeholder into which will be injected a map.
+ *
+ * The locations to be mapped are supplied as an array of location objects,
+ * each with lat,long coordinates and optional balloon text.
+ *
+ * @param
+ *   $locations, array of location objects each containing lat/long pair
+ *   and optional balloon text.
+ * @param
+ *   $div_id, id of the div placeholder, can be anything as long as it's unique
+ * @param
+ *   $map_options, as a JSON string, .e.g '{"mapTypeId":"roadmap", "zoom":15}'
+ * @param
+ *   $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
+ */
+function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options = NULL, $map_style = NULL) {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
     // Only add non-GPS version when GPS version is already there

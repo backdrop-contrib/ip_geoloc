@@ -37,7 +37,7 @@
             alert(Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code !code.', { '!code': status }));
           }
           // lat/long and address are revealed when clicking marker
-          var lat  = coords.latitude.toFixed(4);
+          var lat = coords.latitude.toFixed(4);
           var lng = coords.longitude.toFixed(4);
           var latLongText = Drupal.t('lat. !lat, long. !long', { '!lat': lat, '!long': lng }) + '<br/>'
             + Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
@@ -65,4 +65,3 @@
     }
   }
 })(jQuery);
-

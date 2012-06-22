@@ -29,8 +29,8 @@
  */
 function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
   $theme = array();
-  $theme['ip_geoloc_map'] = array(
-    'template' => 'ip_geoloc_map', // ip_geoloc_map.tpl.php
+  $theme['ip_geoloc_visitor_map'] = array(
+    'template' => 'ip_geoloc_map_multi_visitor', // theme/ip_geoloc_map_multi_visitor.tpl.php
     'path' => $path . '/theme',
     'variables' => array(
       'locations' => NULL,
@@ -41,7 +41,7 @@ function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
     )
   );
   $theme['ip_geoloc_map_current_visitor'] = array(
-    'template' => 'ip_geoloc_map_current_visitor', // ip_geoloc_map_current_visitor.tpl.php
+    'template' => 'ip_geoloc_map_current_visitor', // theme/ip_geoloc_map_current_visitor.tpl.php
     'path' => $path . '/theme',
     'variables' => array(
       'div_id' => NULL,
@@ -53,18 +53,16 @@ function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
 }
 
 /**
- * Template preprocess function for the ip_geoloc_map theme.
+ * Template preprocess function for the ip_geoloc_visitor_map theme.
  *
- * Preprocesses variables for:
- * o theme/ip_geoloc_map.tpl.php
- * o views/ip-geoloc-map.tpl.php
+ * Preprocesses variables for theme/ip_geoloc_map_multi_visitor.tpl.php
  */
-function template_preprocess_ip_geoloc_map(&$variables) {
+function template_preprocess_ip_geoloc_visitor_map(&$variables) {
   return;
 }
 
 /**
- * Template preprocess function for the ip_geoloc_map theme.
+ * Template preprocess function for the ip_geoloc_map_current_visitor theme.
  *
  * Preprocesses variables for theme/ip_geoloc_map_current_visitor.tpl.php
  */
