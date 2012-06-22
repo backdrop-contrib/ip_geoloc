@@ -17,6 +17,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['ip_geoloc_map_of_view_options']    = array('default' => '');
     $options['ip_geoloc_views_plugin_latitude']  = array('default' => 'ip_geoloc_latitude');
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => 'ip_geoloc_longitude');
+    $options['ip_geoloc_views_plugin_show_visitor_location'] = array('default' => TRUE);
     return $options;
   }
 
@@ -51,7 +52,13 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a vewi based on the <strong>Location</strong> module, use <strong>location_longitude</strong>. If the longitude is stored in a <strong>text field</strong>, then enter the field\'s machine name here, e.g. when using the <strong>Geofield</strong> module enter what you entered above for latitude.')
+      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_longitude</strong>. If the longitude is stored in a <strong>text field</strong>, then enter the field\'s machine name here, e.g. when using the <strong>Geofield</strong> module enter what you entered above for latitude.')
+    );
+    $form['ip_geoloc_views_plugin_show_visitor_location'] = array(
+      '#title' => t("Centre the map on a distinctively coloured marker depicting the visitor's current location"),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_show_visitor_location'],
+      '#description' => t('If not ticked, the first location returned from the view will be used as the centre of the map.')
     );
   }
 
@@ -61,7 +68,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
    *
    * @param type $result
    *   This parameter appears to be superfluous, same as $this->view->result.
-   *
    */
   function render($result) {
 
@@ -124,11 +130,12 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $map_style = $this->options['ip_geoloc_map_of_view_div_style'];
 
     $output = theme(array('ip_geoloc_map'), array(
+      'view' => $this->view,
       'locations' => $locations,
       'div_id' => 'ip-geoloc-map-of-view',
       'map_options' => empty($map_options) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $map_options,
       'map_style' => empty($map_style) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : $map_style,
-      'view' => $this->view
+      'show_visitor_location' => !empty($this->options['ip_geoloc_views_plugin_show_visitor_location'])
     ));
     return $output;
   }

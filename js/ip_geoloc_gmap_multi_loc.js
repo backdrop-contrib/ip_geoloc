@@ -10,9 +10,10 @@
       }
       map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
 
-      // Centere the map on the user's real location, using the geo.js unified API.
       centerSet = false;
-      if (geo_position_js.init()) {
+
+      if (settings.ip_geoloc_multi_location_show_visitor_location && geo_position_js.init()) {
+        // Center the map on the user's current location, using the geo.js unified API.
         geo_position_js.getCurrentPosition(setMapCenterAndMarker, handlePositionError, {enableHighAccuracy: true});
       }
       var locations = settings.ip_geoloc_locations;
@@ -27,8 +28,8 @@
         var mouseOverText = Drupal.t('Location #@i', { '@i': i++ });
         var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
         if (!centerSet) {
-          // If visitor location could not be determined, center map on first
-          // location, if there is one.
+          // If the visitor's location could not be determined, center map on
+          // the first location, if there are any at all.
           map.setCenter(position);
           centerSet = true;
         }
@@ -63,7 +64,7 @@
       }
 
       function handlePositionError(error) {
-        alert(Drupal.t('IP Geolocation, multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
+        //alert(Drupal.t('IP Geolocation, multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
       }
     }
   }

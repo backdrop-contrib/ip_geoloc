@@ -36,8 +36,7 @@ function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
       'locations' => NULL,
       'div_id' => NULL,
       'map_options' => NULL,
-      'map_style' => NULL,
-      'view' => NULL // applies to Views only
+      'map_style' => NULL
     )
   );
   $theme['ip_geoloc_map_current_visitor'] = array(

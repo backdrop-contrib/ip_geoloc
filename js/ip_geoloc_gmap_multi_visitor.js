@@ -1,7 +1,7 @@
 
 (function ($) {
 
-  Drupal.behaviors.addGMapMultiLocation = {
+  Drupal.behaviors.addGMapMultiVisitor = {
     attach: function (context, settings) {
 
       var mapOptions = settings.ip_geoloc_multi_location_map_options;

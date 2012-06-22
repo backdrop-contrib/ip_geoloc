@@ -143,8 +143,6 @@ function ip_geoloc_block_view($delta = '') {
     case 'current_visitor_map':
       $block['subject'] = t('Your location');
       $map_options = variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS);
-      // @todo theme this
-      //$block['content'] = ip_geoloc_output_map_current_location('ip-geoloc-block-current-visitor-map', $map_options, $map_style);
       $block['content'] = theme(array('ip_geoloc_map_current_visitor'), array(
         'div_id' => 'ip-geoloc-block-current-visitor-map',
         'map_options' => $map_options,
@@ -306,13 +304,13 @@ function ip_geoloc_get_names_of_views_suitable_for_maps() {
 }
 
 /**
- * Executes the view by the supplied name and transfers the semie-rendered
+ * Executes the view by the supplied name and transfers the semi-rendered
  * output to an array of locations ready to be mapped, with marker balloons.
  *
  * @param $view_id
  *
  * @return
- *   array of locations to be passed to ip_geoloc_output_map_multi_locations().
+ *   array of locations to be passed to ip_geoloc_output_map_multi_location().
  */
 function ip_geoloc_get_view_output($view_id) {
 
