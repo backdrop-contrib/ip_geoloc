@@ -3,33 +3,43 @@
 
   Drupal.behaviors.addGMapMultiLocation = {
     attach: function (context, settings) {
+      console.debug(settings);
 
+      var locations = settings.ip_geoloc_locations;
+      var centerOption = settings.ip_geoloc_multi_location_center_option;
       var mapOptions = settings.ip_geoloc_multi_location_map_options;
+
       if (!mapOptions) {
-        mapOptions = { mapTypeId: google.maps.MapTypeId.ROADMAP, zoom: 2 };
+        alert(Drupal.t('Syntax error in map options.'));
       }
       map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
 
+      // A map must have a type, a zoom and a center or nothing will show.
+      if (!map.getMapTypeId()) {
+        map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+      }
+      if (!map.getZoom()) {
+        map.setZoom(2);
+      }
       centerSet = false;
-
-      if (settings.ip_geoloc_multi_location_show_visitor_location && geo_position_js.init()) {
+      if (centerOption == 0 || locations.length == 0) {
+        // If no center override option was specified, we set the center based
+        // on the mapOptions. Without a center there won't be a map!
+        map.setCenter(new google.maps.LatLng(
+          mapOptions.centerLat ? mapOptions.centerLat : 0,
+          mapOptions.centerLng ? mapOptions.centerLng : 0));
+      }
+      if (centerOption > 1 && geo_position_js.init()) {
         // Center the map on the user's current location, using the geo.js unified API.
         geo_position_js.getCurrentPosition(setMapCenterAndMarker, handlePositionError, {enableHighAccuracy: true});
       }
-      var locations = settings.ip_geoloc_locations;
-      if (!centerSet && locations.length == 0) {
-        // Don't pop up annoying alert. Just show blank map of the world.
-        map.setZoom(0);
-        map.setCenter(new google.maps.LatLng(0, 0));
-      }
-
       var i = 1;
       for (var key in locations) {
         var mouseOverText = Drupal.t('Location #@i', { '@i': i++ });
         var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
-        if (!centerSet) {
-          // If the visitor's location could not be determined, center map on
-          // the first location, if there are any at all.
+        if (!centerSet && centerOption > 0) {
+          // If requested and not already centered, center map on the first
+          // location, if there are any at all.
           map.setCenter(position);
           centerSet = true;
         }

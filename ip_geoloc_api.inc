@@ -200,10 +200,13 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  * @param
  *   $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
  * @param
- *   @show_visitor_location
+ *   $center_option, one of:
+ *    0: no center override (must be provided thorugh $map_options)
+ *    1: auto-center the map on the first location in the $locations array
+ *    2: auto-center the map on a distinct marker depicting the visitor's current location
  */
 function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations',
-    $map_options = NULL, $map_style = NULL, $show_visitor_location = TRUE) {
+    $map_options = NULL, $map_style = NULL, $center_option = 0) {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
     // Only add non-GPS version when GPS version is already there
@@ -219,7 +222,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   drupal_add_js(array('ip_geoloc_locations' => $locations), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options)), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_show_visitor_location' => $show_visitor_location), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_center_option' => $center_option), 'setting');
 
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;

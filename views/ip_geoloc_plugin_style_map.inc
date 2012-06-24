@@ -1,5 +1,9 @@
 <?php
 
+define('IP_GEOLOC_MAP_NO_CENTER_OVERRIDE', 0);
+define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
+define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
+
 /**
  * @file
  * ip_geoloc_plugin_style_map.inc
@@ -17,12 +21,21 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['ip_geoloc_map_of_view_options']    = array('default' => '');
     $options['ip_geoloc_views_plugin_latitude']  = array('default' => 'ip_geoloc_latitude');
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => 'ip_geoloc_longitude');
-    $options['ip_geoloc_views_plugin_show_visitor_location'] = array('default' => TRUE);
+    $options['ip_geoloc_views_plugin_center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     return $options;
   }
 
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+    $form['ip_geoloc_map_of_view_options'] = array(
+      '#title' => t('Map options'),
+      '#type' => 'textfield',
+      '#size' => 127,
+      '#default_value' => $this->options['ip_geoloc_map_of_view_options'],
+      '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your (double) quotes match.", array(
+        '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
+        '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+    );
     $form['ip_geoloc_map_of_view_div_style'] = array(
       '#title' => t('Map style (CSS attributes)'),
       '#type' => 'textfield',
@@ -30,15 +43,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#default_value' => $this->options['ip_geoloc_map_of_view_div_style'],
       '#description' => t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.',
         array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
-    );
-    $form['ip_geoloc_map_of_view_options'] = array(
-      '#title' => t('Map options'),
-      '#type' => 'textfield',
-      '#size' => 127,
-      '#default_value' => $this->options['ip_geoloc_map_of_view_options'],
-      '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.", array(
-        '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
-        '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
     );
     $form['ip_geoloc_views_plugin_latitude'] = array(
       '#title' => t('Name of latitude field in Views query'),
@@ -54,11 +58,17 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
       '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_longitude</strong>. If the longitude is stored in a <strong>text field</strong>, then enter the field\'s machine name here, e.g. when using the <strong>Geofield</strong> module enter what you entered above for latitude.')
     );
-    $form['ip_geoloc_views_plugin_show_visitor_location'] = array(
-      '#title' => t("Centre the map on a distinctively coloured marker depicting the visitor's current location"),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['ip_geoloc_views_plugin_show_visitor_location'],
-      '#description' => t('If not ticked, the first location returned from the view will be used as the centre of the map.')
+    $form['ip_geoloc_views_plugin_center_option'] = array(
+      '#title' => t('Map centering options'),
+      '#type' => 'radios',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_center_option'],
+      '#options' => array(
+         IP_GEOLOC_MAP_NO_CENTER_OVERRIDE => t('No center override'),
+         IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION => t('Use the first location returned by the view as the center of the map'),
+         IP_GEOLOC_MAP_CENTER_ON_VISITOR => t('Center the map on a distinct marker depicting the visitor\'s current location')
+      ),
+      '#description' => t('If you choose the first option you must center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> e.g. %center_example', array(
+        '%center_example' =>'{ "mapTypeId":"roadmap", "centerLat":-38, "centerLng":145 }'))
     );
   }
 
@@ -126,16 +136,17 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
         $locations[] = $location;
       }
     }
-    $map_options = $this->options['ip_geoloc_map_of_view_options'];
-    $map_style = $this->options['ip_geoloc_map_of_view_div_style'];
+    $map_options = empty($this->options['ip_geoloc_map_of_view_options']) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $this->options['ip_geoloc_map_of_view_options'];
+    $map_style = empty($this->options['ip_geoloc_map_of_view_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : $this->options['ip_geoloc_map_of_view_div_style'];
+    $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];
 
     $output = theme(array('ip_geoloc_map'), array(
       'view' => $this->view,
       'locations' => $locations,
       'div_id' => 'ip-geoloc-map-of-view',
-      'map_options' => empty($map_options) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $map_options,
-      'map_style' => empty($map_style) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : $map_style,
-      'show_visitor_location' => !empty($this->options['ip_geoloc_views_plugin_show_visitor_location'])
+      'map_options' => $map_options,
+      'map_style' => $map_style,
+      'center_option' => $center_option
     ));
     return $output;
   }

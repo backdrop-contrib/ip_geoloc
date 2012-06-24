@@ -12,10 +12,12 @@
   *   must be unique
   * - $map_options: passed to Google Maps API, eg '{"mapTypeId":"roadmap", "zoom": 10}'
   * - $map_style: CSS style string, like 'height: 200px; width: 500px'
-  * - $show_visitor_location, center the map on a green marker depicting the
-  *   visitor's current location
+  * - $center_option, one of:
+  *   0: no center override (must be provided thorugh $map_options)
+  *   1: auto-center the map on the first location in the $locations array
+  *   2: auto-center the map on a distinct marker depicting the visitor's current location
   */
 ?>
 <div class="ip-geoloc-map view-based-map">
-  <?php echo ip_geoloc_output_map_multi_location($locations, $div_id, $map_options, $map_style, $show_visitor_location); ?>
+  <?php echo ip_geoloc_output_map_multi_location($locations, $div_id, $map_options, $map_style, $center_option); ?>
 </div>
