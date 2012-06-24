@@ -34,7 +34,8 @@
           geo_position_js.getCurrentPosition(setMapCenterAndMarker, handlePositionError, {enableHighAccuracy: true});
         }
       }
-      var i = 1;
+      var i = 1
+      var balloonTexts = [];
       for (var key in locations) {
         var mouseOverText = Drupal.t('Location #@i', { '@i': i++ });
         var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
@@ -47,9 +48,12 @@
 
         marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
 
+        // Funny index is because listener callback only gives us position
+        balloonTexts['LL' + position] = locations[key].balloonText;
+
         google.maps.event.addListener(marker, 'click',  function(event) {
           new google.maps.InfoWindow({
-            content: locations[key].balloonText,
+            content: balloonTexts['LL' + event.latLng],
             position: event.latLng
           }).open(map);
         });
