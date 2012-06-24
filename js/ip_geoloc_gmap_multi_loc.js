@@ -68,7 +68,7 @@
 
       function setMapCenterAndMarker2(latitude, longitude) {
         var center = new google.maps.LatLng(latitude, longitude);
-        var balloonText = Drupal.t('Your current position');
+        var balloonText = Drupal.t('Your current position (' + latitude + ', ' + longitude + ')');
         map.setCenter(center);
         centerSet = true;
 

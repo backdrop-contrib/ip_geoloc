@@ -141,7 +141,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $map_options = empty($this->options['ip_geoloc_map_of_view_options']) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $this->options['ip_geoloc_map_of_view_options'];
     $map_style = empty($this->options['ip_geoloc_map_of_view_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : $this->options['ip_geoloc_map_of_view_div_style'];
     $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];
-
+    $center_latlng = array(0, 0);
     if ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
       // Perform database IP lookup as backup/replacement for true location
       $resample = FALSE; // use existing location lat/long if these exist
@@ -154,7 +154,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $output = theme(array('ip_geoloc_map'), array(
       'view' => $this->view,
       'locations' => $locations,
-      'div_id' => 'ip-geoloc-map-of-view',
+      'div_id' => 'ip-geoloc-map-of-view-' . $this->view->name,
       'map_options' => $map_options,
       'map_style' => $map_style,
       'center_option' => $center_option,
