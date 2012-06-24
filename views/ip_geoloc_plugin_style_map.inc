@@ -3,6 +3,7 @@
 define('IP_GEOLOC_MAP_NO_CENTER_OVERRIDE', 0);
 define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
 define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
+define('IP_GEOLOC_MAP_CENTER_ON_VISITOR_IP', 3);
 
 /**
  * @file
@@ -63,12 +64,13 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'radios',
       '#default_value' => $this->options['ip_geoloc_views_plugin_center_option'],
       '#options' => array(
-         IP_GEOLOC_MAP_NO_CENTER_OVERRIDE => t('No center override'),
-         IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION => t('Use the first location returned by the view as the center of the map'),
-         IP_GEOLOC_MAP_CENTER_ON_VISITOR => t('Center the map on a distinct marker depicting the visitor\'s current location')
+        IP_GEOLOC_MAP_NO_CENTER_OVERRIDE => t('No center override or fixed center (see note below).'),
+        IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION => t('Use the first location returned by the view as the center of the map.'),
+        IP_GEOLOC_MAP_CENTER_ON_VISITOR => t("Center the map on a distinct marker depicting the visitor's current location provided via their browser. This is subject to them accepting the prompt. If they decline, fall back on the next option."),
+        IP_GEOLOC_MAP_CENTER_ON_VISITOR_IP => t("As above, however the visitor's location is taken from an IP address database lookup, which is less accurate."),
       ),
-      '#description' => t('If you choose the first option you must center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> e.g. %center_example', array(
-        '%center_example' =>'{ "mapTypeId":"roadmap", "centerLat":-38, "centerLng":145 }'))
+      '#description' => t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> e.g. %center_example', array(
+        '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-38, "centerLng":145 }'))
     );
   }
 
@@ -140,13 +142,23 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $map_style = empty($this->options['ip_geoloc_map_of_view_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : $this->options['ip_geoloc_map_of_view_div_style'];
     $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];
 
+    if ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
+      // Perform database IP lookup as backup/replacement for true location
+      $resample = FALSE; // use existing location lat/long if these exist
+      $store = TRUE; // store lat/long, if this is a new location
+      $reverse_geocode = FALSE; // we only need lat/long, not the address
+      $location = ip_geoloc_get_location_by_ip(ip_address(), $resample, $store, $reverse_geocode);
+      $center_latlng = array($location['latitude'], $location['longitude']);
+    }
+
     $output = theme(array('ip_geoloc_map'), array(
       'view' => $this->view,
       'locations' => $locations,
       'div_id' => 'ip-geoloc-map-of-view',
       'map_options' => $map_options,
       'map_style' => $map_style,
-      'center_option' => $center_option
+      'center_option' => $center_option,
+      'center_latlng' => $center_latlng,
     ));
     return $output;
   }

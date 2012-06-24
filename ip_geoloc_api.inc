@@ -203,9 +203,12 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  *    0: no center override (must be provided thorugh $map_options)
  *    1: auto-center the map on the first location in the $locations array
  *    2: auto-center the map on a distinct marker depicting the visitor's current location
+ *    3: auto-center the map on the lat/long coordinates specified in the next arg
+ * @param
+ *   $center_latlng, array of lat/long coords pertaining to $center_option==3
  */
 function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations',
-    $map_options = NULL, $map_style = NULL, $center_option = 0) {
+    $map_options = NULL, $map_style = NULL, $center_option = 0, $center_latlng = array(0, 0)) {
 
   drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
 
@@ -225,6 +228,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options)), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_center_option' => $center_option), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_center_latlng' => $center_latlng), 'setting');
 
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
@@ -266,8 +270,8 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
  *   $ip_address; note if you're looking for location data for the current
  *   visitor look in $_SESSION['ip_geoloc']['location']
  * @param
- *   $resample, if set to TRUE and the supplied IP address is already on
- *   the db, ignore the existing location data and retrieve the latest
+ *   $resample, if set to TRUE, ignore any existing location data for this
+ *   IP address and retrieve the latest
  * @param
  *   $store, if TRUE, store the new or resampled location on the db
  * @param
@@ -296,7 +300,7 @@ function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = F
         }
       }
       if ($store) {
-        ip_geoloc_store_location($location);
+        ip_geoloc_store_location($location); // calls drupal_alter()
       }
       else {
         drupal_alter('get_ip_geolocation', $location);

@@ -13,11 +13,13 @@
   * - $map_options: passed to Google Maps API, eg '{"mapTypeId":"roadmap", "zoom": 10}'
   * - $map_style: CSS style string, like 'height: 200px; width: 500px'
   * - $center_option, one of:
-  *   0: no center override (must be provided thorugh $map_options)
+  *   0: no center override (center may be provided thorugh $map_options)
   *   1: auto-center the map on the first location in the $locations array
   *   2: auto-center the map on a distinct marker depicting the visitor's current location
+  *   3: auto-center the map on the user coodinates based on an IP addresss lookup
+  * - $center_latlng, array of latitude and longitude, applies to option 3 only
   */
 ?>
 <div class="ip-geoloc-map view-based-map">
-  <?php echo ip_geoloc_output_map_multi_location($locations, $div_id, $map_options, $map_style, $center_option); ?>
+  <?php echo ip_geoloc_output_map_multi_location($locations, $div_id, $map_options, $map_style, $center_option, $center_latlng); ?>
 </div>

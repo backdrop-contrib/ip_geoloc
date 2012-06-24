@@ -28,13 +28,16 @@
           mapOptions.centerLat ? mapOptions.centerLat : 0,
           mapOptions.centerLng ? mapOptions.centerLng : 0));
       }
-      if (centerOption > 1) {
-        if (geo_position_js.init()) {
-          // Center the map on the user's current location, using the geo.js unified API.
-          geo_position_js.getCurrentPosition(setMapCenterAndMarker, handlePositionError, {enableHighAccuracy: true});
-        }
+      if (centerOption == 2 && geo_position_js.init()) {
+        // Center the map on the user's current location, using the geo.js unified API.
+        geo_position_js.getCurrentPosition(setMapCenterAndMarker1, handlePositionError, {enableHighAccuracy: true});
       }
-      var i = 1
+      else if (centerOption >= 2) {
+        // Use supplied visitor lat/lng to center and set marker.
+        var latLng = settings.ip_geoloc_multi_location_center_latlng;
+        setMapCenterAndMarker2(latLng[0], latLng[1]);
+      }
+      var i = 1;
       var balloonTexts = [];
       for (var key in locations) {
         var mouseOverText = Drupal.t('Location #@i', { '@i': i++ });
@@ -51,7 +54,7 @@
         // Funny index is because listener callback only gives us position
         balloonTexts['LL' + position] = locations[key].balloonText;
 
-        google.maps.event.addListener(marker, 'click',  function(event) {
+        google.maps.event.addListener(marker, 'click', function(event) {
           new google.maps.InfoWindow({
             content: balloonTexts['LL' + event.latLng],
             position: event.latLng
@@ -59,8 +62,12 @@
         });
       }
 
-      function setMapCenterAndMarker(visitor_position) {
-        var center = new google.maps.LatLng(visitor_position.coords.latitude, visitor_position.coords.longitude);
+      function setMapCenterAndMarker1(visitor_position) {
+        setMapCenterAndMarker2(visitor_position.coords.latitude, visitor_position.coords.longitude);
+      }
+
+      function setMapCenterAndMarker2(latitude, longitude) {
+        var center = new google.maps.LatLng(latitude, longitude);
         var balloonText = Drupal.t('Your current position');
         map.setCenter(center);
         centerSet = true;
@@ -78,8 +85,11 @@
         });
       }
 
+      // Fall back on IP address lookup, for instance when user declined to share location (error 1)
       function handlePositionError(error) {
         //alert(Drupal.t('IP Geolocation, multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
+        var latLng = settings.ip_geoloc_multi_location_center_latlng;
+        setMapCenterAndMarker2(latLng[0], latLng[1]);
       }
     }
   }
