@@ -68,7 +68,7 @@
         // Pass error back to PHP rather than alert();
         callback_php(callback_url, data);
       }
- 
+
       function callback_php(callback_url, data) {
         $.ajax({
           url: callback_url,
@@ -86,7 +86,7 @@
           }
         });
       }
- 
+
     }
   }
 })(jQuery);

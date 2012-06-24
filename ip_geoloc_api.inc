@@ -7,8 +7,8 @@
  * Reusable functions that may be called from other modules.
  */
 
+// Google's gears_init.js is now included at the top of geo.js
 define('IP_GEOLOC_GEO_JS', 'http://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 14k uncompressed
-define('IP_GEOLOC_GOOGLE_GEARS_INIT',  drupal_get_path('module', 'ip_geoloc') . '/js/gears_init.js'); // size 4K uncompressed
 define('IP_GEOLOC_GOOGLE_MAPS',        'http://maps.google.com/maps/api/js?sensor=false'); // size 5k
 define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'http://maps.google.com/maps/api/js?sensor=true');  // size 5k
 define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
@@ -129,7 +129,6 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  */
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_options = NULL, $map_style = NULL) {
   $js_options = array('group' => JS_LIBRARY);
-  drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT, $js_options);
   drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_current_loc.js');
@@ -207,6 +206,9 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  */
 function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations',
     $map_options = NULL, $map_style = NULL, $center_option = 0) {
+
+  drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
+
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
     // Only add non-GPS version when GPS version is already there
@@ -243,7 +245,6 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  */
 function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
   $js_options = array('group' => JS_LIBRARY);
-  drupal_add_js(IP_GEOLOC_GOOGLE_GEARS_INIT, $js_options);
   drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');

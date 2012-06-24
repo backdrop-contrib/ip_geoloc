@@ -3,7 +3,6 @@
 
   Drupal.behaviors.addGMapMultiLocation = {
     attach: function (context, settings) {
-      console.debug(settings);
 
       var locations = settings.ip_geoloc_locations;
       var centerOption = settings.ip_geoloc_multi_location_center_option;
@@ -29,9 +28,11 @@
           mapOptions.centerLat ? mapOptions.centerLat : 0,
           mapOptions.centerLng ? mapOptions.centerLng : 0));
       }
-      if (centerOption > 1 && geo_position_js.init()) {
-        // Center the map on the user's current location, using the geo.js unified API.
-        geo_position_js.getCurrentPosition(setMapCenterAndMarker, handlePositionError, {enableHighAccuracy: true});
+      if (centerOption > 1) {
+        if (geo_position_js.init()) {
+          // Center the map on the user's current location, using the geo.js unified API.
+          geo_position_js.getCurrentPosition(setMapCenterAndMarker, handlePositionError, {enableHighAccuracy: true});
+        }
       }
       var i = 1;
       for (var key in locations) {
