@@ -94,13 +94,13 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       $latitude = 'ip_geoloc_latitude';
     }
     if (empty($longitude)) {
-      $longitude = ($latitude == 'ip_geoloc_latitude') ? 'ip_geoloc_longitude' : $latitude; // for Geofield
+      $longitude = ($latitude == 'ip_geoloc_latitude') ? 'ip_geoloc_longitude' : $latitude; // for field-based modules
     }
 
     // Do token substitutions, render timestamps etc, all the pre-theming stuff.
-    // Exclude lat/long from this.
-    unset($this->view->field[$latitude]);
-    unset($this->view->field[$longitude]);
+    // Note that fields that have their Exclude box ticked, won't be rendered,
+    // see function render_fields().
+    // Typical candidates for exclusion are the latitude and longitude fields.
     $this->render_fields($result);
 
     $locations = array();
@@ -110,11 +110,18 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       // First look for $latitude and $longitude as node field values:
       if (!empty($row->{'field_' . $latitude}[0]['raw']) && !empty($row->{'field_' . $longitude}[0]['raw'])) {
 
-        // When a View is based on Geofield module lat/long are in
-        // field_<field_name>[0]['raw']['lat'] and field_<field_name>[0]['raw']['lon']
-        if (isset($row->{'field_' . $latitude}[0]['raw']['lat'])) {
-          $location->latitude  = $row->{'field_' . $latitude }[0]['raw']['lat'];
-          $location->longitude = $row->{'field_' . $longitude}[0]['raw']['lon'];
+        // When based on Geofield or Geolocation Field modules lat/long are as follows
+        // Geofield   : field_<field_name>[0]['raw']['lat'] and field_<field_name>[0]['raw']['lon']
+        // Geolocation: field_<field_name>[0]['raw']['lat'] and field_<field_name>[0]['raw']['lng']
+        if (isset($row->{'field_' . $latitude}[0]['raw']['lon'])) {
+          $field_name = $latitude;
+          $location->latitude  = $row->{'field_' . $field_name}[0]['raw']['lat'];
+          $location->longitude = $row->{'field_' . $field_name}[0]['raw']['lon'];
+        }
+        elseif (isset($row->{'field_' . $latitude}[0]['raw']['lng'])) {
+          $field_name = $latitude;
+          $location->latitude  = $row->{'field_' . $field_name}[0]['raw']['lat'];
+          $location->longitude = $row->{'field_' . $field_name}[0]['raw']['lng'];
         }
         else {
           // Otherwise field values tend to be inside [0]['raw']['value']:
@@ -180,7 +187,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       foreach ($result as $i => $row) {
         $this->view->row_index = $i; // God knows why we need this...
         foreach ($field_ids as $field_id) {
-          // add the field label if it's provided
+          if ($this->view->field[$field_id]->options['exclude']) {
+            continue;
+          }
+          // Add the field label if it's provided
           $label = $this->view->field[$field_id]->label();
           $element = '';
           $close_element = '';

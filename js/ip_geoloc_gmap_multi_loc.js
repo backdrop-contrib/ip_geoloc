@@ -73,8 +73,8 @@
         centerSet = true;
 
         var pinChar = "%E2%80%A2"; // or a letter, e.g. "X"
-        var pinColor = "00EE00";
-        var textColor = "000000";
+        var pinColor = "00EE00";   // bright green
+        var textColor = "000000";  // black
         var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=" + pinChar + "|" + pinColor + "|" + textColor,
           new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34));
 

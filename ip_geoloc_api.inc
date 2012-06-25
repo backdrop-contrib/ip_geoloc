@@ -8,9 +8,9 @@
  */
 
 // Google's gears_init.js is now included at the top of geo.js
-define('IP_GEOLOC_GEO_JS', 'http://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 14k uncompressed
-define('IP_GEOLOC_GOOGLE_MAPS',        'http://maps.google.com/maps/api/js?sensor=false'); // size 5k
-define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'http://maps.google.com/maps/api/js?sensor=true');  // size 5k
+define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 14k uncompressed
+define('IP_GEOLOC_GOOGLE_MAPS',        'https://maps.google.com/maps/api/js?sensor=false'); // size 5k
+define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'https://maps.google.com/maps/api/js?sensor=true');  // size 5k
 define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
