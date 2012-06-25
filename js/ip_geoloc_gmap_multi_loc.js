@@ -72,9 +72,11 @@
         map.setCenter(center);
         centerSet = true;
 
+        var pinChar = "%E2%80%A2"; // or a letter, e.g. "X"
         var pinColor = "00EE00";
-        var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + pinColor,
-          new google.maps.Size(21, 34), new google.maps.Point(0,0), new google.maps.Point(10, 34));
+        var textColor = "000000";
+        var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=" + pinChar + "|" + pinColor + "|" + textColor,
+          new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34));
 
         centerMarker = new google.maps.Marker({ icon: pinImage, map: map, position: center, title: balloonText });
         google.maps.event.addListener(centerMarker, 'click',  function(event) {
