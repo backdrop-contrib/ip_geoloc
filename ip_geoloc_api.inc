@@ -199,16 +199,23 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  * @param
  *   $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
  * @param
+ *   $visitor_marker, one of FALSE (no marker), TRUE (standard red marker) or
+ *   a 'RRGGBB' color code
+ * @param
  *   $center_option, one of:
  *    0: no center override (must be provided thorugh $map_options)
  *    1: auto-center the map on the first location in the $locations array
- *    2: auto-center the map on a distinct marker depicting the visitor's current location
- *    3: auto-center the map on the lat/long coordinates specified in the next arg
+ *    2: auto-center the map on the visitor's current location
  * @param
- *   $center_latlng, array of lat/long coords pertaining to $center_option==3
+ *   $center_latlng, array of length 2 with lat/long coords used as a backup
+ *   when $visitor_marker is set or $center_option == 2 and location could not
+ *   be determined or $visitor_location_accurate == FALSE
+ * @param
+ *   $visitor_location_accurate,whether HTML5-style location provider is to be
+ *   used, if FALSE $center_latlng is used
  */
 function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations',
-    $map_options = NULL, $map_style = NULL, $center_option = 0, $center_latlng = array(0, 0)) {
+    $map_options = NULL, $map_style = NULL, $visitor_marker = TRUE, $center_option = 0, $center_latlng = array(0, 0), $visitor_location_accurate = TRUE) {
 
   drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
 
@@ -227,8 +234,10 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   drupal_add_js(array('ip_geoloc_locations' => $locations), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options)), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_visitor_marker' => $visitor_marker), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_center_option' => $center_option), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_center_latlng' => $center_latlng), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_visitor_location_accurate' => $visitor_location_accurate), 'setting');
 
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;

@@ -3,7 +3,6 @@
 define('IP_GEOLOC_MAP_NO_CENTER_OVERRIDE', 0);
 define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
 define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
-define('IP_GEOLOC_MAP_CENTER_ON_VISITOR_IP', 3);
 
 /**
  * @file
@@ -22,7 +21,9 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['ip_geoloc_map_of_view_options']    = array('default' => '');
     $options['ip_geoloc_views_plugin_latitude']  = array('default' => 'ip_geoloc_latitude');
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => 'ip_geoloc_longitude');
+    $options['ip_geoloc_views_plugin_visitor_marker'] = array('default' => '<none>');
     $options['ip_geoloc_views_plugin_center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
+    $options['ip_geoloc_views_plugin_visitor_location_accurate'] = array('default' => TRUE);
     return $options;
   }
 
@@ -59,6 +60,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
       '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_longitude</strong>. If the longitude is stored in a <strong>text field</strong>, then enter the field\'s machine name here, e.g. when using the <strong>Geofield</strong> module enter what you entered above for latitude.')
     );
+    $form['ip_geoloc_views_plugin_visitor_marker'] = array(
+      '#title' => t('Visitor marker color'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['ip_geoloc_views_plugin_visitor_marker'],
+      '#description' => t("Show visitor marker in the color specified. %color_code is bright green. Note that an additional web service call will be made to retrieve the marker image, unless this field is left blank, which will result in a standard red marker. Enter <em>&lt;none&gt;</em> if you do not wish to display the visitor's current location.",
+        array('%color_code' => '00FF00'))
+    );
     $form['ip_geoloc_views_plugin_center_option'] = array(
       '#title' => t('Map centering options'),
       '#type' => 'radios',
@@ -66,11 +75,16 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#options' => array(
         IP_GEOLOC_MAP_NO_CENTER_OVERRIDE => t('No center override or fixed center (see note below).'),
         IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION => t('Use the first location returned by the view as the center of the map.'),
-        IP_GEOLOC_MAP_CENTER_ON_VISITOR => t("Center the map on a distinct marker depicting the visitor's current location provided via their browser. This is subject to them accepting the prompt. If they decline, fall back on the next option."),
-        IP_GEOLOC_MAP_CENTER_ON_VISITOR_IP => t("As above, however the visitor's location is taken from an IP address database lookup, which is less accurate."),
+        IP_GEOLOC_MAP_CENTER_ON_VISITOR => t("Center the map on the visitor's current location."),
       ),
-      '#description' => t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> e.g. %center_example', array(
+      '#description' => t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example: %center_example', array(
         '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-38, "centerLng":145 }'))
+    );
+    $form['ip_geoloc_views_plugin_visitor_location_accurate'] = array(
+      '#title' => t('Use HTML5 style of visitor location retrieval'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_visitor_location_accurate'],
+      '#description' => t('This is subject to the visitor accepting to share their location when prompted by their browser. If they decline, or if this box is not ticked, an IP address lookup will be used instead.')
     );
   }
 
@@ -87,7 +101,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
     }
 
-    $latitude  = trim($this->options['ip_geoloc_views_plugin_latitude']);
+    $latitude  = trim($this->options['ip_geoloc_views_plugin_latitude' ]);
     $longitude = trim($this->options['ip_geoloc_views_plugin_longitude']);
 
     if (empty($latitude)) {
@@ -146,10 +160,22 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       }
     }
     $map_options = empty($this->options['ip_geoloc_map_of_view_options']) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $this->options['ip_geoloc_map_of_view_options'];
-    $map_style = empty($this->options['ip_geoloc_map_of_view_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : $this->options['ip_geoloc_map_of_view_div_style'];
+    $map_style = empty($this->options['ip_geoloc_map_of_view_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : check_plain($this->options['ip_geoloc_map_of_view_div_style']);
+
+    if (empty($this->options['ip_geoloc_views_plugin_visitor_marker'])) {
+      $visitor_marker = TRUE; // default to standard red marker
+    }
+    else {
+      $visitor_marker = trim($this->options['ip_geoloc_views_plugin_visitor_marker']);
+      $visitor_marker = ($visitor_marker == '<none>') ? FALSE : check_plain($visitor_marker);
+    }
+
     $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];
     $center_latlng = array(0, 0);
-    if ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
+
+    $visitor_location_accurate = !empty($this->options['ip_geoloc_views_plugin_visitor_location_accurate']);
+
+    if ($visitor_marker || $center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
       // Perform database IP lookup as backup/replacement for true location
       $resample = FALSE; // use existing location lat/long if these exist
       $store = TRUE; // store lat/long, if this is a new location
@@ -164,8 +190,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       'div_id' => 'ip-geoloc-map-of-view-' . $this->view->name,
       'map_options' => $map_options,
       'map_style' => $map_style,
+      'visitor_marker' => $visitor_marker,
       'center_option' => $center_option,
       'center_latlng' => $center_latlng,
+      'visitor_location_accurate' => $visitor_location_accurate
     ));
     return $output;
   }
