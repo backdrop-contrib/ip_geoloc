@@ -14,16 +14,19 @@
   * - $map_style: CSS style string, like 'height: 200px; width: 500px'
   * - $visitor_marker: FALSE for no marker, TRUE for standard marker or 'RRGGBB' colour code
   * - $center_option, one of:
-  *   0: no center override (center may be provided thorugh $map_options)
+  *   0: fixed center, provided thorugh "centerLat", "centerLng" in $map_options
   *   1: auto-center the map on the first location in the $locations array
   *   2: auto-center the map on the visitor's current location
-  * - $center_latlng, array of latitude and longitude based on IP addres lookup,
-  *     applies only when $visitor_marker is set or $center_option == 2
-  * - $visitor_location_accurate, whether HTML5-style location provider is to be used
+  * - $center_latlng, array of latitude and longitude based on IP address lookup,
+  *     applies only when $visitor_marker is set or $center_option == 2 and
+  *     location could not be determined or $visitor_location_gps == FALSE
+  * - $visitor_location_gps, whether HTML5-style location provider is to be used,
+  *     applies only when $visitor_marker is set or $center_opiton == 2; if
+  *     FALSE $center_latlng is used
   */
 ?>
 <div class="ip-geoloc-map view-based-map">
   <?php echo ip_geoloc_output_map_multi_location($locations, $div_id, $map_options,
-            $map_style, $visitor_marker, $center_option, $center_latlng, $visitor_location_accurate);
+          $map_style, $visitor_marker, $center_option, $center_latlng, $visitor_location_gps);
   ?>
 </div>

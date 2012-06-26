@@ -6,25 +6,27 @@
 
       var locations = settings.ip_geoloc_locations;
       var mapOptions = settings.ip_geoloc_multi_location_map_options;
-      var accurateLocation = settings.ip_geoloc_multi_location_visitor_location_accurate;
+      var use_gps = settings.ip_geoloc_multi_location_visitor_location_gps;
       visitorMarker = settings.ip_geoloc_multi_location_visitor_marker;
       centerOption = settings.ip_geoloc_multi_location_center_option;
 
       if (!mapOptions) {
         alert(Drupal.t('Syntax error in map options.'));
       }
-      map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
+      mapDiv = document.getElementById(settings.ip_geoloc_multi_location_map_div);
+      map = new google.maps.Map(mapDiv, mapOptions);
 
       // A map must have a type, a zoom and a center or nothing will show.
       if (!map.getMapTypeId()) {
         map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
       }
       if (!map.getZoom()) {
-        map.setZoom(2);
+        map.setZoom(1);
       }
-      centerSet = false;
-      if (centerOption == 0 || locations.length == 0) {
-        // If no center override option was specified, we set the center based
+
+      if (centerOption != 1 || locations.length == 0) {
+        // If no center override option was specified or as a fallback where
+        // the user declines to share their location, we set the center based
         // on the mapOptions. Without a center there won't be a map!
         map.setCenter(new google.maps.LatLng(
           mapOptions.centerLat ? mapOptions.centerLat : 0,
@@ -33,25 +35,28 @@
 
       if (visitorMarker || centerOption >= 2) {
         // Retrieve visitor's location, fall back on supplied location, if not found.
-        if (accurateLocation && geo_position_js.init()) {
+        if (use_gps && geo_position_js.init()) {
           // Center the map on the user's current location, using the geo.js unified API.
           geo_position_js.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
         }
         else {
           // Use supplied visitor lat/lng to center and set marker.
           var latLng = settings.ip_geoloc_multi_location_center_latlng;
-          handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
+          if (latLng) {
+            handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
+          }
         }
       }
       var i = 1;
       var balloonTexts = [];
+      var center = null;
       for (var key in locations) {
         var mouseOverText = Drupal.t('Location #@i', { '@i': i++ });
         var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
-        if (!centerSet && centerOption == 1) {
+        if (!center && centerOption == 1) {
           // If requested center map on the first location, if any.
           map.setCenter(position);
-          centerSet = true;
+          center = position;
         }
 
         marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
@@ -75,10 +80,9 @@
         var visitorPosition = new google.maps.LatLng(latitude, longitude);
         if (centerOption >= 2) {
           map.setCenter(visitorPosition);
-          centerSet = true;
         }
         if (visitorMarker) {
-          showSpecialMarker(visitorPosition, Drupal.t('Your current position (' + latitude + ', ' + longitude + ')'));
+          showSpecialMarker(visitorPosition, Drupal.t('Your retrieved position (' + latitude + ', ' + longitude + ')'));
         }
       }
 
@@ -108,7 +112,9 @@
       function handlePositionError(error) {
         //alert(Drupal.t('IP Geolocation, multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
         var latLng = settings.ip_geoloc_multi_location_center_latlng;
-        handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
+        if (latLng) {
+          handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
+        }
       }
     }
   }

@@ -23,7 +23,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => 'ip_geoloc_longitude');
     $options['ip_geoloc_views_plugin_visitor_marker'] = array('default' => '<none>');
     $options['ip_geoloc_views_plugin_center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
-    $options['ip_geoloc_views_plugin_visitor_location_accurate'] = array('default' => TRUE);
+    $options['ip_geoloc_views_plugin_visitor_location_gps'] = array('default' => TRUE);
     return $options;
   }
 
@@ -73,18 +73,18 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'radios',
       '#default_value' => $this->options['ip_geoloc_views_plugin_center_option'],
       '#options' => array(
-        IP_GEOLOC_MAP_NO_CENTER_OVERRIDE => t('No center override or fixed center (see note below).'),
+        IP_GEOLOC_MAP_NO_CENTER_OVERRIDE => t('Fixed center (see note below).'),
         IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION => t('Use the first location returned by the view as the center of the map.'),
         IP_GEOLOC_MAP_CENTER_ON_VISITOR => t("Center the map on the visitor's current location."),
       ),
       '#description' => t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example: %center_example', array(
         '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-38, "centerLng":145 }'))
     );
-    $form['ip_geoloc_views_plugin_visitor_location_accurate'] = array(
+    $form['ip_geoloc_views_plugin_visitor_location_gps'] = array(
       '#title' => t('Use HTML5 style of visitor location retrieval'),
       '#type' => 'checkbox',
-      '#default_value' => $this->options['ip_geoloc_views_plugin_visitor_location_accurate'],
-      '#description' => t('This is subject to the visitor accepting to share their location when prompted by their browser. If they decline, or if this box is not ticked, an IP address lookup will be used instead.')
+      '#default_value' => $this->options['ip_geoloc_views_plugin_visitor_location_gps'],
+      '#description' => t('This is subject to the visitor willing to share their location when prompted by their browser. If they decline, or if this box is not ticked, an IP address lookup will be attempted instead. In case the lookup fails, for instance because you have not enabled Smart IP or GeoIP, make sure you specify "centerLat" and "centerLng" in the <strong>Map options</strong> above to avoid an empty grey canvas.')
     );
   }
 
@@ -171,17 +171,19 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     }
 
     $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];
-    $center_latlng = array(0, 0);
+    $center_latlng = FALSE;
 
-    $visitor_location_accurate = !empty($this->options['ip_geoloc_views_plugin_visitor_location_accurate']);
+    $visitor_location_gps = !empty($this->options['ip_geoloc_views_plugin_visitor_location_gps']);
 
     if ($visitor_marker || $center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
       // Perform database IP lookup as backup/replacement for true location
-      $resample = FALSE; // use existing location lat/long if these exist
+      $resample = FALSE; // use existing lat/long if these exist
       $store = TRUE; // store lat/long, if this is a new location
       $reverse_geocode = FALSE; // we only need lat/long, not the address
       $location = ip_geoloc_get_location_by_ip(ip_address(), $resample, $store, $reverse_geocode);
-      $center_latlng = array($location['latitude'], $location['longitude']);
+      if (isset($location['latitude']) && isset($location['longitude'])) {
+        $center_latlng = array($location['latitude'], $location['longitude']);
+      }
     }
 
     $output = theme(array('ip_geoloc_map'), array(
@@ -193,7 +195,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       'visitor_marker' => $visitor_marker,
       'center_option' => $center_option,
       'center_latlng' => $center_latlng,
-      'visitor_location_accurate' => $visitor_location_accurate
+      'visitor_location_gps' => $visitor_location_gps
     ));
     return $output;
   }

@@ -7,11 +7,13 @@
  * Reusable functions that may be called from other modules.
  */
 
+// Note: secure http was chosen, as plain http may cause warnings popping up in
+// enviroments using certificates.
 // Google's gears_init.js is now included at the top of geo.js
-define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 14k uncompressed
-define('IP_GEOLOC_GOOGLE_MAPS',        'https://maps.google.com/maps/api/js?sensor=false'); // size 5k
-define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'https://maps.google.com/maps/api/js?sensor=true');  // size 5k
-define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'http://maps.googleapis.com/maps/api/geocode/json?sensor=false');
+define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 15k uncompressed
+define('IP_GEOLOC_GOOGLE_MAPS',        'https://maps.googleapis.com/maps/api/js?sensor=false'); // size 5k
+define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'https://maps.googleapis.com/maps/api/js?sensor=true');  // size 5k
+define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'https://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
  * Store the supplied IP geolocation info on the database.
@@ -101,7 +103,7 @@ function ip_geoloc_store_location($location) {
 function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', $style = '', $balloon_text = '') {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
-    // Only add non-GPS version when GPS version is already there
+    // Only add non-GPS version when GPS version isn't already there
     drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap.js');
@@ -119,6 +121,9 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  * The map is centered on the visitor's current location and features a position
  * marker, which when clicked reveals latitude and longitude, as well as the
  * street address and the accuracy of the position shown.
+ *
+ * Note this function will result in the visitor being prompted to share their
+ * location.
  *
  * @param
  *   div_id, id of the div placeholder, can be anything as long as it's unique
@@ -165,7 +170,7 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
 function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options = NULL, $map_style = NULL) {
   $javascript_files = drupal_add_js();
   if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
-    // Only add non-GPS version when GPS version is already there
+    // Only add non-GPS version when GPS version isn't already there
     drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_visitor.js');
@@ -189,6 +194,9 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  * The locations to be mapped are supplied as an array of location objects,
  * each with lat,long coordinates and optional balloon text.
  *
+ * Note this function will result in the visitor being prompted to share their
+ * location.
+ *
  * @param
  *   $locations, array of location objects each containing lat/long pair
  *   and optional balloon text.
@@ -203,26 +211,31 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  *   a 'RRGGBB' color code
  * @param
  *   $center_option, one of:
- *    0: no center override (must be provided thorugh $map_options)
+ *    0: fixed cenrer, must be provided thorugh $map_options)
  *    1: auto-center the map on the first location in the $locations array
  *    2: auto-center the map on the visitor's current location
  * @param
  *   $center_latlng, array of length 2 with lat/long coords used as a backup
  *   when $visitor_marker is set or $center_option == 2 and location could not
- *   be determined or $visitor_location_accurate == FALSE
+ *   be determined or $visitor_location_gps == FALSE
  * @param
- *   $visitor_location_accurate,whether HTML5-style location provider is to be
+ *   $visitor_location_gps, whether the HTML5-style location provider is to be
  *   used, if FALSE $center_latlng is used
  */
 function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations',
-    $map_options = NULL, $map_style = NULL, $visitor_marker = TRUE, $center_option = 0, $center_latlng = array(0, 0), $visitor_location_accurate = TRUE) {
+    $map_options = NULL, $map_style = NULL, $visitor_marker = TRUE,
+    $center_option = 0, $center_latlng = array(0, 0), $visitor_location_gps = TRUE) {
 
-  drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
-
-  $javascript_files = drupal_add_js();
-  if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
-    // Only add non-GPS version when GPS version is already there
-    drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
+  if ($visitor_location_gps) {
+    drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
+    drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
+  }
+  else {
+    $javascript_files = drupal_add_js();
+    if (empty($javascript_files[IP_GEOLOC_GOOGLE_MAPS_GPS])) {
+      // Only add non-GPS version when GPS version isn't already there
+      drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
+    }
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js');
   if (!isset($map_options)) {
@@ -237,7 +250,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   drupal_add_js(array('ip_geoloc_multi_location_visitor_marker' => $visitor_marker), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_center_option' => $center_option), 'setting');
   drupal_add_js(array('ip_geoloc_multi_location_center_latlng' => $center_latlng), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_visitor_location_accurate' => $visitor_location_accurate), 'setting');
+  drupal_add_js(array('ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps), 'setting');
 
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
@@ -249,7 +262,10 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  * Also outputs the formatted address (a single string) reverse-geocoded from
  * the lat/long.
  *
- * Note: this is done via an asynchronous javascript call, so the result is not
+ * Note: this function will result in the visitor being prompted to share their
+ * location.
+ *
+ * This is works via an asynchronous javascript call, so the result is not
  * immediately available on return from this function, hence the $menu_callback.
  * Upon page load the included javascript will, when ready, instigate an AJAX
  * call to the $menu_callback, which should invoke a function to retrieve the

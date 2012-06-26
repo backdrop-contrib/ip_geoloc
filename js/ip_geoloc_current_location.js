@@ -10,7 +10,7 @@
        * and some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
-        geo_position_js.getCurrentPosition(getLocation, displayLocationError, {enableHighAccuracy: true, timeout: 20000});
+        geo_position_js.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
       }
       else {
         var data = new Object;
@@ -49,7 +49,7 @@
         });
       }
 
-      function displayLocationError(error) {
+      function handleLocationError(error) {
         switch (error.code) {
           case 1:
             text = Drupal.t('user declined to share location');

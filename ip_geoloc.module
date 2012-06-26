@@ -86,20 +86,20 @@ function ip_geoloc_init() {
     // To avoid mixing of previous (eg. Smart IP) location fields and new (ie.
     // Google) location fields we could clear out $_SESSION['ip_geoloc']['location'].
     // However this will mean that any code relying on $_SESSION['ip_geoloc']['location']
-    // (for instance a PHP snippet for block visibility) will be face erased
+    // (for instance a PHP snippet for block visibility) will face erased
     // location data and behave incorrectly.
 
     $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
 
     // Handle first click of the session (ie $_SESSION['ip_geoloc']['last_position_check'] not set)
-    // as well as client timeout fallback, using Smart IP, GeoIP API and
-    // server-side version of Google Maps reverse-geocode service.
+    // as well as client timeout fallback.
     if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || !isset($_SESSION['ip_geoloc']['last_position_check'])) {
       // 3 calls below are synchronous, $location filled immediately on return.
       if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
         if ($use_google_to_reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
           // (Re)initialise street address details. These are based on the IP,
           // so reflect the provider location, not the browser location.
+          // This is a server-side call.
           if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
             // $location = array('ip_address' => $ip_address);
             ip_geoloc_flatten_google_address($google_address, $location);
@@ -119,9 +119,10 @@ function ip_geoloc_init() {
     }
 
     if ($use_google_to_reverse_geocode) {
-      // Insert some javascript to first retrieve the user's lat/long coords and
-      // then use Google Maps API to reverse-geocode these coords into a street
-      // address. This is all done via client-side calls, so the Drupal server
+      // Insert some javascript to first retrieve the user's lat/long coords,
+      // HTML5 style (requiring the user to accept a browser prompt) and then
+      // use Google Maps API to reverse-geocode these coords into a street address.
+      // This is all done via client-side calls, so the Drupal server
       // will not rake up any calls against its Google-imposed quotum, ie the
       // OVER_QUERY_LIMIT.
       // When done the javascript calls us back on the supplied menu callback,
@@ -150,8 +151,8 @@ function ip_geoloc_init() {
  * Comes in via menu callback /ip-geoloc-current-location, see function
  * ip_geoloc_menu() above.
  * Receives latitude, longitude, accuracy and address via the global $_POST
- * variable from function getLocations(), which posts these through an AJAX
- * call.
+ * variable from function getLocation() in ip_geoloc_current_location.js, which
+ * posts these through an AJAX call.
  * @see ip_geoloc_current_location.js
  */
 function ip_geoloc_current_location_ajax_recipient() {
@@ -166,6 +167,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
       // (Re)initialise street address details. These are based on the IP,
       // so reflect the internet provider location, not the browser location.
+      // Server-side call.
       if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
         ip_geoloc_flatten_google_address($google_address, $location);
       }

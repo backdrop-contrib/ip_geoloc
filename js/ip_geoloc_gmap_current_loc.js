@@ -16,7 +16,7 @@
        * and some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
-        geo_position_js.getCurrentPosition(displayMap, displayMapError, {enableHighAccuracy: true});
+        geo_position_js.getCurrentPosition(displayMap, handleMapError, {enableHighAccuracy: true});
       }
       else {
         // Don't pop up annoying alert. Just show blank map of the world.
@@ -46,7 +46,8 @@
         });
       }
 
-      function displayMapError(error) {
+      function handleMapError(error) {
+      /*
         switch (error.code) {
           case 1:
             text = Drupal.t('user declined to share location');
@@ -60,7 +61,8 @@
           default:
             text = Drupal.t('unknown error');
         }
-      //alert(Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error !code: !text', {'!code': error.code, '!text': text}));
+        alert(Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error !code: !text', {'!code': error.code, '!text': text}));
+      */
       }
     }
   }
