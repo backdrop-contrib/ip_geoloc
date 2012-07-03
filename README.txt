@@ -7,8 +7,8 @@ found at http://drupal.org/project/ip_geoloc.
 
 INSTALLATION & CONFIGURATION
 ============================
-First, if you are using IP Geolocation for its Views mapping interface to other
-modules, then here's a configuration shortcut.
+First, if you are using IP Geolocation mainly for its Views mapping interface to
+other modules, then here's a configuration shortcut.
 Download and enable IP Geolocation like any other module. Visit its
 configuration page, .../admin/config/system/ip_geoloc. Untick both the "Data
 collection option" boxes. That's it! You are now ready to map your View of
@@ -18,9 +18,8 @@ visitor's HTML5-retrieved location.
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you may want
 to configure an alternative lat/long lookup based on IP address. For this follow
-installation instruction B1a or B1b, depending on which module you'd like to use
-for this. And you're done!
-
+installation instruction B1a or B1b below, depending on which module you'd like
+to use for this. And you're done!
 
 If you DO want to auto-record visitor address details then complete the steps
 under A and B below.

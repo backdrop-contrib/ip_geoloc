@@ -51,14 +51,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_latitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong> module enter <strong>field_myname</strong>')
+      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules enter <strong>field_myname</strong>')
     );
     $form['ip_geoloc_views_plugin_longitude'] = array(
       '#title' => t('Name of longitude field in Views query'),
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_longitude</strong>. If the longitude is stored in a <strong>text field</strong>, then enter the field\'s machine name here, e.g. when using the <strong>Geofield</strong> module enter what you entered above for latitude.')
+      '#description' => t('Use the default, <strong>ip_geoloc_longitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_longitude</strong>. If the longitude is stored in a <strong>text field</strong>, then enter the field\'s machine name here, e.g. when using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules enter what you entered above for latitude.')
     );
     $form['ip_geoloc_views_plugin_visitor_marker'] = array(
       '#title' => t('Visitor marker color'),
