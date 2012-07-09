@@ -295,12 +295,12 @@ function ip_geoloc_views_plugins() {
   $plugins = array(
     'style' => array(
       'ip_geoloc_map' => array(
-        'title' => t('Map (via IP Geolocation)'),
+        'title' => t('Map (Google, via IP Geolocation)'),
         'help' => t('Displays the view as a map, showing location markers with balloon texts.'),
         'help topic' => 'style-ip-geoloc-map',
         'handler' => 'ip_geoloc_plugin_style_map',
         'path' => $path . '/views',
-        'theme' => 'ip_geoloc_map',
+        'theme' => 'ip_geoloc_map', // ip-geoloc-map.tpl.php
         'theme path' => $path . '/views',
         'uses fields' => TRUE,
         'uses options' => TRUE, // map style and map options
@@ -311,5 +311,22 @@ function ip_geoloc_views_plugins() {
       )
     )
   );
+  if (module_exists('openlayers')) {
+    $plugins['style']['ip_geoloc_openlayers'] = array(
+      'title' => t('Map (OpenLayers, via IP Geolocation)'),
+      'help' => t('Displays the view as an OpenLayers map.'),
+    //'help topic' => 'style-ip-geoloc-map',
+      'handler' => 'ip_geoloc_plugin_style_openlayers',
+      'path' => $path . '/views',
+      'theme' => 'ip_geoloc_openlayers', // ip-geoloc-openlayers.tpl.php
+      'theme path' => $path . '/views',
+      'uses fields' => TRUE,
+      'uses options' => TRUE,
+      'uses grouping' => FALSE,
+      'uses row plugin' => FALSE,
+      'type' => 'normal',
+      'even empty' => TRUE, // render output, even if empty
+    );
+  }
   return $plugins;
 }

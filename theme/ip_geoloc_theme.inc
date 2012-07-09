@@ -11,10 +11,11 @@
  * Implements hook_theme().
  *
  * Register the theme hooks available in this module, with their arguments.
+ * Does nor apply to Views-specific themes and template files.
  *
  * Themes may be invoked explicitly like so:
  *
- *  theme(array('<theme>'), $template_variables); // eg. <theme> = ip_geoloc_map
+ *  theme(array('<theme>'), $template_variables); // eg. <theme>==ip_geoloc_map
  *
  * where $template_variables is an array indexed by template variable names:
  *

@@ -23,24 +23,8 @@ define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation
 require_once 'ip_geoloc_api.inc';
 require_once 'ip_geoloc_blocks.inc';
 require_once 'theme/ip_geoloc_theme.inc';
-
-
-/**
- * Implements hook_openlayers_map_alter().
- *
- * Called from openlayers_build_map(), which in turn is called by function
- * openlayers_render_map_data().
- * This is where we center the OpenLayers map on the visitor's current position,
- * as obtained through HTML5 location retrieval, with either Smart IP or GeoIP
- * as a fallback.
- */
-function ip_geoloc_openlayers_map_alter(&$map) {
-  if (isset($_SESSION['ip_geoloc']['location']['latitude'])) {
-    $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
-    $latitude = $_SESSION['ip_geoloc']['location']['latitude'];
-    $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
-  }
-//$map['center']['initial']['zoom'] = 5;
+if (module_exists('openlayers')) {
+  include_once 'ip_geoloc.openlayers.inc';
 }
 
 /**

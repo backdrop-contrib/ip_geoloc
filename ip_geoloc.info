@@ -1,11 +1,12 @@
-name = IP Geolocation
-description = Extract geolocation information based on IP address and/or locator hardware and report via maps and views.
+name = IP Geolocation Views and maps
+description = Create maps from Views containing locations. Center these maps on the visitor's current HTML5 location. Also contains a location-based services API.
 package = Location
 core = 7.x
 configure = admin/config/system/ip_geoloc
 
-; List files that contain classes
+; List files class files
 files[] = views/ip_geoloc_plugin_style_map.inc
+files[] = views/ip_geoloc_plugin_style_openlayers.inc
 
 ; dependencies[]
 ; There are no programmatic dependencies but the following modules are highly
