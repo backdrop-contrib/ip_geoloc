@@ -90,6 +90,27 @@ of 10 most recent visitors" should now show more markers.
 with a larger batch size until the IP Geolocation database is up to date with
 the access log. It will automatically remain in synch from now on.
 
+A FEW OPENLAYERS TIPS
+=====================
+Of the modules in OpenLayers package you only need to enable OpenLayers and
+OpenLayers UI. In fact, you could even disable OpenLayers UI when you're done
+configuring your views.
+Initially the location markers are likely to show up as black circles. To
+change the marker shapes and colours you need to first associate the "Location
+markers" layer with your map at Structure >> OpenLayers >> Maps >> List. If
+there is no custom map on this page yet, you have to first clone and save under
+a different name, one of the existing maps. Once you've done that, you'll find
+that on Structure >> OpenLayers >> Maps >> List the map appears with an Edit
+link. Click that, followed by the "Layers & Styles" vertical tab. In the bottom
+section of the page you'll find the "Location markers" and "Current visitor
+marker" layers with check boxes to activate them and to select their marker
+styles. Pick from the drop-downs as you please. Then press Save. Note that the
+location markers won't show up in the map preview, but the visitor marker
+should. This is because the map doesn't know which view it will be paired with.
+In fact there may be several views using the same map. Return to edit your view.
+Under Format, Settings select the map you've just created and edited. Save the
+format and the view. Visit the page containing your view and all markers should
+appear in the colours you chose.
 
 FOR PROGRAMMERS
 ===============

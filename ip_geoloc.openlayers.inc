@@ -54,14 +54,13 @@ function ip_geoloc_ctools_plugin_api($module, $api) {
  * globals are used.
  */
 function ip_geoloc_openlayers_layers() {
-  // Is it even worth caching this..?
-  // For now use a arg-based check for skipping cache.
+  /* Hardly worth caching this and shouldn't as user's position may change.
   if (arg(0) != 'admin') {
     $cache = cache_get(IP_GEOLOC_MARKER_LAYER);
     if (isset($cache->data)) {
       return $cache->data;
     }
-  }
+  } */
   $layers = array();
 
   $marker_layer = new stdClass();
@@ -94,16 +93,15 @@ function ip_geoloc_openlayers_layers() {
   if (isset($_SESSION['ip_geoloc']['location']['longitude'])) {
     $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
     $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
-    $feature = array(
+    $visitor_layer->data['features'][] = array(
       'attributes' => array('title_rendered' => t('Your retrieved location.')),
       'projection' => '4326',
       'wkt' => "POINT($longitude $latitude)"
     );
-    $visitor_layer->data['features'][] = $feature;
   }
   $layers[$visitor_layer->name] = $visitor_layer;
 
-  cache_set(IP_GEOLOC_MARKER_LAYER, $layers);
+  //cache_set(IP_GEOLOC_MARKER_LAYER, $layers);
   return $layers;
 }
 

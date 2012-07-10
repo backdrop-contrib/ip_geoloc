@@ -117,7 +117,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     }
     else {
       $visitor_marker = trim($this->options['ip_geoloc_views_plugin_visitor_marker']);
-      $visitor_marker = ($visitor_marker == '<none>') ? FALSE : check_plain($visitor_marker);
+      $visitor_marker = strpos($visitor_marker, 'none') === FALSE ? check_plain($visitor_marker) : FALSE;
     }
 
     $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];

@@ -24,6 +24,10 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $latitude  = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude' ]);
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
 
+  if (empty($longitude)) {
+    $longitude = $latitude; // when lat/long is a single field
+  }
+
   $locations = array();
   foreach ($views_plugin_style->view->result as $i => $row) {
     $location = new stdClass();
