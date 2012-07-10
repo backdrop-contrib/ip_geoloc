@@ -1,15 +1,13 @@
 <?php
 
-define('IP_GEOLOC_MAP_CENTER_FIXED', 0);
-define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
-define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
-
 /**
  * @file
  * ip_geoloc_plugin_style_map.inc
  *
  * Views Style plugin extension.
  */
+require_once 'ip_geoloc_plugin_style.inc';
+
 class ip_geoloc_plugin_style_map extends views_plugin_style {
 
   /**
@@ -17,10 +15,17 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
    */
   function option_definition() {
     $options = parent::option_definition();
+
+    if (empty($latitude)) {
+      $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
+    }
+    if (empty($longitude)) {
+      $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
+    }
     $options['ip_geoloc_map_of_view_div_style']  = array('default' => '');
     $options['ip_geoloc_map_of_view_options']    = array('default' => '');
-    $options['ip_geoloc_views_plugin_latitude']  = array('default' => 'ip_geoloc_latitude');
-    $options['ip_geoloc_views_plugin_longitude'] = array('default' => 'ip_geoloc_longitude');
+    $options['ip_geoloc_views_plugin_latitude']  = array('default' => $latitude);
+    $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
     $options['ip_geoloc_views_plugin_visitor_marker'] = array('default' => '<none>');
     $options['ip_geoloc_views_plugin_center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['ip_geoloc_views_plugin_visitor_location_gps'] = array('default' => TRUE);
@@ -51,7 +56,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_latitude'],
-      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless you are viewing another module or a relationship, in which case you may have to prefix this name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules enter <em>field_myname</em>. Valid field names are on <a href="/admin/reports/views-fields">this page</a>.')
+      '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless your view involves other modules or relationships, in which case you may have to prefix the name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules enter <em>field_myname</em>. Valid field names are on <a href="/admin/reports/views-fields">this page</a>.')
     );
     $form['ip_geoloc_views_plugin_longitude'] = array(
       '#title' => t('Name of longitude field in Views query'),
@@ -101,7 +106,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
     }
 
-    include_once 'ip_geoloc_plugin_style.inc';
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
 

@@ -1,6 +1,6 @@
 
-IP GEOLOCATION
-==============
+IP GEOLOCATION VIEWS AND MAPS
+=============================
 This documentation concentrates on the installation and configuration of the
 IP Geolocation module. A full description of the module and its features can be
 found at http://drupal.org/project/ip_geoloc.
@@ -18,8 +18,8 @@ visitor's HTML5-retrieved location.
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you may want
 to configure an alternative lat/long lookup based on IP address. For this follow
-installation instruction B1a or B1b below, depending on which module you'd like
-to use for this. And you're done!
+installation instruction B1a or B1b below, depending on whether you'd like to
+employ Smart IP or GeoIP for this. And you're done!
 
 If you DO want to auto-record visitor address details then complete the steps
 under A and B below.

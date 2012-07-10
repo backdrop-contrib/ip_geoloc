@@ -9,6 +9,10 @@
  * @todo turn this into a common base clase for ip_geoloc_style_*.inc.
  */
 
+define('IP_GEOLOC_MAP_CENTER_FIXED', 0);
+define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
+define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
+
 /**
  * Extract an array of locations from the supplied views_plugin_style.
  *
@@ -19,13 +23,6 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
   $latitude  = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude' ]);
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
-
-  if (empty($latitude)) {
-    $latitude = 'ip_geoloc_latitude';
-  }
-  if (empty($longitude)) {
-    $longitude = ($latitude == 'ip_geoloc_latitude') ? 'ip_geoloc_longitude' : $latitude; // for field-based modules
-  }
 
   $locations = array();
   foreach ($views_plugin_style->view->result as $i => $row) {
@@ -81,52 +78,52 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
  * Note that fields that have their Exclude box ticked, won't be rendered,
  * Typical candidates for exclusion are the latitude and longitude fields.
  *
- * @param $view_plugin_style
+ * @param $views_plugin_style
  * @param $result
  *   The result array on the view, e.g.
  */
-function ip_geoloc_plugin_style_render_fields($view_plugin_style) {
-  if (!$view_plugin_style->uses_fields()) {
+function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
+  if (!$views_plugin_style->uses_fields()) {
     return;
   }
-  if (!isset($view_plugin_style->rendered_fields)) {
-    $view_plugin_style->rendered_fields = array();
-    $field_ids = array_keys($view_plugin_style->view->field);
-    foreach ($view_plugin_style->view->result as $i => $row) {
-      $view_plugin_style->view->row_index = $i; // God knows why we need this...
+  if (!isset($views_plugin_style->rendered_fields)) {
+    $views_plugin_style->rendered_fields = array();
+    $field_ids = array_keys($views_plugin_style->view->field);
+    foreach ($views_plugin_style->view->result as $i => $row) {
+      $views_plugin_style->view->row_index = $i; // God knows why we need this...
       foreach ($field_ids as $field_id) {
-        if ($view_plugin_style->view->field[$field_id]->options['exclude']) {
+        if ($views_plugin_style->view->field[$field_id]->options['exclude']) {
           continue;
         }
         // Add the field label if it's provided
-        $label = $view_plugin_style->view->field[$field_id]->label();
+        $label = $views_plugin_style->view->field[$field_id]->label();
         $element = '';
         $close_element = '';
         if ($label) {
-          $label_type = $view_plugin_style->view->field[$field_id]->options['element_label_type'];
+          $label_type = $views_plugin_style->view->field[$field_id]->options['element_label_type'];
           if ($label_type) {
             $label_type = check_plain($label_type);
             $element = '<' . $label_type;
-            $label_class = $view_plugin_style->view->field[$field_id]->options['element_label_class'];
+            $label_class = $views_plugin_style->view->field[$field_id]->options['element_label_class'];
             if ($label_class) {
               $element .= ' class="' . check_plain($label_class) . '"';
             }
             $element .= '>';
             $close_element = '</' . $label_type . '>';
           }
-          if ($view_plugin_style->view->field[$field_id]->options['element_label_colon']) {
+          if ($views_plugin_style->view->field[$field_id]->options['element_label_colon']) {
             $label .= ': ';
           }
-          $view_plugin_style->rendered_fields[$i][$field_id] =
-            $element . $label . $close_element . ' ' . $view_plugin_style->view->field[$field_id]->theme($row);
+          $views_plugin_style->rendered_fields[$i][$field_id] =
+            $element . $label . $close_element . ' ' . $views_plugin_style->view->field[$field_id]->theme($row);
         } // otherwise render with no label
         else {
-          $view_plugin_style->rendered_fields[$i][$field_id] = $view_plugin_style->view->field[$field_id]->theme($row);
+          $views_plugin_style->rendered_fields[$i][$field_id] = $views_plugin_style->view->field[$field_id]->theme($row);
         }
       }
-      //$view_plugin_style->row_tokens[$i] = $view_plugin_style->view->field[$field_id]->get_render_tokens(array());
+      //$views_plugin_style->row_tokens[$i] = $views_plugin_style->view->field[$field_id]->get_render_tokens(array());
     }
-    unset($view_plugin_style->view->row_index);
+    unset($views_plugin_style->view->row_index);
   }
-  return $view_plugin_style->rendered_fields;
+  return $views_plugin_style->rendered_fields;
 }
