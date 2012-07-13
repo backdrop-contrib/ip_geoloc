@@ -1,5 +1,5 @@
 name = IP Geolocation Views and maps
-description = Display Google and OpenLayers maps of Views containing locations of visitors and/or content. Various map centering options, e.g. visitor's HTML5-retrieved current position. Also an API for location-based services.
+description = Display Google and OpenLayers maps of Views containing locations of visitors and/or nodes. Various map centering options, e.g. visitor's HTML5-retrieved current position. Also an API for location-based services.
 package = Location
 core = 7.x
 configure = admin/config/system/ip_geoloc
