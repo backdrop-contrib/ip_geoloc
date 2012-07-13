@@ -32,7 +32,7 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
   // Markers may be switched on/off via a tickbox on the rendered map, if so
   // configured on this page: /admin/structure/openlayers/maps/<map_name>/edit,
   // vertical tab "Layers & Styles", bottom section "Overlay layers"
-  // $map['layer_switcher'][IP_GEOLOC_MARKER_LAYER] = IP_GEOLOC_MARKER_LAYER;
+  // $map['layer_switcher'][IP_GEOLOC_MARKER_LAYER] = IP_GEOLOC_MARKER_LAYER
 }
 
 /**
@@ -94,7 +94,7 @@ function ip_geoloc_openlayers_layers() {
     $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
     $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
     $visitor_layer->data['features'][] = array(
-      'attributes' => array('title_rendered' => t('Your retrieved location.')),
+      'attributes' => array('name' => t('Your retrieved location.')),
       'projection' => '4326',
       'wkt' => "POINT($longitude $latitude)"
     );

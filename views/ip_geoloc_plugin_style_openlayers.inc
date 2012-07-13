@@ -115,13 +115,12 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
           }
         }
         $feature = array(
-          'attributes' => array('title_rendered' => $location->balloonText),
+          // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js
+          'attributes' => array('description' => $location->balloonText),
           'projection' => '4326',
           'wkt' => 'POINT(' . $location->longitude . ' ' . $location->latitude . ')');
         $map['layers'][IP_GEOLOC_MARKER_LAYER]['features'][] = $feature;
       }
-
-      //drupal_set_message(var_dump($map));
 
       // See admin/structure/openlayers/maps/<map-name>/edit...
       // If "Hide empty map for Views" is ticked, then if the map has no

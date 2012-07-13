@@ -111,6 +111,14 @@ In fact there may be several views using the same map. Return to edit your view.
 Under Format, Settings select the map you've just created and edited. Save the
 format and the view. Visit the page containing your view and all markers should
 appear in the colours you chose.
+In order to make the text balloons pop up at a marker when hovered or clicked,
+visit Structure >> OpenLayers >> Maps >> Edit and click the "Behaviors"
+vertical tab. Scroll down the page until you reach the "Pop Up for Features"
+check box. Tick it and select the layers you're interested with, e.g.
+ip_geoloc_visitor_marker_layer and/or ip_geoloc_marker_layer. Same for "Tooltip
+for Features". Other nice behaviors that you may wish to flick on on the same
+page are "Full Screen", "Layer Switcher", "Pan and Zoom Bar Controls" and
+"Scale Line".
 
 FOR PROGRAMMERS
 ===============
