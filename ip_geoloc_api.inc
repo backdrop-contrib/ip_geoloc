@@ -303,7 +303,9 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
  *   $reverse_geocode, applies only when the supplied IP address is not
  *   yet on the database or $resample=TRUE; use TRUE, FALSE or NULL; TRUE will
  *   produce greater detail in the location returned; if NULL or omitted the
- *   value is taken from the tick box on the IP Geolocation configuration page
+ *   value is taken from the tick box on the IP Geolocation configuration page.
+ *   Reverse-geocoding is subject to a Google-imposed limit of 2500 calls per
+ *   day from the same server IP address.
  * @return
  *   location as an array
  */
@@ -357,9 +359,10 @@ function ip_geoloc_get_address($latitude, $longitude) {
  * http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=-37,144
  *
  * CALLER BEWARE:
- * This is a server-side call. If you want to call this function repeatedly,
- * remeber that Google imposes a limit of 2500 calls per 24hr. It may return an
- * OVER_QUERY_LIMIT response.
+ * This is a server-side, as opposed to client-side call. If you want to call
+ * this function repeatedly, remember that Google imposes a limit of 2500 calls
+ * from the same IP address per 24 hours. It may return an OVER_QUERY_LIMIT
+ * response.
  *
  * @param
  *   latitude,  string or double, e.g. "-37.87" or -37.87

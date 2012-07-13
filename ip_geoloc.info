@@ -1,5 +1,5 @@
 name = IP Geolocation Views and maps
-description = Create maps from Views containing locations. Center these maps on the visitor's current HTML5 location. Also contains a location-based services API.
+description = Display Google and OpenLayers maps of Views containing locations of visitors and/or content. Various map centering options, e.g. visitor's HTML5-retrieved current position. Also an API for location-based services.
 package = Location
 core = 7.x
 configure = admin/config/system/ip_geoloc
@@ -12,4 +12,5 @@ files[] = views/ip_geoloc_plugin_style_openlayers.inc
 ; There are no programmatic dependencies but the following modules are highly
 ; recommended to realise a rich feature set: Statistics (core), Views,
 ; Views-PHP and one of Smart IP or GeoIP API.
+; Naturally to use OpenLayers maps, you'll need the OpenLayers module.
 version = "7.x-1.x-dev"

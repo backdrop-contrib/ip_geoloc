@@ -16,7 +16,7 @@ define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
 
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
 define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
-define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disableDefaultUI":true, "zoom":2,  "zoomControl":true}');
+define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disableDefaultUI":true, "zoom":2,  "zoomControl":true, "scaleControl":true}');
 
 define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
 
@@ -90,22 +90,29 @@ function ip_geoloc_init() {
     // (for instance a PHP snippet for block visibility) will face erased
     // location data and behave incorrectly.
 
-    $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+    if ($use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+      global $user;
+      $roles_to_reverse_geocode = variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
+      $roles_applicable = array_intersect($roles_to_reverse_geocode, array_keys($user->roles));
+      $use_google_to_reverse_geocode = !empty($roles_applicable);
+    }
 
     // Handle first click of the session (ie $_SESSION['ip_geoloc']['last_position_check'] not set)
     // as well as client timeout fallback.
     if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || !isset($_SESSION['ip_geoloc']['last_position_check'])) {
-      // 3 calls below are synchronous, $location filled immediately on return.
+      // The calls below are synchronous, $location is filled immediately upon return.
       if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
+        /*
         if ($use_google_to_reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
           // (Re)initialise street address details. These are based on the IP,
-          // so reflect the provider location, not the browser location.
-          // This is a server-side call.
+          // so may reflect the provider location, rather than browser location.
+          // This is a synchronous server-side call, so may result in the Google
+          // maximum number of calls per day being reached.
           if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
-            // $location = array('ip_address' => $ip_address);
             ip_geoloc_flatten_google_address($google_address, $location);
           }
         }
+        */
         if ($reverse_geocode_client_timeout) {
           watchdog('IP Geolocation', 'Location timeout (waited %sec s). Fallback: %address.', array(
             '%sec' => number_format($reverse_geocode_client_timeout, 1),
@@ -168,19 +175,23 @@ function ip_geoloc_current_location_ajax_recipient() {
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
       // (Re)initialise street address details. These are based on the IP,
       // so reflect the internet provider location, not the browser location.
-      // Server-side call.
+      // Server-side call, so subject to a Google-imposed limit of 2500/day
+      // coming from the same IP address.
+      // Note: don't have to check for applicable roles here, as the AJAX call
+      // to which we respond wouldn't have been instigated in the first place.
       if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
         ip_geoloc_flatten_google_address($google_address, $location);
       }
       $error .= t('Fallback: %address', array('%address' => $location['formatted_address']));
     }
     else {
-      $error .= t('Smart IP and GeoIP API fallbacks NOT enabled.');
+      $error .= t('No fallback. Neither Smart IP nor GeoIP API are enabled.');
     }
     watchdog('IP Geolocation', $error, NULL, WATCHDOG_NOTICE);
     ip_geoloc_debug('IP Geolocation, ' . $location['ip_address'] . ': ' . $error);
   }
   else {
+    // Flesh out $location with the returned street address components.
     foreach ($_POST as $key => $value) {
       $location[check_plain($key)] = check_plain($value);
     }
