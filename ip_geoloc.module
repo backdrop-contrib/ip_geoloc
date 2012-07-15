@@ -179,10 +179,13 @@ function ip_geoloc_current_location_ajax_recipient() {
       // coming from the same IP address.
       // Note: don't have to check for applicable roles here, as the AJAX call
       // to which we respond wouldn't have been instigated in the first place.
-      if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
-        ip_geoloc_flatten_google_address($google_address, $location);
+      if (!empty($location['latitude']) && !empty($location['longitude'])) {
+        if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
+          ip_geoloc_flatten_google_address($google_address, $location);
+        }
       }
-      $error .= t('Fallback: %address', array('%address' => $location['formatted_address']));
+      $error .= t('Fallback: %address', array(
+        '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''));
     }
     else {
       $error .= t('No fallback. Neither Smart IP nor GeoIP API are enabled.');
@@ -221,8 +224,8 @@ function ip_geoloc_current_location_ajax_recipient() {
  *   IP address will be used
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
-  $location['provider'] = 'smart_ip';
   if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
+    $location['provider'] = 'smart_ip';
     if (module_exists('smart_ip')) {
       if (empty($location['ip_address'])) {
         $location['ip_address'] = ip_address();
