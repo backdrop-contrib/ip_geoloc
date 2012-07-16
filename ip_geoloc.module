@@ -2,12 +2,14 @@
 
 /**
  * @file
- *
- * Using one or more of a number of optional sources IP Geolocation retrieves
- * and stores geographical and postal address information of your site visitors,
- * based on their IP addresses.
+ * IP Geolocation is a mapping engine for Views that contain locations of nodes
+ * and/or visitors.
+ * Using a number of optional sources IP Geolocation retrieves and stores
+ * geographical and postal address information of your site visitors, based on
+ * either their HTML5-retrieved positions or their IP addresses.
  * It stores this information in a form suitable for further processing,
- * reporting, exporting and displaying via the Views module.
+ * reporting, exporting and displaying via the Views module, either as tables
+ * or as maps. Both Google Maps and OpenLyers interfaces are available.
  * Ready-to-uses views, blocks and maps are provided. For programmers there is
  * also an API.
  */
@@ -97,14 +99,14 @@ function ip_geoloc_init() {
       $use_google_to_reverse_geocode = !empty($roles_applicable);
     }
 
-    // Handle first click of the session (ie $_SESSION['ip_geoloc']['last_position_check'] not set)
+    // Handle first click of the session, ie $_SESSION['ip_geoloc']['last_position_check'] not set,
     // as well as client timeout fallback.
     if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || !isset($_SESSION['ip_geoloc']['last_position_check'])) {
       // The calls below are synchronous, $location is filled immediately upon return.
       if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
         /*
         if ($use_google_to_reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
-          // (Re)initialise street address details. These are based on the IP,
+          // Initialise street address details. These are based on the IP,
           // so may reflect the provider location, rather than browser location.
           // This is a synchronous server-side call, so may result in the Google
           // maximum number of calls per day being reached.
@@ -173,8 +175,8 @@ function ip_geoloc_current_location_ajax_recipient() {
     // Device/browser does not support getCurrentPosition(), timeout, or Google reverse-geocode error.
     $error = check_plain($_POST['error']) . ' -- ';
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-      // (Re)initialise street address details. These are based on the IP,
-      // so reflect the internet provider location, not the browser location.
+      // In case of HTML5 error fill out street address details based on the IP.
+      // These reflect the internet provider location, not the browser location.
       // Server-side call, so subject to a Google-imposed limit of 2500/day
       // coming from the same IP address.
       // Note: don't have to check for applicable roles here, as the AJAX call

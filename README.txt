@@ -10,10 +10,15 @@ INSTALLATION & CONFIGURATION
 First, if you are using IP Geolocation mainly for its Views mapping interface to
 other modules, then here's a configuration shortcut.
 Download and enable IP Geolocation like any other module. Visit its
-configuration page, .../admin/config/system/ip_geoloc. Untick both the "Data
-collection option" boxes. That's it! You are now ready to map your View of
-Location, Geofield or Geolocation data and optionally center that map on the
-visitor's HTML5-retrieved location.
+configuration page, .../admin/config/system/ip_geoloc.
+If you intend to use IP Geolocation's built-in interface to Google Maps, untick
+all "Data collection option" boxes.
+If you intend to use IP Geolocation with the OpenLayers module and also wish to
+show and center on the visitor's HTML-5 retrieved location, then you do need to
+tick the first "Data collection option" and select applicable roles below it.
+
+You are now ready to map your View of Location, Geofield or Geolocation data and
+optionally center that map on the visitor's location.
 
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you may want
@@ -90,8 +95,8 @@ of 10 most recent visitors" should now show more markers.
 with a larger batch size until the IP Geolocation database is up to date with
 the access log. It will automatically remain in synch from now on.
 
-A FEW OPENLAYERS TIPS
-=====================
+A FEW OPENLAYERS TIPS WHEN CREATING MAPS OF VIEWS
+=================================================
 Of the modules in OpenLayers package you only need to enable OpenLayers and
 OpenLayers UI. In fact, you could even disable OpenLayers UI when you're done
 configuring your views.

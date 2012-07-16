@@ -41,7 +41,7 @@ function ip_geoloc_store_location($location) {
   }
   else {
     if ($location['ip_address'] != '127.0.0.1' && (!isset($location['latitude']) || !isset($location['latitude']))) {
-      drupal_set_message(t('IP Geolocation: lat or long missing for IP address %ip (location still stored).', array('%ip' => $location['ip_address'])));
+      watchdog('IP Geolocation', t('lat or long missing for IP address %ip (location still stored)') , array('%ip' => $location['ip_address']), WATCHDOG_WARNING);
     }
     // See if this IP is already on the db
     $result = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip', array(':ip' => $location['ip_address']));

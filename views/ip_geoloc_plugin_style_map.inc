@@ -28,7 +28,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
     $options['ip_geoloc_views_plugin_visitor_marker'] = array('default' => '<none>');
     $options['ip_geoloc_views_plugin_center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
-    $options['ip_geoloc_views_plugin_visitor_location_gps'] = array('default' => TRUE);
+    $options['ip_geoloc_views_plugin_gps_roles'] = array('default' => array(
+      DRUPAL_ANONYMOUS_RID => DRUPAL_ANONYMOUS_RID,
+      DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID)
+    );
     return $options;
   }
 
@@ -85,11 +88,12 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#description' => t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example: %center_example', array(
         '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-37.8, "centerLng":145 }'))
     );
-    $form['ip_geoloc_views_plugin_visitor_location_gps'] = array(
-      '#title' => t('Use HTML5 style of visitor location retrieval'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['ip_geoloc_views_plugin_visitor_location_gps'],
-      '#description' => t('This is subject to the visitor willing to share their location when prompted by their browser. If they decline, or if this box is not ticked, an IP address lookup will be attempted instead. In case the lookup fails, for instance because you have not enabled Smart IP or GeoIP, make sure you specify "centerLat" and "centerLng" in the <strong>Map options</strong> above to avoid an empty grey canvas.')
+    $form['ip_geoloc_views_plugin_gps_roles'] = array(
+      '#title' => t('Roles for which HTML5-style visitor location retrieval is to be applied'),
+      '#type' => 'checkboxes',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_gps_roles'],
+      '#options' => user_roles(),
+      '#description' => t('This is subject to the visitor willing to share their location when prompted by their browser. If they decline, or if their roles aren\'t ticked, an IP address lookup will be attempted instead. In case the lookup fails, for instance because you have not enabled Smart IP or GeoIP, make sure you specify "centerLat" and "centerLng" in the <strong>Map options</strong> above to avoid an empty canvas.')
     );
   }
 
@@ -123,18 +127,20 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];
     $center_latlng = FALSE;
 
-    $visitor_location_gps = !empty($this->options['ip_geoloc_views_plugin_visitor_location_gps']);
-
     if ($visitor_marker || $center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
-      // Perform database IP lookup as backup/replacement for true location
-      $resample = FALSE; // use existing lat/long if these exist
-      $store = TRUE; // store lat/long, if this is a new location
-      $reverse_geocode = FALSE; // we only need lat/long, not the address
+      // Perform database IP lookup as backup/replacement for HTML5 location
+      $resample = TRUE; // visitor may be moving so ignore existing lat/long
+      $store = TRUE; // store lat/long and city belonging to this IP address
+      $reverse_geocode = FALSE; // we only need lat/long, not full street address
       $location = ip_geoloc_get_location_by_ip(ip_address(), $resample, $store, $reverse_geocode);
       if (isset($location['latitude']) && isset($location['longitude'])) {
         $center_latlng = array($location['latitude'], $location['longitude']);
       }
     }
+
+    global $user;
+    $gps_roles = empty($this->options['ip_geoloc_views_plugin_gps_roles']) ? array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID) : $this->options['ip_geoloc_views_plugin_gps_roles'];
+    $gps_roles_applicable = array_intersect($gps_roles, array_keys($user->roles));
 
     $output = theme(array('ip_geoloc_map'), array(
       'view' => $this->view,
@@ -145,7 +151,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       'visitor_marker' => $visitor_marker,
       'center_option' => $center_option,
       'center_latlng' => $center_latlng,
-      'visitor_location_gps' => $visitor_location_gps
+      'visitor_location_gps' => !empty($gps_roles_applicable)
     ));
     return $output;
   }
