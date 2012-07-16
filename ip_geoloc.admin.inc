@@ -71,11 +71,17 @@ function ip_geoloc_admin_configure() {
     '#collapsed' => TRUE,
     '#title' => t('Advanced options'),
   );
+  $form['ip_geoloc_advanced']['ip_geoloc_page_refresh'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Auto-refresh the page as soon as an HTML5 location update has come in.'),
+    '#default_value' => variable_get('ip_geoloc_page_refresh', FALSE),
+    '#description' => t('The above tick box does not apply to administration pages.')
+  );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Detail execution progress with status messages.'),
     '#default_value' => variable_get('ip_geoloc_debug', FALSE),
-    '#description' => t('The above tick box applies to the administrator (uid=1) only.')
+    '#description' => t('The above tick box applies to the super administrator (uid=1) only.')
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_session'] = array(
     '#type' => 'submit',

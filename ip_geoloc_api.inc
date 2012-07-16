@@ -11,6 +11,7 @@
 // enviroments using certificates.
 // Google's gears_init.js is now included at the top of geo.js
 define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js'); // size 15k uncompressed
+define('IP_GEOLOC_JQUERY_BLOCK_UI', 'http://malsup.github.com/jquery.blockUI.js');
 define('IP_GEOLOC_GOOGLE_MAPS',        'https://maps.googleapis.com/maps/api/js?sensor=false'); // size 5k
 define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'https://maps.googleapis.com/maps/api/js?sensor=true');  // size 5k
 define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'https://maps.googleapis.com/maps/api/geocode/json?sensor=false');
@@ -126,13 +127,18 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  * location.
  *
  * @param
- *   div_id, id of the div placeholder, can be anything as long as it's unique
+ *   $div_id, id of the div placeholder, can be anything as long as it's unique
  * @param
- *   map_options, as a JSON string e.g '{"mapTypeId":"roadmap", "zoom":15}'
+ *   $map_options, as a JSON string e.g '{"mapTypeId":"roadmap", "zoom":15}'
  * @param
- *   map_style, CSS style applied to the div, e.g "height:200px; width:300px"
+ *   $map_style, CSS style applied to the div, e.g "height:200px; width:300px"
+ * @param
+ *   $latitude,  fallback value, eg. when error or user declines to share location
+ * @param
+ *   $longitude, fallback value, eg. when error or user declines to share location
  */
-function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location', $map_options = NULL, $map_style = NULL) {
+function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location',
+    $map_options = NULL, $map_style = NULL, $latitude = NULL, $longitude = NULL) {
   $js_options = array('group' => JS_LIBRARY);
   drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
@@ -141,12 +147,16 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS;
   }
+  $settings = array(
+    'ip_geoloc_current_location_map_div' => $div_id,
+    'ip_geoloc_current_location_map_options' => drupal_json_decode($map_options),
+    'ip_geoloc_current_location_map_latlng' => array($latitude, $longitude)
+  );
+  drupal_add_js($settings, 'setting');
+
   if (!isset($map_style)) {
     $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;
   }
-  drupal_add_js(array('ip_geoloc_current_location_map_div' => $div_id), 'setting');
-  drupal_add_js(array('ip_geoloc_current_location_map_options' => drupal_json_decode($map_options)), 'setting');
-
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
 }
@@ -174,16 +184,20 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
     drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('group' => JS_LIBRARY));
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_visitor.js');
+
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
   }
+  $settings = array(
+    'ip_geoloc_locations' => $locations,
+    'ip_geoloc_multi_location_map_div' => $div_id,
+    'ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options)
+  );
+  drupal_add_js($settings, 'setting');
+
   if (!isset($map_style)) {
     $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;
   }
-  drupal_add_js(array('ip_geoloc_locations' => $locations), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options)), 'setting');
-
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
 }
@@ -238,20 +252,24 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     }
   }
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js');
+
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
   }
+  $settings = array(
+    'ip_geoloc_locations' => $locations,
+    'ip_geoloc_multi_location_map_div' => $div_id,
+    'ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options),
+    'ip_geoloc_multi_location_visitor_marker' => $visitor_marker,
+    'ip_geoloc_multi_location_center_option' => $center_option,
+    'ip_geoloc_multi_location_center_latlng' => $center_latlng,
+    'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps
+  );
+  drupal_add_js($settings, 'setting');
+
   if (!isset($map_style)) {
     $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;
   }
-  drupal_add_js(array('ip_geoloc_locations' => $locations), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_map_div' => $div_id), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options)), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_visitor_marker' => $visitor_marker), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_center_option' => $center_option), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_center_latlng' => $center_latlng), 'setting');
-  drupal_add_js(array('ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps), 'setting');
-
   $map_placeholder = "<div id='$div_id'" . (empty($map_style) ? '' : " style='$map_style'") . '></div>';
   return $map_placeholder;
 }
@@ -278,7 +296,16 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
-  drupal_add_js(array('ip_geoloc_menu_callback' => $menu_callback), 'setting');
+  $refresh_page = variable_get('ip_geoloc_page_refresh', FALSE) && !path_is_admin($_GET['q']);
+  if ($refresh_page) {
+    //No longer using this jQuery API, see file js/ip_geoloc_current_location.js
+    //drupal_add_js(IP_GEOLOC_JQUERY_BLOCK_UI, $js_options);
+  }
+  $settings = array(
+    'ip_geoloc_menu_callback' => $menu_callback,
+    'ip_geoloc_refresh_page' => $refresh_page
+  );
+  drupal_add_js($settings, 'setting');
 }
 
 /**
@@ -289,7 +316,7 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
  * array). If the IP address is not yet in the IP Geolocation database, then
  * retrieve lat/long using either Smart IP or GeoIP API (if enabled) and
  * reverse-geocode the lat/long (if the Google Maps service is enabled) into a
- * location. If the second argument is TRUE, then store the new location.
+ * location. If the third argument is TRUE, then store the new location.
  *
  * @param
  *   $ip_address; note if you're looking for location data for the current

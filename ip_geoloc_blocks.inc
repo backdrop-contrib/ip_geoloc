@@ -110,7 +110,10 @@ function ip_geoloc_block_view($delta = '') {
       $block['content'] = theme(array('ip_geoloc_map_current_visitor'), array(
         'div_id' => 'ip-geoloc-block-current-visitor-map',
         'map_options' => $map_options,
-        'map_style' => $map_style
+        'map_style' => $map_style,
+        // Fallback lat/long, in case the HTML5 location retrieval fails
+        'latitude'  => empty($_SESSION['ip_geoloc']['location']['latitude' ]) ? NULL : $_SESSION['ip_geoloc']['location']['latitude'],
+        'longitude' => empty($_SESSION['ip_geoloc']['location']['longitude']) ? NULL : $_SESSION['ip_geoloc']['location']['longitude']
       ));
       break;
 

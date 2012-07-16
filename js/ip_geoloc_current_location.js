@@ -5,9 +5,10 @@
     attach: function (context, settings) {
 
       var callback_url = Drupal.settings.basePath + settings.ip_geoloc_menu_callback;
+      var refresh_page = settings.ip_geoloc_refresh_page;
 
-      /* Use the geo.js unified API. This covers W3C Geolocation API, Google Gears
-       * and some specific devices like Palm and Blackberry.
+      /* Use the geo.js unified API. This covers the W3C Geolocation API as well
+       * as some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
         geo_position_js.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
@@ -15,7 +16,7 @@
       else {
         var data = new Object;
         data['error'] = Drupal.t('Cannot accurately determine visitor location. Browser does not support getCurrentPosition(): @browser', { '@browser': navigator.userAgent });
-        callback_php(callback_url, data);
+        callback_php(callback_url, data, false);
       }
 
       function getLocation(position) {
@@ -43,9 +44,10 @@
           }
           else {
             ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
+            refresh_page = false;
           }
           // Pass lat/long, accuracy and address back to Drupal
-          callback_php(callback_url, ip_geoloc_address);
+          callback_php(callback_url, ip_geoloc_address, refresh_page);
         });
       }
 
@@ -66,10 +68,10 @@
         var data = new Object;
         data['error'] = Drupal.t('getCurrentPosition() returned error !code: !text. @browser', {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
         // Pass error back to PHP rather than alert();
-        callback_php(callback_url, data);
+        callback_php(callback_url, data, false);
       }
 
-      function callback_php(callback_url, data) {
+      function callback_php(callback_url, data, refresh_page) {
         $.ajax({
           url: callback_url,
           type: 'POST',
@@ -83,6 +85,21 @@
             }
           },
           complete: function() {
+            if (refresh_page) {
+              /* Requires: http://malsup.github.com/jquery.blockUI.js
+              $.blockUI({
+                message: Drupal.t('Your location was updated...'),
+                css: {
+                  padding: '10px',
+                  color: 'white',
+                  backgroundColor: 'black',
+                  opacity: .5
+                }
+              });
+              setTimeout($.unblockUI, 2000);
+              */
+              window.location.reload();
+            }
           }
         });
       }

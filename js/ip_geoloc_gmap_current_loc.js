@@ -16,7 +16,8 @@
        * and some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
-        geo_position_js.getCurrentPosition(displayMap, handleMapError, {enableHighAccuracy: true});
+        // Note that we use the same function for normal and error behaviour.
+        geo_position_js.getCurrentPosition(displayMap, displayMap, {enableHighAccuracy: true});
       }
       else {
         // Don't pop up annoying alert. Just show blank map of the world.
@@ -25,7 +26,20 @@
       }
 
       function displayMap(position) {
-        var coords = position.coords;
+        var coords = null;
+        if (position.coords) {
+          coords = position.coords;
+        }
+        else {
+          // If the user declinesd to share their location or if there was some
+          // other error, we set the center based on the fixed lat/long passed
+          // in via the settings. Without a center there won't be a map!
+          // If not supplied this results in a marker in the ocean at (0,0).
+          var latLng = settings.ip_geoloc_current_location_map_latlng;
+          coords = new Object;
+          coords.latitude = latLng[0];
+          coords.longitude = latLng[1];
+        }
         var center = new google.maps.LatLng(coords.latitude, coords.longitude);
         map.setCenter(center);
         var marker = new google.maps.Marker({ map: map, position: center });
@@ -34,7 +48,7 @@
             addressText = response[0]['formatted_address'];
           }
           else {
-            alert(Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code !code.', { '!code': status }));
+          //alert(Drupal.t('IP Geolocation displayMap(): Google address lookup failed with status code !code.', { '!code': status }));
           }
           // lat/long and address are revealed when clicking marker
           var lat = coords.latitude.toFixed(4);
@@ -44,25 +58,6 @@
           var infoPopUp = new google.maps.InfoWindow({ content: addressText + '<br/>' + latLongText });
           google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) });
         });
-      }
-
-      function handleMapError(error) {
-      /*
-        switch (error.code) {
-          case 1:
-            text = Drupal.t('user declined to share location');
-            break;
-          case 2:
-            text = Drupal.t('position unavailable (connection lost?)');
-            break;
-          case 3:
-            text = Drupal.t('timeout');
-            break;
-          default:
-            text = Drupal.t('unknown error');
-        }
-        alert(Drupal.t('IP Geolocation, current location map: getCurrentPosition() returned error !code: !text', {'!code': error.code, '!text': text}));
-      */
       }
     }
   }
