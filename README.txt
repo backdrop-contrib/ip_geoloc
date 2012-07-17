@@ -97,7 +97,7 @@ the access log. It will automatically remain in synch from now on.
 
 A FEW OPENLAYERS TIPS WHEN CREATING MAPS OF VIEWS
 =================================================
-Of the modules in OpenLayers package you only need to enable OpenLayers and
+Of the modules in the OpenLayers package you only need to enable OpenLayers and
 OpenLayers UI. In fact, you could even disable OpenLayers UI when you're done
 configuring your views.
 Initially the location markers are likely to show up as black circles. To

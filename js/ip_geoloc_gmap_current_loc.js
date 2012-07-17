@@ -16,7 +16,7 @@
        * and some specific devices like Palm and Blackberry.
        */
       if (geo_position_js.init()) {
-        // Note that we use the same function for normal and error behaviour.
+        // Note that we use the same function for normal and error behaviours.
         geo_position_js.getCurrentPosition(displayMap, displayMap, {enableHighAccuracy: true});
       }
       else {
@@ -57,6 +57,9 @@
             + Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
           var infoPopUp = new google.maps.InfoWindow({ content: addressText + '<br/>' + latLongText });
           google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) });
+          //google.maps.event.addListener(map, 'center_changed', function() {
+          //  alert('New coords: ' + map.getCenter().lat() + ', ' + map.getCenter().lng());
+          //});
         });
       }
     }
