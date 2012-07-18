@@ -4,17 +4,18 @@
   Drupal.behaviors.addGMapMultiLocation = {
     attach: function (context, settings) {
 
-      var locations = settings.ip_geoloc_locations;
-      var mapOptions = settings.ip_geoloc_multi_location_map_options;
-      var use_gps = settings.ip_geoloc_multi_location_visitor_location_gps;
-      visitorMarker = settings.ip_geoloc_multi_location_visitor_marker;
-      centerOption = settings.ip_geoloc_multi_location_center_option;
+      var locations     = settings.ip_geoloc_locations;
+      var mapOptions    = settings.ip_geoloc_multi_location_map_options;
+      var use_gps       = settings.ip_geoloc_multi_location_visitor_location_gps;
+      var visitorMarker = settings.ip_geoloc_multi_location_visitor_marker;
+      var centerOption  = settings.ip_geoloc_multi_location_center_option;
+      var markerFilename= settings.ip_geoloc_multi_location_marker_filename;
 
       if (!mapOptions) {
         alert(Drupal.t('Syntax error in map options.'));
       }
-      mapDiv = document.getElementById(settings.ip_geoloc_multi_location_map_div);
-      map = new google.maps.Map(mapDiv, mapOptions);
+      var mapDiv = document.getElementById(settings.ip_geoloc_multi_location_map_div);
+      var map = new google.maps.Map(mapDiv, mapOptions);
 
       // A map must have a type, a zoom and a center or nothing will show.
       if (!map.getMapTypeId()) {
@@ -47,6 +48,13 @@
           }
         }
       }
+
+      var pinImage = new google.maps.MarkerImage(markerFilename,
+        new google.maps.Size(21, 34),   // image width, height
+        new google.maps.Point(0, 0),    // origin
+        new google.maps.Point(10, 34)); // anchor
+      var shadowImage = null;
+
       var i = 1;
       var balloonTexts = [];
       var center = null;
@@ -59,7 +67,7 @@
           center = position;
         }
 
-        marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
+        marker = new google.maps.Marker({ map: map, icon: pinImage, shadow: shadowImage, position: position, title: mouseOverText });
 
         // Funny index is because listener callback only gives us position
         balloonTexts['LL' + position] = locations[key].balloonText;
@@ -92,13 +100,13 @@
         }
         else {
           // Interpret value of visitorMarker as the marker color
-          var pinChar = "%E2%80%A2"; // or a letter, e.g. "X"
           var pinColor = visitorMarker; // eg "00FF00" for bright green
+          var pinChar = "%E2%80%A2"; // use character like "x", for a dot use "%E2%80%A2"
           var textColor = "000000";  // black
           // Note: cannot use https: here...
           var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=" + pinChar + "|" + pinColor + "|" + textColor,
             new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34));
-          specialMarker = new google.maps.Marker({ icon: pinImage, map: map, position: position, title: text });
+          specialMarker = new google.maps.Marker({ map: map, icon: pinImage, shadow: shadowImage, position: position, title: text });
         }
         google.maps.event.addListener(specialMarker, 'click',  function(event) {
           new google.maps.InfoWindow({

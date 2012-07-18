@@ -237,7 +237,7 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  *   used, if FALSE $center_latlng is used
  */
 function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations',
-    $map_options = NULL, $map_style = NULL, $visitor_marker = TRUE,
+    $map_options = NULL, $map_style = NULL, $marker_color = 'red', $visitor_marker = TRUE,
     $center_option = 0, $center_latlng = array(0, 0), $visitor_location_gps = TRUE) {
 
   if ($visitor_location_gps) {
@@ -256,6 +256,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
   }
+  $marker_filename = "$marker_color.png";
   $settings = array(
     'ip_geoloc_locations' => $locations,
     'ip_geoloc_multi_location_map_div' => $div_id,
@@ -263,7 +264,8 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     'ip_geoloc_multi_location_visitor_marker' => $visitor_marker,
     'ip_geoloc_multi_location_center_option' => $center_option,
     'ip_geoloc_multi_location_center_latlng' => $center_latlng,
-    'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps
+    'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps,
+    'ip_geoloc_multi_location_marker_filename' => drupal_get_path('module', 'ip_geoloc') . "/markers/$marker_filename"
   );
   drupal_add_js($settings, 'setting');
 

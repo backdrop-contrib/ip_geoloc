@@ -77,7 +77,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   function render($result) {
 
     if (!empty($this->view->live_preview)) {
-      return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
+    //return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
     }
 
     // This somewhat mimics function openlayers_render_map_data() and class

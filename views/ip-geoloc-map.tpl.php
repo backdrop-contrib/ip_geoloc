@@ -12,6 +12,7 @@
   *   must be unique
   * - $map_options: passed to Google Maps API, eg '{"mapTypeId":"roadmap", "zoom": 10}'
   * - $map_style: CSS style string, like 'height: 200px; width: 500px'
+  * - $marker_color: name in English of the color used for all location markers
   * - $visitor_marker: FALSE for no marker, TRUE for standard marker or 'RRGGBB' colour code
   * - $center_option, one of:
   *   0: fixed center, provided thorugh "centerLat", "centerLng" in $map_options
@@ -27,6 +28,6 @@
 ?>
 <div class="ip-geoloc-map view-based-map">
   <?php echo ip_geoloc_output_map_multi_location($locations, $div_id, $map_options,
-          $map_style, $visitor_marker, $center_option, $center_latlng, $visitor_location_gps);
+          $map_style, $marker_color, $visitor_marker, $center_option, $center_latlng, $visitor_location_gps);
   ?>
 </div>

@@ -26,6 +26,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['ip_geoloc_map_of_view_options']    = array('default' => '');
     $options['ip_geoloc_views_plugin_latitude']  = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
+    $options['ip_geoloc_map_of_view_marker_color'] = array('default' => 'red');
     $options['ip_geoloc_views_plugin_visitor_marker'] = array('default' => '<none>');
     $options['ip_geoloc_views_plugin_center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['ip_geoloc_views_plugin_gps_roles'] = array('default' => array(
@@ -67,6 +68,13 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#size' => 127,
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
       '#description' => t('See comments above. When using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules you can leave this field empty.')
+    );
+    $form['ip_geoloc_views_plugin_marker_color'] = array(
+      '#title' => t('Location marker color'),
+      '#type' => 'select',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_marker_color'],
+      '#options' => $this->ip_geoloc_gmap_marker_colors(),
+      '#description' => t('This color is used for all markers except the visitor marker.')
     );
     $form['ip_geoloc_views_plugin_visitor_marker'] = array(
       '#title' => t('Visitor marker color'),
@@ -115,6 +123,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
 
     $map_options = empty($this->options['ip_geoloc_map_of_view_options']) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $this->options['ip_geoloc_map_of_view_options'];
     $map_style = empty($this->options['ip_geoloc_map_of_view_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : check_plain($this->options['ip_geoloc_map_of_view_div_style']);
+    $marker_color = empty($this->options['ip_geoloc_views_plugin_marker_color']) ? 'red' : $this->options['ip_geoloc_views_plugin_marker_color'];
 
     if (empty($this->options['ip_geoloc_views_plugin_visitor_marker'])) {
       $visitor_marker = TRUE; // default to standard red marker
@@ -148,12 +157,31 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       'div_id' => 'ip-geoloc-map-of-view-' . $this->view->name,
       'map_options' => $map_options,
       'map_style' => $map_style,
+      'marker_color' => $marker_color,
       'visitor_marker' => $visitor_marker,
       'center_option' => $center_option,
       'center_latlng' => $center_latlng,
       'visitor_location_gps' => !empty($gps_roles_applicable)
     ));
     return $output;
+  }
+
+  function ip_geoloc_gmap_marker_colors() {
+    return array(
+      'blue' => t('Blue'),
+      'lightblue' => t('Light blue'),
+      'gray' => t('Grey'),
+      'green' => t('Green'),
+      'orange' => t('Orange'),
+      'pink' => t('Pink'),
+      'purple' => t('Purple'),
+      'red' => t('Red'),
+      'red+dot' => t('Red with dot'),
+      'red+square' => t('Red with square'),
+      'red cluster' => t('Red cluster'),
+      'white' => t('White'),
+      'yellow' => t('Yellow')
+    );
   }
 
 }
