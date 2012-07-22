@@ -42,7 +42,7 @@ function ip_geoloc_store_location($location) {
   }
   else {
     if ($location['ip_address'] != '127.0.0.1' && (!isset($location['latitude']) || !isset($location['latitude']))) {
-      watchdog('IP Geolocation', t('lat or long missing for IP address %ip (location still stored)') , array('%ip' => $location['ip_address']), WATCHDOG_WARNING);
+      watchdog('IP Geolocation', 'latitude or longitude missing for IP address %ip (location still stored)', array('%ip' => $location['ip_address']), WATCHDOG_WARNING);
     }
     // See if this IP is already on the db
     $result = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip', array(':ip' => $location['ip_address']));
@@ -220,6 +220,9 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  *   $map_options, as a JSON string, .e.g '{"mapTypeId":"roadmap", "zoom":15}'
  * @param
  *   $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
+ * @parem
+ *   $marker_color, default color used for all locations that haven't had their
+ *   color overridden
  * @param
  *   $visitor_marker, one of FALSE (no marker), TRUE (standard red marker) or
  *   a 'RRGGBB' color code
@@ -256,7 +259,6 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
   }
-  $marker_filename = "$marker_color.png";
   $settings = array(
     'ip_geoloc_locations' => $locations,
     'ip_geoloc_multi_location_map_div' => $div_id,
@@ -265,7 +267,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     'ip_geoloc_multi_location_center_option' => $center_option,
     'ip_geoloc_multi_location_center_latlng' => $center_latlng,
     'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps,
-    'ip_geoloc_multi_location_marker_filename' => drupal_get_path('module', 'ip_geoloc') . "/markers/$marker_filename"
+    'ip_geoloc_multi_location_marker_filename' => "$marker_color.png"
   );
   drupal_add_js($settings, 'setting');
 

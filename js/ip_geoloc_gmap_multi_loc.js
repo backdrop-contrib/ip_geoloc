@@ -11,6 +11,8 @@
       var centerOption  = settings.ip_geoloc_multi_location_center_option;
       var markerFilename= settings.ip_geoloc_multi_location_marker_filename;
 
+      var markerDirname = '/sites/all/modules/ip_geoloc/markers'; // @todo
+
       if (!mapOptions) {
         alert(Drupal.t('Syntax error in map options.'));
       }
@@ -49,7 +51,7 @@
         }
       }
 
-      var pinImage = new google.maps.MarkerImage(markerFilename,
+      var defaultPinImage = new google.maps.MarkerImage(markerDirname + '/' + markerFilename,
         new google.maps.Size(21, 34),   // image width, height
         new google.maps.Point(0, 0),    // origin
         new google.maps.Point(10, 34)); // anchor
@@ -66,7 +68,13 @@
           map.setCenter(position);
           center = position;
         }
-
+        var pinImage = defaultPinImage;
+        if (locations[key].marker_filename) {
+          pinImage = new google.maps.MarkerImage(markerDirname + '/' + locations[key].marker_filename,
+            new google.maps.Size(21, 34),   // image width, height
+            new google.maps.Point(0, 0),    // origin
+            new google.maps.Point(10, 34)); // anchor
+        }
         marker = new google.maps.Marker({ map: map, icon: pinImage, shadow: shadowImage, position: position, title: mouseOverText });
 
         // Funny index is because listener callback only gives us position

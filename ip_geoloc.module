@@ -61,6 +61,13 @@ function ip_geoloc_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  $items['ip-geoloc-differentiator-config/%'] = array(
+    'title' => 'Differentiator color associations',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ip_geoloc_differentiator_to_color_mappings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'views/ip_geoloc_plugin_style.inc',
+  );
   return $items;
 }
 
@@ -375,6 +382,32 @@ function ip_geoloc_debug($message, $type = 'status') {
   if ($GLOBALS['user']->uid == 1 && variable_get('ip_geoloc_debug', FALSE)) {
     drupal_set_message($message, $type);
   }
+}
+
+/**
+ * Return available marker colors for use in a select drop-down.
+ *
+ * @return array of color names indexed by machine names
+ * @todo auto-retrieve by doing a directory file listing on /markers
+ */
+function ip_geoloc_marker_colors() {
+  return array(
+    '' => '<' . t('default') . '>',
+    'blue' => t('Blue'),
+    'lightblue' => t('Light blue'),
+    'gray' => t('Grey'),
+    'green' => t('Green'),
+    'orange' => t('Orange'),
+    'pink' => t('Pink'),
+    'purple' => t('Purple'),
+    'red' => t('Red'),
+    'red+dot' => t('Red with dot'),
+    'red+square' => t('Red with square'),
+    'red cluster' => t('Red cluster'),
+    'white' => t('White'),
+    'yellow' => t('Yellow'),
+    'drupal' => t('Drupal')
+  );
 }
 
 /**

@@ -22,13 +22,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     if (empty($longitude)) {
       $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
     }
-    $options['ip_geoloc_map_of_view_div_style']  = array('default' => '');
-    $options['ip_geoloc_map_of_view_options']    = array('default' => '');
-    $options['ip_geoloc_views_plugin_latitude']  = array('default' => $latitude);
+    $options['ip_geoloc_map_of_view_div_style'] = array('default' => '');
+    $options['ip_geoloc_map_of_view_options'] = array('default' => '');
+    $options['ip_geoloc_views_plugin_latitude'] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
-    $options['ip_geoloc_map_of_view_marker_color'] = array('default' => 'red');
-    $options['ip_geoloc_views_plugin_visitor_marker'] = array('default' => '<none>');
     $options['ip_geoloc_views_plugin_center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
+    $options['ip_geoloc_views_plugin_visitor_marker'] = array('default' => '<none>');
+    $options['ip_geoloc_map_of_view_marker_color'] = array('default' => 'red');
+    $options['ip_geoloc_views_plugin_differentiator_field'] = array('default' => '');
     $options['ip_geoloc_views_plugin_gps_roles'] = array('default' => array(
       DRUPAL_ANONYMOUS_RID => DRUPAL_ANONYMOUS_RID,
       DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID)
@@ -69,21 +70,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#default_value' => $this->options['ip_geoloc_views_plugin_longitude'],
       '#description' => t('See comments above. When using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules you can leave this field empty.')
     );
-    $form['ip_geoloc_views_plugin_marker_color'] = array(
-      '#title' => t('Location marker color'),
-      '#type' => 'select',
-      '#default_value' => $this->options['ip_geoloc_views_plugin_marker_color'],
-      '#options' => $this->ip_geoloc_gmap_marker_colors(),
-      '#description' => t('This color is used for all markers except the visitor marker.')
-    );
-    $form['ip_geoloc_views_plugin_visitor_marker'] = array(
-      '#title' => t('Visitor marker color'),
-      '#type' => 'textfield',
-      '#size' => 6,
-      '#default_value' => $this->options['ip_geoloc_views_plugin_visitor_marker'],
-      '#description' => t("Show visitor marker in the color specified. %color_code is bright green. Note that an additional web service call will be made to retrieve the marker image, unless this field is left blank, which will result in a standard red marker. Enter <em>&lt;none&gt;</em> if you do not wish to display the visitor's current location.",
-        array('%color_code' => '00FF00'))
-    );
     $form['ip_geoloc_views_plugin_center_option'] = array(
       '#title' => t('Map centering options'),
       '#type' => 'radios',
@@ -95,6 +81,47 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       ),
       '#description' => t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example: %center_example', array(
         '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-37.8, "centerLng":145 }'))
+    );
+    $form['ip_geoloc_views_plugin_visitor_marker'] = array(
+      '#title' => t('Visitor marker color'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['ip_geoloc_views_plugin_visitor_marker'],
+      '#description' => t("Show visitor marker in the color specified. %color_code is bright green. Note that an additional web service call will be made to retrieve the marker image, unless this field is left blank, which will result in a standard red marker. Enter <em>&lt;none&gt;</em> if you do not wish to display the visitor's current location.",
+        array('%color_code' => '00FF00'))
+    );
+    $form['ip_geoloc_views_plugin_marker_color'] = array(
+      '#title' => t('Default location marker color'),
+      '#type' => 'select',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_marker_color'],
+      '#options' => ip_geoloc_marker_colors(),
+      '#description' => t('This color is used for all location markers that have not had their color overridden by the differentiator field (see below).')
+    );
+    $fields = array('' => '<' . t('none') . '>');
+    foreach ($this->display->handler->get_handlers('field') as $field_id => $field_handler) {
+      if (drupal_substr($field_id, 0, 6) != 'field_') {
+        $field_id = $field_handler->table . "_$field_id";
+      }
+      $fields[$field_id] = $field_handler->ui_name();
+    }
+    $selected_field = empty($fields[$this->options['ip_geoloc_views_plugin_differentiator_field']])
+      ? '' : $fields[$this->options['ip_geoloc_views_plugin_differentiator_field']];
+
+    if (empty($selected_field)) {
+      $description = t('You may designate one field as a location differentiator. Locations with the same differentiator value in the view will have the same marker colors on the map.<br/>After you have pressed "Apply" and "Save" please return to this panel to associate differentiator values with marker colors.');
+    }
+    else {
+      $description = t('You may associate "%field" values with marker colors <a href="@url">here</a>. Locations with the same "%field" value will have the same marker color on the map.', array(
+        '%field' => $selected_field,
+        '@url' => '/ip-geoloc-differentiator-config/' . $this->options['ip_geoloc_views_plugin_differentiator_field']));
+    }
+
+    $form['ip_geoloc_views_plugin_differentiator_field'] = array(
+      '#title' => t('Location differentiator'),
+      '#type' => 'select',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_differentiator_field'],
+      '#options' => $fields,
+      '#description' => $description
     );
     $form['ip_geoloc_views_plugin_gps_roles'] = array(
       '#title' => t('Roles for which HTML5-style visitor location retrieval is to be applied'),
@@ -164,24 +191,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       'visitor_location_gps' => !empty($gps_roles_applicable)
     ));
     return $output;
-  }
-
-  function ip_geoloc_gmap_marker_colors() {
-    return array(
-      'blue' => t('Blue'),
-      'lightblue' => t('Light blue'),
-      'gray' => t('Grey'),
-      'green' => t('Green'),
-      'orange' => t('Orange'),
-      'pink' => t('Pink'),
-      'purple' => t('Purple'),
-      'red' => t('Red'),
-      'red+dot' => t('Red with dot'),
-      'red+square' => t('Red with square'),
-      'red cluster' => t('Red cluster'),
-      'white' => t('White'),
-      'yellow' => t('Yellow')
-    );
   }
 
 }

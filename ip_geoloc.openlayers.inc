@@ -36,7 +36,7 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
 }
 
 /**
- * Implementation of hook_ctools_plugin_api().
+ * Implements hook_ctools_plugin_api().
  *
  * Required to add a layer to OpenLayers, see ip_geoloc_openlayers_layers().
  */

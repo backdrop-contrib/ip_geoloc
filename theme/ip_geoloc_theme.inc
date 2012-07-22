@@ -49,6 +49,11 @@ function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
       'map_style' => NULL,
     )
   );
+
+  $theme['ip_geoloc_field_mapping_table'] = array(
+    'render element' => 'form'
+  );
+
   return $theme;
 }
 

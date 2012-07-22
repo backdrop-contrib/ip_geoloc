@@ -41,7 +41,7 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', TRUE),
     '#description' => t("For present and future visitors this is done via the Javascript version of the Maps API and the HTML5 way of obtaining a visitor's location. This involves them being prompted to accept sharing of their location. For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server. <br/>If you are using IP Geolocation only for the Views format <strong>Map (Google, via IP Geolocation)</strong>, then you can safely untick this box.")
   );
- $form['ip_geoloc_data_collection_options']['ip_geoloc_roles_to_reverse_geocode'] = array(
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_roles_to_reverse_geocode'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Roles for which HTML5 visitor locations are to be requested and reverse-geocoded to street addresses'),
     '#default_value' => variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID)),
