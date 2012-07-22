@@ -77,26 +77,28 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
 
-    if (!empty($row->{$differentiator_name})) {
-      $differentiator_value = $row->{$differentiator_name};
-    }
-    elseif (!empty($row->{'field_' . $differentiator_name})) {
-      $differentiator_value = $row->{'field_' . $differentiator_name};
-      if (is_array($differentiator_value)) {
-        if (isset($differentiator_value[0]['raw']['tid'])) {
-          $differentiator_value = $differentiator_value[0]['raw']['tid'];
-        }
-        elseif (isset($differentiator_value[0]['raw']['value'])) {
-          $differentiator_value = $differentiator_value[0]['raw']['value'];
-        }
-        elseif (isset($differentiator_value[0]['rendered']['#markup'])) {
-          $differentiator_value = $differentiator_value[0]['rendered']['#markup'];
+    if (!empty($differentiator_name)) {
+      if (!empty($row->{$differentiator_name})) {
+        $differentiator_value = $row->{$differentiator_name};
+      }
+      elseif (!empty($row->{'field_' . $differentiator_name})) {
+        $differentiator_value = $row->{'field_' . $differentiator_name};
+        if (is_array($differentiator_value)) {
+          if (isset($differentiator_value[0]['raw']['tid'])) {
+            $differentiator_value = $differentiator_value[0]['raw']['tid'];
+          }
+          elseif (isset($differentiator_value[0]['raw']['value'])) {
+            $differentiator_value = $differentiator_value[0]['raw']['value'];
+          }
+          elseif (isset($differentiator_value[0]['rendered']['#markup'])) {
+            $differentiator_value = $differentiator_value[0]['rendered']['#markup'];
+          }
         }
       }
-    }
-    if (!empty($differentiator_color_mappings[$differentiator_value])) {
-      $color = $differentiator_color_mappings[$differentiator_value];
-      $location->marker_filename = "$color.png";
+      if (!empty($differentiator_color_mappings[$differentiator_value])) {
+        $color = $differentiator_color_mappings[$differentiator_value];
+        $location->marker_filename = "$color.png";
+      }
     }
   }
   return $locations;
@@ -170,7 +172,7 @@ function ip_geoloc_differentiator_to_color_mappings($form, &$form_state) {
     $form_state['differentiator'] = arg(1);
   }
   $differentiator = $form_state['differentiator'];
-  $field = field_info_field($differentiator);
+//$field = field_info_field($differentiator);
   $instance = ip_geoloc_get_field_instance($differentiator);
   $differentiator_label = isset($instance) ? $instance['label'] : $differentiator;
 
@@ -364,6 +366,9 @@ function theme_ip_geoloc_field_mapping_table($variables) {
       $differentiator = $attribute_name;
       break;
     }
+  }
+  if (empty($differentiator)) {
+    return '';
   }
   $instance = ip_geoloc_get_field_instance($differentiator);
   $differentiator_label = isset($instance) ? $instance['label'] : $differentiator;

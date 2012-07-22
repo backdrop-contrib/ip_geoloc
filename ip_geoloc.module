@@ -387,27 +387,26 @@ function ip_geoloc_debug($message, $type = 'status') {
 /**
  * Return available marker colors for use in a select drop-down.
  *
+ * List is compiled based on available .png files in ip_geoloc/markers dir.
+ *
  * @return array of color names indexed by machine names
- * @todo auto-retrieve by doing a directory file listing on /markers
  */
 function ip_geoloc_marker_colors() {
-  return array(
-    '' => '<' . t('default') . '>',
-    'blue' => t('Blue'),
-    'lightblue' => t('Light blue'),
-    'gray' => t('Grey'),
-    'green' => t('Green'),
-    'orange' => t('Orange'),
-    'pink' => t('Pink'),
-    'purple' => t('Purple'),
-    'red' => t('Red'),
-    'red+dot' => t('Red with dot'),
-    'red+square' => t('Red with square'),
-    'red cluster' => t('Red cluster'),
-    'white' => t('White'),
-    'yellow' => t('Yellow'),
-    'drupal' => t('Drupal')
-  );
+  $color_list = &drupal_static(__FUNCTION__);
+  if (!isset($color_list)) {
+    $color_list = array('' => '<' . t('default') . '>');
+    $directory = drupal_get_path('module', 'ip_geoloc') . '/markers';
+    if ($directory_handle = opendir($directory)) {
+      while (($filename = readdir($directory_handle)) !== FALSE) {
+        if ($ext_pos = strrpos($filename, '.png')) {
+          $color = drupal_substr($filename, 0, $ext_pos);
+          $color_list[$color] = t($color); // ok... relies on translations done elsewhere
+        }
+      }
+      closedir($directory_handle);
+    }
+  }
+  return $color_list;
 }
 
 /**
