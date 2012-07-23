@@ -108,9 +108,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       $description = t('You may designate one field as a location differentiator. Locations with the same differentiator value in the view will have the same marker colors on the map.<br/>After you have pressed "Apply" and "Save" please return to this panel to associate differentiator values with marker colors.');
     }
     else {
+      $destination = $this->display->display_options['path'];
       $description = t('You may associate "%field" values with marker colors <a href="@url">here</a>. Locations with the same "%field" value will have the same marker color on the map.', array(
         '%field' => $fields[$this->options['ip_geoloc_views_plugin_differentiator_field']],
-        '@url' => '/ip-geoloc-differentiator-config/' . $this->options['ip_geoloc_views_plugin_differentiator_field']));
+        '@url' => '/ip-geoloc-differentiator-config/' . $this->view->name . '/' . $this->options['ip_geoloc_views_plugin_differentiator_field'] . "?destination=$destination"));
     }
     $form['ip_geoloc_views_plugin_differentiator_field'] = array(
       '#title' => t('Location differentiator'),

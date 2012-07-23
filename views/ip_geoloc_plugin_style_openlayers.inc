@@ -75,9 +75,10 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       $description = t('You may designate one field as a location differentiator. Locations with the same differentiator value in the view will share the same marker layer, and therefore shape and color, on the map<br/>After you have pressed "Apply" and "Save" please return to this panel to associate differentiator values with marker layers.');
     }
     else {
+      $destination = $this->display->display_options['path'];
       $description = t('You may associate "%field" values with marker layers <a href="@url">here</a>. Locations with the same "%field" value will share the same marker layer, and therefore shape and color, on the map.', array(
         '%field' => $fields[$this->options['ip_geoloc_views_plugin_differentiator_field']],
-        '@url' => '/ip-geoloc-differentiator-config/' . $this->options['ip_geoloc_views_plugin_differentiator_field'] . '/ol'));
+        '@url' => '/ip-geoloc-differentiator-config/' . $this->view->name . '/' . $this->options['ip_geoloc_views_plugin_differentiator_field'] . "/ol?destination=$destination"));
     }
     $form['ip_geoloc_views_plugin_differentiator_field'] = array(
       '#title' => t('Location differentiator'),
@@ -139,7 +140,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
           'attributes' => array('description' => $location->balloonText),
           'projection' => '4326',
           'wkt' => 'POINT(' . $location->longitude . ' ' . $location->latitude . ')');
-        $layer = is_numeric($location->marker_color) ? $location->marker_color : 1;
+        $layer = isset($location->marker_color) && is_numeric($location->marker_color) ? $location->marker_color : 1;
         $map['layers'][IP_GEOLOC_MARKER_LAYER . $layer]['features'][] = $feature;
       }
 

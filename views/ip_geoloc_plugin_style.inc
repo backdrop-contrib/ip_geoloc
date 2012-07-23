@@ -29,7 +29,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   }
   else {
     $differentiator_name = $views_plugin_style->options['ip_geoloc_views_plugin_differentiator_field'];
-    $differentiator_color_mappings = variable_get('ip_geoloc_' . $differentiator_name . '_color_mappings', array());
+    $differentiator_color_mappings = variable_get('ip_geoloc_' . $views_plugin_style->view->name . '_' . $differentiator_name . '_color_mappings', array());
   }
   if (empty($longitude)) {
     $longitude = $latitude; // when lat/long is a single field
@@ -168,8 +168,9 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
 function ip_geoloc_differentiator_to_color_mappings($form, &$form_state) {
 
   if (empty($form_state['differentiator'])) {
-    $form_state['differentiator'] = arg(1);
-    $form_state['is_openlayers'] = (arg(2) == 'ol');
+    $form_state['view'] = arg(1);
+    $form_state['differentiator'] = arg(2);
+    $form_state['is_openlayers'] = (arg(3) == 'ol');
   }
   $differentiator = $form_state['differentiator'];
   $is_openlayers = $form_state['is_openlayers'];
@@ -204,7 +205,7 @@ function ip_geoloc_differentiator_to_color_mappings($form, &$form_state) {
     '#suffix' => '</div>',
   );
 
-  $field_mappings = variable_get('ip_geoloc_' . $differentiator . '_color_mappings', array('' => 'blue', '' => 'red'));
+  $field_mappings = variable_get('ip_geoloc_' . $form_state['view'] . '_' . $differentiator . '_color_mappings', array('' => 'blue', '' => 'red'));
   // First the saved rows (or default rows if none saved)...
   // @todo: if $field['cardinality'] > 1, compress multiple differentiator values
   // for the same color together in a single row
@@ -221,7 +222,7 @@ function ip_geoloc_differentiator_to_color_mappings($form, &$form_state) {
     $form_state['num_mappings'] = count($field_mappings);
   }
   while ($row < $form_state['num_mappings']) {
-    $form['field-mappings']['table'][$row] = _ip_geoloc_table_row_form($is_open_layers, $row, $differentiator);
+    $form['field-mappings']['table'][$row] = _ip_geoloc_table_row_form($is_openlayers, $row, $differentiator);
     $row++;
   }
 
@@ -282,7 +283,7 @@ function ip_geoloc_remove_bottom_mapping_submit($form, &$form_state) {
 /**
  * Ajax callback in response to new mapping rows being added to the form.
  */
-function ip_geoloc_add_another_mapping_js($form, $form_state) {
+function ip_geoloc_add_another_mapping_js($form, &$form_state) {
   if ($form_state['num_mappings'] == 0) {
     unset($form_state['values']['remove']);
   }
@@ -297,6 +298,7 @@ function ip_geoloc_differentiator_to_color_mappings_submit($form, &$form_state) 
   $field_mappings = array();
   if (!empty($form_state['values']['table'])) {
     foreach ($form_state['values']['table'] as $mapping) {
+
       if (is_array($mapping[$differentiator])) { // e.g mapping['field_file_under'][0]['tid']
         foreach ($mapping[$differentiator][LANGUAGE_NONE] as $key => $value_array) {
           $differentiator_value = reset($value_array);
@@ -305,7 +307,7 @@ function ip_geoloc_differentiator_to_color_mappings_submit($form, &$form_state) 
           }
         }
       }
-      else { // text
+      else { // plain text field
         $differentiator_value = trim($mapping[$differentiator]);
         if (!empty($differentiator_value)) {
           $field_mappings[$differentiator_value] = $mapping['color'];
@@ -313,7 +315,7 @@ function ip_geoloc_differentiator_to_color_mappings_submit($form, &$form_state) 
       }
     }
   }
-  variable_set('ip_geoloc_' . $differentiator . '_color_mappings', $field_mappings);
+  variable_set('ip_geoloc_' . $form_state['view'] . '_' . $differentiator . '_color_mappings', $field_mappings);
 }
 
 function _ip_geoloc_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value = '', $color = '') {
@@ -367,6 +369,9 @@ function theme_ip_geoloc_field_mapping_table($variables) {
   // Use the first form child to find out the name of the differentiator.
   $form = $variables['form'];
   $form_children = element_children($form);
+  if (empty($form_children)) {
+    return '';
+  }
   $key = reset($form_children);
   foreach ($form[$key] as $attribute_name => $element) {
     if (drupal_substr($attribute_name, 0, 1) != '#' && $attribute_name != 'color') {

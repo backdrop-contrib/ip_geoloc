@@ -61,7 +61,7 @@ function ip_geoloc_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
-  $items['ip-geoloc-differentiator-config/%'] = array(
+  $items['ip-geoloc-differentiator-config/%/%'] = array(//   view/differentiator[/ol]
     'title' => 'Differentiator color associations',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ip_geoloc_differentiator_to_color_mappings'),
