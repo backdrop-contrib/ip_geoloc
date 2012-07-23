@@ -64,7 +64,28 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       ),
       '#description' => t('<strong>Note 1 </strong> If you choose the first option, the map may be centered via its "Center & Bounds" options. Click the Edit link (if available) for the map you selected on <a href="/admin/structure/openlayers/maps">this page</a>.<br/><strong>Note 2 </strong>A similar option is available natively as an OpenLayers "Behavior". However, in case it fails, it does not fall back on an IP address based position lookup. It also does not feature the display of the visitor\'s position as an additional marker on the map.')
     );
-
+    $fields = array('' => '<' . t('none') . '>');
+    foreach ($this->display->handler->get_handlers('field') as $field_id => $field_handler) {
+      if (drupal_substr($field_id, 0, 6) != 'field_') {
+        $field_id = $field_handler->table . "_$field_id";
+      }
+      $fields[$field_id] = $field_handler->ui_name();
+    }
+    if (empty($this->options['ip_geoloc_views_plugin_differentiator_field'])) {
+      $description = t('You may designate one field as a location differentiator. Locations with the same differentiator value in the view will share the same marker layer, and therefore shape and color, on the map<br/>After you have pressed "Apply" and "Save" please return to this panel to associate differentiator values with marker layers.');
+    }
+    else {
+      $description = t('You may associate "%field" values with marker layers <a href="@url">here</a>. Locations with the same "%field" value will share the same marker layer, and therefore shape and color, on the map.', array(
+        '%field' => $fields[$this->options['ip_geoloc_views_plugin_differentiator_field']],
+        '@url' => '/ip-geoloc-differentiator-config/' . $this->options['ip_geoloc_views_plugin_differentiator_field'] . '/ol'));
+    }
+    $form['ip_geoloc_views_plugin_differentiator_field'] = array(
+      '#title' => t('Location differentiator'),
+      '#type' => 'select',
+      '#default_value' => $this->options['ip_geoloc_views_plugin_differentiator_field'],
+      '#options' => $fields,
+      '#description' => $description
+    );
   }
 
   /**
@@ -86,7 +107,8 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
     // function openlayers_build_map() invokes:
     // o hook_openlayers_map_preprocess_alter(&$map), which introduces the names
-    //   of two layers we'll use: IP_GEOLOC_MARKER_LAYER and IP_GEOLOC_VISITOR_MARKER_LAYER
+    //   of the layers we'll use: IP_GEOLOC_MARKER_LAYER_1..3 and
+    //   IP_GEOLOC_VISITOR_MARKER_LAYER
     // o hook_openlayers_layers(), which creates barebone layers for the above
     // o hook_openlayers_map_alter(&$map), for modules to make final changes to
     //   the map and its layers
@@ -100,11 +122,8 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
       $center_option = !isset($this->options['ip_geoloc_views_plugin_center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['ip_geoloc_views_plugin_center_option'];
 
-      if (!isset($map['layers'][IP_GEOLOC_MARKER_LAYER]['features'])) {
-        $map['layers'][IP_GEOLOC_MARKER_LAYER]['features'] = array();
-      }
       foreach ($locations as $location) {
-        if (empty($map['layers'][IP_GEOLOC_MARKER_LAYER]['features'])) { // first location
+        if (empty($centre_set)) {
           if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
             $map['center']['initial']['centerpoint'] = $location->longitude . ',' . $location->latitude;
           }
@@ -113,20 +132,22 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
             $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
             $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
           }
+          $centre_set = TRUE;
         }
         $feature = array(
           // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js
           'attributes' => array('description' => $location->balloonText),
           'projection' => '4326',
           'wkt' => 'POINT(' . $location->longitude . ' ' . $location->latitude . ')');
-        $map['layers'][IP_GEOLOC_MARKER_LAYER]['features'][] = $feature;
+        $layer = is_numeric($location->marker_color) ? $location->marker_color : 1;
+        $map['layers'][IP_GEOLOC_MARKER_LAYER . $layer]['features'][] = $feature;
       }
 
       // See admin/structure/openlayers/maps/<map-name>/edit...
       // If "Hide empty map for Views" is ticked, then if the map has no
       // features, it shouldn't be displayed.
       if (!empty($map['hide_empty_map'])) {
-        if (empty($map['layers'][IP_GEOLOC_MARKER_LAYER]['features']) && empty($map['layers'][IP_GEOLOC_VISITOR_MARKER_LAYER]['features'])) {
+        if (empty($map['layers'][IP_GEOLOC_MARKER_LAYER . $i]['features']) && empty($map['layers'][IP_GEOLOC_VISITOR_MARKER_LAYER]['features'])) {
           return '';
         }
       }

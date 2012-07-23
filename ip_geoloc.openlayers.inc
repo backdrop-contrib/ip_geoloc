@@ -6,9 +6,10 @@
  *
  * Hook implementations for the OpenLayers interface.
  */
-
-DEFINE('IP_GEOLOC_MARKER_LAYER', 'ip_geoloc_marker_layer');
 DEFINE('IP_GEOLOC_VISITOR_MARKER_LAYER', 'ip_geoloc_visitor_marker_layer');
+DEFINE('IP_GEOLOC_MARKER_LAYER', 'ip_geoloc_marker_layer');
+DEFINE('IP_GEOLOC_DEF_NUM_MARKER_LAYERS', 3);
+
 
 /**
  * Implements hook_openlayers_map_preprocess_alter($map)
@@ -22,17 +23,20 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
 
 //$map['center']['initial']['zoom'] = 5;
 
-  // Introduce a couple of layers that will be created below in function
+  // Introduce a number of layers that will be created below in function
   // ip_geoloc_openlayers_layers().
-  $map['layers'][IP_GEOLOC_MARKER_LAYER] = IP_GEOLOC_MARKER_LAYER;
-  $map['layer_activated'][IP_GEOLOC_MARKER_LAYER] = IP_GEOLOC_MARKER_LAYER;
-
   $map['layers'][IP_GEOLOC_VISITOR_MARKER_LAYER] = IP_GEOLOC_VISITOR_MARKER_LAYER;
 
-  // Markers may be switched on/off via a tickbox on the rendered map, if so
-  // configured on this page: /admin/structure/openlayers/maps/<map_name>/edit,
-  // vertical tab "Layers & Styles", bottom section "Overlay layers"
-  // $map['layer_switcher'][IP_GEOLOC_MARKER_LAYER] = IP_GEOLOC_MARKER_LAYER
+  $num_marker_layers = variable_get('ip_geoloc_openlayers_num_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+  for ($layer = 1; $layer <= $num_marker_layers; $layer++) {
+    $map['layers'         ][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
+    $map['layer_activated'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
+    // Markers may be switched on/off via a tickbox on the rendered map, if so
+    // configured on page /admin/structure/openlayers/maps/<map_name>/edit,
+    // vertical tab "Layers & Styles", bottom section "Overlay layers"
+    // Programmatically, you'd do this like so:
+    // $map['layer_switcher'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
+  }
 }
 
 /**
@@ -41,7 +45,7 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
  * Required to add a layer to OpenLayers, see ip_geoloc_openlayers_layers().
  */
 function ip_geoloc_ctools_plugin_api($module, $api) {
-  if ($module == 'openlayers' /* && $api == 'openlayers_layers' */) {
+  if ($module == 'openlayers' && $api == 'openlayers_layers') {
     return array('version' => 1);
   }
 }
@@ -55,53 +59,58 @@ function ip_geoloc_ctools_plugin_api($module, $api) {
  */
 function ip_geoloc_openlayers_layers() {
   /* Hardly worth caching this and shouldn't as user's position may change.
+   * Could do it for location marker layers only...
   if (arg(0) != 'admin') {
-    $cache = cache_get(IP_GEOLOC_MARKER_LAYER);
+    $cache = cache_get('ip_geoloc_layer_cache');
     if (isset($cache->data)) {
       return $cache->data;
     }
   } */
   $layers = array();
-
-  $marker_layer = new stdClass();
-  $marker_layer->api_version = 1;
-  $marker_layer->name = IP_GEOLOC_MARKER_LAYER;
-  $marker_layer->title = 'Location markers';
-  $marker_layer->description = "Layer to map a view's locations.";
-  $marker_layer->data = array(
-    'baselayer' => FALSE,
-    'layer_type' => 'openlayers_layer_type_raw',
-    'projection' => array('900913')
-  );
-  // Features, ie. location markers, are added based on the view output, see
-  // file ip_geoloc_plugin_style_openlaysers.inc
-  $layers[$marker_layer->name] = $marker_layer;
-
   $visitor_layer = new stdClass();
   $visitor_layer->api_version = 1;
   $visitor_layer->name = IP_GEOLOC_VISITOR_MARKER_LAYER;
   $visitor_layer->title = 'Current visitor marker';
-  $visitor_layer->description = "Layer to mark current visitor's position.";
+  $visitor_layer->description = "Layer to mark visitor's current position.";
+  $visitor_layer->weight = -10;
   $visitor_layer->data = array(
     'baselayer' => FALSE,
     'layer_type' => 'openlayers_layer_type_raw',
     'projection' => array('900913')
   );
   // Add the visitor's location as a single feature in its own layer, so
-  // that it may be styled (eg marker colour) and activated separately on page
+  // that it may be separately styled (eg marker colour) and activated on page
   // admin/structure/openlayers/maps/<map-name>/edit
   if (isset($_SESSION['ip_geoloc']['location']['longitude'])) {
     $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
     $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
     $visitor_layer->data['features'][] = array(
       'attributes' => array('name' => t('Your retrieved location.')),
-      'projection' => '4326',
-      'wkt' => "POINT($longitude $latitude)"
+      'wkt' => "POINT($longitude $latitude)",
+      'projection' => '4326'
     );
   }
   $layers[$visitor_layer->name] = $visitor_layer;
 
-  //cache_set(IP_GEOLOC_MARKER_LAYER, $layers);
+  $num_marker_layers = variable_get('ip_geoloc_openlayers_num_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+  for ($layer = 1; $layer <= $num_marker_layers; $layer++) {
+    $marker_layer = new stdClass();
+    $marker_layer->api_version = 1;
+    $marker_layer->name = IP_GEOLOC_MARKER_LAYER . $layer;
+    $marker_layer->title = "Location markers #$layer";
+    $marker_layer->description = "Layer to map a view's locations.";
+    $marker_layer->weight = $visitor_layer->weight + $layer;
+    $marker_layer->data = array(
+      'baselayer' => FALSE,
+      'layer_type' => 'openlayers_layer_type_raw',
+      'projection' => array('900913')
+    );
+    // Features, ie. location markers, are added based on the view output, see
+    // file ip_geoloc_plugin_style_openlaysers.inc
+    $layers[$marker_layer->name] = $marker_layer;
+  }
+
+  //cache_set('ip_geoloc_layer_cache', $layers);
   return $layers;
 }
 

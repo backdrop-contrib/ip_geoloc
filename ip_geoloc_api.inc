@@ -267,7 +267,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     'ip_geoloc_multi_location_center_option' => $center_option,
     'ip_geoloc_multi_location_center_latlng' => $center_latlng,
     'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps,
-    'ip_geoloc_multi_location_marker_filename' => "$marker_color.png"
+    'ip_geoloc_multi_location_marker_color' => $marker_color
   );
   drupal_add_js($settings, 'setting');
 

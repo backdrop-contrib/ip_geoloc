@@ -104,18 +104,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       }
       $fields[$field_id] = $field_handler->ui_name();
     }
-    $selected_field = empty($fields[$this->options['ip_geoloc_views_plugin_differentiator_field']])
-      ? '' : $fields[$this->options['ip_geoloc_views_plugin_differentiator_field']];
-
-    if (empty($selected_field)) {
+    if (empty($fields[$this->options['ip_geoloc_views_plugin_differentiator_field']])) {
       $description = t('You may designate one field as a location differentiator. Locations with the same differentiator value in the view will have the same marker colors on the map.<br/>After you have pressed "Apply" and "Save" please return to this panel to associate differentiator values with marker colors.');
     }
     else {
       $description = t('You may associate "%field" values with marker colors <a href="@url">here</a>. Locations with the same "%field" value will have the same marker color on the map.', array(
-        '%field' => $selected_field,
+        '%field' => $fields[$this->options['ip_geoloc_views_plugin_differentiator_field']],
         '@url' => '/ip-geoloc-differentiator-config/' . $this->options['ip_geoloc_views_plugin_differentiator_field']));
     }
-
     $form['ip_geoloc_views_plugin_differentiator_field'] = array(
       '#title' => t('Location differentiator'),
       '#type' => 'select',
@@ -123,6 +119,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#options' => $fields,
       '#description' => $description
     );
+
     $form['ip_geoloc_views_plugin_gps_roles'] = array(
       '#title' => t('Roles for which HTML5-style visitor location retrieval is to be applied'),
       '#type' => 'checkboxes',

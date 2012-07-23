@@ -9,9 +9,10 @@
       var use_gps       = settings.ip_geoloc_multi_location_visitor_location_gps;
       var visitorMarker = settings.ip_geoloc_multi_location_visitor_marker;
       var centerOption  = settings.ip_geoloc_multi_location_center_option;
-      var markerFilename= settings.ip_geoloc_multi_location_marker_filename;
+      var markerColor   = settings.ip_geoloc_multi_location_marker_color;
+      var imageExt      = '.png';
 
-      var markerDirname = '/sites/all/modules/ip_geoloc/markers'; // @todo
+      var markerDirname = '/sites/all/modules/ip_geoloc/markers'; // @todo: pass in?
 
       if (!mapOptions) {
         alert(Drupal.t('Syntax error in map options.'));
@@ -51,7 +52,7 @@
         }
       }
 
-      var defaultPinImage = new google.maps.MarkerImage(markerDirname + '/' + markerFilename,
+      var defaultPinImage = new google.maps.MarkerImage(markerDirname + '/' + markerColor + imageExt,
         new google.maps.Size(21, 34),   // image width, height
         new google.maps.Point(0, 0),    // origin
         new google.maps.Point(10, 34)); // anchor
@@ -69,8 +70,8 @@
           center = position;
         }
         var pinImage = defaultPinImage;
-        if (locations[key].marker_filename) {
-          pinImage = new google.maps.MarkerImage(markerDirname + '/' + locations[key].marker_filename,
+        if (locations[key].marker_color) {
+          pinImage = new google.maps.MarkerImage(markerDirname + '/' + locations[key].marker_color + imageExt,
             new google.maps.Size(21, 34),   // image width, height
             new google.maps.Point(0, 0),    // origin
             new google.maps.Point(10, 34)); // anchor

@@ -96,8 +96,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
         }
       }
       if (!empty($differentiator_color_mappings[$differentiator_value])) {
-        $color = $differentiator_color_mappings[$differentiator_value];
-        $location->marker_filename = "$color.png";
+        $location->marker_color = $differentiator_color_mappings[$differentiator_value];
       }
     }
   }
@@ -170,8 +169,10 @@ function ip_geoloc_differentiator_to_color_mappings($form, &$form_state) {
 
   if (empty($form_state['differentiator'])) {
     $form_state['differentiator'] = arg(1);
+    $form_state['is_openlayers'] = (arg(2) == 'ol');
   }
   $differentiator = $form_state['differentiator'];
+  $is_openlayers = $form_state['is_openlayers'];
 //$field = field_info_field($differentiator);
   $instance = ip_geoloc_get_field_instance($differentiator);
   $differentiator_label = isset($instance) ? $instance['label'] : $differentiator;
@@ -212,7 +213,7 @@ function ip_geoloc_differentiator_to_color_mappings($form, &$form_state) {
     if (isset($form_state['num_mappings']) && $row >= $form_state['num_mappings']) {
       break;
     }
-    $form['field-mappings']['table'][$row] = _ip_geoloc_table_row_form($row, $differentiator, $differentiator_value, $color);
+    $form['field-mappings']['table'][$row] = _ip_geoloc_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value, $color);
     $row++;
   }
   // ... then the not yet saved, empty rows
@@ -220,7 +221,7 @@ function ip_geoloc_differentiator_to_color_mappings($form, &$form_state) {
     $form_state['num_mappings'] = count($field_mappings);
   }
   while ($row < $form_state['num_mappings']) {
-    $form['field-mappings']['table'][$row] = _ip_geoloc_table_row_form($row, $differentiator);
+    $form['field-mappings']['table'][$row] = _ip_geoloc_table_row_form($is_open_layers, $row, $differentiator);
     $row++;
   }
 
@@ -315,7 +316,7 @@ function ip_geoloc_differentiator_to_color_mappings_submit($form, &$form_state) 
   variable_set('ip_geoloc_' . $differentiator . '_color_mappings', $field_mappings);
 }
 
-function _ip_geoloc_table_row_form($row, $differentiator, $differentiator_value = '', $color = '') {
+function _ip_geoloc_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value = '', $color = '') {
 
   if (drupal_substr($differentiator, 0, 6) == 'field_') {
     $field = field_info_field($differentiator);
@@ -332,11 +333,17 @@ function _ip_geoloc_table_row_form($row, $differentiator, $differentiator_value 
       '#default_value' => $differentiator_value
     );
   }
-
+  if ($is_openlayers) {
+    $num_location_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+    $marker_layers = array();
+    for ($layer = 1; $layer <= $num_location_marker_layers; $layer++) {
+      $marker_layers[$layer] = t('Marker layer') . " #$layer";
+    }
+  }
   $form['color'] = array(
     '#type' => 'select',
     '#default_value' => $color,
-    '#options' => ip_geoloc_marker_colors()
+    '#options' => $is_openlayers ? $marker_layers : ip_geoloc_marker_colors()
   );
 
   // We'll manually set the #parents property of these fields so that their
