@@ -107,10 +107,11 @@ there is no custom map on this page yet, you have to first clone and save under
 a different name, one of the existing maps. Once you've done that, you'll find
 that on Structure >> OpenLayers >> Maps >> List the map appears with an Edit
 link. Click that, followed by the "Layers & Styles" vertical tab. In the bottom
-section of the page you'll find the "Location markers" and "Current visitor
-marker" layers with check boxes to activate them and to select their marker
-styles. Pick from the drop-downs as you please. Then press Save. Note that the
-location markers won't show up in the map preview, but the visitor marker
+section of the page you'll find the "Current visitor marker" layer and a number
+of "Location markers" layers. You'll only need to activate Location markers #1,
+unless you have defined a "differentiator" (e.g. taxonomy term) on your view.
+Pick marker styles from the drop-downs as you please and press Save. Note that
+the location markers won't show up in the map preview, but the visitor marker
 should. This is because the map doesn't know which view it will be paired with.
 In fact there may be several views using the same map. Return to edit your view.
 Under Format, Settings select the map you've just created and edited. Save the
