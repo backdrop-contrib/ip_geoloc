@@ -6,13 +6,12 @@
 
       var locations     = settings.ip_geoloc_locations;
       var mapOptions    = settings.ip_geoloc_multi_location_map_options;
-      var use_gps       = settings.ip_geoloc_multi_location_visitor_location_gps;
-      var visitorMarker = settings.ip_geoloc_multi_location_visitor_marker;
       var centerOption  = settings.ip_geoloc_multi_location_center_option;
-      var markerColor   = settings.ip_geoloc_multi_location_marker_color;
+      var visitorMarker = settings.ip_geoloc_multi_location_visitor_marker;
+      var use_gps       = settings.ip_geoloc_multi_location_visitor_location_gps;
+      var markerDirname = settings.ip_geoloc_multi_location_marker_directory;
+      var markerColor   = settings.ip_geoloc_multi_location_marker_default_color;
       var imageExt      = '.png';
-
-      var markerDirname = '/sites/all/modules/ip_geoloc/markers'; // @todo: pass in?
 
       if (!mapOptions) {
         alert(Drupal.t('Syntax error in map options.'));

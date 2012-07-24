@@ -13,6 +13,7 @@
   * - $map_options: passed to Google Maps API, eg '{"mapTypeId":"roadmap", "zoom": 10}'
   * - $map_style: CSS style string, like 'height: 200px; width: 500px'
   * - $marker_color: name in English of the color used for all location markers
+  *   that do not have their color overridden via the differentiator field
   * - $visitor_marker: FALSE for no marker, TRUE for standard marker or 'RRGGBB' colour code
   * - $center_option, one of:
   *   0: fixed center, provided thorugh "centerLat", "centerLng" in $map_options
