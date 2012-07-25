@@ -405,6 +405,7 @@ function ip_geoloc_marker_colors() {
       }
       closedir($directory_handle);
     }
+    asort($color_list);
   }
   return $color_list;
 }
@@ -418,6 +419,15 @@ function ip_geoloc_views_api() {
     'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
   );
 }
+
+
+function ip_geoloc_form_alter(&$form, &$form_state) {
+  // Append our own handler to deal with saving of the differentiator table
+  if ($form['#form_id'] == 'views_ui_edit_display_form') {
+    $form['buttons']['submit']['#submit'][] = 'ip_geoloc_plugin_style_differentiator_color_associations_submit';
+  }
+}
+
 
 /**
  * Implements hook_library_alter().

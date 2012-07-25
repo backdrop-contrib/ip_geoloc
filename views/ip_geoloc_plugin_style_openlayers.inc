@@ -17,12 +17,8 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   function option_definition() {
     $options = parent::option_definition();
 
-    if (empty($latitude)) {
-      $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
-    }
-    if (empty($longitude)) {
-      $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
-    }
+    $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
+    $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
     $options['map'] = array('default' => variable_get('openlayers_default_map', 'default'));
     $options['ip_geoloc_views_plugin_latitude']  = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
