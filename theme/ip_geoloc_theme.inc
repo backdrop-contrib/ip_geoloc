@@ -50,7 +50,7 @@ function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
     )
   );
 
-  // For the differentiator color associations table.
+  // For the differentiator color associations table in the Views UI
   // @see views/ip_geoloc_plugin_style.inc
   $theme['ip_geoloc_plugin_style_differentiator_color_table'] = array(
     'render element' => 'form'
