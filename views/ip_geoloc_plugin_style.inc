@@ -122,7 +122,11 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#type' => 'select',
     '#default_value' => $views_plugin_style->options['default_marker_color'],
     '#options' => empty($form_state['is_openlayers']) ? ip_geoloc_marker_colors() : ip_geoloc_openlayers_marker_layers(),
-    '#description' => t('Applied to all location markers whose colors are not overridden by the <strong>Location differentiator</strong> above.')
+    '#description' => t('Applied to all location markers whose colors are not overridden by the <strong>Location differentiator</strong> above.'),
+    '#attributes' => empty($form_state['is_openlayers']) ? array('class' => array('marker-color')) : array(),
+    '#attached' => array(
+      'css' => array(drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc.css')
+    )
   );
   $form['center_option'] = array(
     '#title' => t('Map centering options'),
@@ -244,10 +248,21 @@ function _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentia
     //'#size' => 40,
     );
   }
+  if (!$is_openlayers) {
+    if (empty($form[$differentiator]['#attributes']['class'])) {
+      $form[$differentiator] += array(
+        '#attributes' => array('class' => array('differentiator'))
+      );
+    }
+    else {
+      $form[$differentiator]['#attributes']['class'][] = 'differentiator';
+    }
+  }
   $form['color'] = array(
     '#type' => 'select',
     '#default_value' => $color,
-    '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors()
+    '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
+    '#attributes' => $is_openlayers ? array() : array('class' => array('marker-color')),
   );
 
   // We'll manually set the #parents property of these fields so that their
