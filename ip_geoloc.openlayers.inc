@@ -27,7 +27,7 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
   // ip_geoloc_openlayers_layers().
   $map['layers'][IP_GEOLOC_VISITOR_MARKER_LAYER] = IP_GEOLOC_VISITOR_MARKER_LAYER;
 
-  $num_marker_layers = variable_get('ip_geoloc_openlayers_num_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+  $num_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
   for ($layer = 1; $layer <= $num_marker_layers; $layer++) {
     $map['layers'         ][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
     $map['layer_activated'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
@@ -92,7 +92,7 @@ function ip_geoloc_openlayers_layers() {
   }
   $layers[$visitor_layer->name] = $visitor_layer;
 
-  $num_marker_layers = variable_get('ip_geoloc_openlayers_num_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+  $num_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
   for ($layer = 1; $layer <= $num_marker_layers; $layer++) {
     $marker_layer = new stdClass();
     $marker_layer->api_version = 1;

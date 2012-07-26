@@ -33,7 +33,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     );
     $options['map_options'] = array('default' => '');
     $options['map_div_style'] = array('default' => '');
-    
+
     return $options;
   }
 
@@ -58,7 +58,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'checkboxes',
       '#default_value' => $this->options['gps_roles'],
       '#options' => user_roles(),
-      '#description' => t('This is subject to the visitor willing to share their location when prompted by their browser. If they decline, or if their roles aren\'t ticked, an IP address lookup will be attempted instead. In case the lookup fails, for instance because you have not enabled Smart IP or GeoIP, make sure you specify "centerLat" and "centerLng" in the <strong>Map options</strong> above to avoid an empty canvas.')
+      '#description' => t('This is subject to the visitor willing to share their location when prompted by their browser. If they decline, or if their roles aren\'t ticked, an IP address lookup will be attempted instead. In case the lookup fails, for instance because you have not enabled Smart IP or GeoIP, make sure you specify "centerLat" and "centerLng" in the <strong>Map options</strong> below to avoid an empty canvas.')
     );
 
     $form['map_options'] = array(

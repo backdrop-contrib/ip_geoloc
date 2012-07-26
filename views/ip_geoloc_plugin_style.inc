@@ -18,14 +18,12 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $form['ip_geoloc_views_plugin_latitude'] = array(
     '#title' => t('Name of latitude field in Views query'),
     '#type' => 'textfield',
-    '#size' => 127,
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
     '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless your view involves other modules or relationships, in which case you may have to prefix the name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules enter <em>field_myname</em>. Valid field names are on <a href="/admin/reports/views-fields">this page</a>.')
   );
   $form['ip_geoloc_views_plugin_longitude'] = array(
     '#title' => t('Name of longitude field in Views query'),
     '#type' => 'textfield',
-    '#size' => 127,
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude'],
     '#description' => t('See comments above. When using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules you can leave this field empty.')
   );
@@ -116,14 +114,17 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       );
     }
   }
-
+  $is_openlayers = !empty($form_state['is_openlayers']);
   $form['default_marker_color'] = array(
     '#title' => t('Default location marker color'),
     '#type' => 'select',
+    '#multiple' => FALSE, // !$is_openlayers,
+    '#size' => 1, // $is_openlayers ? 1 : 2, // may not be granted, 4 is minimum in some browsers
     '#default_value' => $views_plugin_style->options['default_marker_color'],
-    '#options' => empty($form_state['is_openlayers']) ? ip_geoloc_marker_colors() : ip_geoloc_openlayers_marker_layers(),
-    '#description' => t('Applied to all location markers whose colors are not overridden by the <strong>Location differentiator</strong> above.'),
-    '#attributes' => empty($form_state['is_openlayers']) ? array('class' => array('marker-color')) : array(),
+    '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
+    '#description' => t('Select one color to apply to all location markers whose colors are not overridden by the <strong>Location differentiator</strong> above.'),
+    '#attributes' => array(
+      'class' => $is_openlayers ? array('marker-color ol') : array('marker-color gmap')),
     '#attached' => array(
       'css' => array(drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc.css')
     )
@@ -240,29 +241,27 @@ function _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentia
     $form['#parents'] = array();
     $form_state = array();
     $form = field_default_form($instance['entity_type'], NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
+    $form[$differentiator]['#attributes']['class'][] = $is_openlayers ? 'differentiator ol' : 'differentiator gmap';
   }
   else {
     $form[$differentiator] = array(
       '#type' => 'textfield',
       '#default_value' => $differentiator_value,
-    //'#size' => 40,
+      '#attributes' => array(
+        'class' => $is_openlayers ? array('differentiator ol') : array('differentiator gmap')
+      )
     );
-  }
-  if (!$is_openlayers) {
-    if (empty($form[$differentiator]['#attributes']['class'])) {
-      $form[$differentiator] += array(
-        '#attributes' => array('class' => array('differentiator'))
-      );
-    }
-    else {
-      $form[$differentiator]['#attributes']['class'][] = 'differentiator';
-    }
   }
   $form['color'] = array(
     '#type' => 'select',
+    '#multiple' => FALSE, // !$is_openlayers,
+    '#size' => 1, // $is_openlayers ? 1 : 2, // may not be granted, 4 is minimum in some browsers
     '#default_value' => $color,
     '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
-    '#attributes' => $is_openlayers ? array() : array('class' => array('marker-color')),
+    '#description' => NULL, // $is_openlayers ? NULL : t('Select one'),
+    '#attributes' => array(
+      'class' => $is_openlayers ? array('marker-color ol') : array('marker-color gmap')
+    )
   );
 
   // We'll manually set the #parents property of these fields so that their
@@ -405,6 +404,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       if (!empty($differentiator_color_associations[$differentiator_value])) {
         $location->marker_color = $differentiator_color_associations[$differentiator_value];
       }
+    }
+    if (is_array($location->marker_color)) {
+      $location->marker_color = reset($location->marker_color);
     }
   }
   return $locations;

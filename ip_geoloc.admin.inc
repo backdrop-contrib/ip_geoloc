@@ -77,10 +77,10 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_page_refresh', FALSE),
     '#description' => t('The above tick box does not apply to administration pages.')
   );
-  $form['ip_geoloc_advanced']['ip_geoloc_openlayers_num_marker_layers'] = array(
+  $form['ip_geoloc_advanced']['ip_geoloc_num_location_marker_layers'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum number of location marker layers you may need.'),
-    '#default_value' => variable_get('ip_geoloc_openlayers_num_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS),
+    '#default_value' => variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS),
     '#description' => t('Only relevant when you have selected a "differentiator" field in your view and have the OpenLayers module enabled also.')
   );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
