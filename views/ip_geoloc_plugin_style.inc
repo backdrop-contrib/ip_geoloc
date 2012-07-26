@@ -52,21 +52,20 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $form['differentiator'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location differentiator and color associations'),
-    '#description' => t('You may designate one field as a <strong>location differentiator</strong>. Locations with the same differentiator value in the view will have the same marker colors on the map. Examples of location differentiators are content type, taxonomy, number of bed rooms, star rating etc... any enumeration field from your view.'),
+    '#description' => t('You may designate one field as a <strong>location differentiator</strong>. Locations with the same differentiator value in the view will have the same marker colors on the map. Examples of location differentiators are content type, taxonomy terms, number of bed rooms, star rating etc... just about any enumeration field from your view may be selected as a location differentiator.'),
     '#prefix' => '<div id="differentiator-wrapper">',
     '#suffix' => '</div>'
   );
 
   $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler);
   $instance = ip_geoloc_get_field_instance($differentiator);
-  $differentiator_label = isset($instance) ? $instance['label'] : $fields[$differentiator];
 
   if (empty($differentiator)) {
     $description = t('Optionally select a location differentiator.');
   }
   else {
     $description = t('Below associate "%differentiator" values with map marker colors.', array(
-      '%differentiator' => $differentiator_label
+      '%differentiator' => isset($instance) ? $instance['label'] : $fields[$differentiator]
     )) . '<br/>';
   }
   $form['differentiator']['differentiator_field'] = array(
@@ -122,7 +121,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#title' => t('Default location marker color'),
     '#type' => 'select',
     '#default_value' => $views_plugin_style->options['default_marker_color'],
-    '#options' => $is_openlayers ? ip_geoloc_openlayers_layers() : ip_geoloc_marker_colors(),
+    '#options' => empty($form_state['is_openlayers']) ? ip_geoloc_marker_colors() : ip_geoloc_openlayers_marker_layers(),
     '#description' => t('Applied to all location markers whose colors are not overridden by the <strong>Location differentiator</strong> above.')
   );
   $form['center_option'] = array(
@@ -204,18 +203,17 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
 
 function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
 
-  // First the saved rows (or default rows if none saved)...
+  // First the saved rows...
   // @todo: if $field['cardinality'] > 1, compress multiple differentiator values
   // for the same color together in a single row
-  $is_openlayers = !empty($form_state['openlayers']);
   $differentiator = $form_state['differentiator'];
   $row = 0;
-  $differentiator_color_associations = variable_get('ip_geoloc_' . $form_state['view']->name . '_' . $differentiator . '_color_mappings', array());
+  $differentiator_color_associations = variable_get('ip_geoloc_' . $form_state['view']->name . '_' . $differentiator . '_color_mappings', array('' => 'red'));
   foreach ($differentiator_color_associations as $differentiator_value => $color) {
     if (isset($form_state['num_associations']) && $row >= $form_state['num_associations']) {
       break;
     }
-    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value, $color);
+    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($form_state['is_openlayers'], $row, $differentiator, $differentiator_value, $color);
     $row++;
   }
   // ... then the empty rows
@@ -223,7 +221,7 @@ function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
     $form_state['num_associations'] = count($differentiator_color_associations);
   }
   while ($row < $form_state['num_associations']) {
-    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentiator);
+    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($form_state['is_openlayers'], $row, $differentiator);
     $row++;
   }
 }
@@ -242,14 +240,14 @@ function _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentia
   else {
     $form[$differentiator] = array(
       '#type' => 'textfield',
+      '#default_value' => $differentiator_value,
     //'#size' => 40,
-      '#default_value' => $differentiator_value
     );
   }
   $form['color'] = array(
     '#type' => 'select',
     '#default_value' => $color,
-    '#options' => $is_openlayers ? ip_geoloc_openlayers_layers() : ip_geoloc_marker_colors()
+    '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors()
   );
 
   // We'll manually set the #parents property of these fields so that their
@@ -370,6 +368,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
 
+    $location->marker_color = $views_plugin_style->options['default_marker_color'];
     if (!empty($differentiator_name)) {
       if (!empty($row->{$differentiator_name})) {
         $differentiator_value = $row->{$differentiator_name};
@@ -454,9 +453,9 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   return $views_plugin_style->rendered_fields;
 }
 
-function ip_geoloc_get_display_fields($display) {
+function ip_geoloc_get_display_fields($view_display) {
   $fields = array('' => '<' . t('none') . '>');
-  foreach ($display->get_handlers('field') as $field_id => $field_handler) {
+  foreach ($view_display->get_handlers('field') as $field_id => $field_handler) {
     if (drupal_substr($field_id, 0, 6) != 'field_') {
       // Example: 'title' becomes 'node_title'
       $field_id = $field_handler->table . "_$field_id";

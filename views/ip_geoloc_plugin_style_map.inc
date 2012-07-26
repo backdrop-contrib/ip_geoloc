@@ -33,6 +33,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     );
     $options['map_options'] = array('default' => '');
     $options['map_div_style'] = array('default' => '');
+    
     return $options;
   }
 
