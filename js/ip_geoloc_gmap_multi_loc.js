@@ -70,7 +70,8 @@
         }
         var pinImage = defaultPinImage;
         if (locations[key].marker_color) {
-          pinImage = new google.maps.MarkerImage(markerDirname + '/' + locations[key].marker_color + imageExt,
+          var imageFile = markerDirname + '/' + locations[key].marker_color + imageExt;
+          pinImage = new google.maps.MarkerImage(imageFile,
             new google.maps.Size(21, 34),   // image width, height
             new google.maps.Point(0, 0),    // origin
             new google.maps.Point(10, 34)); // anchor

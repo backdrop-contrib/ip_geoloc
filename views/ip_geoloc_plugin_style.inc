@@ -237,6 +237,7 @@ function _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentia
     $field = field_info_field($differentiator);
     $instance = ip_geoloc_get_field_instance($differentiator);
     $instance['label'] = ''; // no label, unless other modules override this
+    $instance['required'] = FALSE; // don't want asterisk to appear
     $items[0][key($field['columns'])] = $differentiator_value;
     $form['#parents'] = array();
     $form_state = array();
@@ -382,7 +383,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
 
-    $location->marker_color = $views_plugin_style->options['default_marker_color'];
+    //$location->marker_color = $views_plugin_style->options['default_marker_color'];
     if (!empty($differentiator_name)) {
       if (!empty($row->{$differentiator_name})) {
         $differentiator_value = $row->{$differentiator_name};
@@ -401,11 +402,14 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
           }
         }
       }
+      else {
+        $differentiator_value = '';
+      }
       if (!empty($differentiator_color_associations[$differentiator_value])) {
         $location->marker_color = $differentiator_color_associations[$differentiator_value];
       }
     }
-    if (is_array($location->marker_color)) {
+    if (isset($location->marker_color) && is_array($location->marker_color)) {
       $location->marker_color = reset($location->marker_color);
     }
   }
