@@ -19,13 +19,13 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#title' => t('Name of latitude field in Views query'),
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
-    '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless your view involves other modules or relationships, in which case you may have to prefix the name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules enter <em>field_myname</em>. Valid field names are on <a href="/admin/reports/views-fields">this page</a>.')
+    '#description' => t('Use the default, <strong>ip_geoloc_latitude</strong>, unless your view involves other modules or relationships, in which case you may have to prefix the name with the relevant table name(s), delimited by underscores. For instance, if you use a view based on the <strong>Location</strong> module, use <strong>location_latitude</strong>. If the latitude is stored in a <strong>text field</strong>, then enter the field\'s machine name, e.g. when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="/admin/reports/views-fields">this page</a>.')
   );
   $form['ip_geoloc_views_plugin_longitude'] = array(
     '#title' => t('Name of longitude field in Views query'),
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude'],
-    '#description' => t('See comments above. When using the <strong>Geofield</strong> or <strong>Geolocation field</strong> modules you can leave this field empty.')
+    '#description' => t('See comments above. When using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules you can leave this field empty.')
   );
 
   $differentiator = isset($form_state['differentiator'])
@@ -138,8 +138,11 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION => t('Use the first location returned by the view as the center of the map.'),
       IP_GEOLOC_MAP_CENTER_ON_VISITOR => t("Center the map on the visitor's current location."),
     ),
-    '#description' => t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example: %center_example', array(
-      '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-37.8, "centerLng":145 }'))
+    '#description' => $is_openlayers
+       ? t('You may set the center on the "Center & Bounds" tab of the <a href="@url">map edit page</a>.', array(
+           '@url' => url('admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit')))
+       : t('If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example: %center_example', array(
+           '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-37.8, "centerLng":145 }'))
   );
 
   return $form;
@@ -329,6 +332,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
   $latitude  = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude' ]);
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
+  $field_name = 'field_' . $latitude;
 
   if (empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
     $differentiator_color_associations = array();
@@ -337,29 +341,29 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     $differentiator_name = $views_plugin_style->options['differentiator']['differentiator_field'];
     $differentiator_color_associations = variable_get('ip_geoloc_' . $views_plugin_style->view->name . '_' . $differentiator_name . '_color_mappings', array());
   }
-  if (empty($longitude)) {
-    $longitude = $latitude; // when lat/long is a single field
-  }
 
   $locations = array();
   foreach ($views_plugin_style->view->result as $i => $row) {
     $location = new stdClass();
     $row_has_location = TRUE;
     // First look for $latitude and $longitude as node field values:
-    if (!empty($row->{'field_' . $latitude}[0]['raw']) && !empty($row->{'field_' . $longitude}[0]['raw'])) {
+    if (!empty($row->{'field_' . $latitude}[0]['raw'])) {
 
-      // When based on Geofield or Geolocation Field modules lat/long are as follows
-      // Geofield   : field_<field_name>[0]['raw']['lat'] and field_<field_name>[0]['raw']['lon']
-      // Geolocation: field_<field_name>[0]['raw']['lat'] and field_<field_name>[0]['raw']['lng']
-      if (isset($row->{'field_' . $latitude}[0]['raw']['lon'])) {
-        $field_name = $latitude;
-        $location->latitude  = $row->{'field_' . $field_name}[0]['raw']['lat'];
-        $location->longitude = $row->{'field_' . $field_name}[0]['raw']['lon'];
+      // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
+      // Geofield     : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lon']
+      // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
+      // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
+      if (isset($row->{$field_name}[0]['raw']['lon'])) {
+        $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
+        $location->longitude = $row->{$field_name}[0]['raw']['lon'];
       }
-      elseif (isset($row->{'field_' . $latitude}[0]['raw']['lng'])) {
-        $field_name = $latitude;
-        $location->latitude  = $row->{'field_' . $field_name}[0]['raw']['lat'];
-        $location->longitude = $row->{'field_' . $field_name}[0]['raw']['lng'];
+      elseif (isset($row->{$field_name}[0]['raw']['lng'])) {
+        $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
+        $location->longitude = $row->{$field_name}[0]['raw']['lng'];
+      }
+      elseif (isset($row->{$field_name}[0]['raw']['longitude'])) {
+        $location->latitude  = $row->{$field_name}[0]['raw']['latitude'];
+        $location->longitude = $row->{$field_name}[0]['raw']['longitude'];
       }
       else {
         // Otherwise field values tend to be inside [0]['raw']['value']:
