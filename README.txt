@@ -95,8 +95,19 @@ of 10 most recent visitors" should now show more markers.
 with a larger batch size until the IP Geolocation database is up to date with
 the access log. It will automatically remain in synch from now on.
 
-A FEW OPENLAYERS TIPS WHEN CREATING MAPS OF VIEWS
-=================================================
+A FEW LEAFLET TIPS
+==================
+You need to download and install the Leaflet package on your system, but you
+do not have to enable any of its modules. Don't forget to download the Leaflet
+javascript library from http://leaflet.cloudmade.com/download.html. This zip
+file contains a directory named 'dist'. Drop this directory in your Drupal
+install in sites/all/libraries/leaflet, so that the path to the core javascript
+file becomes sites/all/libraries/leaflet/dist/leaflet.js
+Remember to install and enable the Libraries API module. If all's ok, you
+won't see any errors in the Status Report, .../admin/reports/status.
+
+A FEW OPENLAYERS TIPS
+=====================
 Of the modules in the OpenLayers package you only need to enable OpenLayers and
 OpenLayers UI. In fact, you could even disable OpenLayers UI when you're done
 configuring your views.

@@ -95,7 +95,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       //'leaflet_id' => $key
       );
       if (!empty($location->marker_color)) {
-        $feature['icon'] = array('iconUrl' =>  $icon_path . $location->marker_color . '.png');
+      // Doesn't seem to work
+      // $feature['icon'] = array('iconUrl' => $icon_path . $location->marker_color . '.png');
       }
       $features[] = $feature;
     }
