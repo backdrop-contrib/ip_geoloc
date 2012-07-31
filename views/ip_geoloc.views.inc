@@ -311,6 +311,23 @@ function ip_geoloc_views_plugins() {
       )
     )
   );
+  if (module_exists('leaflet')) {
+    $plugins['style']['ip_geoloc_leaflet'] = array(
+      'title' => t('Map (Leaflet, via IP Geolocation)'),
+      'help' => t('Displays the view as a Leaflet map.'),
+    //'help topic' => 'style-ip-geoloc-map',
+      'handler' => 'ip_geoloc_plugin_style_leaflet',
+      'path' => $path . '/views',
+      'theme' => 'ip_geoloc_leaflet', // ip-geoloc-leaflet.tpl.php
+      'theme path' => $path . '/views',
+      'uses fields' => TRUE,
+      'uses options' => TRUE,
+      'uses grouping' => FALSE,
+      'uses row plugin' => FALSE,
+      'type' => 'normal',
+      'even empty' => TRUE, // render output, even if empty
+    );
+  }
   if (module_exists('openlayers')) {
     $plugins['style']['ip_geoloc_openlayers'] = array(
       'title' => t('Map (OpenLayers, via IP Geolocation)'),
@@ -328,5 +345,6 @@ function ip_geoloc_views_plugins() {
       'even empty' => TRUE, // render output, even if empty
     );
   }
+
   return $plugins;
 }

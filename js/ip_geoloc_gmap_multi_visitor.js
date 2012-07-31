@@ -36,7 +36,7 @@
           '@lng': locations[key].longitude });
 
         if (locations[key].balloonText) {
-          balloonTexts['LL' + position] += '<br/>' + locations[key].balloonText;
+          balloonTexts['LL' + position] += '<br/>' + locations[key].balloon_text;
         }
 
         google.maps.event.addListener(marker, 'click',  function(event) {

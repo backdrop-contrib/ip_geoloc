@@ -164,11 +164,11 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
         $loc_rendered = new stdClass();
         $loc_rendered->latitude = $location->latitude;
         $loc_rendered->longitude = $location->longitude;
-        $loc_rendered->balloonText = t('IP address') . ' ' . $location->ip_address . '<br/>'
+        $loc_rendered->balloon_text = t('IP address') . ' ' . $location->ip_address . '<br/>'
          . $location->formatted_address . '<br/>'
          . t('#visits') . ' ' . (empty($location->visit_count) ? '?' : $location->visit_count)
          . ', ' . t('last visit') . ' ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
-        // $loc-rendered->balloonText = filter_xss($loc_rendered->balloonText);
+        // $loc-rendered->balloon_text = filter_xss($loc_rendered->balloon_text);
         $locations[$location->ip_address] = $loc_rendered;
       }
     }

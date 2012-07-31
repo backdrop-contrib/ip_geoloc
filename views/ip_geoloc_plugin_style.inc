@@ -13,7 +13,7 @@ define('IP_GEOLOC_MAP_CENTER_FIXED', 0);
 define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
 define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
 
-function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state) {
+function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state, $short_form = FALSE) {
 
   $form['ip_geoloc_views_plugin_latitude'] = array(
     '#title' => t('Name of latitude field in Views query'),
@@ -27,6 +27,10 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude'],
     '#description' => t('See comments above. When using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules you can leave this field empty.')
   );
+
+  if (!empty($short_form)) {
+    return $form;
+  }
 
   $differentiator = isset($form_state['differentiator'])
     ? $form_state['differentiator']
@@ -326,7 +330,7 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
  * Extract an array of locations from the supplied views_plugin_style.
  *
  * @param type $views_plugin_style
- * @return array of location objects, each containing lat/long and balloonText
+ * @return array of location objects, each containing lat/long and balloon_text
  */
 function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
@@ -382,7 +386,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     if ($row_has_location) {
       // Remaining row values go into the balloon
       if (!empty($views_plugin_style->rendered_fields[$i])) {
-        $location->balloonText = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
+        $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
       }
       $locations[] = $location;
     }

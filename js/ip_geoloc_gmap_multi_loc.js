@@ -79,7 +79,7 @@
         marker = new google.maps.Marker({ map: map, icon: pinImage, shadow: shadowImage, position: position, title: mouseOverText });
 
         // Funny index is because listener callback only gives us position
-        balloonTexts['LL' + position] = locations[key].balloonText;
+        balloonTexts['LL' + position] = locations[key].balloon_text;
 
         google.maps.event.addListener(marker, 'click', function(event) {
           new google.maps.InfoWindow({
