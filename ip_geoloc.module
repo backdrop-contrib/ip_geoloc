@@ -434,20 +434,11 @@ function ip_geoloc_views_api() {
   );
 }
 
-
 function ip_geoloc_form_alter(&$form, &$form_state) {
   // Append our own handler to deal with saving of the differentiator table
   if ($form['#form_id'] == 'views_ui_edit_display_form') {
     $form['buttons']['submit']['#submit'][] = 'ip_geoloc_plugin_style_differentiator_color_associations_submit';
   }
-}
-
-
-/**
- * Implements hook_library_alter().
- */
-function ip_geoloc_library_alter(&$libraries, $module) {
-  return;
 }
 
 /**
@@ -473,4 +464,11 @@ function ip_geoloc_smart_ip_get_location_alter(&$location) {
  */
 function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
   ip_geoloc_debug(t('IP Geolocation: Device Geolocation retrieved: !location', array('!location' => ip_geoloc_pretty_print($location))));
+}
+
+/**
+ *  Implements hook_leaflet_map_info_alter().
+ */
+function ip_geoloc_leaflet_map_info_alter(&$map_info) {
+  return;
 }

@@ -130,7 +130,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $output = theme(array('ip_geoloc_map'), array(
       'view' => $this->view,
       'locations' => $locations,
-      'div_id' => 'ip-geoloc-map-of-view-' . $this->view->name,
+      'div_id' => 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id,
       'map_options' => $map_options,
       'map_style' => $map_div_style,
       'marker_color' => $marker_color,

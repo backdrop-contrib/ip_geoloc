@@ -33,7 +33,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state, $short_form = TRUE);
 
     $maps = array();
-    foreach (ip_geoloc_map_get_info() as $key => $map) {
+    foreach (ip_geoloc_plugin_style_leaflet_map_get_info() as $key => $map) {
       $maps[$key] = t($map['label']);
     }
     $form['map'] = array(
@@ -72,7 +72,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    */
   function render($result) {
 
-    if (empty($this->options['map']) || !($map = ip_geoloc_map_get_info($this->options['map']))) {
+    if (empty($this->options['map']) || !($map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']))) {
       return(t('No map selected or map data not found.'));
     }
 
@@ -101,7 +101,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $features[] = $feature;
     }
 
-    $map_id = 'leaflet_map_' . md5(serialize($features) . serialize($features));
+  //$map_id = 'leaflet_map_' . md5(serialize($features) . serialize($features));
+    $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id;
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
     $settings = array(
@@ -123,7 +124,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
 /**
  * Wrapper around the only programmatic dependency we have on the Leaflet module.
+ *
+ * Note: this indirectly calls ip_geoloc_leaflet_map_info_alter($map_info).
  */
-function ip_geoloc_map_get_info($map_name = NULL) {
+function ip_geoloc_plugin_style_leaflet_map_get_info($map_name = NULL) {
   return leaflet_map_get_info($map_name);
 }

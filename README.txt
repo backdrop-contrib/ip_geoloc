@@ -98,24 +98,25 @@ the access log. It will automatically remain in synch from now on.
 A FEW LEAFLET TIPS
 ==================
 You need to download and install the Leaflet package on your system, but you
-do not have to enable any of its modules. Don't forget to download the Leaflet
-javascript library from http://leaflet.cloudmade.com/download.html. This zip
-file contains a directory named 'dist'. Drop this directory in your Drupal
-install in sites/all/libraries/leaflet, so that the path to the core javascript
-file becomes sites/all/libraries/leaflet/dist/leaflet.js
-Remember to install and enable the Libraries API module. If all's ok, you
+only have to enable the main module, no need for the Leaflet Views submodule.
+Don't forget to download the Leaflet javascript library from
+http://leaflet.cloudmade.com/download.html. This zip file contains a directory
+named 'dist'. Drop this directory in your Drupal install in
+sites/all/libraries/leaflet, so that the path to the essential javascript file
+becomes sites/all/libraries/leaflet/dist/leaflet.js
+Remember to install and enable the Libraries API module too. If all's ok, you
 won't see any errors in the Status Report, .../admin/reports/status.
 
 A FEW OPENLAYERS TIPS
 =====================
 Of the modules in the OpenLayers package you only need to enable OpenLayers and
 OpenLayers UI. In fact, you could even disable OpenLayers UI when you're done
-configuring your views.
+configuring your maps.
 Initially the location markers are likely to show up as black circles. To
 change the marker shapes and colours you need to first associate the "Location
 markers" layer with your map at Structure >> OpenLayers >> Maps >> List. If
 there is no custom map on this page yet, you have to first clone and save under
-a different name, one of the existing maps. Once you've done that, you'll find
+a different name one of the existing maps. Once you've done that, you'll find
 that on Structure >> OpenLayers >> Maps >> List the map appears with an Edit
 link. Click that, followed by the "Layers & Styles" vertical tab. In the bottom
 section of the page you'll find the "Current visitor marker" layer and a number
