@@ -27,7 +27,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['default_marker_color'] = array('default' => 'red');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['visitor_marker'] = array('default' => '<none>');
-    $options['ip_geoloc_views_plugin_gps_roles'] = array('default' => array(
+    $options['gps_roles'] = array('default' => array(
       DRUPAL_ANONYMOUS_RID => DRUPAL_ANONYMOUS_RID,
       DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID)
     );
@@ -40,8 +40,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
-    $form_state['is_openlayers'] = FALSE;
-
+    $form_state['renderer'] = 'google';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
     $form['visitor_marker'] = array(

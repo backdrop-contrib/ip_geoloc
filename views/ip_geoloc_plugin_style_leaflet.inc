@@ -20,7 +20,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
     $options['ip_geoloc_views_plugin_latitude' ] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
-
+    $options['default_marker_color'] = array('default' => '');
+    $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
+    $options['visitor_marker_color'] = array('default' => 'none');
     $options['map'] = array('default' => '');
     $options['map_height'] = array('default' => '400');
 
@@ -30,7 +32,25 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
-    ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state, $short_form = TRUE);
+    $form_state['renderer'] = 'leaflet';
+    ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
+    unset($form['center_option']); // @todo, once we know how to center in Leaflet
+
+    $visitor_marker_colors = array(
+      'none' => '<' . t('none') . '>') +
+      ip_geoloc_marker_colors();
+
+    $form['visitor_marker_color'] = array(
+      '#title' => t('Visitor marker color'),
+      '#type' => 'select',
+      '#multiple' => FALSE,
+      '#default_value' => $this->options['visitor_marker_color'],
+      '#options' => $visitor_marker_colors,
+      '#description' => t(''),
+      '#attributes' => array('class' => array('marker-color gmap')),
+      '#attached' => array('css' => array(drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc.css')
+      )
+    );
 
     $maps = array();
     foreach (ip_geoloc_plugin_style_leaflet_map_get_info() as $key => $map) {
@@ -83,10 +103,42 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
 
-    // See leaflet/README.txt for examples of Leaflet "features"
+    $marker_color = $this->options['default_marker_color'];
+    $visitor_marker_color = $this->options['visitor_marker_color'];
+    $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
+
     $icon_path = drupal_get_path('module', 'ip_geoloc') . '/markers/';
+
     $features = array();
+    if ($visitor_marker_color != 'none' && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
+      // See leaflet/README.txt for examples of Leaflet "features"
+      $visitor_feature = array(
+        'type' => 'point',
+        'lat' => $_SESSION['ip_geoloc']['location']['latitude'],
+        'lon' => $_SESSION['ip_geoloc']['location']['longitude'],
+        'popup' => t('Your retrieved location'),
+      );
+      if ($visitor_marker_color != '') {
+        $visitor_feature['icon'] = array(
+          'iconUrl' => $icon_path . $visitor_marker_color . '.png',
+          'iconSize' => array('x' => 21, 'y' => 34), // width, height
+          'iconAnchor' => array('x' => 10, 'y' => 34), // center baseline
+          'popupAnchor' => array('x' => -1, 'y' => 10), // above topline, center
+        );
+      }
+      $features[] = $visitor_feature;
+    }
+
+    if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
+      $first_location = reset($locations);
+      // @todo pass first_location lat/long to map to center on
+    }
+    elseif ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
+      // @todo pass visitor lat/long to map to center on
+    }
+
     foreach ($locations as $key => $location) {
+
       $feature = array(
         'type' => 'point',
         'lat' => $location->latitude,
@@ -94,14 +146,23 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'popup' => $location->balloon_text,
       //'leaflet_id' => $key
       );
-      if (!empty($location->marker_color)) {
-      // Doesn't seem to work
-      // $feature['icon'] = array('iconUrl' => $icon_path . $location->marker_color . '.png');
+      if (!empty($location->marker_color) || !empty($marker_color)) {
+        // Switch from default icon
+        $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
+        $feature['icon'] = array(
+          'iconUrl' => $icon_path . $color . '.png',
+          'iconSize' => array('x' => 21, 'y' => 34), // width, height
+          'iconAnchor' => array('x' => 10, 'y' => 34), // center baseline
+        // popupAnchor doesn't seem to be handled well in leaflet.drupal.js (defaults to (0, 6)
+          'popupAnchor' => array('x' => -1, 'y' => 10), // above topline, center
+        //'shadowUrl'
+        //'shodowSize'
+        //'shadowAnchor
+        );
       }
       $features[] = $feature;
     }
 
-  //$map_id = 'leaflet_map_' . md5(serialize($features) . serialize($features));
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id;
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');

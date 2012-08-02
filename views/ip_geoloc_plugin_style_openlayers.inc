@@ -42,7 +42,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       '#default_value' => $this->options['map'] ? $this->options['map'] : variable_get('openlayers_default_map', 'default'),
     );
 
-    $form_state['is_openlayers'] = TRUE;
+    $form_state['renderer'] = 'openlayers';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
   }
 
@@ -81,7 +81,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
 
       foreach ($locations as $location) {
-        if (empty($centre_set)) {
+        if (empty($center_set)) {
           if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
             $map['center']['initial']['centerpoint'] = $location->longitude . ',' . $location->latitude;
           }
@@ -90,7 +90,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
             $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
             $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
           }
-          $centre_set = TRUE;
+          $center_set = TRUE;
         }
         $feature = array(
           // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js

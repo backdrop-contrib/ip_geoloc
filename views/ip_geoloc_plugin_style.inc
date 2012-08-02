@@ -13,7 +13,7 @@ define('IP_GEOLOC_MAP_CENTER_FIXED', 0);
 define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
 define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
 
-function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state, $short_form = FALSE) {
+function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state) {
 
   $form['ip_geoloc_views_plugin_latitude'] = array(
     '#title' => t('Name of latitude field in Views query'),
@@ -27,10 +27,6 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude'],
     '#description' => t('See comments above. When using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules you can leave this field empty.')
   );
-
-  if (!empty($short_form)) {
-    return $form;
-  }
 
   $differentiator = isset($form_state['differentiator'])
     ? $form_state['differentiator']
@@ -118,7 +114,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       );
     }
   }
-  $is_openlayers = !empty($form_state['is_openlayers']);
+  $is_openlayers = $form_state['renderer'] == 'openlayers';
   $form['default_marker_color'] = array(
     '#title' => t('Default location marker color'),
     '#type' => 'select',
@@ -215,6 +211,8 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
 
 function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
 
+  $is_openlayers = $form_state['renderer'] == 'openlayers';
+
   // First the saved rows...
   // @todo: if $field['cardinality'] > 1, compress multiple differentiator values
   // for the same color together in a single row
@@ -225,7 +223,7 @@ function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
     if (isset($form_state['num_associations']) && $row >= $form_state['num_associations']) {
       break;
     }
-    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($form_state['is_openlayers'], $row, $differentiator, $differentiator_value, $color);
+    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value, $color);
     $row++;
   }
   // ... then the empty rows
@@ -233,7 +231,7 @@ function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
     $form_state['num_associations'] = count($differentiator_color_associations);
   }
   while ($row < $form_state['num_associations']) {
-    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($form_state['is_openlayers'], $row, $differentiator);
+    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentiator);
     $row++;
   }
 }
