@@ -22,6 +22,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
     $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
+    $options['zoom'] = array('default' => 2);
     $options['visitor_marker_color'] = array('default' => 'none');
     $options['map'] = array('default' => '');
     $options['map_height'] = array('default' => '400');
@@ -34,7 +35,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
-    unset($form['center_option']); // @todo, once we know how to center in Leaflet
+
+    $form['center_option']['#options'][0] = t('Auto-box');
+    unset($form['center_option']['#description']);
+
+    $form['zoom'] = array(
+      '#title' => t('Zoom level (1..18)'),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['zoom'],
+      '#description' => t('Does not apply when the auto-box option is selected.')
+    );
 
     $visitor_marker_colors = array(
       'none' => '<' . t('none') . '>') +
@@ -70,7 +81,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#field_suffix' => t('px'),
       '#size' => 4,
       '#default_value' => $this->options['map_height'],
-      '#required' => FALSE,
       '#description' => t('The default produces a map of 400 pixels high with a width extending to its bounding container.')
     );
   }
@@ -79,6 +89,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    * Validate the options form.
    */
   function options_validate(&$form, &$form_state) {
+    if (!is_numeric($form_state['values']['style_options']['zoom']) || $form_state['values']['style_options']['zoom'] < 0) {
+      form_error($form['zoom'], t('Zoom level must be a positive number.'));
+    }
     if (!is_numeric($form_state['values']['style_options']['map_height']) || $form_state['values']['style_options']['map_height'] < 0) {
       form_error($form['map_height'], t('Map height must be a positive number.'));
     }
@@ -104,10 +117,30 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $locations = ip_geoloc_plugin_style_extract_locations($this);
 
     $marker_color = $this->options['default_marker_color'];
-    $visitor_marker_color = $this->options['visitor_marker_color'];
     $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
+    $zoom = $this->options['zoom'];
+    $visitor_marker_color = $this->options['visitor_marker_color'];
 
     $icon_path = drupal_get_path('module', 'ip_geoloc') . '/markers/';
+
+    if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
+      $first_location = reset($locations);
+      $map['center'] = array(
+        'lat' => $first_location->latitude,
+        'lon' => $first_location->longitude
+      );
+      $map['settings']['zoom'] = $zoom;
+    }
+    elseif ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
+      $map['center'] = array(
+        'lat' => $_SESSION['ip_geoloc']['location']['latitude'],
+        'lon' => $_SESSION['ip_geoloc']['location']['longitude']
+      );
+      $map['settings']['zoom'] = $zoom;
+    }
+    else {
+      // Auto-box
+    }
 
     $features = array();
     if ($visitor_marker_color != 'none' && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
@@ -129,14 +162,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $features[] = $visitor_feature;
     }
 
-    if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
-      $first_location = reset($locations);
-      // @todo pass first_location lat/long to map to center on
-    }
-    elseif ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
-      // @todo pass visitor lat/long to map to center on
-    }
-
     foreach ($locations as $key => $location) {
 
       $feature = array(
@@ -153,7 +178,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           'iconUrl' => $icon_path . $color . '.png',
           'iconSize' => array('x' => 21, 'y' => 34), // width, height
           'iconAnchor' => array('x' => 10, 'y' => 34), // center baseline
-        // popupAnchor doesn't seem to be handled well in leaflet.drupal.js (defaults to (0, 6)
+        // popupAnchor doesn't seem to be handled well in leaflet.drupal.js (defaults to (0,6)
           'popupAnchor' => array('x' => -1, 'y' => 10), // above topline, center
         //'shadowUrl'
         //'shodowSize'
