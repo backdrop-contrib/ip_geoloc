@@ -25,7 +25,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['zoom'] = array('default' => 2);
     $options['visitor_marker_color'] = array('default' => 'none');
     $options['map'] = array('default' => '');
-    $options['map_height'] = array('default' => '400');
+    $options['map_height'] = array('default' => 400);
 
     return $options;
   }
@@ -106,7 +106,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   function render($result) {
 
     if (empty($this->options['map']) || !($map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']))) {
-      return(t('No map selected or map data not found.'));
+      return t('No map selected or map data not found.');
     }
 
     if (!empty($this->view->live_preview)) {
@@ -155,8 +155,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $visitor_feature['icon'] = array(
           'iconUrl' => $icon_path . $visitor_marker_color . '.png',
           'iconSize' => array('x' => 21, 'y' => 34), // width, height
-          'iconAnchor' => array('x' => 10, 'y' => 34), // center baseline
-          'popupAnchor' => array('x' => -1, 'y' => 10), // above topline, center
+          'iconAnchor' => array('x' => 11, 'y' => 34), // center baseline
+          'popupAnchor' => array('x' => 0, 'y' => -35), // above topline, center
         );
       }
       $features[] = $visitor_feature;

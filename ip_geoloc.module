@@ -467,7 +467,7 @@ function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
 }
 
 /**
- *  Implements hook_leaflet_map_info_alter().
+ * Implements hook_leaflet_map_info_alter().
  */
 function ip_geoloc_leaflet_map_info_alter(&$map_info) {
   return;
