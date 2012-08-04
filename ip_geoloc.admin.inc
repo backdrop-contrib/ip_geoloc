@@ -84,10 +84,10 @@ function ip_geoloc_admin_configure() {
     '#description' => t('Only relevant when you have selected a "differentiator" field in your view and have the OpenLayers module enabled also.')
   );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
-    '#type' => 'checkbox',
+    '#type' => 'textfield',
     '#title' => t('Detail execution progress with status messages.'),
     '#default_value' => variable_get('ip_geoloc_debug', FALSE),
-    '#description' => t('The above tick box applies to the super administrator (uid=1) only.')
+    '#description' => t('Enter a comma-separated list of user name(s) that should see status messages coming from this module.')
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_session'] = array(
     '#type' => 'submit',

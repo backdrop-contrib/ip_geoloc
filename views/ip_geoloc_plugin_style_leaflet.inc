@@ -177,9 +177,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['icon'] = array(
           'iconUrl' => $icon_path . $color . '.png',
           'iconSize' => array('x' => 21, 'y' => 34), // width, height
-          'iconAnchor' => array('x' => 10, 'y' => 34), // center baseline
-        // popupAnchor doesn't seem to be handled well in leaflet.drupal.js (defaults to (0,6)
-          'popupAnchor' => array('x' => -1, 'y' => 10), // above topline, center
+          'iconAnchor' => array('x' => 11, 'y' => 34), // center baseline
+          'popupAnchor' => array('x' => 0, 'y' => -35), // above topline, center
         //'shadowUrl'
         //'shodowSize'
         //'shadowAnchor

@@ -116,15 +116,31 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       $resample = TRUE; // visitor may be moving so ignore existing lat/long
       $store = TRUE; // store lat/long and city belonging to this IP address
       $reverse_geocode = FALSE; // we only need lat/long, not full street address
-      $location = ip_geoloc_get_location_by_ip(ip_address(), $resample, $store, $reverse_geocode);
-      if (isset($location['latitude']) && isset($location['longitude'])) {
-        $center_latlng = array($location['latitude'], $location['longitude']);
+      $visitor_location = ip_geoloc_get_location_by_ip(ip_address(), $resample, $store, $reverse_geocode);
+      if (isset($visitor_location['latitude']) && isset($visitor_location['longitude'])) {
+        $center_latlng = array($visitor_location['latitude'], $visitor_location['longitude']);
       }
     }
 
     global $user;
     $gps_roles = empty($this->options['gps_roles']) ? array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID) : $this->options['gps_roles'];
     $gps_roles_applicable = array_intersect($gps_roles, array_keys($user->roles));
+
+    ip_geoloc_debug(t('IP Geolocation: passing the following to Google Maps:'));
+    ip_geoloc_debug(t('- map options %options:', array('%options' => $map_options)));
+    ip_geoloc_debug(t('- visitor marker: %marker', array('%marker' => $visitor_marker)));
+    ip_geoloc_debug(t('- center option: @option' , array('@option' => $center_option)));
+    if ($center_latlng) {
+      ip_geoloc_debug(t('- visitor fallback location: (@lat, @lng)', array(
+        '@lat' => $visitor_location['latitude'],
+        '@lng' => $visitor_location['longitude']
+      )));
+    }
+    foreach ($locations as $location) {
+      $color = isset($location->marker_color) ? $location->marker_color : $marker_color;
+      $msg = '- ' . t('marker') . ' ' . $color . ' (' . $location->latitude . ', ' . $location->longitude . ')<br/>' . $location->balloon_text . '<br/>';
+      ip_geoloc_debug($msg);
+    }
 
     $output = theme(array('ip_geoloc_map'), array(
       'view' => $this->view,

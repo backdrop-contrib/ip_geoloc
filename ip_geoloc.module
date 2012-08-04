@@ -378,12 +378,6 @@ function ip_geoloc_pretty_print($location) {
   return empty($t) ? t('nothing') : $t;
 }
 
-function ip_geoloc_debug($message, $type = 'status') {
-  if ($GLOBALS['user']->uid == 1 && variable_get('ip_geoloc_debug', FALSE)) {
-    drupal_set_message($message, $type);
-  }
-}
-
 /**
  * Return available marker colors for use in a select drop-down.
  *
@@ -471,4 +465,12 @@ function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
  */
 function ip_geoloc_leaflet_map_info_alter(&$map_info) {
   return;
+}
+
+function ip_geoloc_debug($message, $type = 'status') {
+  global $user;
+  $user_names = variable_get('ip_geoloc_debug');
+  if (strpos($user_names, $user->name) !== FALSE) {
+    drupal_set_message($message, $type);
+  }
 }
