@@ -86,8 +86,8 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
     '#type' => 'textfield',
     '#title' => t('Detail execution progress with status messages.'),
-    '#default_value' => variable_get('ip_geoloc_debug', FALSE),
-    '#description' => t('Enter a comma-separated list of user name(s) that should see status messages coming from this module.')
+    '#default_value' => variable_get('ip_geoloc_debug'),
+    '#description' => t('Enter a comma-separated list of names of users that should see status messages coming from this module, e.g. for debugging purposes.')
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_session'] = array(
     '#type' => 'submit',

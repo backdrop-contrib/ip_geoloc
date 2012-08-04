@@ -469,7 +469,7 @@ function ip_geoloc_leaflet_map_info_alter(&$map_info) {
 
 function ip_geoloc_debug($message, $type = 'status') {
   global $user;
-  $user_names = variable_get('ip_geoloc_debug');
+  $user_names = check_plain(variable_get('ip_geoloc_debug'));
   if (strpos($user_names, $user->name) !== FALSE) {
     drupal_set_message($message, $type);
   }
