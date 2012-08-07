@@ -234,7 +234,7 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
     $form_state['num_associations'] = count($differentiator_color_associations);
   }
   while ($row < $form_state['num_associations']) {
-    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentiator);
+    $form['differentiator']['color_table'][$row] = _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row, $differentiator);
     $row++;
   }
 }
@@ -348,7 +348,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
   $locations = array();
   foreach ($views_plugin_style->view->result as $i => $row) {
-    
+
     $location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude);
 
     if ($location) {
