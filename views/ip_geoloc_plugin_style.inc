@@ -185,6 +185,9 @@ function _ip_geoloc_plugin_style_refresh_color_table_js($form, &$form_state) {
  * Submit handler as declared in ip_geoloc_form_alter().
  */
 function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, &$form_state) {
+  if (empty($form_state['differentiator'])) {
+    return;
+  }
   $differentiator = $form_state['differentiator'];
   $differentiator_color_associations = array();
   if (!empty($form_state['values']['color_table'])) {

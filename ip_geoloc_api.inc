@@ -267,8 +267,8 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   ip_geoloc_debug(t('- visitor marker: %marker', array('%marker' => $visitor_marker)));
   ip_geoloc_debug(t('- use GPS: @gps', array('@gps' => (bool)$visitor_location_gps)));
   ip_geoloc_debug(t('- visitor location fallback: (@lat, @lng)', array(
-    '@lat' => empty($center_latlng[0]) ? '?' : $center_latlng[0],
-    '@lng' => empty($center_latlng[1]) ? '?' : $center_latlng[1]
+    '@lat' => empty($center_latlng[0]) ? '-' : $center_latlng[0],
+    '@lng' => empty($center_latlng[1]) ? '-' : $center_latlng[1]
   )));
   ip_geoloc_debug(t('- marker directory : %dir', array('%dir' => $marker_directory)));
   foreach ($locations as $location) {
