@@ -85,7 +85,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     //'#suffix' => '</div>'
     );
 
-    _ip_geoloc_differentiator_color_table_form($form, $form_state);
+    _ip_geoloc_plugin_style_differentiator_color_table_form($form, $form_state);
 
     $form['differentiator']['add-another'] = array(
       '#type' => 'submit',
@@ -212,7 +212,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
   variable_set('ip_geoloc_' . $form_state['view']->name . '_' . $differentiator . '_color_mappings', $differentiator_color_associations);
 }
 
-function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
+function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_state) {
 
   $is_openlayers = $form_state['renderer'] == 'openlayers';
 
@@ -226,7 +226,7 @@ function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
     if (isset($form_state['num_associations']) && $row >= $form_state['num_associations']) {
       break;
     }
-    $form['differentiator']['color_table'][$row] = _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value, $color);
+    $form['differentiator']['color_table'][$row] = _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value, $color);
     $row++;
   }
   // ... then the empty rows
@@ -239,7 +239,7 @@ function _ip_geoloc_differentiator_color_table_form(&$form, &$form_state) {
   }
 }
 
-function _ip_geoloc_diff_color_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value = '', $color = '') {
+function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row, $differentiator, $differentiator_value = '', $color = '') {
 
   if (drupal_substr($differentiator, 0, 6) == 'field_') {
     $field = field_info_field($differentiator);
@@ -337,7 +337,6 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
   $latitude  = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude' ]);
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
-  $field_name = 'field_' . $latitude;
 
   if (empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
     $differentiator_color_associations = array();
@@ -349,80 +348,86 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
   $locations = array();
   foreach ($views_plugin_style->view->result as $i => $row) {
-    $location = new stdClass();
-    $row_has_location = TRUE;
-    // First look for $latitude and $longitude as node field values:
-    if (!empty($row->{'field_' . $latitude}[0]['raw'])) {
+    
+    $location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude);
 
-      // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
-      // Geofield     : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lon']
-      // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
-      // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
-      if (isset($row->{$field_name}[0]['raw']['lon'])) {
-        $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
-        $location->longitude = $row->{$field_name}[0]['raw']['lon'];
-      }
-      elseif (isset($row->{$field_name}[0]['raw']['lng'])) {
-        $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
-        $location->longitude = $row->{$field_name}[0]['raw']['lng'];
-      }
-      elseif (isset($row->{$field_name}[0]['raw']['longitude'])) {
-        $location->latitude  = $row->{$field_name}[0]['raw']['latitude'];
-        $location->longitude = $row->{$field_name}[0]['raw']['longitude'];
-      }
-      else {
-        // Otherwise field values tend to be inside [0]['raw']['value']:
-        $location->latitude  = $row->{'field_' . $latitude }[0]['raw']['value'];
-        $location->longitude = $row->{'field_' . $longitude}[0]['raw']['value'];
-      }
-    }
-    elseif (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
-      // Standard table fields: values are $row->{$latitude} and $row->{$longitude}
-      $location->latitude  = $row->{$latitude};
-      $location->longitude = $row->{$longitude};
-    }
-    else {
-      $row_has_location = FALSE;
-    }
-    if ($row_has_location) {
+    if ($location) {
       // Remaining row values go into the balloon
       if (!empty($views_plugin_style->rendered_fields[$i])) {
         $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
       }
+
+      _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator_name, $differentiator_color_associations);
       $locations[] = $location;
-    }
-
-
-    if (!empty($differentiator_name)) {
-      if (!empty($row->{$differentiator_name})) {
-        $differentiator_value = $row->{$differentiator_name};
-      }
-      elseif (!empty($row->{'field_' . $differentiator_name})) {
-        $differentiator_value = $row->{'field_' . $differentiator_name};
-        if (is_array($differentiator_value)) {
-          if (isset($differentiator_value[0]['raw']['tid'])) {
-            $differentiator_value = $differentiator_value[0]['raw']['tid'];
-          }
-          elseif (isset($differentiator_value[0]['raw']['value'])) {
-            $differentiator_value = $differentiator_value[0]['raw']['value'];
-          }
-          elseif (isset($differentiator_value[0]['rendered']['#markup'])) {
-            $differentiator_value = $differentiator_value[0]['rendered']['#markup'];
-          }
-        }
-      }
-      else {
-        $differentiator_value = '';
-      }
-      if (!empty($differentiator_color_associations[$differentiator_value])) {
-        $location->marker_color = $differentiator_color_associations[$differentiator_value];
-      }
-    }
-    if (isset($location->marker_color) && is_array($location->marker_color)) {
-      $location->marker_color = reset($location->marker_color);
     }
   }
   return $locations;
+}
+
+function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
+  $location = new stdClass();
+  // First look for $latitude and $longitude as node FIELD values:
+  $field_name = 'field_' . $latitude;
+  if (!empty($row->{$field_name}[0]['raw'])) {
+    // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
+    // Geofield     : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lon']
+    // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
+    // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
+    if (isset($row->{$field_name}[0]['raw']['lon'])) { // Geofield
+      $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
+      $location->longitude = $row->{$field_name}[0]['raw']['lon'];
+    }
+    elseif (isset($row->{$field_name}[0]['raw']['lng'])) { // GeoLocation
+      $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
+      $location->longitude = $row->{$field_name}[0]['raw']['lng'];
+    }
+    elseif (isset($row->{$field_name}[0]['raw']['longitude'])) { // Get Locations
+      $location->latitude  = $row->{$field_name}[0]['raw']['latitude'];
+      $location->longitude = $row->{$field_name}[0]['raw']['longitude'];
+    }
+    else { // Other module
+      // Field values tend to be inside [0]['raw']['value']:
+      $location->latitude  = $row->{'field_' . $latitude }[0]['raw']['value'];
+      $location->longitude = $row->{'field_' . $longitude}[0]['raw']['value'];
+    }
+  }
+  elseif (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
+    // If not node fields then db table fields...
+    $location->latitude  = $row->{$latitude};
+    $location->longitude = $row->{$longitude};
+  }
+  return isset($location->latitude) ? $location : NULL;
+}
+
+function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator_name, $differentiator_color_associations) {
+  if (!empty($differentiator_name)) {
+    if (!empty($row->{$differentiator_name})) {
+      $differentiator_value = $row->{$differentiator_name};
+    }
+    elseif (!empty($row->{'field_' . $differentiator_name})) {
+      $differentiator_value = $row->{'field_' . $differentiator_name};
+      if (is_array($differentiator_value)) {
+        if (isset($differentiator_value[0]['raw']['tid'])) {
+          $differentiator_value = $differentiator_value[0]['raw']['tid'];
+        }
+        elseif (isset($differentiator_value[0]['raw']['value'])) {
+          $differentiator_value = $differentiator_value[0]['raw']['value'];
+        }
+        elseif (isset($differentiator_value[0]['rendered']['#markup'])) {
+          $differentiator_value = $differentiator_value[0]['rendered']['#markup'];
+        }
+      }
+    }
+    else {
+      $differentiator_value = '';
+    }
+    if (!empty($differentiator_color_associations[$differentiator_value])) {
+      $location->marker_color = $differentiator_color_associations[$differentiator_value];
+    }
+  }
+  if (isset($location->marker_color) && is_array($location->marker_color)) {
+    $location->marker_color = reset($location->marker_color);
+  }
 }
 
 /**
