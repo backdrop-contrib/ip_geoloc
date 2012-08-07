@@ -222,7 +222,7 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  *   $map_style, CSS style applied to the div, e.g "height:250px; width:300px"
  * @parem
  *   $marker_color, default color used for all locations that haven't had their
- *   color overridden
+ *   color overridden, defaults to Google default (i.e. red marker with dot).
  * @param
  *   $visitor_marker, one of FALSE (no marker), TRUE (standard red marker) or
  *   a 'RRGGBB' color code
@@ -240,7 +240,7 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  *   used, if FALSE $center_latlng is used
  */
 function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-map-multi-locations',
-    $map_options = NULL, $map_style = NULL, $marker_color = 'red', $visitor_marker = TRUE,
+    $map_options = NULL, $map_style = NULL, $marker_color = NULL, $visitor_marker = TRUE,
     $center_option = 0, $center_latlng = array(0, 0), $visitor_location_gps = TRUE) {
 
   if ($visitor_location_gps) {
@@ -259,6 +259,24 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
   }
+  $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
+
+  ip_geoloc_debug(t('IP Geolocation: passing the following to Google Maps:'));
+  ip_geoloc_debug(t('- map options %options:', array('%options' => $map_options)));
+  ip_geoloc_debug(t('- center option: @option' , array('@option' => $center_option)));
+  ip_geoloc_debug(t('- visitor marker: %marker', array('%marker' => $visitor_marker)));
+  ip_geoloc_debug(t('- use GPS: @gps', array('@gps' => (bool)$visitor_location_gps)));
+  ip_geoloc_debug(t('- visitor location fallback: (@lat, @lng)', array(
+    '@lat' => empty($center_latlng[0]) ? '?' : $center_latlng[0],
+    '@lng' => empty($center_latlng[1]) ? '?' : $center_latlng[1]
+  )));
+  ip_geoloc_debug(t('- marker directory : %dir', array('%dir' => $marker_directory)));
+  foreach ($locations as $location) {
+    $color = isset($location->marker_color) ? $location->marker_color : ($marker_color ? $marker_color : t('default'));
+    $msg = '- ' . t('marker') . ' ' . $color . ' (' . $location->latitude . ', ' . $location->longitude . ')<br/>' . $location->balloon_text . '<br/>';
+    ip_geoloc_debug($msg);
+  }
+
   $settings = array(
     'ip_geoloc_locations' => $locations,
     'ip_geoloc_multi_location_map_div' => $div_id,
@@ -267,7 +285,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     'ip_geoloc_multi_location_center_latlng' => $center_latlng,
     'ip_geoloc_multi_location_visitor_marker' => $visitor_marker,
     'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps,
-    'ip_geoloc_multi_location_marker_directory' => '/' . drupal_get_path('module', 'ip_geoloc') . '/markers',
+    'ip_geoloc_multi_location_marker_directory' => $marker_directory,
     'ip_geoloc_multi_location_marker_default_color' => $marker_color
   );
   drupal_add_js($settings, 'setting');

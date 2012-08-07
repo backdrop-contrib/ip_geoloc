@@ -24,7 +24,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['differentiator'] = array('contains' => array(
       'differentiator_field' => array('default' => '')
     ));
-    $options['default_marker_color'] = array('default' => 'red');
+    $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['visitor_marker'] = array('default' => '<none>');
     $options['gps_roles'] = array('default' => array(
@@ -98,7 +98,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
 
     $map_options = empty($this->options['map_options']) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $this->options['map_options'];
     $map_div_style = empty($this->options['map_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : check_plain($this->options['map_div_style']);
-    $marker_color = empty($this->options['default_marker_color']) ? 'red' : $this->options['default_marker_color'];
+    $marker_color = empty($this->options['default_marker_color']) ? '' : $this->options['default_marker_color'];
 
     if (empty($this->options['visitor_marker'])) {
       $visitor_marker = TRUE; // default to standard red marker
@@ -125,22 +125,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     global $user;
     $gps_roles = empty($this->options['gps_roles']) ? array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID) : $this->options['gps_roles'];
     $gps_roles_applicable = array_intersect($gps_roles, array_keys($user->roles));
-
-    ip_geoloc_debug(t('IP Geolocation: passing the following to Google Maps:'));
-    ip_geoloc_debug(t('- map options %options:', array('%options' => $map_options)));
-    ip_geoloc_debug(t('- visitor marker: %marker', array('%marker' => $visitor_marker)));
-    ip_geoloc_debug(t('- center option: @option' , array('@option' => $center_option)));
-    if ($center_latlng) {
-      ip_geoloc_debug(t('- visitor fallback location: (@lat, @lng)', array(
-        '@lat' => $visitor_location['latitude'],
-        '@lng' => $visitor_location['longitude']
-      )));
-    }
-    foreach ($locations as $location) {
-      $color = isset($location->marker_color) ? $location->marker_color : $marker_color;
-      $msg = '- ' . t('marker') . ' ' . $color . ' (' . $location->latitude . ', ' . $location->longitude . ')<br/>' . $location->balloon_text . '<br/>';
-      ip_geoloc_debug($msg);
-    }
 
     $output = theme(array('ip_geoloc_map'), array(
       'view' => $this->view,

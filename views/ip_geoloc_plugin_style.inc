@@ -389,7 +389,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
 
-    //$location->marker_color = $views_plugin_style->options['default_marker_color'];
+
     if (!empty($differentiator_name)) {
       if (!empty($row->{$differentiator_name})) {
         $differentiator_value = $row->{$differentiator_name};

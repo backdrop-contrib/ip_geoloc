@@ -25,7 +25,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
     $options['differentiator'] = array('contains' => array(
       'differentiator_field' => array('default' => '')
     ));
-    $options['default_marker_color'] = array('default' => 'red');
+    $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
 
     return $options;

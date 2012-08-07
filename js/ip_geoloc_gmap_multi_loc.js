@@ -51,7 +51,8 @@
         }
       }
 
-      var defaultPinImage = new google.maps.MarkerImage(markerDirname + '/' + markerColor + imageExt,
+      var defaultPinImage = !markerColor ? null : new google.maps.MarkerImage(
+        markerDirname + '/' + markerColor + imageExt,
         new google.maps.Size(21, 34),   // image width, height
         new google.maps.Point(0, 0),    // origin
         new google.maps.Point(10, 34)); // anchor
