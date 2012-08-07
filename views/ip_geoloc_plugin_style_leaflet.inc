@@ -121,7 +121,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $zoom = $this->options['zoom'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
 
-    $icon_path = drupal_get_path('module', 'ip_geoloc') . '/markers/';
+    $icon_path = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
 
     if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
       $first_location = reset($locations);
@@ -153,7 +153,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       );
       if ($visitor_marker_color != '') {
         $visitor_feature['icon'] = array(
-          'iconUrl' => $icon_path . $visitor_marker_color . '.png',
+          'iconUrl' => $icon_path . "/$visitor_marker_color.png",
           'iconSize' => array('x' => 21, 'y' => 34), // width, height
           'iconAnchor' => array('x' => 11, 'y' => 34), // center baseline
           'popupAnchor' => array('x' => 0, 'y' => -35), // above topline, center
@@ -175,7 +175,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Switch from default icon
         $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
         $feature['icon'] = array(
-          'iconUrl' => $icon_path . $color . '.png',
+          'iconUrl' => $icon_path . "/$color.png",
           'iconSize' => array('x' => 21, 'y' => 34), // width, height
           'iconAnchor' => array('x' => 11, 'y' => 34), // center baseline
           'popupAnchor' => array('x' => 0, 'y' => -35), // above topline, center
@@ -188,6 +188,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
 
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id;
+
+    //ip_geoloc_debug(print_r($map, TRUE));
+    //ip_geoloc_debug(print_r($features, TRUE));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
     $settings = array(
