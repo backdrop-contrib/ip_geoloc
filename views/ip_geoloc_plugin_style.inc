@@ -339,6 +339,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
 
   if (empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
+    $differentiator_name = NULL;
     $differentiator_color_associations = array();
   }
   else {
