@@ -122,8 +122,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $visitor_marker_color = $this->options['visitor_marker_color'];
 
     $icon_path = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
+    // Need to prepend a slash when contextual filter is present in URL
+    // Does not work for blocks
+    if (isset($this->display->display_options['path'])) {
+      $view_path = $this->display->display_options['path'];
+      $arg = drupal_substr($_GET['q'], strlen($view_path));
+      if (strlen($arg) > 1 && drupal_substr($arg, 0, 1) == '/') {
+        $icon_path = '/' . $icon_path;
+      }
+    }
 
-    if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
+    if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION && !empty($locations)) {
       $first_location = reset($locations);
       $map['center'] = array(
         'lat' => $first_location->latitude,
