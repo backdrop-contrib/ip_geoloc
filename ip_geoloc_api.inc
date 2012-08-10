@@ -259,7 +259,13 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
   }
+
   $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
+  $server = variable_get('ip_geoloc_marker_server', 'http://' . $_SERVER['HTTP_HOST']);
+  if (!empty($server)) {
+    // Using absolute path to find markers when contextual filter is present in URL
+    $marker_directory = "$server/$marker_directory";
+  }
 
   ip_geoloc_debug(t('IP Geolocation: passing the following to Google Maps:'));
   ip_geoloc_debug(t('- map options %options:', array('%options' => $map_options)));

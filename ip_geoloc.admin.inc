@@ -77,18 +77,32 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_page_refresh', FALSE),
     '#description' => t('The above tick box does not apply to administration pages.')
   );
-  $form['ip_geoloc_advanced']['ip_geoloc_marker_directory'] = array(
+
+  $form['ip_geoloc_advanced']['markers'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Alternative markers'),
+    '#description' => t('')
+  );
+  $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_server'] = array(
     '#type' => 'textfield',
-    '#title' => t('Path to marker images (Leaflet and Google Maps only)'),
+    '#title' => t('Confirm localhost'),
+    '#default_value' => variable_get('ip_geoloc_marker_server', 'http://' . $_SERVER['HTTP_HOST']),
+    '#description' => t('Only change this if markers do not display by default.')
+  );
+  $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_directory'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Path to marker images (Leaflet, Google Maps)'),
     '#default_value' => variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers'),
-    '#description' => t('Does not apply to OpenLayers. All marker images must be .png files.')
+    '#description' => t('All marker images must be .png files.')
   );
   if (module_exists('openlayers')) {
-    $form['ip_geoloc_advanced']['ip_geoloc_num_location_marker_layers'] = array(
+    $form['ip_geoloc_advanced']['markers']['ip_geoloc_num_location_marker_layers'] = array(
       '#type' => 'textfield',
-      '#title' => t('Maximum number of location marker layers you may need.'),
+      '#title' => t('Maximum number of OpenLayers location marker layers you may need.'),
       '#default_value' => variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS),
-      '#description' => t('Only relevant when you have selected a "differentiator" field in your view and have the OpenLayers module enabled also.')
+      '#description' => t('Only relevant when you have selected "differentiator" fields in your views.')
     );
   }
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
