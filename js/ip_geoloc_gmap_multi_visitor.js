@@ -35,7 +35,7 @@
           '@lat': locations[key].latitude, // @todo fix to 4 decimals?
           '@lng': locations[key].longitude });
 
-        if (locations[key].balloonText) {
+        if (locations[key].balloon_text) {
           balloonTexts['LL' + position] += '<br/>' + locations[key].balloon_text;
         }
 
