@@ -61,13 +61,13 @@ function ip_geoloc_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
-  $items['ip-geoloc-differentiator-config/%/%'] = array(//   view/differentiator[/ol]
+/*$items['ip-geoloc-differentiator-config/%/%'] = array(//   view/differentiator[/ol]
     'title' => 'Differentiator color associations',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ip_geoloc_differentiator_to_color_mappings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'views/ip_geoloc_plugin_style.inc',
-  );
+  );*/
   return $items;
 }
 
@@ -135,7 +135,7 @@ function ip_geoloc_init() {
       unset($_SESSION['ip_geoloc']['position_pending_since']);
     }
 
-    if ($use_google_to_reverse_geocode) {
+    if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0) /* avoid HTTP 503 */) {
       // Insert some javascript to first retrieve the user's lat/long coords,
       // HTML5 style (requiring the user to accept a browser prompt) and then
       // use Google Maps API to reverse-geocode these coords into a street address.

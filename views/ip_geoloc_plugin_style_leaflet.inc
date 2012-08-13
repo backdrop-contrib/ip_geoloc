@@ -122,11 +122,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $visitor_marker_color = $this->options['visitor_marker_color'];
 
     $icon_path = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
-    $server = variable_get('ip_geoloc_marker_server', 'http://' . $_SERVER['HTTP_HOST']);
-    if (!empty($server)) {
-      // Using absolute path to find icons when contextual filter is present in URL
-      $icon_path = "$server/$icon_path";
-    }
+    $icon_path = file_create_url($icon_path);
 
     if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION && !empty($locations)) {
       $first_location = reset($locations);

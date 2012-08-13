@@ -261,11 +261,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   }
 
   $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
-  $server = variable_get('ip_geoloc_marker_server', 'http://' . $_SERVER['HTTP_HOST']);
-  if (!empty($server)) {
-    // Using absolute path to find markers when contextual filter is present in URL
-    $marker_directory = "$server/$marker_directory";
-  }
+  $marker_directory = file_create_url($marker_directory);
 
   ip_geoloc_debug(t('IP Geolocation: passing the following to Google Maps:'));
   ip_geoloc_debug(t('- map options %options:', array('%options' => $map_options)));
@@ -304,20 +300,20 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
 }
 
 /**
- * Places in $_POST the lat/long and accuracy of the visitor's current location.
+ * Uses AJAX to return in $_POST info about the visitor's current location.
  *
- * Also outputs the formatted address (a single string) reverse-geocoded from
- * the lat/long.
+ * Note: this function will result in the browser prompting the visitor to share
+ * their location, which they may or may not accept.
  *
- * Note: this function will result in the visitor being prompted to share their
- * location.
- *
- * This is works via an asynchronous javascript call, so the result is not
+ * This works via an asynchronous javascript call, so the result is not
  * immediately available on return from this function, hence the $menu_callback.
  * Upon page load the included javascript will, when ready, instigate an AJAX
  * call to the $menu_callback, which should invoke a function to retrieve the
  * lat/long and address values from the $_POST variable.
  * See ip_geoloc_current_location_ajax_recipient() for an example.
+ *
+ * Note: will result in a HTTP error 503 when the site is in maintenance mode,
+ *       as in maintenance mode menu items are not available.
  */
 function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
   $js_options = array('group' => JS_LIBRARY);
@@ -326,10 +322,10 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
   $refresh_page = variable_get('ip_geoloc_page_refresh', FALSE) && !path_is_admin($_GET['q']);
-  if ($refresh_page) {
+  //if ($refresh_page) {
     //No longer using this jQuery API, see file js/ip_geoloc_current_location.js
     //drupal_add_js(IP_GEOLOC_JQUERY_BLOCK_UI, $js_options);
-  }
+  //}
   $settings = array(
     'ip_geoloc_menu_callback' => $menu_callback,
     'ip_geoloc_refresh_page' => $refresh_page

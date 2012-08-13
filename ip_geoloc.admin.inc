@@ -85,17 +85,11 @@ function ip_geoloc_admin_configure() {
     '#title' => t('Alternative markers'),
     '#description' => t('')
   );
-  $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_server'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Confirm localhost'),
-    '#default_value' => variable_get('ip_geoloc_marker_server', 'http://' . $_SERVER['HTTP_HOST']),
-    '#description' => t('Only change this if markers do not display by default.')
-  );
   $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_directory'] = array(
     '#type' => 'textfield',
     '#title' => t('Path to marker images (Leaflet, Google Maps)'),
     '#default_value' => variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers'),
-    '#description' => t('All marker images must be .png files.')
+    '#description' => t('Should normally NOT start with a slash. All marker images must be .png files.')
   );
   if (module_exists('openlayers')) {
     $form['ip_geoloc_advanced']['markers']['ip_geoloc_num_location_marker_layers'] = array(
