@@ -273,6 +273,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     '@lng' => empty($center_latlng[1]) ? '-' : $center_latlng[1]
   )));
   ip_geoloc_debug(t('- marker directory : %dir', array('%dir' => $marker_directory)));
+  ip_geoloc_debug(t('- @count locations found', array('@count' => count($locations))));
   foreach ($locations as $location) {
     $color = isset($location->marker_color) ? $location->marker_color : t('default') . " ($marker_color)";
     $msg = '- ' . t('marker') . ' ' . $color . ' (' . $location->latitude . ', ' . $location->longitude . ')<br/>' . $location->balloon_text . '<br/>';
