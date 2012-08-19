@@ -430,7 +430,7 @@ function ip_geoloc_views_api() {
 
 function ip_geoloc_form_alter(&$form, &$form_state) {
   // Append our own handler to deal with saving of the differentiator table
-  if ($form['#form_id'] == 'views_ui_edit_display_form' && isset($form['options']['style_options']['differentiator'])) {
+  if (isset($form['#form_id']) && $form['#form_id'] == 'views_ui_edit_display_form' && isset($form['options']['style_options']['differentiator'])) {
     $form['buttons']['submit']['#submit'][] = 'ip_geoloc_plugin_style_differentiator_color_associations_submit';
   }
 }

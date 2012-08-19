@@ -20,8 +20,12 @@
       }
 
       function getLocation(position) {
+        //alert(Drupal.t('Received (@lat, @lng)', { '@lat': position.coords.latitude, '@lng': position.coords.longitude }));
+
         var location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
         new google.maps.Geocoder().geocode({'latLng': location }, function(response, status) {
+
           var ip_geoloc_address = new Object;
           ip_geoloc_address['latitude']  = position.coords.latitude;
           ip_geoloc_address['longitude'] = position.coords.longitude;
@@ -40,7 +44,7 @@
                 }
               }
             }
-            //alert(Drupal.t('Received address: @address', { '@address': ip_geoloc_address['formatted_address'] }));
+            //alert(Drupal.t('Google reverse-geocoded position to address: @address', { '@address': ip_geoloc_address['formatted_address'] }));
           }
           else {
             ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
