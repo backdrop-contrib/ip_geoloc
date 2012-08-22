@@ -484,16 +484,19 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
  * data.
  *
  * @param
- *   array $location1, must contain 'latitude' and 'longitude' keys and values
+ *   array $location, must contain 'latitude' and 'longitude' keys and values
  * @param
- *   $location2, if an array, must contain 'latitude' and 'longitude' keys
+ *   $ref_location, if an array, must contain 'latitude' and 'longitude' keys
  *     and values, otherwise defaults to $_SESSION['ip_geoloc']['location']
  * @return
  *   float, distance in meters.
  */
 function ip_geoloc_distance($location, $ref_location = 'current visitor') {
-  if (!is_array($ref_location) && !empty($_SESSION) && is_array($_SESSION['ip_geoloc']['location'])) {
+  if (!is_array($ref_location) && !empty($_SESSION) && isset($_SESSION['ip_geoloc']['location']['longitude'])) {
     $ref_location = $_SESSION['ip_geoloc']['location'];
+  }
+  if (empty($ref_location)) {
+    return '?';
   }
   if (is_numeric($location['longitude']) && is_numeric($location['latitude']) && is_numeric($ref_location['longitude']) && is_numeric($ref_location['latitude'])) {
     return ip_geoloc_earth_distance($location['longitude'], $location['latitude'], $ref_location['longitude'], $ref_location['latitude']);

@@ -95,8 +95,8 @@ of 10 most recent visitors" should now show more markers.
 with a larger batch size until the IP Geolocation database is up to date with
 the access log. It will automatically remain in synch from now on.
 
-A FEW LEAFLET TIPS
-==================
+LEAFLET TIPS
+============
 You need to download and install the Leaflet package on your system, but you
 only have to enable the main module, no need for the Leaflet Views submodule.
 Don't forget to download the Leaflet javascript library from
@@ -107,8 +107,8 @@ becomes sites/all/libraries/leaflet/dist/leaflet.js
 Remember to install and enable the Libraries API module too. If all's ok, you
 won't see any errors in the Status Report, .../admin/reports/status.
 
-A FEW OPENLAYERS TIPS
-=====================
+OPENLAYERS TIPS
+===============
 Of the modules in the OpenLayers package you only need to enable OpenLayers and
 OpenLayers UI. In fact, you could even disable OpenLayers UI when you're done
 configuring your maps.

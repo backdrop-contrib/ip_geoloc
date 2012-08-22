@@ -114,7 +114,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     if ($visitor_marker || $center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
       // Perform database IP lookup as backup/replacement for HTML5 location
       $resample = TRUE; // visitor may be moving so ignore existing lat/long
-      $store = TRUE; // store lat/long and city belonging to this IP address
+      $store = FALSE; // do not store lat/long and city as it will obliterate the reverse-geocoded one
       $reverse_geocode = FALSE; // we only need lat/long, not full street address
       $visitor_location = ip_geoloc_get_location_by_ip(ip_address(), $resample, $store, $reverse_geocode);
       if (isset($visitor_location['latitude']) && isset($visitor_location['longitude'])) {

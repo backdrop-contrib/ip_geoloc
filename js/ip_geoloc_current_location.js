@@ -44,10 +44,11 @@
                 }
               }
             }
-            //alert(Drupal.t('Google reverse-geocoded position to address: @address', { '@address': ip_geoloc_address['formatted_address'] }));
+            //alert(Drupal.t('Reverse-geocoded your location to address: @address', { '@address': ip_geoloc_address['formatted_address'] }));
           }
           else {
             ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
+            //alert(ip_geoloc_address['error']);
             refresh_page = false;
           }
           // Pass lat/long, accuracy and address back to Drupal
