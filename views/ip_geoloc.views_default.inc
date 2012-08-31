@@ -13,6 +13,168 @@
  */
 function ip_geoloc_views_default_views() {
   /*
+   * View 'Map (Google) centered on visitor's location'
+   */
+  $view = new view();
+  $view->name = 'map_google_centered_on_visitor_location';
+  $view->description = 'You may set any color for the visitor location marker.';
+  $view->tag = 'default';
+  $view->base_table = 'node';
+  $view->human_name = 'Map (Google) centered on visitor\'s location';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = TRUE;
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Your location';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '0';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['style_plugin'] = 'ip_geoloc_map';
+  $handler->display->display_options['style_options']['ip_geoloc_views_plugin_latitude'] = '';
+  $handler->display->display_options['style_options']['ip_geoloc_views_plugin_longitude'] = '';
+  $handler->display->display_options['style_options']['center_option'] = '2';
+  $handler->display->display_options['style_options']['visitor_marker'] = '00FF00';
+  $handler->display->display_options['style_options']['gps_roles'] = array(
+    1 => '1',
+    2 => '2'
+  );
+  $handler->display->display_options['style_options']['map_options'] = '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true, "scaleControl":true}';
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  /* Display: Block */
+  $handler = $view->new_display('block', 'Block', 'block');
+  $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+  $translatables['map_leaflet_centered_on_visitor_location'] = array(
+    t('Master'),
+    t('Your location'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Block'),
+  );
+  $views[$view->name] = $view;
+
+  /*
+   * View 'Map (Leaflet) centered on visitor's location'
+   */
+  $view = new view();
+  $view->name = 'map_leaflet_centered_on_visitor_location';
+  $view->description = 'Enable the "Leaflet More Maps" module for a variety of attractive map styles.';
+  $view->tag = 'default';
+  $view->base_table = 'node';
+  $view->human_name = 'Map (Leaflet) centered on visitor\'s location';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = TRUE;
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Your location';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '0';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['style_plugin'] = 'ip_geoloc_leaflet';
+  $handler->display->display_options['style_options']['ip_geoloc_views_plugin_latitude'] = '';
+  $handler->display->display_options['style_options']['ip_geoloc_views_plugin_longitude'] = '';
+  $handler->display->display_options['style_options']['center_option'] = '2';
+  $handler->display->display_options['style_options']['zoom'] = '15';
+  $handler->display->display_options['style_options']['visitor_marker_color'] = '';
+  $handler->display->display_options['style_options']['map'] = 'OSM Mapnik';
+  $handler->display->display_options['style_options']['map_height'] = '300';
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  /* Display: Block */
+  $handler = $view->new_display('block', 'Block', 'block');
+  $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+  $translatables['map_centered_on_visitor_location'] = array(
+    t('Master'),
+    t('Your location'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Block'),
+  );
+  $views[$view->name] = $view;
+
+  /*
+   * View 'Map (OpenLayers) centered on visitor's location'
+   */
+  $view = new view();
+  $view->name = 'map_ol_centered_on_visitor_location';
+  $view->description = 'Various maps and marker layers are available through OpenLayers';
+  $view->tag = 'default';
+  $view->base_table = 'node';
+  $view->human_name = 'Map (OpenLayers) centered on visitor\'s location';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = TRUE;
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Your location';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '0';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['style_plugin'] = 'ip_geoloc_openlayers';
+  $handler->display->display_options['style_options']['ip_geoloc_views_plugin_latitude'] = '';
+  $handler->display->display_options['style_options']['ip_geoloc_views_plugin_longitude'] = '';
+  $handler->display->display_options['style_options']['default_marker_color'] = '1';
+  $handler->display->display_options['style_options']['center_option'] = '2';
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  /* Display: Block */
+  $handler = $view->new_display('block', 'Block', 'block');
+  $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+  $translatables['map_centered_on_visitor_location'] = array(
+    t('Master'),
+    t('Your location'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Block'),
+  );
+  $views[$view->name] = $view;
+
+  /*
    * View 'Visitor log'
    */
   $view = new view;

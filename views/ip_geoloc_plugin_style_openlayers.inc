@@ -39,7 +39,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       '#title' => t('Map'),
       '#description' => t('The OpenLayers map used to place the view locations on. You can configure map and markers <a href="/admin/structure/openlayers/maps">here</a>.'),
       '#options' => openlayers_map_options(),
-      '#default_value' => $this->options['map'] ? $this->options['map'] : variable_get('openlayers_default_map', 'default'),
+      '#default_value' => isset($this->options['map']) ? $this->options['map'] : variable_get('openlayers_default_map', 'default'),
     );
 
     $form_state['renderer'] = 'openlayers';
@@ -61,7 +61,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
     // This somewhat mimics function openlayers_render_map_data() and class
     // openlayers_views_style_map, function render()
-    $map = openlayers_map_load($this->options['map']);
+    $map = openlayers_map_load(isset($this->options['map']) ? $this->options['map'] : variable_get('openlayers_default_map', 'default'));
 
     // function openlayers_build_map() invokes:
     // o hook_openlayers_map_preprocess_alter(&$map), which introduces the names

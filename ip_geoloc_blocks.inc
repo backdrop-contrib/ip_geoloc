@@ -10,7 +10,7 @@
  */
 function ip_geoloc_block_info() {
   $blocks['current_visitor_map'] = array(
-    'info' => t("Map centered on current visitor's location"),
+    'info' => t("Google map centered on visitor's location"),
     'cache' => DRUPAL_NO_CACHE
   );
   $blocks['recent_visitors_map'] = array(

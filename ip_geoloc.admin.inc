@@ -68,7 +68,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_advanced'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => FALSE,
     '#title' => t('Advanced options'),
   );
   $form['ip_geoloc_advanced']['ip_geoloc_page_refresh'] = array(

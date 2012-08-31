@@ -25,7 +25,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['zoom'] = array('default' => 2);
     $options['visitor_marker_color'] = array('default' => 'none');
     $options['map'] = array('default' => '');
-    $options['map_height'] = array('default' => 400);
+    $options['map_height'] = array('default' => 300);
 
     return $options;
   }
@@ -81,7 +81,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#field_suffix' => t('px'),
       '#size' => 4,
       '#default_value' => $this->options['map_height'],
-      '#description' => t('The default produces a map of 400 pixels high with a width extending to its bounding container.')
+      '#description' => t('The default produces a map of 300 pixels high with a width extending to its bounding container.')
     );
   }
 
