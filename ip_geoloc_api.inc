@@ -203,7 +203,7 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
 }
 
 /**
- * Outputs an HTML div placeholder into which will be injected a map.
+ * Outputs an HTML div placeholder into which will be injected a Google map.
  *
  * The locations to be mapped are supplied as an array of location objects,
  * each with lat,long coordinates and optional balloon text.
@@ -474,6 +474,59 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
     watchdog('IP Geolocation', '%address reverse-geocoded from (@lat, @long) in %sec s.', $msg_args, WATCHDOG_INFO);
   }
   return $google_address;
+}
+
+/**
+ * Calculate the center of the supplied locations using one of two algorithms.
+ *
+ * The first algorithm returns the center of the rectangle whose horizontal
+ * sides pass through the top and bottom locations in the set, while its
+ * vertical sides pass through the left-most and right-most locations.
+ *
+ * The second algorithm returns the center of gravity of all supplied locations.
+ * The second algorithn is therefore sensitive to location clusters. This may
+ * be what you want, or it may be what you want to avoid.
+ *
+ * @param type $locations, array of location objects or arrays each with
+ *   latitude and longitude entries.
+ * @param type $weighted, if TRUE return the center of gravity of all locations
+ * @return type
+ */
+
+function ip_geoloc_center_of_locations($locations, $weighted = FALSE) {
+  if (empty($locations)) {
+    return array(0.0, 0.0);
+  }
+  if ($weighted) {
+    $latitude = $longitude = 0.0;
+    foreach ($locations as $location) {
+      $location = (array)$location;
+      $latitude += $location['latitude'];
+      $longitude += $location['longitude'];
+    }
+    $count = count($locations);
+    return array($latitude/$count, $longitude/$count);
+  }
+  $top = $bottom = $left = $right = (array)reset($locations);
+  foreach ($locations as $location) {
+    $location = (array)$location;
+    if ($location['latitude'] > $top['latitude']) {
+      $top = $location;
+    }
+    elseif ($location['latitude'] < $bottom['latitude']) {
+      $bottom = $location;
+    }
+    if ($location['longitude'] < $left['longitude']) {
+      $left = $location;
+    }
+    elseif ($location['longitude'] > $right['longitude']) {
+      $right = $location;
+    }
+  }
+  return array(
+    0.5 * ($top['latitude'] + $bottom['latitude']),
+    0.5 * ($left['longitude'] + $right['longitude'])
+  );
 }
 
 /**

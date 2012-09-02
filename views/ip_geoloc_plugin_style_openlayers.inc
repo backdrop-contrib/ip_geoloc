@@ -80,16 +80,19 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
       $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
 
+      if ($center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR && $center_set = isset($_SESSION['ip_geoloc']['location']['longitude'])) {
+        $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
+        $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
+        $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
+      }
+      elseif (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {
+        list($latitude, $longitude) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
+        $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
+        $center_set = TRUE;
+      }
       foreach ($locations as $location) {
-        if (empty($center_set)) {
-          if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
-            $map['center']['initial']['centerpoint'] = $location->longitude . ',' . $location->latitude;
-          }
-          elseif ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR && isset($_SESSION['ip_geoloc']['location']['longitude'])) {
-            $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
-            $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
-            $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
-          }
+        if (empty($center_set) && $center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
+          $map['center']['initial']['centerpoint'] = $location->longitude . ',' . $location->latitude;
           $center_set = TRUE;
         }
         $feature = array(
@@ -103,7 +106,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
       // See admin/structure/openlayers/maps/<map-name>/edit...
       // If "Hide empty map for Views" is ticked, then if the map has no
-      // features, it shouldn't be displayed.
+      // features, it should not be displayed.
       if (!empty($map['hide_empty_map'])) {
         $num_location_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
         for ($layer = 1; $layer <= $num_location_marker_layers; $layer++) {

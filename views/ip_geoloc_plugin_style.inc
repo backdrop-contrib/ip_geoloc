@@ -12,6 +12,8 @@
 define('IP_GEOLOC_MAP_CENTER_FIXED', 0);
 define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
 define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
+define('IP_GEOLOC_MAP_CENTER_OF_LOCATIONS', 3);
+define('IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED', 4);
 
 function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state) {
 
@@ -138,6 +140,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       IP_GEOLOC_MAP_CENTER_FIXED => t('Fixed center (see note below).'),
       IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION => t('Use the first location returned by the view as the center of the map.'),
       IP_GEOLOC_MAP_CENTER_ON_VISITOR => t("Center the map on the visitor's current location."),
+      IP_GEOLOC_MAP_CENTER_OF_LOCATIONS => t('Use the center of the rectangle whose sides are defined by the left-most, right-most, top and bottom locations (this option is insensitive to location clusters).'),
+      IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED => t('Use the center of gravity based on all locations (this option is sensitive to location clusters)')
     ),
     '#description' => $is_openlayers
       ? t('You may set the center on the "Center & Bounds" tab of the <a href="@url">map edit page</a>.', array(

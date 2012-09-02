@@ -132,7 +132,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       );
       $map['settings']['zoom'] = $zoom;
     }
-    elseif ($center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
+    elseif (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {
+      list($center_lat, $center_lon) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
+      $map['center'] = array(
+        'lat' => $center_lat,
+        'lon' => $center_lon
+      );
+      $map['settings']['zoom'] = $zoom;
+    }
+    elseif ($center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
       $map['center'] = array(
         'lat' => $_SESSION['ip_geoloc']['location']['latitude'],
         'lon' => $_SESSION['ip_geoloc']['location']['longitude']
@@ -140,7 +148,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $map['settings']['zoom'] = $zoom;
     }
     else {
-      // Auto-box
+      // Auto-box if none of the above
     }
 
     $features = array();

@@ -111,7 +111,13 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
     $center_latlng = FALSE;
 
-    if ($visitor_marker || $center_option >= IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
+    if (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {
+      list($center_lat, $center_lng) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
+      $map_options = drupal_substr($map_options, strpos($map_options, '{') + 1);
+      $map_options = '{ "centerLat":' . $center_lat . ', "centerLng":' . $center_lng . ', ' . $map_options;
+    }
+
+    if ($visitor_marker || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
       // Perform database IP lookup as backup/replacement for HTML5 location
       $resample = TRUE; // visitor may be moving so ignore existing lat/long
       $store = FALSE; // do not store lat/long and city as it will obliterate the reverse-geocoded one

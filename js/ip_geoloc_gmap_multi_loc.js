@@ -36,7 +36,7 @@
           mapOptions.centerLng ? mapOptions.centerLng : 0));
       }
 
-      if (visitorMarker || centerOption >= 2) {
+      if (visitorMarker || centerOption == 2) {
         // Retrieve visitor's location, fall back on supplied location, if not found.
         if (use_gps && geo_position_js.init()) {
           // Center the map on the user's current location, using the geo.js unified API.
@@ -96,7 +96,7 @@
 
       function handleMapCenterAndVisitorMarker2(latitude, longitude) {
         var visitorPosition = new google.maps.LatLng(latitude, longitude);
-        if (centerOption >= 2) {
+        if (centerOption == 2) {
           map.setCenter(visitorPosition);
         }
         if (visitorMarker) {
