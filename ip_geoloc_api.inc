@@ -487,46 +487,62 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
  * The second algorithn is therefore sensitive to location clusters. This may
  * be what you want, or it may be what you want to avoid.
  *
- * @param type $locations, array of location objects or arrays each with
- *   latitude and longitude entries.
- * @param type $weighted, if TRUE return the center of gravity of all locations
- * @return type
+ * @param $locations, array of location objects each with latitude and longitude
+ * @param $center_of_gravity, if TRUE use the center of gravity algorithm
+ * @return array containing latitude and longitude of the center
  */
-
-function ip_geoloc_center_of_locations($locations, $weighted = FALSE) {
+function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
   if (empty($locations)) {
     return array(0.0, 0.0);
   }
-  if ($weighted) {
-    $latitude = $longitude = 0.0;
+  if ($center_of_gravity) {
+    // Because longitude turns back on itself, cannot simply average coords.
+    $count = 0;
+    $x = $y = $z = 0.0;
     foreach ($locations as $location) {
-      $location = (array)$location;
-      $latitude += $location['latitude'];
-      $longitude += $location['longitude'];
+      $lat = deg2rad($location->latitude);
+      $lng = deg2rad($location->longitude);
+      // Convert to Cartesian coords and total the 3 dimensions independently.
+      $x += cos($lat) * cos($lng);
+      $y += cos($lat) * sin($lng);
+      $z += sin($lat);
+      $count++;
     }
-    $count = count($locations);
-    return array($latitude/$count, $longitude/$count);
+    $x /= $count;
+    $y /= $count;
+    $z /= $count;
+    $center_lat = atan2($z, sqrt($x * $x + $y * $y));
+    $center_lng = atan2($y, $x);
+    return array(rad2deg($center_lat), rad2deg($center_lng));
   }
-  $top = $bottom = $left = $right = (array)reset($locations);
-  foreach ($locations as $location) {
-    $location = (array)$location;
-    if ($location['latitude'] > $top['latitude']) {
-      $top = $location;
+  // Alternative method based on top & bottom latitude and left & right longitude
+  $location = reset($locations);
+  $top = $bottom = $location->latitude;
+  $left = $right = $location->longitude;
+  while ($location = next($locations)) {
+    $lat = $location->latitude;
+    if ($lat > $top) {
+      $top = $lat;
     }
-    elseif ($location['latitude'] < $bottom['latitude']) {
-      $bottom = $location;
+    elseif ($lat < $bottom) {
+      $bottom = $lat;
     }
-    if ($location['longitude'] < $left['longitude']) {
-      $left = $location;
+    $lng = $location->longitude;
+    if ($lng < $left) {
+      $left = $lng;
     }
-    elseif ($location['longitude'] > $right['longitude']) {
-      $right = $location;
+    elseif ($lng > $right) {
+      $right = $lng;
     }
   }
-  return array(
-    0.5 * ($top['latitude'] + $bottom['latitude']),
-    0.5 * ($left['longitude'] + $right['longitude'])
-  );
+  $center_lat = 0.5 * ($top + $bottom);
+  $center_lng = 0.5 * ($right + $left);
+  if ($right - $left > 180) {
+    // If the angle between right and left is greater than 180, then averaging
+    // is still ok, provided we flip to the opposite direction
+    $center_lng = ($center_lng > 0.0) ? $center_lng - 180.0 : $center_lng + 180.0;
+  }
+  return array($center_lat, $center_lng);
 }
 
 /**
