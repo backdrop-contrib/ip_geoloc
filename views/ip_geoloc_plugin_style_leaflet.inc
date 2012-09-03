@@ -124,7 +124,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $icon_path = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
     $icon_path = file_create_url($icon_path);
 
-    if ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION && !empty($locations)) {
+    if (!empty($locations) &&
+        ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
+        ($visitor_marker_color == 'none' && count($locations) == 1))) {
       $first_location = reset($locations);
       $map['center'] = array(
         'lat' => $first_location->latitude,
@@ -148,7 +150,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $map['settings']['zoom'] = $zoom;
     }
     else {
-      // Auto-box if none of the above
+      // Auto-box if none of the above.
     }
 
     $features = array();

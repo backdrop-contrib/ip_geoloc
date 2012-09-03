@@ -536,10 +536,10 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
     }
   }
   $center_lat = 0.5 * ($top + $bottom);
-  $center_lng = 0.5 * ($right + $left);
+  $center_lng = 0.5 * ($left + $right);
   if ($right - $left > 180) {
     // If the angle between right and left is greater than 180, then averaging
-    // is still ok, provided we flip to the opposite direction
+    // is still ok, provided we flip over to the opposite end of the world.
     $center_lng = ($center_lng > 0.0) ? $center_lng - 180.0 : $center_lng + 180.0;
   }
   return array($center_lat, $center_lng);
