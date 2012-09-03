@@ -36,7 +36,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     : $views_plugin_style->options['differentiator']['differentiator_field'];
 
   if (isset($form_state['triggering_element'])) {
-    // Get here when any form element with a #ajax was changed/clicked causing
+    // Get here when any form element with #ajax was changed/clicked causing
     // an auto-rebuild of the form. Can't put this in an ajax handler, as these
     // are called AFTER the form rebuild, so too late.
     if (strpos($form_state['triggering_element']['#id'], 'differentiator-differentiator-field') > 0) {

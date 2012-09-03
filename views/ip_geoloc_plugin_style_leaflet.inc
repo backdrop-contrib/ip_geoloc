@@ -20,6 +20,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
     $options['ip_geoloc_views_plugin_latitude' ] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
+    
+    $options['differentiator'] = array('contains' => array(
+      'differentiator_field' => array('default' => '')
+    ));
     $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['zoom'] = array('default' => 2);
