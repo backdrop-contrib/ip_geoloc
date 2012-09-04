@@ -363,7 +363,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
         $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
       }
 
-      _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator_name, $differentiator_color_associations);
+      _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator_name, $differentiator_color_associations);
       $locations[] = $location;
     }
   }
