@@ -315,7 +315,6 @@ function ip_geoloc_views_plugins() {
     $plugins['style']['ip_geoloc_leaflet'] = array(
       'title' => t('Map (Leaflet, via IP Geolocation)'),
       'help' => t('Displays the view as a Leaflet map.'),
-    //'help topic' => 'style-ip-geoloc-map',
       'handler' => 'ip_geoloc_plugin_style_leaflet',
       'path' => $path . '/views',
       'theme' => 'ip_geoloc_leaflet', // ip-geoloc-leaflet.tpl.php
@@ -332,7 +331,6 @@ function ip_geoloc_views_plugins() {
     $plugins['style']['ip_geoloc_openlayers'] = array(
       'title' => t('Map (OpenLayers, via IP Geolocation)'),
       'help' => t('Displays the view as an OpenLayers map.'),
-    //'help topic' => 'style-ip-geoloc-map',
       'handler' => 'ip_geoloc_plugin_style_openlayers',
       'path' => $path . '/views',
       'theme' => 'ip_geoloc_openlayers', // ip-geoloc-openlayers.tpl.php
@@ -345,6 +343,14 @@ function ip_geoloc_views_plugins() {
       'even empty' => TRUE, // render output, even if empty
     );
   }
+
+  $plugins['argument default'] = array(
+    'postal_code' => array(
+      'title' => t('Visitor location attribute (via IP Geolocation)'),
+      'handler' => 'ip_geoloc_plugin_argument_default_ip_geoloc',
+      'path' => $path . '/views'
+    )
+  );
 
   return $plugins;
 }

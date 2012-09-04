@@ -4,15 +4,20 @@ description = Display Google, Leaflet and OpenLayers maps of Views containing lo
 core = 7.x
 configure = admin/config/system/ip_geoloc
 
-; List files class files
+; List files containing classes
 files[] = views/ip_geoloc_plugin_style_map.inc
 files[] = views/ip_geoloc_plugin_style_leaflet.inc
 files[] = views/ip_geoloc_plugin_style_openlayers.inc
+files[] = views/ip_geoloc_plugin_argument_default_ip_geoloc.inc
 
-; dependencies[]
+; dependencies[] = ..
 ; There are no programmatic dependencies but the following modules are highly
-; recommended to realise a rich feature set: Statistics (core), Views,
-; Views-PHP and one of Smart IP or GeoIP API.
+; recommended to realise a rich feature set:
+;   Statistics (core)
+;   Views
+;   Views-PHP
+;   either Smart IP or GeoIP API
+;
 ; Naturally to use OpenLayers or Leaflet maps, you'll need the OpenLayers and/or
 ; Leaflet modules.
 version = "7.x-1.x-dev"
