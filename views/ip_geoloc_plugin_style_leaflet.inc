@@ -20,7 +20,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
     $options['ip_geoloc_views_plugin_latitude' ] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
-    
+
     $options['differentiator'] = array('contains' => array(
       'differentiator_field' => array('default' => '')
     ));

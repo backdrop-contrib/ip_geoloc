@@ -467,3 +467,12 @@ function ip_geoloc_debug($message, $type = 'status') {
     drupal_set_message($message, $type);
   }
 }
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function ip_geoloc_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'ctools' || $module == 'panels') {
+    return 'plugins/' . $plugin;
+  }
+}

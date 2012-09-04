@@ -14,6 +14,7 @@ define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
 define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);
 define('IP_GEOLOC_MAP_CENTER_OF_LOCATIONS', 3);
 define('IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED', 4);
+define('IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT', 5);
 
 function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state) {
 

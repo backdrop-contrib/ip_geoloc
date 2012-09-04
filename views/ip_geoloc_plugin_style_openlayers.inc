@@ -27,6 +27,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
     ));
     $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
+    $options['argument'] = array('default' => '');
 
     return $options;
   }
@@ -44,6 +45,21 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
     $form_state['renderer'] = 'openlayers';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
+
+    $form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT] = t('Use lat/lon coordinate arguments from a contextual filter');
+    $argument_handlers = $this->view->display_handler->get_handlers('argument');
+    if (!empty($argument_handlers)) {
+      $argument_options = array();
+      foreach ($argument_handlers as $key => $handler) {
+        $argument_options[$key] = $handler->definition['group'] . ': ' . $handler->definition['title'];
+      }
+      $form['argument'] = array(
+       '#type' => 'select',
+       '#title' => t('Choose a contextual filter to pull data from'),
+       '#options' => $argument_options,
+       '#default_value' => $this->options['argument'],
+      );
+    }
   }
 
   /**
@@ -90,6 +106,14 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
         $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
         $center_set = TRUE;
       }
+      elseif ($center_option == IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT) {
+        if ($handler = $this->view->display_handler->get_handler('argument', $this->options['argument'])) {
+        $latitude = $handler->value['lat'];
+        $longitude = $handler->value['lon'];
+        $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
+        $center_set = TRUE;
+        }
+      }
       foreach ($locations as $location) {
         if (empty($center_set) && $center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
           $map['center']['initial']['centerpoint'] = $location->longitude . ',' . $location->latitude;
@@ -99,7 +123,8 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
           // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js
           'attributes' => array('description' => $location->balloon_text),
           'projection' => '4326',
-          'wkt' => 'POINT(' . $location->longitude . ' ' . $location->latitude . ')');
+          'wkt' => 'POINT(' . $location->longitude . ' ' . $location->latitude . ')'
+        );
         $layer = isset($location->marker_color) && is_numeric($location->marker_color) ? $location->marker_color : 1;
         $map['layers'][IP_GEOLOC_MARKER_LAYER . $layer]['features'][] = $feature;
       }
