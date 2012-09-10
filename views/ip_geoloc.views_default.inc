@@ -13,12 +13,111 @@
  */
 function ip_geoloc_views_default_views() {
   /*
+   * View 'Map (Leaflet) of recent visitors.
+   */
+  $view = new view();
+  $view->name = 'map_leaflet_of_visitor_locations';
+  $view->description = 'Map of recent visitors to this site with zoom and cluster features.';
+  $view->tag = 'IP Geolocation Views and Maps';
+  $view->base_table = 'accesslog';
+  $view->human_name = 'Map (Leaflet) of recent visitors';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = TRUE;
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Locations of recent visitors';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['group_by'] = TRUE;
+  $handler->display->display_options['access']['type'] = 'role';
+  $handler->display->display_options['access']['role'] = array(
+    2 => '2',
+  );
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['disable_sql_rewrite'] = TRUE;
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '2000';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['style_plugin'] = 'ip_geoloc_leaflet';
+  $handler->display->display_options['style_options']['center_option'] = '0';
+  $handler->display->display_options['style_options']['zoom'] = '1';
+  $handler->display->display_options['style_options']['visitor_marker_color'] = 'white';
+  $handler->display->display_options['style_options']['map'] = 'osm-transport';
+  $handler->display->display_options['style_options']['map_height'] = '480';
+  $handler->display->display_options['style_options']['cluster_radius'] = '80';
+  /* Field: MAX(Access log: Timestamp) */
+  $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
+  $handler->display->display_options['fields']['timestamp']['table'] = 'accesslog';
+  $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
+  $handler->display->display_options['fields']['timestamp']['group_type'] = 'max';
+  $handler->display->display_options['fields']['timestamp']['label'] = 'Last visit';
+  $handler->display->display_options['fields']['timestamp']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['timestamp']['date_format'] = 'short';
+  /* Field: IP geolocations: IP address */
+  $handler->display->display_options['fields']['ip_address']['id'] = 'ip_address';
+  $handler->display->display_options['fields']['ip_address']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['ip_address']['field'] = 'ip_address';
+  $handler->display->display_options['fields']['ip_address']['label'] = 'IP';
+  $handler->display->display_options['fields']['ip_address']['exclude'] = TRUE;
+  /* Field: IP geolocations: Address */
+  $handler->display->display_options['fields']['formatted_address']['id'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['formatted_address']['field'] = 'formatted_address';
+  $handler->display->display_options['fields']['formatted_address']['label'] = '';
+  $handler->display->display_options['fields']['formatted_address']['element_label_colon'] = FALSE;
+  /* Field: IP geolocations: Latitude */
+  $handler->display->display_options['fields']['latitude']['id'] = 'latitude';
+  $handler->display->display_options['fields']['latitude']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['latitude']['field'] = 'latitude';
+  $handler->display->display_options['fields']['latitude']['label'] = '';
+  $handler->display->display_options['fields']['latitude']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['latitude']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['latitude']['separator'] = '';
+  /* Field: IP geolocations: Longitude */
+  $handler->display->display_options['fields']['longitude']['id'] = 'longitude';
+  $handler->display->display_options['fields']['longitude']['table'] = 'ip_geoloc';
+  $handler->display->display_options['fields']['longitude']['field'] = 'longitude';
+  $handler->display->display_options['fields']['longitude']['label'] = '';
+  $handler->display->display_options['fields']['longitude']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['longitude']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['longitude']['separator'] = '';
+  /* Sort criterion: MAX(Access log: Timestamp) */
+  $handler->display->display_options['sorts']['timestamp']['id'] = 'timestamp';
+  $handler->display->display_options['sorts']['timestamp']['table'] = 'accesslog';
+  $handler->display->display_options['sorts']['timestamp']['field'] = 'timestamp';
+  $handler->display->display_options['sorts']['timestamp']['group_type'] = 'max';
+  $handler->display->display_options['sorts']['timestamp']['order'] = 'DESC';
+
+  /* Display: Block */
+  $handler = $view->new_display('block', 'Block', 'block');
+  $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+  $translatables['map_leaflet_of_visitor_locations'] = array(
+    t('Master'),
+    t('Locations of 2000 most recent visitors'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Last visit'),
+    t('IP'),
+    t('.'),
+    t('Block'),
+  );
+  $views[$view->name] = $view;
+
+
+  /*
    * View 'Map (Google) centered on visitor's location'
    */
   $view = new view();
   $view->name = 'map_google_centered_on_visitor_location';
   $view->description = 'You may set any color for the visitor location marker.';
-  $view->tag = 'default';
+  $view->tag = 'IP Geolocation Views and Maps';
   $view->base_table = 'node';
   $view->human_name = 'Map (Google) centered on visitor\'s location';
   $view->core = 7;
@@ -75,7 +174,7 @@ function ip_geoloc_views_default_views() {
   $view = new view();
   $view->name = 'map_leaflet_centered_on_visitor_location';
   $view->description = 'Enable the "Leaflet More Maps" module for a variety of attractive map styles.';
-  $view->tag = 'default';
+  $view->tag = 'IP Geolocation Views and Maps';
   $view->base_table = 'node';
   $view->human_name = 'Map (Leaflet) centered on visitor\'s location';
   $view->core = 7;
@@ -129,7 +228,7 @@ function ip_geoloc_views_default_views() {
   $view = new view();
   $view->name = 'map_ol_centered_on_visitor_location';
   $view->description = 'Various maps and marker layers are available through OpenLayers';
-  $view->tag = 'default';
+  $view->tag = 'IP Geolocation Views and Maps';
   $view->base_table = 'node';
   $view->human_name = 'Map (OpenLayers) centered on visitor\'s location';
   $view->core = 7;
@@ -180,7 +279,7 @@ function ip_geoloc_views_default_views() {
   $view = new view;
   $view->name = 'visitor_log';
   $view->description = 'Shows IP and street addresses of recent visitors with visit counts and maps.';
-  $view->tag = 'ip_geoloc';
+  $view->tag = 'IP Geolocation Views and Maps';
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log';
   $view->core = 7;
@@ -569,7 +668,7 @@ function ip_geoloc_views_default_views() {
   $view = new view;
   $view->name = 'visitor_log_lite';
   $view->description = 'Shows IP and street addresses of recent visitors.';
-  $view->tag = 'ip_geoloc';
+  $view->tag = 'IP Geolocation Views and Maps';
   $view->base_table = 'accesslog';
   $view->human_name = 'Visitor log (lite)';
   $view->core = 7;
@@ -742,7 +841,7 @@ function ip_geoloc_views_default_views() {
   $view = new view;
   $view->name = 'order_locations';
   $view->description = '';
-  $view->tag = 'ip_geoloc';
+  $view->tag = 'IP Geolocation Views and Maps';
   $view->base_table = 'commerce_order';
   $view->human_name = 'Order Locations';
   $view->core = 7;

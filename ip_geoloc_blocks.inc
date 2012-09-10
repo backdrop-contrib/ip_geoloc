@@ -10,11 +10,11 @@
  */
 function ip_geoloc_block_info() {
   $blocks['current_visitor_map'] = array(
-    'info' => t("Google map centered on visitor's location"),
+    'info' => t("Map (Google) centered on visitor's location"),
     'cache' => DRUPAL_NO_CACHE
   );
   $blocks['recent_visitors_map'] = array(
-    'info' => t('Map showing locations of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10))),
+    'info' => t('Map (Google) of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 20))),
     'cache' => DRUPAL_NO_CACHE
   );
   $blocks['address_lookup'] = array(
@@ -36,8 +36,8 @@ function ip_geoloc_block_configure($delta = '') {
     $form['ip_geoloc_recent_visitors_map_number_of_visitors'] = array(
       '#type' => 'textfield',
       '#title' => t('Number of recent visitor locations to show on the map.'),
-      '#default_value' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10),
-      '#description' => t('Must be greater than 0. Values greater than 25 are not recommended.')
+      '#default_value' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 20),
+      '#description' => t('Must be greater than 0. Clustering is not supported, all markers are shown individually.')
     );
   }
   $form['ip_geoloc_' . $delta . '_div_style'] = array(
@@ -119,7 +119,7 @@ function ip_geoloc_block_view($delta = '') {
 
     case 'recent_visitors_map':
       $block['subject'] = t('Recent visitors');
-      $how_many = variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 10);
+      $how_many = variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 20);
       if ($how_many > 0) {
         $locations = ip_geoloc_get_recent_visitor_locations($how_many);
         $map_options = variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS);

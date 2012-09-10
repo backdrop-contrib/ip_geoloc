@@ -11,7 +11,7 @@
  * Implements hook_theme().
  *
  * Register the theme hooks available in this module, with their arguments.
- * Does nor apply to Views-specific themes and template files.
+ * Does not apply to Views-specific themes and template files.
  *
  * Themes may be invoked explicitly like so:
  *

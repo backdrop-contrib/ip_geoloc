@@ -30,6 +30,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['visitor_marker_color'] = array('default' => 'none');
     $options['map'] = array('default' => '');
     $options['map_height'] = array('default' => 300);
+    $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
 
     return $options;
   }
@@ -87,6 +88,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['map_height'],
       '#description' => t('The default produces a map of 300 pixels high with a width extending to its bounding container.')
     );
+
+    $form['cluster_radius'] = array(
+      '#title' => t('Cluster marker radius'),
+      '#type' => 'textfield',
+      '#field_suffix' => t('px'),
+      '#size' => 4,
+      '#default_value' => $this->options['cluster_radius'],
+      '#description' => module_exists('leaflet_markercluster') ? t('Leave empty to disable clustering.') : t('Requires the <a href="!url">Leaflet MarkerCluster</a> module and corresponding javascript library.', array(
+        '!url' => url('http://drupal.org/project/leaflet_markercluster')
+      ))
+    );
   }
 
   /**
@@ -110,7 +122,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   function render($result) {
 
     if (empty($this->options['map']) || !($map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']))) {
-      return t('No map selected or map data not found.');
+      return t('No Leaflet map was selected or map configuration was not found.');
     }
 
     if (!empty($this->view->live_preview)) {
@@ -124,6 +136,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
     $zoom = $this->options['zoom'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
+    $cluster_radius = $this->options['cluster_radius'];
 
     $icon_path = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
     $icon_path = file_create_url($icon_path);
@@ -201,11 +214,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       $features[] = $feature;
     }
+    if (!empty($cluster_radius)) {
+      $map['settings']['maxClusterRadius'] = $cluster_radius;
+    }
 
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id;
-
-    //ip_geoloc_debug(print_r($map, TRUE));
-    //ip_geoloc_debug(print_r($features, TRUE));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
     $settings = array(
@@ -215,6 +228,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     drupal_add_js(array('leaflet' => array($settings)), 'setting');
     drupal_add_library('leaflet', 'leaflet');
+
+    if (!empty($cluster_radius)) {
+      // This is hacky but can't see another way to conditionally load Leaflet
+      // MarkerCluster
+      if (module_exists('leaflet_markercluster')) {
+        $vars = array();
+        leaflet_markercluster_preprocess_leaflet_map($vars);
+      }
+      else {
+        drupal_set_message(t('Cannot cluster - Leaflet Markercluster module not enabled.'), 'warning');
+      }
+    }
 
     $output = theme('ip_geoloc_leaflet', array(
       'map_id' => $map_id,
