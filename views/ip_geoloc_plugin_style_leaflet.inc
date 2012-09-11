@@ -45,7 +45,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     unset($form['center_option']['#description']);
 
     $form['zoom'] = array(
-      '#title' => t('Zoom level (1..18)'),
+      '#title' => t('Initial zoom level (0..18)'),
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['zoom'],
