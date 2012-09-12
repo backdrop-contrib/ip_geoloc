@@ -8,7 +8,7 @@
 /**
  * Implements hook_requirements().
  */
-function ip_geoloc_requirements($phase = 'runtime') {
+function ip_geoloc_requirements($phase) {
   $t = get_t();
   $requirements = array('ip_geoloc' => array());
 
