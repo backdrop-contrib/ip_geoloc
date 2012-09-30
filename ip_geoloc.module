@@ -9,7 +9,7 @@
  * either their HTML5-retrieved positions or their IP addresses.
  * It stores this information in a form suitable for further processing,
  * reporting, exporting and displaying via the Views module, either as tables
- * or as maps. Both Google Maps and OpenLyers interfaces are available.
+ * or as maps. Google Maps, Leaflet and OpenLyers interfaces are available.
  * Ready-to-uses views, blocks and maps are provided. For programmers there is
  * also an API.
  */
@@ -72,7 +72,7 @@ function ip_geoloc_menu() {
  * hook_inits are called as the last step in _drupal_bootstrap_full(), file
  * includes/common.inc
  * Note that the {accesslog} is updated in statistics_exit(), i.e. after the
- * page is loaded. This means that a second click may be required to before the
+ * page is loaded. This means that a second click may be required before the
  * current position marker appears on the recent visitor map.
  */
 function ip_geoloc_init() {

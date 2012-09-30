@@ -149,7 +149,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lat' => $first_location->latitude,
         'lon' => $first_location->longitude
       );
-      $map['settings']['zoom'] = $zoom;
     }
     elseif (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {
       list($center_lat, $center_lon) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
@@ -157,17 +156,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lat' => $center_lat,
         'lon' => $center_lon
       );
-      $map['settings']['zoom'] = $zoom;
     }
-    elseif ($center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
+    if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
       $map['center'] = array(
         'lat' => $_SESSION['ip_geoloc']['location']['latitude'],
         'lon' => $_SESSION['ip_geoloc']['location']['longitude']
       );
-      $map['settings']['zoom'] = $zoom;
     }
-    else {
-      // Auto-box if none of the above.
+    if (!empty($center_option) || empty($locations)) { // i.e. NOT auto-box or no locations
+      $map['settings']['zoom'] = $zoom;
     }
 
     $features = array();
@@ -217,6 +214,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($cluster_radius)) {
       $map['settings']['maxClusterRadius'] = $cluster_radius;
     }
+    $map['settings']['animateAddingMarkers'] = TRUE;
 
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id;
 
@@ -231,7 +229,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     if (!empty($cluster_radius)) {
       // This is hacky but can't see another way to conditionally load Leaflet
-      // MarkerCluster
+      // MarkerCluster library
       if (module_exists('leaflet_markercluster')) {
         $vars = array();
         leaflet_markercluster_preprocess_leaflet_map($vars);
