@@ -17,6 +17,12 @@ $plugin = array(
   'convert' => 'ip_geoloc_ip_geoloc_context_convert',
 );
 
+function ip_geoloc_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools') {
+    return "plugins/$plugin_type";
+  }
+}
+
 function ip_geoloc_ip_geoloc_context($empty, $data = NULL, $conf = FALSE) {
   $context = new ctools_context('ip_geoloc');
   $context->plugin = 'ip_geoloc';
