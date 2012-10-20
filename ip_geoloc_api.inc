@@ -69,7 +69,7 @@ function ip_geoloc_store_location($location) {
       $empty_location['formatted_address'] = '';
       $location['id'] = $existing_location['id'];
       $full_location = array_merge($empty_location, $location);
-      ip_geoloc_debug(t('IP Geolocation: updating db with: !location', array('!location' => ip_geoloc_pretty_print($full_location))));
+      ip_geoloc_debug(t('IP Geolocation: updating db with above location'));
     }
     try {
       $result = drupal_write_record('ip_geoloc', $full_location, $existing_location ? array('id') : array());
@@ -345,8 +345,7 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
  * location. If the third argument is TRUE, then store the new location.
  *
  * @param
- *   $ip_address; note if you're looking for location data for the current
- *   visitor look in $_SESSION['ip_geoloc']['location']
+ *   $ip_address
  * @param
  *   $resample, if set to TRUE, ignore any existing location data for this
  *   IP address and retrieve the latest
@@ -556,13 +555,13 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
  *   array $location, must contain 'latitude' and 'longitude' keys and values
  * @param
  *   $ref_location, if an array, must contain 'latitude' and 'longitude' keys
- *     and values, otherwise defaults to $_SESSION['ip_geoloc']['location']
+ *     and values, otherwise defaults to ip_geoloc_get_visitor_location()
  * @return
  *   float, distance in meters.
  */
 function ip_geoloc_distance($location, $ref_location = 'current visitor') {
-  if (!is_array($ref_location) && !empty($_SESSION) && isset($_SESSION['ip_geoloc']['location']['longitude'])) {
-    $ref_location = $_SESSION['ip_geoloc']['location'];
+  if (!is_array($ref_location)) {
+    $ref_location = ip_geoloc_get_visitor_location();
   }
   if (empty($ref_location)) {
     return '?';

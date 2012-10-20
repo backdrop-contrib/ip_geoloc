@@ -32,8 +32,8 @@ class ip_geoloc_plugin_argument_default_ip_geoloc extends views_plugin_argument_
   }
 
   function get_argument() {
-    if (!empty($_SESSION['ip_geoloc']['location'])) {
-      $location = $_SESSION['ip_geoloc']['location'];
+    $location = ip_geoloc_get_visitor_location();
+    if (!empty($location)) {
       switch ($this->options['type']) {
         case 'postal_code':
           return $location['postal_code'];

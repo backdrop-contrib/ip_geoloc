@@ -157,10 +157,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lon' => $center_lon
       );
     }
-    if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
+    $visitor_location = ip_geoloc_get_visitor_location();
+    if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
       $map['center'] = array(
-        'lat' => $_SESSION['ip_geoloc']['location']['latitude'],
-        'lon' => $_SESSION['ip_geoloc']['location']['longitude']
+        'lat' => $visitor_location['latitude'],
+        'lon' => $visitor_location['longitude']
       );
     }
     if (!empty($center_option) || empty($locations)) { // i.e. NOT auto-box or no locations
@@ -168,12 +169,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
 
     $features = array();
-    if ($visitor_marker_color != 'none' && isset($_SESSION['ip_geoloc']['location']['latitude'])) {
+    if ($visitor_marker_color != 'none' && isset($visitor_location['latitude'])) {
       // See leaflet/README.txt for examples of Leaflet "features"
       $visitor_feature = array(
         'type' => 'point',
-        'lat' => $_SESSION['ip_geoloc']['location']['latitude'],
-        'lon' => $_SESSION['ip_geoloc']['location']['longitude'],
+        'lat' => $visitor_location['latitude'],
+        'lon' => $visitor_location['longitude'],
         'popup' => t('Your retrieved location'),
       );
       if ($visitor_marker_color != '') {

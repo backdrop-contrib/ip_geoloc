@@ -107,13 +107,14 @@ function ip_geoloc_block_view($delta = '') {
     case 'current_visitor_map':
       $block['subject'] = t('Your location');
       $map_options = variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS);
+      $location = ip_geoloc_get_visitor_location();
       $block['content'] = theme(array('ip_geoloc_map_current_visitor'), array(
         'div_id' => 'ip-geoloc-block-current-visitor-map',
         'map_options' => $map_options,
         'map_style' => $map_style,
         // Fallback lat/long, in case the HTML5 location retrieval fails
-        'latitude'  => empty($_SESSION['ip_geoloc']['location']['latitude' ]) ? NULL : $_SESSION['ip_geoloc']['location']['latitude'],
-        'longitude' => empty($_SESSION['ip_geoloc']['location']['longitude']) ? NULL : $_SESSION['ip_geoloc']['location']['longitude']
+        'latitude'  => empty($location['latitude' ]) ? NULL : $location['latitude'],
+        'longitude' => empty($location['longitude']) ? NULL : $location['longitude']
       ));
       break;
 

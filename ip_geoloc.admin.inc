@@ -219,7 +219,7 @@ function ip_geoloc_ips_to_be_synched() {
 
 function ip_geoloc_erase_session() {
   drupal_get_messages();
-  unset($_SESSION['ip_geoloc']);
+  _ip_geoloc_set_session_value(FALSE);
   drupal_set_message(t('Geolocation data erased from session.'));
 }
 

@@ -81,9 +81,10 @@ function ip_geoloc_openlayers_layers() {
   // Add the visitor's location as a single feature in its own layer, so
   // that it may be separately styled (eg marker colour) and activated on page
   // admin/structure/openlayers/maps/<map-name>/edit
-  if (isset($_SESSION['ip_geoloc']['location']['longitude'])) {
-    $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
-    $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
+  $location = ip_geoloc_get_visitor_location();
+  if (!empty($location) && isset($location['longitude'])) {
+    $longitude = $location['longitude'];
+    $latitude  = $location['latitude'];
     $visitor_layer->data['features'][] = array(
       'attributes' => array('name' => t('Your retrieved location.')),
       'wkt' => "POINT($longitude $latitude)",

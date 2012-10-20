@@ -95,10 +95,10 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       $locations = ip_geoloc_plugin_style_extract_locations($this);
 
       $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
-
-      if ($center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR && $center_set = isset($_SESSION['ip_geoloc']['location']['longitude'])) {
-        $longitude = $_SESSION['ip_geoloc']['location']['longitude'];
-        $latitude  = $_SESSION['ip_geoloc']['location']['latitude'];
+      $visitor_location = ip_geoloc_get_visitor_location();
+      if ($center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR && $center_set = isset($visitor_location['longitude'])) {
+        $longitude = $visitor_location['longitude'];
+        $latitude  = $visitor_location['latitude'];
         $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
       }
       elseif (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {

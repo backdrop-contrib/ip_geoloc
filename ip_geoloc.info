@@ -10,9 +10,9 @@ files[] = views/ip_geoloc_plugin_style_leaflet.inc
 files[] = views/ip_geoloc_plugin_style_openlayers.inc
 files[] = views/ip_geoloc_plugin_argument_default_ip_geoloc.inc
 
-; dependencies[] = ..
-; There are no programmatic dependencies but the following modules are highly
-; recommended to realise a rich feature set:
+; dependencies[] = session_cache
+; The following aren't dependencies but are highly recommended to realise a
+; rich feature set:
 ;   Statistics (core)
 ;   Views
 ;   Views-PHP

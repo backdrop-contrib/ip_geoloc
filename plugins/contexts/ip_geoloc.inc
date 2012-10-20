@@ -23,7 +23,7 @@ function ip_geoloc_ip_geoloc_context($empty, $data = NULL, $conf = FALSE) {
   if ($empty) {
     return $context;
   }
-  $context->data = $_SESSION['ip_geoloc'];
+  $context->data = _ip_geoloc_get_session_value();
   return $context;
 }
 
