@@ -217,7 +217,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $map['settings']['animateAddingMarkers'] = TRUE;
 
-    $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id;
+    $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features)); // [#1802732]
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
     $settings = array(
