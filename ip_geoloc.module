@@ -78,11 +78,10 @@ function ip_geoloc_menu() {
 function ip_geoloc_init() {
 
   $location = ip_geoloc_get_visitor_location();
-
   $reverse_geocode_client_timeout = ip_geoloc_reverse_geocode_timeout();
 
   // Sample location when due or as soon as a reverse_geocode timeout is detected.
-  if (ip_geoloc_check_location() || $reverse_geocode_client_timeout) {
+  if (_ip_geoloc_check_location($location) || $reverse_geocode_client_timeout) {
     // To avoid mixing of previous (eg. Smart IP) location fields and new (ie.
     // Google) location fields we could clear out the session.
     // However this will mean that any code relying on the session
@@ -269,14 +268,16 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
  * Return whether a the visitor's location is due for an update.
  *
  * An update is due when more than a configurable number of seconds have
- * elapsed.
+ * elapsed. If that number is set to zero, then the user's location will be
+ * requested until at least the location's country is known, which is
+ * normally immediately at the start of the session.
  */
-function ip_geoloc_check_location() {
-  $last_position_check = _ip_geoloc_get_session_value('last_position_check');
-  $interval = variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
+function _ip_geoloc_check_location($location = NULL) {
+  $interval = (int)variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
   if ($interval == 0) {
-    return !isset($last_position_check); // return TRUE if very first click of session
+    return !isset($location['country']);
   }
+  $last_position_check = _ip_geoloc_get_session_value('last_position_check');
   if (isset($last_position_check)) {
     $time_elapsed = time() - $last_position_check;
     if ($time_elapsed < $interval) {
