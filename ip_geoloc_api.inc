@@ -476,6 +476,14 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
 }
 
 /**
+ * Return the visitor's location as currently stored in the session.
+ * @return array
+ */
+function ip_geoloc_get_visitor_location() {
+  return _ip_geoloc_get_session_value('location');
+}
+
+/**
  * Calculate the center of the supplied locations using one of two algorithms.
  *
  * The first algorithm returns the center of the rectangle whose horizontal

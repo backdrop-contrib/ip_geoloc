@@ -9,6 +9,7 @@
  * @todo turn this into a common base clase for ip_geoloc_style_*.inc.
  */
 
+define('IP_GEOLOC_MAP_AUTOBOX_IGNORE_VISITOR', -1); // Leaflet only
 define('IP_GEOLOC_MAP_CENTER_FIXED', 0);
 define('IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION', 1);
 define('IP_GEOLOC_MAP_CENTER_ON_VISITOR', 2);

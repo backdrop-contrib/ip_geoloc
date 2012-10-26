@@ -41,7 +41,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
-    $form['center_option']['#options'][0] = t('Auto-box');
+    $form['center_option']['#options'][0] = t('Auto-box (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
+  //$form['center_option']['#options'][IP_GEOLOC_MAP_AUTOBOX_IGNORE_VISITOR] = t('Auto-box (ignore visitor location)');
     unset($form['center_option']['#description']);
 
     $form['zoom'] = array(
