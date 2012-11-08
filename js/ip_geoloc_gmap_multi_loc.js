@@ -38,8 +38,8 @@
 
       if (visitorMarker || centerOption == 2) {
         // Retrieve visitor's location, fall back on supplied location, if not found.
-        if (use_gps && geo_position_js.init()) {
-          // Center the map on the user's current location, using the geo.js unified API.
+        if (use_gps && typeof(geo_position_js) == 'object' && geo_position_js.init()) {
+          // Center the map on the user's current location, using the unified API.
           geo_position_js.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
         }
         else {

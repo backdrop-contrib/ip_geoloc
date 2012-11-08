@@ -10,14 +10,18 @@
       /* Use the geo.js unified API. This covers the W3C Geolocation API as well
        * as some specific devices like Palm and Blackberry.
        */
-      if (geo_position_js.init()) {
-        geo_position_js.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
-      }
-      else {
-        var data = new Object;
-        data['error'] = Drupal.t('Cannot accurately determine visitor location. Browser does not support getCurrentPosition(): @browser', { '@browser': navigator.userAgent });
+      var data = new Object;
+      if (typeof(geo_position_js) != 'object') {
+        data['error'] = Drupal.t('IP Geolocation: geo_position_js code missing. Are you connected to the internet?');
         callback_php(callback_url, data, false);
+        return;
       }
+      if (!geo_position_js.init()) {
+        data['error'] = Drupal.t('IP Geolocation cannot accurately determine visitor location. Browser does not support getCurrentPosition(): @browser', { '@browser': navigator.userAgent });
+        callback_php(callback_url, data, false);
+        return;
+      }
+      geo_position_js.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
 
       function getLocation(position) {
         //alert(Drupal.t('Received (@lat, @lng)', { '@lat': position.coords.latitude, '@lng': position.coords.longitude }));
@@ -48,7 +52,6 @@
           }
           else {
             ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
-            //alert(ip_geoloc_address['error']);
             refresh_page = false;
           }
           // Pass lat/long, accuracy and address back to Drupal
@@ -91,18 +94,6 @@
           },
           complete: function() {
             if (refresh_page) {
-              /* Requires: http://malsup.github.com/jquery.blockUI.js
-              $.blockUI({
-                message: Drupal.t('Your location was updated...'),
-                css: {
-                  padding: '10px',
-                  color: 'white',
-                  backgroundColor: 'black',
-                  opacity: .5
-                }
-              });
-              setTimeout($.unblockUI, 2000);
-              */
               window.location.reload();
             }
           }

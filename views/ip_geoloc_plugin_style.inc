@@ -428,8 +428,10 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
     }
     else {
       $differentiator_value = '';
-      drupal_set_message(t('IP Geolocation Views and Maps: wrong differentiator? No differentiator values found for %diff. Cannot set marker colors.', array(
-        '%diff' => $differentiator_name)), 'warning', FALSE);
+      if (!isset($row->{'field_' . $differentiator_name})) {
+        drupal_set_message(t('IP Geolocation Views and Maps: wrong differentiator? No differentiator values found for %diff. Cannot set marker colors.', array(
+          '%diff' => $differentiator_name)), 'warning', FALSE);
+      }
     }
     if (!empty($differentiator_color_associations[$differentiator_value])) {
       $location->marker_color = $differentiator_color_associations[$differentiator_value];

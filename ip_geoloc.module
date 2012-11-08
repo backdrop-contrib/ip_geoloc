@@ -136,9 +136,9 @@ function ip_geoloc_init() {
       // '/ip-geoloc-current-location', which receives the geolocation data
       // from the Google Maps call via the $_POST variable and stores it in
       // the session.
-      // Naturally all of this will only work if the browser has javascript
-      // enabled.
-      ip_geoloc_debug(t('IP Geolocation: initiating services to locate current position and reverse-geocode address...'));
+      // Naturally all of this will only work if the browser is connected to
+      // the internet and has javascript enabled.
+      ip_geoloc_debug(t('IP Geolocation: initiating services to locate current position and reverse-geocode to address...'));
       ip_geoloc_get_current_location('ip-geoloc-current-location');
 
       _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));

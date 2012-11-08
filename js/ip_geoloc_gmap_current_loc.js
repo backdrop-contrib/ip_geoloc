@@ -12,10 +12,10 @@
       }
       var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_current_location_map_div), mapOptions);
 
-      /* Use the geo.js unified API. This covers W3C Geolocation API, Google Gears
-       * and some specific devices like Palm and Blackberry.
+      /* Use the geo.js unified API. This covers the W3C Geolocation API
+       * as well as some specific devices like Palm and Blackberry.
        */
-      if (geo_position_js.init()) {
+      if (typeof(geo_position_js) == 'object' && geo_position_js.init()) {
         // Note that we use the same function for normal and error behaviours.
         geo_position_js.getCurrentPosition(displayMap, displayMap, {enableHighAccuracy: true});
       }
