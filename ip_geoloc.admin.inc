@@ -41,9 +41,23 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', TRUE),
     '#description' => t("For present and future visitors this is done via the Javascript version of the Maps API and the HTML5 way of obtaining a visitor's location. This involves them being prompted to accept sharing of their location. For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server. <br/>If you are using IP Geolocation only for the Views format <strong>Map (Google, via IP Geolocation)</strong>, then you can safely untick this box.")
   );
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_include_pages'] = array(
+    '#type' => 'textarea',
+    '#rows' => 2,
+    '#title' => t("Pages on which the visitor's HTML5 location may be sampled and reverse-geocoded to a street address"),
+    '#default_value' => variable_get('ip_geoloc_include_pages', '*'),
+    '#description' => t("Enter relative paths, one per line. Where they exist use the URL aliases rather than the node numbers. <strong>&lt;front&gt;</strong> means the front page.<br/>The asterisk <em>*</em> is the wildcard character, i.e. <em>recipes/mains*</em> denotes all pages that have a path starting with <em>recipes/mains</em><br/>The asterisk by itself means any page on your site."),
+  );
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_exclude_pages'] = array(
+    '#type' => 'textarea',
+    '#rows' => 3,
+    '#title' => t('Exceptions: pages excluded from the set of pages specified above'),
+    '#default_value' => variable_get('ip_geoloc_exclude_pages', IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS),
+    '#description' => t('As above, one path specification per line.')
+  );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_roles_to_reverse_geocode'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Roles for which HTML5 visitor locations are to be requested and reverse-geocoded to street addresses'),
+    '#title' => t("User roles for which the HTML5 location may be sampled and reverse-geocoded to a street address"),
     '#default_value' => variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID)),
     '#options' => user_roles(),
     '#description' => t('Selected roles are effective only when the check box on the data collection option above is also ticked.'),
@@ -51,7 +65,7 @@ function ip_geoloc_admin_configure() {
 
   $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Employ Smart IP as a backup to the Google Maps Javascript API as well as declined or failed HTML5 location retrievals in Views.'),
+    '#title' => t('Employ Smart IP as a backup to the Google Maps JS API as well as declined or failed HTML5 location retrievals in Views.'),
     '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),
     '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
       '@geoip' => url('http://drupal.org/project/geoip')

@@ -14,6 +14,7 @@
  */
 define('IP_GEOLOC_CALLBACK_TIMEOUT', 60);
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
+define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*");
 
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
 define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
@@ -82,11 +83,6 @@ function ip_geoloc_init() {
 
   // Sample location when due or as soon as a reverse_geocode timeout is detected.
   if (_ip_geoloc_check_location($location) || $reverse_geocode_client_timeout) {
-    // To avoid mixing of previous (eg. Smart IP) location fields and new (ie.
-    // Google) location fields we could clear out the session.
-    // However this will mean that any code relying on the session
-    // (for instance a PHP snippet for block visibility) will face erased
-    // location data and behave incorrectly.
 
     if ($use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
       global $user;
@@ -263,12 +259,24 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
 /**
  * Return whether a the visitor's location is due for an update.
  *
+ * Updates are only performed on selected configured pages.
  * An update is due when more than a configurable number of seconds have
  * elapsed. If that number is set to zero, then the user's location will be
  * requested until at least the location's country is known, which is
  * normally immediately at the start of the session.
  */
 function _ip_geoloc_check_location($location = NULL) {
+
+  $path_alias = drupal_get_path_alias();
+
+  $include_pages = variable_get('ip_geoloc_include_pages', '*');
+  if (!drupal_match_path($path_alias, $include_pages)) {
+    return FALSE;
+  }
+  $exclude_pages = variable_get('ip_geoloc_exclude_pages', IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS);
+  if (drupal_match_path($path_alias, $exclude_pages)) {
+    return FALSE;
+  }
   $interval = (int)variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
   if ($interval == 0) {
     return !isset($location['country']);
@@ -277,7 +285,7 @@ function _ip_geoloc_check_location($location = NULL) {
   if (isset($last_position_check)) {
     $time_elapsed = time() - $last_position_check;
     if ($time_elapsed < $interval) {
-      ip_geoloc_debug(t('IP Geolocation: next update in %seconds seconds.', array('%seconds' => $interval - $time_elapsed)));
+      ip_geoloc_debug(t('IP Geolocation: next update in %seconds seconds (if not on excluded page).', array('%seconds' => $interval - $time_elapsed)));
       return FALSE;
     }
   }
