@@ -51,7 +51,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $form_state['no_cache'] = FALSE; // or AJAX won't work!
 
   // Add wrapper for differentiator drop-down, association table and buttons.
-  // The id in the prefix must match the AJAX sbumit handlers below.
+  // The id in the prefix must match the AJAX submit handlers below.
   $form['differentiator'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location differentiator and color associations'),
@@ -369,6 +369,8 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
   }
+  // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations)
+  drupal_alter('ip_geoloc_marker_locations', $locations);
   return $locations;
 }
 
@@ -378,7 +380,7 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   $field_name = 'field_' . $latitude;
   if (!empty($row->{$field_name}[0]['raw'])) {
     // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
-    // Geofield     : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lon']
+    // Geofield     : field_<field_name>[0]['raw']['wkt'], eg POINT(144.976 -37.813) or MULTIPOINT( (),(),() )
     // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
     // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
     if (isset($row->{$field_name}[0]['raw']['lon'])) { // Geofield

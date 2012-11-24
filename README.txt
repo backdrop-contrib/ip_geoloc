@@ -138,16 +138,53 @@ ip_geoloc_visitor_marker_layer1 and/or ip_geoloc_marker_layer. Same for
 the same page are "Full Screen", "Layer Switcher", "Pan and Zoom Bar Controls"
 and "Scale Line".
 
-FOR PROGRAMMERS
-===============
+UTILITY FUNCTIONS
+=================
 First of all, check out file ip_geoloc_api.inc for a number of useful utility
 functions for creating maps and markers, calculating distances between locations
 etc. All functions are documented and should be straightforward to use.
 
-Secondly, if you want to hook your own gelocation data provider into IP
-Geolocation, then you can -- it's simple.
-In your module, let's call it MYMODULE, all you have to do is flesh out the
-following function.
+HOOKS
+=====
+To add, change or remove marker locations from the View-based set, you can
+implement hook_ip_geoloc_marker_locations_alter(&$marker_locations).
+Each element in the &marker_locations array is an object with the following
+fields:
+
+  $marker_location->latitude
+  $marker_location->longitude
+  $marker_location->marker_color
+  $marker_location->balloon_text
+
+The $marker_location->marker_color has to be the name (without extension) of one
+of the files in the ip_geoloc/markers directory, or alternative, if configured
+at admin/config/system/ip_geoloc.
+The code below changes the color of the first two markers returned by the View
+to orange and yellow and then prepends an additional marker, not in the View.
+Because the marker is added at the front of the location array, the map can be
+centered on it. Or you can choose one of the other centering options, as per
+normal.
+
+<?php
+  /*
+   *  Implements hook_ip_geoloc_marker_locations_alter().
+   */
+  function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations) {
+    if (count($marker_locations) >= 2) {
+      $marker_locations[0]->marker_color = 'orange';
+      $marker_locations[1]->marker_color = 'yellow';
+    }
+    $observatory = new stdClass();
+    $observatory->latitude = 51.4777;
+    $observatory->longitude = -0.0015;
+    $observatory->balloon_text = t('The zero-meridian passes through the courtyard of the <strong>Greenwich</strong> observatory.');
+    $observatory->marker_color = 'white';
+    array_unshift($marker_locations, $observatory);
+  }
+
+If you want to hook your own gelocation data provider into IP Geolocation, then
+you can -- it's simple, using another hook.
+All you have to do is flesh out the following function.
 
 <?php
   /*
@@ -188,7 +225,6 @@ reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then IP
 Geolocation does not expect any further details and will store the $location
 with your modifications (if any) on the IP Geolocation database. You must set
 $location['formatted_address'] in order for the location to be stored.
-
 
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================

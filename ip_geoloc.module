@@ -419,16 +419,6 @@ function ip_geoloc_openlayers_marker_layers() {
   return $marker_layers;
 }
 
-/**
- * Implements hook_views_api().
- */
-function ip_geoloc_views_api() {
-  return array(
-    'api' => views_api_version(),
-    'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
-  );
-}
-
 function ip_geoloc_form_alter(&$form, &$form_state) {
   // Append our own handler to deal with saving of the differentiator table
   if (isset($form['#form_id']) && $form['#form_id'] == 'views_ui_edit_display_form' && isset($form['options']['style_options']['differentiator'])) {
@@ -488,4 +478,14 @@ function ip_geoloc_ctools_plugin_directory($module, $plugin) {
   if ($module == 'ctools' || $module == 'panels') {
     return 'plugins/' . $plugin;
   }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function ip_geoloc_views_api() {
+  return array(
+    'api' => views_api_version(),
+    'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
+  );
 }
