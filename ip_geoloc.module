@@ -462,8 +462,8 @@ function ip_geoloc_debug($message, $type = 'status') {
   global $user;
   $user_names = explode(',', check_plain(variable_get('ip_geoloc_debug')));
   foreach ($user_names as $user_name) {
-    $user_name = strtolower(trim($user_name));
-    $match = isset($user->name) ? $user_name == strtolower(trim($user->name)) : ($user_name == 'anon' || $user_name == 'anonymous');
+    $user_name = drupal_strtolower(trim($user_name));
+    $match = isset($user->name) ? $user_name == drupal_strtolower(trim($user->name)) : ($user_name == 'anon' || $user_name == 'anonymous');
     if ($match) {
       drupal_set_message($message, $type);
       return;

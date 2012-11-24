@@ -144,8 +144,8 @@ First of all, check out file ip_geoloc_api.inc for a number of useful utility
 functions for creating maps and markers, calculating distances between locations
 etc. All functions are documented and should be straightforward to use.
 
-HOOKS
-=====
+HOOKS (see ip_geoloc.api.php)
+=============================
 To add, change or remove marker locations from the View-based set, you can
 implement hook_ip_geoloc_marker_locations_alter(&$marker_locations).
 Each element in the &marker_locations array is an object with the following
