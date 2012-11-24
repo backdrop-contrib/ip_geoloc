@@ -380,12 +380,24 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   $field_name = 'field_' . $latitude;
   if (!empty($row->{$field_name}[0]['raw'])) {
     // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
-    // Geofield     : field_<field_name>[0]['raw']['wkt'], eg POINT(144.976 -37.813) or MULTIPOINT( (),(),() )
+    // Geofield     : field_<field_name>[0]['raw']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
     // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
     // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
-    if (isset($row->{$field_name}[0]['raw']['lon'])) { // Geofield
-      $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
-      $location->longitude = $row->{$field_name}[0]['raw']['lon'];
+    if (isset($row->{$field_name}[0]['raw']['geo_type'])) { // Geofield
+      $high_res = ($row->{$field_name}[0]['raw']['geo_type'] == 'point');
+      if ($high_res) {
+        // Use the 'wkt' entry as it is more accurate
+        $wkt = trim($row->{$field_name}[0]['raw']['wkt']);
+        $high_res = (drupal_substr($wkt, 0, 7) == 'POINT (');
+        if ($high_res) {
+          $parts = explode(' ', drupal_substr($wkt, 7));
+          $high_res = count($parts) > 1;
+        }
+      }
+      // $high_res==FALSE may indicate a MULTIPOINT cluster, which has its
+      // averaged center point on 'lat' and 'lon' indices.
+      $location->longitude = $high_res ? $parts[0] : $row->{$field_name}[0]['raw']['lon'];
+      $location->latitude  = $high_res ? (float)$parts[1] : $row->{$field_name}[0]['raw']['lat'];
     }
     elseif (isset($row->{$field_name}[0]['raw']['lng'])) { // GeoLocation
       $location->latitude  = $row->{$field_name}[0]['raw']['lat'];
