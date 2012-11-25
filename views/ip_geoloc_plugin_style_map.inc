@@ -83,11 +83,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   /**
    * Transform the View result in a list of marker locations and render these on
    * a map.
-   *
-   * @param type $result
-   *   This parameter appears to be superfluous, same as $this->view->result.
    */
-  function render($result) {
+  function render() {
 
     if (!empty($this->view->live_preview)) {
       return t('The preview function is incompatible with Google Maps so cannot be used. Please visit the page path or the block to view your map.');
