@@ -116,11 +116,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   /**
    * Transform the View result in a list of marker locations and render on map.
-   *
-   * @param type $result
-   *   This parameter appears to be superfluous, same as $this->view->result.
    */
-  function render($result) {
+  function render() {
 
     if (empty($this->options['map']) || !($map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']))) {
       return t('No Leaflet map was selected or map configuration was not found.');

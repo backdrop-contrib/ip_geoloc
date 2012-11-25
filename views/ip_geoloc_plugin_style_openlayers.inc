@@ -65,11 +65,8 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   /**
    * Transform the View result in a list of marker locations and render these on
    * a map.
-   *
-   * @param type $result
-   *   This parameter appears to be superfluous, same as $this->view->result.
    */
-  function render($result) {
+  function render() {
 
     if (!empty($this->view->live_preview)) {
     //return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
