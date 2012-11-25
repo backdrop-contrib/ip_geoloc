@@ -489,3 +489,14 @@ function ip_geoloc_views_api() {
     'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
   );
 }
+
+/**
+ * Implements hook_statistics_api() from Better Statistics module.
+ */
+function ip_geoloc_statistics_api() {
+  return array(
+   'version' => 1,
+   'path' => drupal_get_path('module', 'ip_geoloc') . '/plugins',
+   'file' => 'ip_geoloc.statistics.inc',
+  );
+}
