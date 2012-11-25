@@ -48,7 +48,9 @@ function ip_geoloc_store_location($location) {
     $result = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip', array(':ip' => $location['ip_address']));
     $existing_location = $result->fetchAssoc();
 
-    if ($existing_location == FALSE) { // New entry, insert
+    if (!$existing_location) { // New entry, insert
+      $location['city'] = utf8_encode($location['city']);
+      $location['formatted_address'] = utf8_encode($location['formatted_address']);
       ip_geoloc_debug(t('IP Geolocaton: adding new record to db: !location', array('!location' => ip_geoloc_pretty_print($location))));
       $full_location = &$location;
     }
