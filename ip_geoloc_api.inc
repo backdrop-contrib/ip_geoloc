@@ -265,7 +265,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
   $marker_directory = file_create_url($marker_directory);
 
-  $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21x34'));
+  $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
   $marker_width  = (int)$marker_dimensions[0];
   $marker_height = (int)$marker_dimensions[1];
 

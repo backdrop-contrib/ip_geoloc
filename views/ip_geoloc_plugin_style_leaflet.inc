@@ -166,7 +166,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $map['settings']['zoom'] = $zoom;
     }
 
-    $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21x34'));
+    $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
     $marker_width  = (int)$marker_dimensions[0];
     $marker_height = (int)$marker_dimensions[1];
 
