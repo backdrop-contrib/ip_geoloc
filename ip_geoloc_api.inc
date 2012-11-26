@@ -265,6 +265,10 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
   $marker_directory = file_create_url($marker_directory);
 
+  $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21x34'));
+  $marker_width  = (int)$marker_dimensions[0];
+  $marker_height = (int)$marker_dimensions[1];
+
   ip_geoloc_debug(t('IP Geolocation: passing the following to Google Maps:'));
   ip_geoloc_debug(t('- map options %options:', array('%options' => $map_options)));
   ip_geoloc_debug(t('- center option: @option' , array('@option' => $center_option)));
@@ -275,6 +279,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     '@lng' => empty($center_latlng[1]) ? '-' : $center_latlng[1]
   )));
   ip_geoloc_debug(t('- marker directory : %dir', array('%dir' => $marker_directory)));
+  ip_geoloc_debug(t('- marker dimensions : w@w x h@h px', array('@w' => $marker_width, '@h' => $marker_height)));
   ip_geoloc_debug(t('- @count locations found', array('@count' => count($locations))));
   foreach ($locations as $location) {
     $color = isset($location->marker_color) ? $location->marker_color : t('default') . " ($marker_color)";
@@ -291,6 +296,8 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     'ip_geoloc_multi_location_visitor_marker' => $visitor_marker,
     'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps,
     'ip_geoloc_multi_location_marker_directory' => $marker_directory,
+    'ip_geoloc_multi_location_marker_width' => $marker_width,
+    'ip_geoloc_multi_location_marker_height' => $marker_height,
     'ip_geoloc_multi_location_marker_default_color' => $marker_color
   );
   drupal_add_js($settings, 'setting');

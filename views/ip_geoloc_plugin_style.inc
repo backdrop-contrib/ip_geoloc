@@ -378,50 +378,56 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   $location = new stdClass();
   // First look for $latitude and $longitude as node FIELD values:
   $field_name = 'field_' . $latitude;
-  $delta = 0;
+  $delta = &drupal_static(__FUNCTION__);
+  if (isset($delta)) {
+    $delta++;
+  }
   // Hack for http://drupal.org/node/1824538
   // In the View, AddressField must have "Display all values in the same row"
   // UNTICKED, while Geofield (and all other fields) must have it TICKED.
   foreach ((array)$row as $key => $value) {
     if (drupal_substr($key, -6) == '_delta' && strpos($key, 'field_data_field_') === 0) {
-      if ($value < count($row->{$field_name})) {
-        $delta = $value;
-      }
+      $delta = $value;
       break;
     }
   }
+  if (!isset($delta) || $delta >= count($row->{$field_name})) {
+    $delta = 0;
+  }
+
   if (!empty($row->{$field_name}[$delta]['raw'])) {
-    $base = $row->{$field_name}[$delta]['raw'];
+
     // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
-    // Geofield     : field_<field_name>[0]['raw']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+    // Geofield     : field_<field_name>[0]['raw']['geom'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
     // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
     // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
+
+    $base = $row->{$field_name}[$delta]['raw'];
     if (isset($base['geo_type'])) { // Geofield
-      $high_res = ($base['geo_type'] == 'point');
-      if ($high_res) {
-        // Use the 'wkt' entry as it is more accurate
-        $wkt = trim($base['wkt']);
-        $high_res = (drupal_substr($wkt, 0, 7) == 'POINT (');
-        if ($high_res) {
-          $parts = explode(' ', drupal_substr($wkt, 7));
-          $high_res = count($parts) > 1;
+      $is_point = ($base['geo_type'] == 'point');
+      if ($is_point) { // wkt more accurate than lat,lon in Geofield 7.x-1.x
+        $point = empty($base['geom']) ? $base['wkt'] : $base['geom'];
+        $is_point = (drupal_substr(trim($point), 0, 7) == 'POINT (');
+        if ($is_point) {
+          $parts = explode(' ', drupal_substr($point, 7));
+          $is_point = count($parts) > 1;
         }
       }
-      // $high_res==FALSE may indicate a MULTIPOINT cluster, which has its
-      // averaged center point on 'lat' and 'lon' indices.
-      $location->longitude = $high_res ? $parts[0] : $base['lon'];
-      $location->latitude  = $high_res ? (float)$parts[1] : $base['lat'];
+      // $is_point==FALSE may indicate a MULTIPOINT cluster, which has its
+      // averaged center on 'lat' and 'lon' indices.
+      $location->longitude = $is_point ? $parts[0] : $base['lon'];
+      $location->latitude  = $is_point ? (float)$parts[1] : $base['lat'];
     }
-    elseif (isset($row->{$field_name}[$delta]['raw']['lng'])) { // GeoLocation
-      $location->latitude  = $row->{$field_name}[$delta]['raw']['lat'];
-      $location->longitude = $row->{$field_name}[$delta]['raw']['lng'];
+    elseif (isset($base['lng'])) { // GeoLocation
+      $location->latitude  = $base['lat'];
+      $location->longitude = $base['lng'];
     }
-    elseif (isset($row->{$field_name}[$delta]['raw']['longitude'])) { // Get Locations
-      $location->latitude  = $row->{$field_name}[$delta]['raw']['latitude'];
-      $location->longitude = $row->{$field_name}[$delta]['raw']['longitude'];
+    elseif (isset($base['longitude'])) { // Get Locations
+      $location->latitude  = $base['latitude'];
+      $location->longitude = $base['longitude'];
     }
     else { // Other module
-      // Field values tend to be inside [0]['raw']['value']:
+      // Field values tend to be inside ...[0]['raw']['value']:
       $location->latitude  = $row->{'field_' . $latitude }[$delta]['raw']['value'];
       $location->longitude = $row->{'field_' . $longitude}[$delta]['raw']['value'];
     }

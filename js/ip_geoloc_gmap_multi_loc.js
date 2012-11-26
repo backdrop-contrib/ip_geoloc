@@ -10,6 +10,8 @@
       var visitorMarker = settings.ip_geoloc_multi_location_visitor_marker;
       var use_gps       = settings.ip_geoloc_multi_location_visitor_location_gps;
       var markerDirname = settings.ip_geoloc_multi_location_marker_directory;
+      var markerWidth   = settings.ip_geoloc_multi_location_marker_width;
+      var markerHeight  = settings.ip_geoloc_multi_location_marker_height;
       var markerColor   = settings.ip_geoloc_multi_location_marker_default_color;
       var imageExt      = '.png';
 
@@ -53,9 +55,9 @@
 
       var defaultPinImage = !markerColor ? null : new google.maps.MarkerImage(
         markerDirname + '/' + markerColor + imageExt,
-        new google.maps.Size(21, 34),   // image width, height
-        new google.maps.Point(0, 0),    // origin
-        new google.maps.Point(10, 34)); // anchor
+        new google.maps.Size(markerWidth, markerHeight),
+        new google.maps.Point(0, 0), // origin
+        new google.maps.Point((markerWidth / 2), markerHeight)); // anchor
       var shadowImage = null;
 
       var i = 1;
@@ -73,9 +75,9 @@
         if (locations[key].marker_color) {
           pinImage = new google.maps.MarkerImage(
             markerDirname + '/' + locations[key].marker_color + imageExt,
-            new google.maps.Size(21, 34),   // image width, height
-            new google.maps.Point(0, 0),    // origin
-            new google.maps.Point(10, 34)); // anchor
+            new google.maps.Size(markerWidth, markerHeight),
+            new google.maps.Point(0, 0), // origin
+            new google.maps.Point((markerWidth / 2), markerHeight)); // anchor
         }
         marker = new google.maps.Marker({ map: map, icon: pinImage, shadow: shadowImage, position: position, title: mouseOverText });
 

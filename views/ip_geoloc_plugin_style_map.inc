@@ -124,7 +124,6 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
         $center_latlng = array($visitor_location['latitude'], $visitor_location['longitude']);
       }
     }
-
     global $user;
     $gps_roles = empty($this->options['gps_roles']) ? array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID) : $this->options['gps_roles'];
     $gps_roles_applicable = array_intersect($gps_roles, array_keys($user->roles));

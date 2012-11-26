@@ -166,6 +166,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $map['settings']['zoom'] = $zoom;
     }
 
+    $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21x34'));
+    $marker_width  = (int)$marker_dimensions[0];
+    $marker_height = (int)$marker_dimensions[1];
+
     $features = array();
     if ($visitor_marker_color != 'none' && isset($visitor_location['latitude'])) {
       // See leaflet/README.txt for examples of Leaflet "features"
@@ -178,9 +182,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if ($visitor_marker_color != '') {
         $visitor_feature['icon'] = array(
           'iconUrl' => $icon_path . "/$visitor_marker_color.png",
-          'iconSize' => array('x' => 21, 'y' => 34), // width, height
-          'iconAnchor' => array('x' => 11, 'y' => 34), // center baseline
-          'popupAnchor' => array('x' => 0, 'y' => -35), // above topline, center
+          'iconSize' => array('x' => $marker_width, 'y' => $marker_height), // width, height
+          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center baseline
+          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
         );
       }
       $features[] = $visitor_feature;
@@ -200,9 +204,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
         $feature['icon'] = array(
           'iconUrl' => $icon_path . "/$color.png",
-          'iconSize' => array('x' => 21, 'y' => 34), // width, height
-          'iconAnchor' => array('x' => 11, 'y' => 34), // center baseline
-          'popupAnchor' => array('x' => 0, 'y' => -35), // above topline, center
+          'iconSize' => array('x' => $marker_width, 'y' => $marker_height), // width, height
+          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center baseline
+          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
         //'shadowUrl'
         //'shodowSize'
         //'shadowAnchor

@@ -85,25 +85,12 @@ function ip_geoloc_admin_configure() {
     '#collapsed' => FALSE,
     '#title' => t('Advanced options'),
   );
-  $form['ip_geoloc_advanced']['ip_geoloc_page_refresh'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Auto-refresh the page as soon as an HTML5 location update has come in.'),
-    '#default_value' => variable_get('ip_geoloc_page_refresh', FALSE),
-    '#description' => t('The above tick box does not apply to administration pages.')
-  );
-
   $form['ip_geoloc_advanced']['markers'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Alternative markers'),
     '#description' => t('')
-  );
-  $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_directory'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Path to marker images (Leaflet, Google Maps)'),
-    '#default_value' => variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers'),
-    '#description' => t('Should normally NOT start with a slash. All marker images must be .png files.')
   );
   if (module_exists('openlayers')) {
     $form['ip_geoloc_advanced']['markers']['ip_geoloc_num_location_marker_layers'] = array(
@@ -113,6 +100,27 @@ function ip_geoloc_admin_configure() {
       '#description' => t('Only relevant when you have selected "differentiator" fields in your views.')
     );
   }
+  else {
+    $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_directory'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Path to marker icons'),
+      '#default_value' => variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers'),
+      '#description' => t('Should normally NOT start with a slash. All marker images must be .png files.')
+    );
+    $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_dimensions'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Marker icon width and height'),
+      '#default_value' => variable_get('ip_geoloc_marker_dimensions', '21 x 34'),
+      '#field_suffix' => 'px',
+      '#description' => t('These dimensions apply to all markers in the set. The marker anchor is expected to be the middle of the icon baseline. The default marker size is 21 x 34.')
+    );
+  }
+  $form['ip_geoloc_advanced']['ip_geoloc_page_refresh'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Auto-refresh the page as soon as an HTML5 location update has come in.'),
+    '#default_value' => variable_get('ip_geoloc_page_refresh', FALSE),
+    '#description' => t('The above tick box does not apply to administration pages.')
+  );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
     '#type' => 'textfield',
     '#title' => t('Detail execution progress with status messages.'),
