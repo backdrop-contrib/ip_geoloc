@@ -4,6 +4,9 @@
   Drupal.behaviors.addGMapCurrentLocation = {
     attach: function (context, settings) {
 
+      if (typeof(google) != 'object') { // when not connected to Internet
+        return;
+      }
       // Start with a map canvas, then add marker and balloon with address info
       // when the geo-position comes in.
       var mapOptions = settings.ip_geoloc_current_location_map_options;

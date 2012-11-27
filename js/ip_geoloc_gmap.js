@@ -2,6 +2,10 @@
 /* Use this when you want several small maps on the same page, e.g. via Views */
 
 function displayGMap(latitude, longitude, elementId, balloonText) {
+
+  if (typeof(google) != 'object') { // when not connected to Internet
+    return;
+  }
   var mapOptions = {
     mapTypeId: google.maps.MapTypeId.ROADMAP,
     disableDefaultUI: true,

@@ -9,6 +9,9 @@
         alert(Drupal.t('Syntax error in visitor map options.'));
         mapOptions = { mapTypeId: google.maps.MapTypeId.ROADMAP, zoom: 2 };
       }
+      if (typeof(google) != 'object') { // when not connected to Internet
+        return;
+      }
       var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
 
       var locations = settings.ip_geoloc_locations;

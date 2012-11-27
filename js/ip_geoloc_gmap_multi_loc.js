@@ -18,6 +18,9 @@
       if (!mapOptions) {
         alert(Drupal.t('Syntax error in map options.'));
       }
+      if (typeof(google) != 'object') { // when not connected to Internet
+        return;
+      }
       var mapDiv = document.getElementById(settings.ip_geoloc_multi_location_map_div);
       var map = new google.maps.Map(mapDiv, mapOptions);
 
