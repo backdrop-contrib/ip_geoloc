@@ -155,6 +155,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lon' => $center_lon
       );
     }
+
+    uasort($locations, '_ip_geoloc_plugin_style_leaflet_compare');
+
     $visitor_location = ip_geoloc_get_visitor_location();
     if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
       $map['center'] = array(
@@ -258,4 +261,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
  */
 function ip_geoloc_plugin_style_leaflet_map_get_info($map_name = NULL) {
   return leaflet_map_get_info($map_name);
+}
+
+
+function _ip_geoloc_plugin_style_leaflet_compare($location1, $location2) {
+  $weight1 = empty($location1->weight) ? 0 : $location1->weight;
+  $weight2 = empty($location2->weight) ? 0 : $location2->weight;
+  return $weight2 - $weight1;
 }

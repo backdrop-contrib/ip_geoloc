@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * ip_geoloc_plugin_style.inc
@@ -369,8 +370,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
   }
-  // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations)
-  drupal_alter('ip_geoloc_marker_locations', $locations);
+  // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
+  drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
+
   return $locations;
 }
 

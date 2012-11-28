@@ -147,7 +147,7 @@ etc. All functions are documented and should be straightforward to use.
 HOOKS (see ip_geoloc.api.php)
 =============================
 To add, change or remove marker locations from the View-based set, you can
-implement hook_ip_geoloc_marker_locations_alter(&$marker_locations).
+implement hook_ip_geoloc_marker_locations_alter(&$marker_locations, &$view).
 Each element in the &marker_locations array is an object with the following
 fields:
 
@@ -169,7 +169,10 @@ normal.
   /*
    *  Implements hook_ip_geoloc_marker_locations_alter().
    */
-  function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations) {
+  function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
+    if ($view->name != 'my_view') {
+       return;
+    }
     if (count($marker_locations) >= 2) {
       $marker_locations[0]->marker_color = 'orange';
       $marker_locations[1]->marker_color = 'yellow';
