@@ -378,6 +378,7 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   $location = new stdClass();
   // First look for $latitude and $longitude as node FIELD values:
   $field_name = 'field_' . $latitude;
+
   $delta = &drupal_static(__FUNCTION__);
   if (isset($delta)) {
     $delta++;
@@ -391,7 +392,7 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
       break;
     }
   }
-  if (!isset($delta) || $delta >= count($row->{$field_name})) {
+  if (!isset($delta) || !isset($row->{$field_name}) || $delta >= count($row->{$field_name})) {
     $delta = 0;
   }
 
