@@ -132,7 +132,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#attributes' => array(
       'class' => $is_openlayers ? array('marker-color ol') : array('marker-color gmap')),
     '#attached' => array(
-      'css' => array(drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc.css')
+      'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
     )
   );
   $form['center_option'] = array(

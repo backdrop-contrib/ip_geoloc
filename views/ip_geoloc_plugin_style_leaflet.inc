@@ -65,7 +65,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#options' => $visitor_marker_colors,
       '#description' => t(''),
       '#attributes' => array('class' => array('marker-color gmap')),
-      '#attached' => array('css' => array(drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc.css')
+      '#attached' => array('css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
       )
     );
 

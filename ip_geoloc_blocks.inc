@@ -21,6 +21,10 @@ function ip_geoloc_block_info() {
     'info' => t('Address lookup based on IP'),
     'cache' => DRUPAL_NO_CACHE
   );
+  $blocks['geocode_address'] = array(
+    'info' => t('Refine location via street address'),
+    'cache' => DRUPAL_NO_CACHE
+  );
   return $blocks;
 }
 
@@ -29,7 +33,7 @@ function ip_geoloc_block_info() {
  */
 function ip_geoloc_block_configure($delta = '') {
   $form = array();
-  if ($delta == 'address_lookup') {
+  if ($delta == 'address_lookup' || $delta == 'geocode_address') {
     return $form;
   }
   if ($delta == 'recent_visitors_map') {
@@ -81,7 +85,7 @@ function ip_geoloc_block_configure($delta = '') {
  * Implements hook_block_save().
  */
 function ip_geoloc_block_save($delta = '', $edit = array()) {
-  if ($delta == 'address_lookup') {
+  if ($delta == 'address_lookup' || $delta == 'geocode_address') {
     return;
   }
   // Save options common to all maps
@@ -137,6 +141,13 @@ function ip_geoloc_block_view($delta = '') {
       $block['subject'] = t('Global address lookup');
       $block['content'] = drupal_get_form('ip_geoloc_address_lookup');
       break;
+
+    case 'geocode_address':
+      $block['subject'] = t('Refine your location');
+      $block['content'] = drupal_get_form('ip_geoloc_geocode_address');
+      break;
+
+
   }
   return $block;
 }
@@ -211,6 +222,30 @@ function ip_geoloc_address_lookup($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Generates a simple form for collecting the address to be geocoded.
+ *
+ * @ingroup forms
+ */
+function ip_geoloc_geocode_address($form, &$form_state) {
+
+  $location = ip_geoloc_get_visitor_location();
+
+  $form['street_address'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Current approximate address'),
+    '#default_value' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Refine'),
+    '#submit' => array('ip_geoloc_geocode')
+  );
+  $form['#attributes']['class'][] = 'ip-geoloc-address';
+  $form['#attached']['css'][] = drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_all.css';
+  return $form;
+}
+
 function ip_geoloc_lookup($form, &$form_state) {
   $store = !empty($form_state['values']['store']);
   $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), TRUE, $store);
@@ -228,4 +263,37 @@ function ip_geoloc_lookup($form, &$form_state) {
     ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address']))
     : '';
   $form_state['rebuild'] = TRUE; // to preserve entered values and storage array
+}
+
+function ip_geoloc_geocode($form, &$form_state) {
+
+  if (empty($form_state['values']['street_address'])) {
+    return;
+  }
+  if (!module_exists('geocoder')) {
+    $form_state['rebuild'] = TRUE;
+    return;
+  }
+  $location = array('provider' => 'user/google');
+
+  // Use Google server-side API to retrieve lat/long from entered address.
+  $point = geocoder('google', $form_state['values']['street_address']);
+
+  // Flatten the point object into a straight location array.
+  foreach ($point->data['geocoder_address_components'] as $component) {
+    if (!empty($component->long_name)) {
+      $type = $component->types[0];
+      $location[$type] = $component->long_name;
+      if ($type == 'country' && !empty($component->short_name)) {
+        $location['country_code'] = $component->short_name;
+      }
+    }
+  }
+  $location['formatted_address'] = $point->data['geocoder_formatted_address'];
+  $location['latitude']  = $point->coords[1];
+  $location['longitude'] = $point->coords[0];
+
+  _ip_geoloc_set_session_value('location', $location);
+
+  $form_state['rebuild'] = FALSE;
 }
