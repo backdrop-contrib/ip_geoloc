@@ -33,9 +33,19 @@ function ip_geoloc_block_info() {
  */
 function ip_geoloc_block_configure($delta = '') {
   $form = array();
-  if ($delta == 'address_lookup' || $delta == 'geocode_address') {
+  if ($delta == 'address_lookup') {
     return $form;
   }
+  if ($delta == 'geocode_address') {
+    $form['ip_geoloc_visitor_address_editable'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Address editable'),
+      '#default_value' => variable_get('ip_geoloc_visitor_address_editable', TRUE),
+      '#description' => t('If ticked the visitor may tweak and re-submit their address. It will be geocoded to lat/long to become their new location.<br/>If not ticked, this field simply displays the current reverse-geocoded address, without a submit button.')
+    );
+    return $form;
+  }
+
   if ($delta == 'recent_visitors_map') {
     $form['ip_geoloc_recent_visitors_map_number_of_visitors'] = array(
       '#type' => 'textfield',
@@ -85,7 +95,11 @@ function ip_geoloc_block_configure($delta = '') {
  * Implements hook_block_save().
  */
 function ip_geoloc_block_save($delta = '', $edit = array()) {
-  if ($delta == 'address_lookup' || $delta == 'geocode_address') {
+  if ($delta == 'address_lookup') {
+    return;
+  }
+  if ($delta == 'geocode_address') {
+    variable_set('ip_geoloc_visitor_address_editable', $edit['ip_geoloc_visitor_address_editable']);
     return;
   }
   // Save options common to all maps
@@ -230,17 +244,21 @@ function ip_geoloc_address_lookup($form, &$form_state) {
 function ip_geoloc_geocode_address($form, &$form_state) {
 
   $location = ip_geoloc_get_visitor_location();
+  $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
 
   $form['street_address'] = array(
     '#type' => 'textfield',
     '#title' => t('Current approximate address'),
     '#default_value' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
+    '#disabled' => !$is_address_editable
   );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Refine'),
-    '#submit' => array('ip_geoloc_geocode')
-  );
+  if ($is_address_editable) {
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Refine'),
+      '#submit' => array('ip_geoloc_geocode')
+    );
+  }
   $form['#attributes']['class'][] = 'ip-geoloc-address';
   $form['#attached']['css'][] = drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_all.css';
   return $form;
@@ -265,35 +283,46 @@ function ip_geoloc_lookup($form, &$form_state) {
   $form_state['rebuild'] = TRUE; // to preserve entered values and storage array
 }
 
+/**
+ * Geocode, using the Geocoder API, the submitted street address.
+ *
+ * Stores the geocoded lat/long on the session.
+ * Modules may implement their own variations by implementing hook_form_alter()
+ * and appending their own handler to $form['#submit'].
+ *
+ * @param type $form
+ * @param array $form_state
+ */
 function ip_geoloc_geocode($form, &$form_state) {
 
-  if (empty($form_state['values']['street_address'])) {
-    return;
-  }
-  if (!module_exists('geocoder')) {
-    $form_state['rebuild'] = TRUE;
-    return;
-  }
-  $location = array('provider' => 'user/google');
+  if (module_exists('geocoder')) {
+    // Use Google server-side API to retrieve lat/long from entered address.
+    $point = geocoder('google', $form_state['values']['street_address']);
 
-  // Use Google server-side API to retrieve lat/long from entered address.
-  $point = geocoder('google', $form_state['values']['street_address']);
+    if (!$point) {
+      drupal_set_message(t('The address you entered could not be geocoded to a location.'), 'warning');
+      return;
+    }
 
-  // Flatten the point object into a straight location array.
-  foreach ($point->data['geocoder_address_components'] as $component) {
-    if (!empty($component->long_name)) {
-      $type = $component->types[0];
-      $location[$type] = $component->long_name;
-      if ($type == 'country' && !empty($component->short_name)) {
-        $location['country_code'] = $component->short_name;
+    $location = array(
+      'provider' => 'user/google',
+      'ip_address' => ip_address(),
+      'latitude' => $point->coords[1],
+      'longitude' => $point->coords[0],
+      'formatted_address' => $point->data['geocoder_formatted_address'],
+      'accuracy' => $point->data['geocoder_accuracy']
+    );
+    // Flatten the point object into a straight location array.
+    foreach ($point->data['geocoder_address_components'] as $component) {
+      if (!empty($component->long_name)) {
+        $type = $component->types[0];
+        $location[$type] = $component->long_name;
+        if ($type == 'country' && !empty($component->short_name)) {
+          $location['country_code'] = $component->short_name;
+        }
       }
     }
+    _ip_geoloc_set_session_value('location', $location);
   }
-  $location['formatted_address'] = $point->data['geocoder_formatted_address'];
-  $location['latitude']  = $point->coords[1];
-  $location['longitude'] = $point->coords[0];
-
-  _ip_geoloc_set_session_value('location', $location);
-
-  $form_state['rebuild'] = FALSE;
+  $form_state['rebuild'] = FALSE; // form always uses location from session
 }
