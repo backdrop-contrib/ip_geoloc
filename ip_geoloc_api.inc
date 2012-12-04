@@ -609,16 +609,29 @@ function ip_geoloc_distance($location, $ref_location = 'current visitor') {
  *   distance in meters
  *
  *  @see http://en.wikipedia.org/wiki/Great-circle_distance
- *    This article appears to use a slightly different algorithm.
+ *    This article recommends a slightly different formula for points less than
+ *    a km apart.
  */
 function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitude2) {
   $long1 = deg2rad($longitude1);
   $lat1  = deg2rad($latitude1);
   $long2 = deg2rad($longitude2);
   $lat2  = deg2rad($latitude2);
-  $radius = ip_geoloc_earth_radius(($latitude1 + $latitude2) / 2);
-  $cosangle = cos($lat1)*cos($lat2) * (cos($long1)*cos($long2) + sin($long1)*sin($long2)) + sin($lat1)*sin($lat2);
-  return acos($cosangle) * $radius;
+  // $long_factor = cos($long1)*cos($long2) + sin($long1)*sin($long2);
+  // This is identical to this $long_factor = cos($long1 - $long2)
+  $long_factor = cos($long1 - $long2);
+  $cosangle = cos($lat1)*cos($lat2)*$long_factor + sin($lat1)*sin($lat2);
+  $radius = ip_geoloc_earth_radius(0.5 * ($latitude1 + $latitude2));
+  $distance = acos($cosangle) * $radius;
+/*
+  if ($distance < 1000) { // see http://en.wikipedia.org/wiki/Haversine_formula
+    $sinlat = sin(0.5*($lat1 - $lat2));
+    $sinlong = sin(0.5*($long1 - $long2));
+    $sinangle = $sinlat*$sinlat + cos($long1)*cos($long2)*$sinlong*$sinlong;
+    $distance = 2.0 * asin(sqrt($sinangle)) * $radius;
+  }
+ */
+  return $distance;
 }
 
 function ip_geoloc_earth_radius($latitude) {
