@@ -609,8 +609,6 @@ function ip_geoloc_distance($location, $ref_location = 'current visitor') {
  *   distance in meters
  *
  *  @see http://en.wikipedia.org/wiki/Great-circle_distance
- *    This article recommends a slightly different formula for points less than
- *    a km apart.
  */
 function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitude2) {
   $long1 = deg2rad($longitude1);
