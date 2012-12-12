@@ -50,7 +50,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['zoom'],
-      '#description' => t('Does not apply when the auto-box option is selected.')
+      '#description' => t('Does not apply to auto-box except when only one or no markers are shown.')
     );
 
     $visitor_marker_colors = array(
@@ -165,9 +165,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lon' => $visitor_location['longitude']
       );
     }
-    if (!empty($center_option) || empty($locations)) { // i.e. NOT auto-box or no locations
-      $map['settings']['zoom'] = $zoom;
-    }
+    $map['settings']['zoom'] = $zoom;
 
     $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
     $marker_width  = (int)$marker_dimensions[0];
