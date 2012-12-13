@@ -50,7 +50,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['zoom'],
-      '#description' => t('Does not apply to auto-box except when only one or no markers are shown.')
+      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.')
     );
 
     $visitor_marker_colors = array(
@@ -165,8 +165,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lon' => $visitor_location['longitude']
       );
     }
-    $map['settings']['zoom'] = $zoom;
-
     $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
     $marker_width  = (int)$marker_dimensions[0];
     $marker_height = (int)$marker_dimensions[1];
@@ -183,8 +181,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if ($visitor_marker_color != '') {
         $visitor_feature['icon'] = array(
           'iconUrl' => $icon_path . "/$visitor_marker_color.png",
-          'iconSize' => array('x' => $marker_width, 'y' => $marker_height), // width, height
-          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center baseline
+          'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
+          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center of baseline
           'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
         );
       }
@@ -215,6 +213,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       $features[] = $feature;
     }
+    // If auto-box is chosen ($center_option==0), zoom only when there are 0 or 1 markers [#1863374]
+    if (!empty($center_option) || count($features) <= 1) {
+      $map['settings']['zoom'] = $zoom;
+    }
+
     if (!empty($cluster_radius)) {
       $map['settings']['maxClusterRadius'] = $cluster_radius;
     }
