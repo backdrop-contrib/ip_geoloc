@@ -107,10 +107,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    */
   function options_validate(&$form, &$form_state) {
     if (!is_numeric($form_state['values']['style_options']['zoom']) || $form_state['values']['style_options']['zoom'] < 0) {
-      form_error($form['zoom'], t('Zoom level must be a positive number.'));
+      form_error($form['zoom'], t('Zoom level cannot be blank and must be a non-negative number.'));
     }
-    if (!is_numeric($form_state['values']['style_options']['map_height']) || $form_state['values']['style_options']['map_height'] < 0) {
-      form_error($form['map_height'], t('Map height must be a positive number.'));
+    if (!is_numeric($form_state['values']['style_options']['map_height']) || $form_state['values']['style_options']['map_height'] <= 0) {
+      form_error($form['map_height'], t('Map height cannot be blank and must be a positive number.'));
     }
   }
 

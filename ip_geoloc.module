@@ -22,6 +22,9 @@ define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"terrain", "disabl
 
 define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
 
+define('IP_GEOLOC_RANGE_SEPARATOR1', '--'); // same as used for dates
+define('IP_GEOLOC_RANGE_SEPARATOR2', ':');  // alternative delimiter
+
 require_once 'ip_geoloc.session.inc';
 require_once 'ip_geoloc_api.inc';
 require_once 'ip_geoloc_blocks.inc';
@@ -456,6 +459,89 @@ function ip_geoloc_device_geolocation_detector_ajax_alter(&$location) {
  */
 function ip_geoloc_leaflet_map_info_alter(&$map_info) {
   return;
+}
+
+/**
+ * Determines if a value is within the supplied numeric or alphabetical range.
+ *
+ * String comparison is based on the ASCII/UTF8 order, so is case-sensitive.
+ *
+ * @param string $value
+ * @param string $range, of the form '1.5--4.5' (range is inclusive of end points)
+ * @return bool
+ */
+function ip_geoloc_is_in_range($value, $range) {
+  if (!isset($value) || !isset($range)) {
+    return FALSE;
+  }
+  if (is_array($range)) { // defensive programming to make sure we have a string
+    $range = reset($range);
+  }
+  $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR1, $range);
+  if (count($from_to) < 2) {
+    $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR2, $range);
+  }
+  if (count($from_to) == 1) { // single value
+    return trim($value) == trim($range);
+  }
+  $from = trim($from_to[0]);
+  $to = trim($from_to[1]);
+  if (empty($from) && empty($to)) { // range separator without values
+    return TRUE;
+  }
+  if (!empty($from) && !empty($to)) {
+    return ($value >= $from) && ($value <= $to);
+  }
+  if (!empty($from)) {
+    return $value >= $from;
+  }
+  return $value <= $to;
+}
+
+/**
+ * FAPI validation of a range element.
+ *
+ * We want to cover both numeric and alphabetic ranges, but do not know the
+ * whether we're dealing with numbers or strings. So this validation is as
+ * strict as it can be, not knowing that information.
+ */
+function ip_geoloc_range_widget_validate($element, &$form_state) {
+
+  $range = $element['#value'];
+
+  $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR1, $range);
+  if (count($from_to) < 2) {
+    $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR2, $range);
+  }
+  if (count($from_to) < 2) {
+    // Not a range but a single value. This is ok. If we knew we were checking
+    // for a number we would pass the input through is_numeric(), but we don't.
+    /*
+      if (!is_numeric(trim($range))) {
+        form_error($element, t('Invalid number or range.'));
+       }
+    */
+  }
+  else {
+    $from = trim($from_to[0]);
+    $to = trim($from_to[1]);
+    $ok = TRUE;
+    // If either $from or $to is numeric then assume numeric range and apply
+    // validation accordingly.
+    if (is_numeric($from) || is_numeric($to)) {
+      // If one end is numeric, then the other must also be, or be empty.
+      $ok =
+        (empty($from) && empty($to)) ||
+        (empty($from) && is_numeric($to)) || (empty($to) && is_numeric($from)) ||
+        (is_numeric($from) && is_numeric($to) && $from <= $to);
+    }
+    elseif (!empty($from) && !empty($to)) { // alphabetic range validation
+      $ok = ($from <= $to);
+    }
+    if (!$ok) {
+      form_error($element, t('Invalid range.'));
+    }
+  }
 }
 
 function ip_geoloc_debug($message, $type = 'status') {
