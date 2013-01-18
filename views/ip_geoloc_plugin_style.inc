@@ -201,11 +201,15 @@ function _ip_geoloc_plugin_style_refresh_color_table_js($form, &$form_state) {
  * Submit handler as declared in ip_geoloc_form_alter().
  */
 function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, &$form_state) {
-  if (empty($form_state['differentiator'])) {
+  if (empty($form_state['view']) || empty($form_state['display_id']) || empty($form_state['differentiator'])) {
     return;
   }
+  $view_id = $form_state['view']->name;
+  $display_id = $form_state['display_id'];
   $differentiator = $form_state['differentiator'];
-  $differentiator_color_associations = array();
+
+  $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
+
   if (!empty($form_state['values']['color_table'])) {
     $i = 0;
     foreach ($form_state['values']['color_table'] as $association) {
@@ -224,8 +228,8 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
             $differentiator_value[] = $values;
           }
           if (!empty($differentiator_value)) {
-            $differentiator_color_associations[$i]['differentiator_value'] = $differentiator_value;
-            $differentiator_color_associations[$i]['color'] = $association['color'];
+            $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = $differentiator_value;
+            $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
             $i++;
           }
         }
@@ -233,15 +237,14 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
       else { // plain text field
         $differentiator_value = trim($association[$differentiator]);
         if (!empty($differentiator_value)) {
-          $differentiator_color_associations[$i]['differentiator_value'] = array($differentiator_value);
-          $differentiator_color_associations[$i]['color'] = $association['color'];
+          $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = array($differentiator_value);
+          $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
           $i++;
         }
       }
     }
   }
-  // @todo Do not assume that all View displays use the same differentiator.
-  variable_set('ip_geoloc_' . $form_state['view']->name . '_' . $differentiator . '_color_mappings', $differentiator_color_associations);
+  variable_set('ip_geoloc_' . $view_id . '_color_mappings', $differentiator_color_associations);
 }
 
 function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_state) {
@@ -251,10 +254,16 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
   // First the saved rows...
   // @todo: if $field['cardinality'] > 1, compress multiple differentiator values
   // for the same color together in a single row
+  $view_id = $form_state['view']->name;
+  $display_id = $form_state['display_id'];
   $differentiator = $form_state['differentiator'];
+
+  $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
+  if (empty($differentiator_color_associations[$display_id])) {
+    $differentiator_color_associations[$display_id] = array($differentiator => array());
+  }
   $row = 0;
-  $differentiator_color_associations = variable_get('ip_geoloc_' . $form_state['view']->name . '_' . $differentiator . '_color_mappings', array('' => 'red'));
-  foreach ($differentiator_color_associations as $association) {
+  foreach ($differentiator_color_associations[$display_id][$differentiator] as $association) {
     if (!is_array($association)) { // data corrupt
       break;
     }
@@ -266,7 +275,7 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
   }
   // ... then the empty rows
   if (!isset($form_state['num_associations'])) {
-    $form_state['num_associations'] = count($differentiator_color_associations);
+    $form_state['num_associations'] = count($differentiator_color_associations[$display_id][$differentiator]);
   }
   while ($row < $form_state['num_associations']) {
     $form['differentiator']['color_table'][$row] = _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row, $differentiator);
@@ -291,7 +300,6 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
     if (isset($instance['widget']['settings']['size']) && $instance['widget']['settings']['size'] < 15) {
       $instance['widget']['settings']['size'] = 15;
     }
-
     $items[0] = empty($differentiator_value)
       ? array()
       : is_array($differentiator_value) ? $differentiator_value : array($differentiator_value);
@@ -302,7 +310,7 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
     $form['#parents'] = array();
     $form_state = array();
 
-    $form = field_default_form($instance['entity_type'], NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state, 0);
+    $form = field_default_form($instance['entity_type'], NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
 
     if ($field['module'] == 'number' || $field['module'] == 'text') {
       $form[$differentiator][LANGUAGE_NONE][0][key($field['columns'])]['#element_validate'] = array('ip_geoloc_range_widget_validate');
@@ -397,15 +405,17 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $latitude  = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude' ]);
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
 
-  if (empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
-    $differentiator_name = NULL;
-    $differentiator_color_associations = array();
-  }
-  else {
-    $differentiator_name = $views_plugin_style->options['differentiator']['differentiator_field'];
-    $differentiator_color_associations = variable_get('ip_geoloc_' . $views_plugin_style->view->name . '_' . $differentiator_name . '_color_mappings', array());
-  }
+  $view_id = $views_plugin_style->view->name;
+  $display_id = $views_plugin_style->display->id;
+  $differentiator = FALSE;
 
+  if (!empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
+    $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
+    $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
+    if (empty($differentiator_color_associations[$display_id])) {
+      $differentiator_color_associations[$display_id] = array($differentiator => array());
+    }
+  }
   $locations = array();
   foreach ($views_plugin_style->view->result as $i => $row) {
 
@@ -416,8 +426,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       if (!empty($views_plugin_style->rendered_fields[$i])) {
         $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
       }
-
-      _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator_name, $differentiator_color_associations);
+      if ($differentiator) {
+        _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
+      }
       $locations[] = $location;
     }
   }
@@ -494,15 +505,15 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   return isset($location->latitude) ? $location : NULL;
 }
 
-function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator_name, $differentiator_color_associations) {
+function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator, $differentiator_color_associations) {
 
-  if (!empty($differentiator_name)) {
+  if (!empty($differentiator)) {
 
-    if (!empty($row->{$differentiator_name})) {
-      $differentiator_value = $row->{$differentiator_name};
+    if (!empty($row->{$differentiator})) {
+      $differentiator_value = $row->{$differentiator};
     }
-    elseif (!empty($row->{'field_' . $differentiator_name})) {
-      $differentiator_values = $row->{'field_' . $differentiator_name};
+    elseif (!empty($row->{'field_' . $differentiator})) {
+      $differentiator_values = $row->{'field_' . $differentiator};
       if (is_array($differentiator_values)) {
         $num_values = count($differentiator_values); // > 1 for taxonomy term with lineage
         if (isset($differentiator_values[0]['raw'])) {
@@ -515,9 +526,9 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
     }
     else {
       $differentiator_value = '';
-      if (!isset($row->{'field_' . $differentiator_name})) {
+      if (!isset($row->{'field_' . $differentiator})) {
         drupal_set_message(t('IP Geolocation Views and Maps: wrong differentiator? No differentiator values found for %diff. Cannot set marker colors.', array(
-          '%diff' => $differentiator_name)), 'warning', FALSE);
+          '%diff' => $differentiator)), 'warning', FALSE);
       }
     }
     if (!empty($differentiator_value)) {
