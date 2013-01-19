@@ -259,7 +259,7 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
   $differentiator = $form_state['differentiator'];
 
   $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
-  if (empty($differentiator_color_associations[$display_id])) {
+  if (empty($differentiator_color_associations[$display_id][$differentiator])) {
     $differentiator_color_associations[$display_id] = array($differentiator => array());
   }
   $row = 0;
@@ -527,7 +527,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
     else {
       $differentiator_value = '';
       if (!isset($row->{'field_' . $differentiator})) {
-        drupal_set_message(t('IP Geolocation Views and Maps: wrong differentiator? No differentiator values found for %diff. Cannot set marker colors.', array(
+        drupal_set_message(t('IP Geolocation Views and Maps: no differentiator values found for %diff. Cannot set marker colors.', array(
           '%diff' => $differentiator)), 'warning', FALSE);
       }
     }
@@ -604,8 +604,16 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
           if ($views_plugin_style->view->field[$field_id]->options['element_label_colon']) {
             $label .= ': ';
           }
-          $views_plugin_style->rendered_fields[$i][$field_id] =
-            $element . $label . $close_element . ' ' . $views_plugin_style->view->field[$field_id]->theme($row);
+          $field_value = $views_plugin_style->view->field[$field_id]->theme($row);
+          // Add to the raw results set, so that the differentiator can pick it up
+          if (strpos($field_id, 'expression') === 0) {
+            $field_expr = 'views_' . $field_id; // eg 'views_expression_1'
+            if (empty($views_plugin_style->view->result[$i]->{$field_expr})) {
+              $views_plugin_style->view->result[$i]->{$field_expr} = array();
+            }
+            $views_plugin_style->view->result[$i]->{$field_expr}[] = $field_value;
+          }
+          $views_plugin_style->rendered_fields[$i][$field_id] = $element . $label . $close_element . ' ' . $field_value;
         } // otherwise render with no label
         else {
           $views_plugin_style->rendered_fields[$i][$field_id] = $views_plugin_style->view->field[$field_id]->theme($row);
