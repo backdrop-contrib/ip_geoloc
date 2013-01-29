@@ -138,6 +138,17 @@ ip_geoloc_visitor_marker_layer1 and/or ip_geoloc_marker_layer. Same for
 the same page are "Full Screen", "Layer Switcher", "Pan and Zoom Bar Controls"
 and "Scale Line".
 
+ALTERNATIVE MARKER ICONS (LEAFLET, GOOGLE MAPS)
+===============================================
+Find on the web a marker icon set you like, eg http://mapicons.nicolasmollet.com
+Download and extract the icon image files, which must have extension .png, into
+a directory anywhere in your Drupal instal, e.g. sites/default/files/map_markers.
+Now visit the the IP Geolocation Views and Maps configuration page at
+admin/config/system/ip_geoloc. Expand the "Alternative markers" fieldset.
+Enter the path to your map_markers directory and the dimensions of your markers.
+The marker set will now be available in your map settings, in particular in the
+differentiator settings.
+
 UTILITY FUNCTIONS
 =================
 First of all, check out file ip_geoloc_api.inc for a number of useful utility
