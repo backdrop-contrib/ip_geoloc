@@ -116,6 +116,29 @@ function ip_geoloc_openlayers_layers() {
 }
 
 /**
+ * Implements hook_openlayers_layer_types().
+ *
+ * Allows user to change the title and save the layer.
+ *
+ * See http://drupal.org/node/1824696
+ */
+function ip_geoloc_openlayers_layer_types() {
+  return array(
+    'openlayers_layer_type_MY_MODULE' => array(
+      'title' => t('Raw'),
+      'description' => t('Layer type for raw data input'),
+      'type' => 'layer',
+      'path' => drupal_get_path('module', 'openlayers') . '/plugins/layer_types',
+      'file' => 'openlayers_layer_type_raw.inc',
+      'layer_type' => array(
+        'class' => 'openlayers_layer_type_raw',
+        'parent' => 'openlayers_layer_type',
+      )
+    )
+  );
+}
+
+/**
  * Implements hook_openlayers_map_alter().
  *
  * Called at the end of openlayers_build_map().
