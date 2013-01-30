@@ -486,13 +486,13 @@ function ip_geoloc_is_in_range($value, $range) {
   }
   $from = trim($from_to[0]);
   $to = trim($from_to[1]);
-  if (empty($from) && empty($to)) { // range separator without values
+  if ($from == '' && $to == '') { // range separator without values
     return TRUE;
   }
-  if (!empty($from) && !empty($to)) {
+  if ($from != '' && $to != '') {
     return ($value >= $from) && ($value <= $to);
   }
-  if (!empty($from)) {
+  if ($from != '') {
     return $value >= $from;
   }
   return $value <= $to;

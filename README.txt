@@ -95,6 +95,23 @@ of 10 most recent visitors" should now show more markers.
 with a larger batch size until the IP Geolocation database is up to date with
 the access log. It will automatically remain in synch from now on.
 
+CONFIGURING YOUR VIEW TO DISPLAY AS A MAP
+=========================================
+If you have one of the Location, Geofield, Geolocation Field or Get Locations
+modules enabled, then first create a normal tabular content View of nodes that
+hold location coordinates via one of these modules. The coordinates will show up
+in the Field list of your View.
+Unless you use the Location module (with User Locations or Node Locations), make
+sure you have included in your view's field selection a field named "Content:
+your_Geofield/Geolocation_field". Only one copy is required, you do NOT need
+both a latitude version plus a longitude version. The "Formatter", if it pops
+up, is relevant only if you want the location field to appear in the marker
+balloons.
+Then, after selecting the View Format "Map (Google, via IP Geolocation)", "Map
+(Leaflet, via IP Geolocation)" or "Map (OpenLayers, via IP Geolocation)" enter
+field_name in the "Name of latitude field in Views query".
+Fill out the remaining options to your liking. Save. Done.
+
 LEAFLET TIPS
 ============
 You need to download and install the Leaflet package on your system, but you
