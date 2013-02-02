@@ -106,8 +106,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    * Validate the options form.
    */
   function options_validate(&$form, &$form_state) {
-    if (!is_numeric($form_state['values']['style_options']['zoom']) || $form_state['values']['style_options']['zoom'] < 0) {
-      form_error($form['zoom'], t('Zoom level cannot be blank and must be a non-negative number.'));
+    if ($form_state['values']['style_options']['zoom'] != '' && (!is_numeric($form_state['values']['style_options']['zoom']) || $form_state['values']['style_options']['zoom'] < 0)) {
+      form_error($form['zoom'], t('Zoom level must be a non-negative number.'));
     }
     if (!is_numeric($form_state['values']['style_options']['map_height']) || $form_state['values']['style_options']['map_height'] <= 0) {
       form_error($form['map_height'], t('Map height cannot be blank and must be a positive number.'));
@@ -263,7 +263,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 function ip_geoloc_plugin_style_leaflet_map_get_info($map_name = NULL) {
   return leaflet_map_get_info($map_name);
 }
-
 
 function _ip_geoloc_plugin_style_leaflet_compare($location1, $location2) {
   $weight1 = empty($location1->weight) ? 0 : $location1->weight;
