@@ -214,7 +214,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $features[] = $feature;
     }
     // If auto-box is chosen ($center_option==0), zoom only when there are 0 or 1 markers [#1863374]
-    if (!empty($center_option) || count($features) <= 1) {
+    if (empty($center_option) && count($features) > 1) {
+      unset($map['settings']['zoom']);
+    }
+    else {
       $map['settings']['zoom'] = $zoom;
     }
 
