@@ -124,7 +124,7 @@ function ip_geoloc_openlayers_layers() {
  */
 function ip_geoloc_openlayers_layer_types() {
   return array(
-    'openlayers_layer_type_MY_MODULE' => array(
+    'openlayers_layer_type_ip_geoloc' => array(
       'title' => t('Raw'),
       'description' => t('Layer type for raw data input'),
       'type' => 'layer',
