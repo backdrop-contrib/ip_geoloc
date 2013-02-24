@@ -236,10 +236,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     drupal_add_js(array('leaflet' => array($settings)), 'setting');
     drupal_add_library('leaflet', 'leaflet');
+    // This is hacky but can't see another way to conditionally load
+    // Leaflet More Map js (for Retina support).
+    if (function_exists('leaflet_more_maps_preprocess_leaflet_map')) {
+      $vars = array();
+      leaflet_more_maps_preprocess_leaflet_map($vars);
+    }
 
     if (!empty($cluster_radius)) {
-      // This is hacky but can't see another way to conditionally load Leaflet
-      // MarkerCluster library
       if (module_exists('leaflet_markercluster')) {
         $vars = array();
         leaflet_markercluster_preprocess_leaflet_map($vars);
