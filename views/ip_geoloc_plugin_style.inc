@@ -577,45 +577,45 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
     return;
   }
   if (!isset($views_plugin_style->rendered_fields)) {
+    $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
     $views_plugin_style->rendered_fields = array();
     $field_ids = array_keys($views_plugin_style->view->field);
-    foreach ($views_plugin_style->view->result as $i => $row) {
+    
+    foreach ($views_plugin_style->view->result as $i => &$row) {
       $views_plugin_style->view->row_index = $i; // God knows why we need this...
       foreach ($field_ids as $field_id) {
         $field_value = $views_plugin_style->view->field[$field_id]->theme($row);
-        // When "Excluded" is ticked for the field, we use the above theme()
-        // call only for its side-effect: to render tokens used in other fields.
+        if ('views_' . $field_id == $differentiator && empty($row->{$differentiator})) {
+          $row->{$differentiator}[] = $field_value;
+        }
+        // When "Excluded" is ticked for the field, we use the above theme($row)
+        // result only for its side-effect: to render tokens used in other
+        // fields.
         if ($views_plugin_style->view->field[$field_id]->options['exclude']) {
           continue;
         }
         // Add the field label if it's provided
         $label = $views_plugin_style->view->field[$field_id]->label();
-        $element = '';
-        $close_element = '';
         if ($label) {
-          $label_type = $views_plugin_style->view->field[$field_id]->options['element_label_type'];
+          $options = $views_plugin_style->view->field[$field_id]->options;
+          if ($options['element_label_colon']) {
+            $label .= ': ';
+          }
+          $label_type = $options['element_label_type'];
           if ($label_type) {
             $label_type = check_plain($label_type);
             $element = '<' . $label_type;
-            $label_class = $views_plugin_style->view->field[$field_id]->options['element_label_class'];
+            $label_class = $options['element_label_class'];
             if ($label_class) {
               $element .= ' class="' . check_plain($label_class) . '"';
             }
             $element .= '>';
             $close_element = '</' . $label_type . '>';
           }
-          if ($views_plugin_style->view->field[$field_id]->options['element_label_colon']) {
-            $label .= ': ';
+          else {
+            $element = $close_element = '';
           }
-          // Add to the raw results set, so that the differentiator can pick it up
-          if (strpos($field_id, 'expression') === 0) {
-            $field_expr = 'views_' . $field_id; // eg 'views_expression_1'
-            if (empty($views_plugin_style->view->result[$i]->{$field_expr})) {
-              $views_plugin_style->view->result[$i]->{$field_expr} = array();
-            }
-            $views_plugin_style->view->result[$i]->{$field_expr}[] = $field_value;
-          }
-          $field_value = $element . $label . $close_element . ' ' . $field_value;
+          $field_value = $element . $label . $close_element . $field_value;
         }
         $views_plugin_style->rendered_fields[$i][$field_id] = $field_value;
       }
@@ -627,8 +627,9 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
 
 function ip_geoloc_get_display_fields($view_display) {
   $fields = array('' => '<' . t('none') . '>');
-  foreach ($view_display->get_handlers('field') as $field_id => $field_handler) {
-    if (drupal_substr($field_id, 0, 6) != 'field_') {
+  $field_handlers = $view_display->get_handlers('field');
+  foreach ($field_handlers as $field_id => $field_handler) {
+    if (strpos($field_id, 'field_') === FALSE) {
       // Example: 'title' becomes 'node_title'
       $field_id = $field_handler->table . "_$field_id";
     }
