@@ -70,7 +70,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   }
   else {
     $description = t('Below associate %differentiator values with marker colors on the map.', array(
-      '%differentiator' => isset($instance) ? $instance['label'] : $fields[$differentiator]
+      '%differentiator' => empty($instance) ? $fields[$differentiator] :  $instance['label']
     )) . '<br/>';
     $field = field_info_field($differentiator);
     if (!$field || $field['module'] == 'text') {
@@ -582,6 +582,9 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
     foreach ($views_plugin_style->view->result as $i => $row) {
       $views_plugin_style->view->row_index = $i; // God knows why we need this...
       foreach ($field_ids as $field_id) {
+        $field_value = $views_plugin_style->view->field[$field_id]->theme($row);
+        // When "Excluded" is ticked for the field, we use the above theme()
+        // call only for its side-effect: to render tokens used in other fields.
         if ($views_plugin_style->view->field[$field_id]->options['exclude']) {
           continue;
         }
@@ -604,7 +607,6 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
           if ($views_plugin_style->view->field[$field_id]->options['element_label_colon']) {
             $label .= ': ';
           }
-          $field_value = $views_plugin_style->view->field[$field_id]->theme($row);
           // Add to the raw results set, so that the differentiator can pick it up
           if (strpos($field_id, 'expression') === 0) {
             $field_expr = 'views_' . $field_id; // eg 'views_expression_1'
@@ -613,13 +615,10 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
             }
             $views_plugin_style->view->result[$i]->{$field_expr}[] = $field_value;
           }
-          $views_plugin_style->rendered_fields[$i][$field_id] = $element . $label . $close_element . ' ' . $field_value;
-        } // otherwise render with no label
-        else {
-          $views_plugin_style->rendered_fields[$i][$field_id] = $views_plugin_style->view->field[$field_id]->theme($row);
+          $field_value = $element . $label . $close_element . ' ' . $field_value;
         }
+        $views_plugin_style->rendered_fields[$i][$field_id] = $field_value;
       }
-      //$views_plugin_style->row_tokens[$i] = $views_plugin_style->view->field[$field_id]->get_render_tokens(array());
     }
     unset($views_plugin_style->view->row_index);
   }
