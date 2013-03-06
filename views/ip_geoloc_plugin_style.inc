@@ -584,28 +584,29 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
     foreach ($views_plugin_style->view->result as $i => &$row) {
       $views_plugin_style->view->row_index = $i; // God knows why we need this...
       foreach ($field_ids as $field_id) {
-        $field_value = $views_plugin_style->view->field[$field_id]->theme($row);
+        $field = $views_plugin_style->view->field[$field_id];
+        $field_value = $field->theme($row);
         if ('views_' . $field_id == $differentiator && empty($row->{$differentiator})) {
           $row->{$differentiator}[] = $field_value;
         }
         // When "Excluded" is ticked for the field, we use the above theme($row)
         // result only for its side-effect: to render tokens used in other
         // fields.
-        if ($views_plugin_style->view->field[$field_id]->options['exclude']) {
+        $field_options = $field->options;
+        if ($field_options['exclude']) {
           continue;
         }
         // Add the field label if it's provided
-        $label = $views_plugin_style->view->field[$field_id]->label();
+        $label = $field->label();
         if ($label) {
-          $options = $views_plugin_style->view->field[$field_id]->options;
-          if ($options['element_label_colon']) {
+          if ($field_options['element_label_colon']) {
             $label .= ': ';
           }
-          $label_type = $options['element_label_type'];
+          $label_type = $field_options['element_label_type'];
           if ($label_type) {
             $label_type = check_plain($label_type);
             $element = '<' . $label_type;
-            $label_class = $options['element_label_class'];
+            $label_class = $field_options['element_label_class'];
             if ($label_class) {
               $element .= ' class="' . check_plain($label_class) . '"';
             }
