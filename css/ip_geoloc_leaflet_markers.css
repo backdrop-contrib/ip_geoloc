@@ -1,0 +1,21 @@
+.leaflet-tagged-marker div {
+  position: relative;
+  font-size: 10px;
+  top: -31px;
+  left: -31px;
+  min-width: 60px;
+  text-align: center;
+  height: 0;  /* so that tag doesn't affect position of marker */
+}
+.leaflet-tagged-marker .tag-above-marker {
+  top: -48px;
+  color: red;
+}
+.leaflet-tagged-marker .tag-below-marker {
+  top: -1px;
+  color: red;
+  z-index: 3000;
+}
+.leaflet-tagged-marker .tag-inside-marker {
+  /* z-index: 1; /* needed if img follows tag */
+}

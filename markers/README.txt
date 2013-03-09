@@ -1,21 +1,22 @@
 
-Marker images for "IP Gelocation Views and maps" module
+Marker images for "IP Gelocation Views and Maps" module
 =======================================================
 
-All you need to do to add a new marker image to your set of Google Map markers
-is to drop a new .png image file in the /markers folder.
+All you need to do to add a new marker image to your set of markers is drop a
+new .png image file in the /markers folder.
 
-In order for the image to align exactly with its location beware of the
-following:
-o image size is expected to be 20-21 pixels wide by 34 pixels high
-o the anchor point of all marker images is expected to be at (10,34), i.e. on
-  the bottom border of the image, centered.
+The markers in this directory are all 21 pixels wide. If you wish to use
+markers of different dimensions you can do so by specifying an alternative
+marker directory and marker dimensions on the module configuration page.
+
+The anchor point of all marker images is expected to be in the centre of the 
+bottom border of the image.
 
 Note: images in this folder are NOT used when you elect OpenLayers for your maps.
-OpenLayers has its own set of markers, see the admin/structure/openlayers/maps
-page and click edit or clone to open one of your maps. Then click the vertical
-tab "Layers & Styles" to view available marker styles in the "Overlay layers"
+OpenLayers has its own set of markers. On the admin/structure/openlayers/maps
+page click edit or clone to open one of your maps. Then click the vertical tab
+"Layers & Styles" to view available marker styles in the "Overlay layers"
 section of the page.
 
 ACKNOWLEDGEMENT:
-The markers in this directory were kindly copied from the GMap module.
+Most of the markers in this directory were kindly copied from the GMap module.

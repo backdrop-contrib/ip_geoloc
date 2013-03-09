@@ -61,7 +61,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#suffix' => '</div>'
   );
 
-  $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler);
+  $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler, TRUE);
   $instances = ip_geoloc_get_field_instances($differentiator);
   $instance = reset($instances);
 
@@ -408,12 +408,20 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $view_id = $views_plugin_style->view->name;
   $display_id = $views_plugin_style->display->id;
   $differentiator = FALSE;
+  $marker_tag = FALSE;
 
   if (!empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
     $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
     $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
     if (empty($differentiator_color_associations[$display_id])) {
       $differentiator_color_associations[$display_id] = array($differentiator => array());
+    }
+  }
+  $marker_field = FALSE;
+  if (isset($views_plugin_style->options['tags']['marker_tag'])) {
+    $marker_tag = $views_plugin_style->options['tags']['marker_tag'];
+    if (isset($views_plugin_style->view->field[$marker_tag])) {
+      $marker_field = $views_plugin_style->view->field[$marker_tag];
     }
   }
   $locations = array();
@@ -428,6 +436,10 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       }
       if ($differentiator) {
         _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
+      }
+      if ($marker_field) {
+        $views_plugin_style->view->row_index = $i; // don't know why this is required
+        $location->marker_tag = $marker_field->theme($row);
       }
       $locations[] = $location;
     }
@@ -561,7 +573,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
 }
 
 /**
- * Perform token replacement, convert timestamps to date strings etc. for
+ * Perform token replacement, convert timestamps to date strings etc.
  *
  * Store the rendered rows on the object passed in, which will typically be an
  * instance of class views_plugin_style or subclass.
@@ -570,7 +582,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
  *
  * @param $views_plugin_style
  * @param $result
- *   The result array on the view, e.g.
+ *   The rendered_fields array
  */
 function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   if (!$views_plugin_style->uses_fields()) {
@@ -578,6 +590,10 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   }
   if (!isset($views_plugin_style->rendered_fields)) {
     $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
+    $marker_tag = FALSE;
+    if (isset($views_plugin_style->options['tags']['marker_tag'])) {
+      $marker_tag = $views_plugin_style->options['tags']['marker_tag'];
+    }
     $views_plugin_style->rendered_fields = array();
     $field_ids = array_keys($views_plugin_style->view->field);
     
@@ -585,18 +601,23 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       $views_plugin_style->view->row_index = $i; // God knows why we need this...
       foreach ($field_ids as $field_id) {
         $field = $views_plugin_style->view->field[$field_id];
+        // This also renders the tokens that may be used in the balloon fields.
         $field_value = $field->theme($row);
-        if ('views_' . $field_id == $differentiator && empty($row->{$differentiator})) {
-          $row->{$differentiator}[] = $field_value;
+
+        // Add the special 'views_' fields that normally aren't in the results
+        // set to the row, if required for the $differentiator.
+        $special_field_id = 'views_' . $field_id;
+        if ($special_field_id == $differentiator && empty($row->{$special_field_id})) {
+          $row->{$special_field_id}[] = $field_value;
         }
-        // When "Excluded" is ticked for the field, we use the above theme($row)
-        // result only for its side-effect: to render tokens used in other
-        // fields.
+
+        // If Excluded is ticked, the field does not require a label and does
+        // not need to be added to the rendered_fields array.
         $field_options = $field->options;
         if ($field_options['exclude']) {
           continue;
         }
-        // Add the field label if it's provided
+        // Add the field label if provided
         $label = $field->label();
         if ($label) {
           if ($field_options['element_label_colon']) {
@@ -612,11 +633,11 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
             }
             $element .= '>';
             $close_element = '</' . $label_type . '>';
+            $field_value = $element . $label . $close_element . $field_value;
           }
           else {
-            $element = $close_element = '';
+            $field_value = $label . $field_value;
           }
-          $field_value = $element . $label . $close_element . $field_value;
         }
         $views_plugin_style->rendered_fields[$i][$field_id] = $field_value;
       }
@@ -626,11 +647,11 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   return $views_plugin_style->rendered_fields;
 }
 
-function ip_geoloc_get_display_fields($view_display) {
+function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE) {
   $fields = array('' => '<' . t('none') . '>');
   $field_handlers = $view_display->get_handlers('field');
   foreach ($field_handlers as $field_id => $field_handler) {
-    if (strpos($field_id, 'field_') === FALSE) {
+    if ($with_table_prefixes && strpos($field_id, 'field_') === FALSE) {
       // Example: 'title' becomes 'node_title'
       $field_id = $field_handler->table . "_$field_id";
     }
