@@ -590,10 +590,6 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   }
   if (!isset($views_plugin_style->rendered_fields)) {
     $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
-    $marker_tag = FALSE;
-    if (isset($views_plugin_style->options['tags']['marker_tag'])) {
-      $marker_tag = $views_plugin_style->options['tags']['marker_tag'];
-    }
     $views_plugin_style->rendered_fields = array();
     $field_ids = array_keys($views_plugin_style->view->field);
     

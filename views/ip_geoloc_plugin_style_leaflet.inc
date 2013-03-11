@@ -33,6 +33,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
     $options['tags'] = array('contains' => array(
       'marker_tag' => array('default' => ''),
+      'tag_only' => array('default' => FALSE),
       'tag_css_class' => array('default' => 'tag-inside-marker')
     ));
     return $options;
@@ -108,20 +109,28 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form['tags'] = array(
       '#title' => t('Marker tags'),
       '#type' => 'fieldset',
-      '#description' => t('In addition to its balloon each marker may have its own tag. A tag is a number or short text shown above, below or inside the marker.<br/>Does not work with the default marker.'),
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($this->options['tags']['marker_tag']),
+      '#description' => t('In addition to its balloon each marker may have its own tag. A tag is a number or short text shown above, below or inside the marker.<br/>Select a suitable default location marker above, unless you tick <em>Show tags without markers</em>.'),
     );
     $form['tags']['marker_tag'] = array(
-      '#title' => t('Views field used to populate marker tags'),
+      '#title' => t('Views field used to populate tags'),
       '#type' => 'select',
       '#default_value' => $this->options['tags']['marker_tag'],
       '#options' => $fields,
-      '#description' => t('Use "Global: View result counter" if you want to number your markers.'),
+      '#description' => t('Example: "Content: Title". Use "Global: View result counter" if you want to number your locations.'),
+    );
+    $form['tags']['tag_only'] = array(
+      '#title' => t('Show tags without markers'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['tags']['tag_only'],
+      '#description' => t('If ticked tags will be output without their marker icons.'),
     );
     $form['tags']['tag_css_class'] = array(
       '#title' => t('Tag position and style'),
       '#type' => 'textfield',
       '#default_value' => $this->options['tags']['tag_css_class'],
-      '#description' => t('The name you enter is the CCS class applied to each tag. CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. You may create your own CSS classes and use them here.'),
+      '#description' => t('The CCS class or classes applied to each tag. <br/>Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. <br/>If you tick <em>Show tags without markers</em> you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. <br/>You may also create your own CSS classes and use them here.'),
     );
   }
 
@@ -159,8 +168,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
     $marker_tag = $this->options['tags']['marker_tag'];
-    $tag_css_class = $this->options['tags']['tag_css_class'];
-
+    $tag_css_classes = $this->options['tags']['tag_css_class'];
+    $tag_only = $this->options['tags']['tag_only'];
+    
     $module_path = drupal_get_path('module', 'ip_geoloc');
     $icon_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
     $icon_path = file_create_url($icon_path);
@@ -227,7 +237,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       );
       if (!empty($location->marker_tag)) {
         $feature['tag'] = $location->marker_tag;
-        $feature['cssClass'] = $tag_css_class;
+      }
+      if (!empty($tag_css_classes)) {
+        $feature['cssClass'] = $tag_css_classes;
+      }
+      // Whether the 'tag' is to be shown by itself or with its marker
+      if (!empty($tag_only)) {
+        $feature['tagOnly'] = $tag_only;
       }
       if (!empty($location->marker_color) || !empty($marker_color)) {
         // Switch from default icon

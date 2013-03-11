@@ -12,8 +12,14 @@
     this.bounds.push(latLng);
     var lMarker;
 
-    if (marker.icon) {
-      var icon = new L.Icon.Tagged(marker.tag, marker.cssClass, {iconUrl: marker.icon.iconUrl});
+    if (marker.tagOnly) {
+      var icon = new L.DivIcon({html: marker.tag, className: marker.cssClass});
+      // Prevent div style tag being set, so that upper left corner becomes anchor.
+      icon.options.iconSize = null;
+      lMarker = new L.Marker(latLng, {icon: icon});
+    }
+    else if (marker.icon) {
+      var icon = new L.Icon.Tagged(marker.tag, {iconUrl: marker.icon.iconUrl, className: marker.cssClass});
       // override applicable marker defaults
       if (marker.icon.iconSize) {
         icon.options.iconSize = new L.Point(parseInt(marker.icon.iconSize.x), parseInt(marker.icon.iconSize.y));
@@ -33,7 +39,7 @@
       if (marker.icon.shadowAnchor) {
         icon.options.shadowAnchor = new L.Point(parseInt(marker.icon.shadowAnchor.x), parseInt(marker.icon.shadowAnchor.y));
       }
-      lMarker = new L.Marker(latLng, {icon:icon});
+      lMarker = new L.Marker(latLng, {icon: icon});
     }
     else {
       lMarker = new L.Marker(latLng);
@@ -45,10 +51,9 @@
 
 L.Icon.Tagged = L.Icon.extend({
 
-  initialize: function (tag, cssClass, options) {
+  initialize: function (tag, options) {
     L.Icon.prototype.initialize.apply(this, [options]);
     this._tag = tag;
-    this._cssClass = cssClass;
   },
  
   // Create an icon as per normal, but wrap it in an outerdiv together with the tag.
@@ -56,8 +61,8 @@ L.Icon.Tagged = L.Icon.extend({
     var img = this._createIcon('icon');
     var tag = document.createElement('div');
     tag.innerHTML = this._tag;
-    if (this._cssClass) {
-      tag.setAttribute('class', this._cssClass);
+    if (this.options.className) {
+      tag.setAttribute('class', this.options.className);
     }
     var outer = document.createElement('div');
     outer.setAttribute('class', 'leaflet-tagged-marker');
