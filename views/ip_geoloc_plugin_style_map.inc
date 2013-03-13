@@ -64,9 +64,11 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#title' => t('Map options'),
       '#type' => 'textfield',
       '#size' => 127,
+      '#maxlength' => 511,
       '#default_value' => $this->options['map_options'],
-      '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your (double) quotes match.", array(
+      '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your (double) quotes match.<br/>These options apply a grey hue to all roads:<br/>%example_options", array(
         '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
+        '%example_options' => IP_GEOLOC_EXAMPLE_MAP_OPTIONS,
         '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
     );
 
@@ -74,6 +76,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#title' => t('Map style (CSS attributes)'),
       '#type' => 'textfield',
       '#size' => 127,
+      '#maxlength' => 511,
       '#default_value' => $this->options['map_div_style'],
       '#description' => t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.',
         array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
