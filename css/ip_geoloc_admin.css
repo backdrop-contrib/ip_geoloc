@@ -8,11 +8,15 @@ select.marker-color.gmap option {
   padding: 9px 0 11px 27px;
 }
 
-select.marker-color.gmap option[value="Drupal"] {
+select.marker-color.gmap option[value="drupal"] {
   background: url(../markers/Drupal.png) no-repeat 2px 1px;
 }
 select.marker-color.gmap option[value="blue"] {
   background: url(../markers/blue.png) no-repeat 2px 1px;
+}
+select.marker-color.gmap option[value="blue with hole"] {
+  background: url("../markers/blue with hole.png") no-repeat 0px 0px;
+  height: 22px;
 }
 select.marker-color.gmap option[value="green"] {
   background: url(../markers/green.png) no-repeat 2px 1px;
