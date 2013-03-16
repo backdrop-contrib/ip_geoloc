@@ -585,62 +585,87 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
  *   The rendered_fields array
  */
 function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
-  if (!$views_plugin_style->uses_fields()) {
+  if (!$views_plugin_style->uses_fields() || isset($views_plugin_style->rendered_fields)) {
     return;
   }
-  if (!isset($views_plugin_style->rendered_fields)) {
-    $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
-    $views_plugin_style->rendered_fields = array();
-    $field_ids = array_keys($views_plugin_style->view->field);
-    
-    foreach ($views_plugin_style->view->result as $i => &$row) {
-      $views_plugin_style->view->row_index = $i; // God knows why we need this...
-      foreach ($field_ids as $field_id) {
-        $field = $views_plugin_style->view->field[$field_id];
-        // This also renders the tokens that may be used in the balloon fields.
-        $field_value = $field->theme($row);
+  $views_plugin_style->rendered_fields = array();
+  $field_ids = array_keys($views_plugin_style->view->field);
+  $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
 
-        // Add the special 'views_' fields that normally aren't in the results
-        // set to the row, if required for the $differentiator.
-        $special_field_id = 'views_' . $field_id;
-        if ($special_field_id == $differentiator && empty($row->{$special_field_id})) {
-          $row->{$special_field_id}[] = $field_value;
-        }
+  foreach ($views_plugin_style->view->result as $i => &$row) {
+    $views_plugin_style->view->row_index = $i; // God knows why we need this...
+    foreach ($field_ids as $field_id) {
+      $field = $views_plugin_style->view->field[$field_id];
+      // theme() also renders the tokens that may be used in the balloon fields.
+      $field_value = $field->theme($row);
 
-        // If Excluded is ticked, the field does not require a label and does
-        // not need to be added to the rendered_fields array.
-        $field_options = $field->options;
-        if ($field_options['exclude']) {
-          continue;
-        }
-        // Add the field label if provided
-        $label = $field->label();
-        if ($label) {
-          if ($field_options['element_label_colon']) {
-            $label .= ': ';
-          }
-          $label_type = $field_options['element_label_type'];
-          if ($label_type) {
-            $label_type = check_plain($label_type);
-            $element = '<' . $label_type;
-            $label_class = $field_options['element_label_class'];
-            if ($label_class) {
-              $element .= ' class="' . check_plain($label_class) . '"';
-            }
-            $element .= '>';
-            $close_element = '</' . $label_type . '>';
-            $field_value = $element . $label . $close_element . $field_value;
-          }
-          else {
-            $field_value = $label . $field_value;
-          }
-        }
-        $views_plugin_style->rendered_fields[$i][$field_id] = $field_value;
+      // Add the special 'views_' fields that normally aren't in the results
+      // set to the row, if required for the $differentiator.
+      $special_field_id = 'views_' . $field_id;
+      if ($special_field_id == $differentiator && empty($row->{$special_field_id})) {
+        $row->{$special_field_id}[] = $field_value;
+      }
+      // If Excluded is ticked, we don't style and add the field to the rendered_fields.
+      if (!$field->options['exclude']) {
+        $styled_field_value = _ip_geoloc_plugin_style_add_label_and_styling($field, $field_value);
+        $views_plugin_style->rendered_fields[$i][$field_id] = $styled_field_value;
       }
     }
-    unset($views_plugin_style->view->row_index);
   }
+  unset($views_plugin_style->view->row_index);
   return $views_plugin_style->rendered_fields;
+}
+
+/**
+ * Style field value, label and wrapper around both, where requested.
+ *
+ * Note: the "Add default classes" tickbox, options['element_default_classes'],
+ * is NOT supported to avoid the balloons having excessive bulky markup.
+ * 
+ * @param $field
+ * @param $field_content
+ * @return string, $field_content wrapped in HTML with CSS classes
+ */
+function _ip_geoloc_plugin_style_add_label_and_styling($field, $field_content) {
+
+  if ($field_content_type = $field->element_type(TRUE, TRUE)) {
+    $element = '<' . $field_content_type;
+    if ($field_content_class = $field->element_classes(NULL)) {
+      $element .= ' class="' . $field_content_class . '"';
+    }
+    $element .= '>';
+    $close_element = '</' . $field_content_type . '>';
+    $field_content = $element . $field_content . $close_element;
+  }
+
+  $label = $field->label();
+  if (!$label) {
+    return $field_content;
+  }
+  if ($field->options['element_label_colon']) {
+    $label .= ': ';
+  }
+  $label_and_field_content = $label . $field_content;
+  if ($label_type = $field->element_label_type(TRUE, TRUE)) {
+    $element = '<' . $label_type;
+    if ($label_class = $field->element_label_classes(NULL)) {
+      $element .= ' class="' . $label_class . '"';
+    }
+    $element .= '>';
+    $close_element = '</' . $label_type . '>';
+    $label_and_field_content = $element . $label . $close_element . $field_content;
+  }
+  
+  if ($wrapper_type = $field->element_wrapper_type(TRUE, TRUE)) {
+    $element = '<' . $wrapper_type;
+    if ($wrapper_class = $field->element_wrapper_classes(NULL)) {
+      $element .= ' class="' . $wrapper_class . '"';
+    }
+    $element .= '>';
+    $close_element = '</' . $wrapper_type . '>';
+    return $element . $label_and_field_content . $close_element;
+  }
+  return $label_and_field_content;
 }
 
 function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE) {

@@ -45,8 +45,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
-    $form['center_option']['#options'][0] = t('Auto-box (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
-  //$form['center_option']['#options'][IP_GEOLOC_MAP_AUTOBOX_IGNORE_VISITOR] = t('Auto-box (ignore visitor location)');
+    $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
+
     unset($form['center_option']['#description']);
 
     $form['zoom'] = array(
@@ -111,7 +111,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['tags']['marker_tag']),
-      '#description' => t('In addition to its balloon each marker may have its own tag. A tag is a number or short text shown above, below or inside the marker.<br/>Select a suitable default location marker above, unless you tick <em>Show tags without markers</em>.'),
+      '#description' => t('In addition to its balloon each marker may have its own tag. A tag is a number or short text shown above, below or inside the marker. Select a suitable <strong>Default location marker color</strong> above, unless you tick <em>Show tags without markers</em> below.'),
     );
     $form['tags']['marker_tag'] = array(
       '#title' => t('Views field used to populate tags'),

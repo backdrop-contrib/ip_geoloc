@@ -425,7 +425,15 @@ function ip_geoloc_openlayers_marker_layers() {
 
 function ip_geoloc_form_alter(&$form, &$form_state) {
   // Append our own handler to deal with saving of the differentiator table
-  if (isset($form['#form_id']) && $form['#form_id'] == 'views_ui_edit_display_form' && isset($form['options']['style_options']['differentiator'])) {
+  if (!isset($form['#form_id'])) {
+    return;
+  }
+  if ($form['#form_id'] == 'views_ui_config_item_form') {
+    // Remove the "Add default classes" checkbox", we don't support it for map balloons.
+    // Problem is: we don't know if we're in a map context. @todo
+    // unset($form['options']['element_default_classes']);
+  }
+  if ($form['#form_id'] == 'views_ui_edit_display_form' && isset($form['options']['style_options']['differentiator'])) {
     $form['buttons']['submit']['#submit'][] = 'ip_geoloc_plugin_style_differentiator_color_associations_submit';
   }
 }
