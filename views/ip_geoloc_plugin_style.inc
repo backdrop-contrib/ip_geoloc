@@ -438,8 +438,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
         _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
       }
       if ($marker_field) {
-        $views_plugin_style->view->row_index = $i; // don't know why this is required
-        $location->marker_tag = $marker_field->theme($row);
+        $views_plugin_style->view->row_index = $i; // don't know why, but this is required
+        $tag = $marker_field->theme($row);
+        $location->marker_tag = _ip_geoloc_plugin_style_add_label_and_styling($marker_field, $tag);
       }
       $locations[] = $location;
     }
@@ -639,10 +640,7 @@ function _ip_geoloc_plugin_style_add_label_and_styling($field, $field_content) {
   }
 
   $label = $field->label();
-  if (!$label) {
-    return $field_content;
-  }
-  if ($field->options['element_label_colon']) {
+  if ($label && $field->options['element_label_colon']) {
     $label .= ': ';
   }
   $label_and_field_content = $label . $field_content;
