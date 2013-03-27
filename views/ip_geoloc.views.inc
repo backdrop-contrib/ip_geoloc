@@ -1,4 +1,4 @@
- <?php
+<?php
 /**
  * @file
  * Views data from IP geolocation module
