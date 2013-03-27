@@ -22,7 +22,8 @@
         return;
       }
       var mapDiv = document.getElementById(settings.ip_geoloc_multi_location_map_div);
-      var map = new google.maps.Map(mapDiv, mapOptions);
+      // Create map as a global, see [#1954876]
+      map = new google.maps.Map(mapDiv, mapOptions);
 
       // A map must have a type, a zoom and a center or nothing will show.
       if (!map.getMapTypeId()) {
