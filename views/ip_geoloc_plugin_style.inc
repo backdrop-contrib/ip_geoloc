@@ -24,8 +24,10 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#title' => t('Name of latitude field in Views query'),
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
-    '#description' => t('If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>. If your View involves other modules or relationships, prefix the name with the relevant table name(s), delimited by underscores.', array(
-      '!url' => url('admin/reports/fields')))
+    '#description' => t('If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>. If your View involves other modules or relationships, prefix the name with the relevant table name(s), delimited by underscores. If you use <a href="!url2">EFQ Views Backend</a> you may have to omit the <em>field_</em> prefix.', array(
+      '!url1' => url('admin/reports/fields'),
+      '!url2' => url('http://drupal.org/project/efq_views')
+    ))
   );
   $form['ip_geoloc_views_plugin_longitude'] = array(
     '#title' => t('Name of longitude field in Views query'),
@@ -444,6 +446,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       }
       $locations[] = $location;
     }
+    else {
+      drupal_set_message(t("IP Geolocation: %latitude does not appar in the Views result set or its lat/lng values could not be found.", array('%latitude' => $latitude)), 'warning', FALSE);
+    }
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
@@ -472,15 +477,21 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   if (!isset($delta) || !isset($row->{$field_name}) || $delta >= count($row->{$field_name})) {
     $delta = 0;
   }
-
-  if (!empty($row->{$field_name}[$delta]['raw'])) {
-
+  $lang = 'und';
+  if (!empty($row->{$field_name}[$lang][$delta])) { // EntityFieldQuery Views Backend
+    // For Geofield module lat/long are as follows (note: no extra field_ prefix)
+    // <field_name>['und]['0']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+    $base = $row->{$field_name}[$lang][$delta];
+  }
+  elseif (!empty($row->{$field_name}[$delta]['raw'])) {
+    $base = $row->{$field_name}[$delta]['raw'];
     // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
     // Geofield     : field_<field_name>[0]['raw']['geom'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
     // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
     // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
+  }
+  if (isset($base)) {
 
-    $base = $row->{$field_name}[$delta]['raw'];
     if (isset($base['geo_type'])) { // Geofield
       $is_point = ($base['geo_type'] == 'point');
       if ($is_point) { // wkt more accurate than lat,lon in Geofield 7.x-1.x
