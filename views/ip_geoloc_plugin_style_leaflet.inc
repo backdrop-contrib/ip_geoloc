@@ -28,7 +28,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['zoom'] = array('default' => 2);
     $options['visitor_marker_color'] = array('default' => 'none');
-    $options['map'] = array('default' => '');
+    $options['map'] = array('default' => 'OSM Mapnik'); // leaflet.module default
     $options['map_height'] = array('default' => 300);
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
     $options['tooltips'] = array('contains' => array(
@@ -109,14 +109,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE);
     $form['tooltips'] = array(
-      '#title' => t('Marker tool-tips'),
+      '#title' => t('Marker tooltips'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
-      '#description' => t('In addition to its balloon each marker may have a tool-tip. A tool-tip is a short text that shows when visitors hover their mouse over a marker.'),
+      '#description' => t('In addition to its balloon each marker may have a tooltip. A tooltip is a short text that appears when visitors hover their mouse over a marker.'),
     );
     $form['tooltips']['marker_tooltip'] = array(
-      '#title' => t('Views field to populate tool-tips'),
+      '#title' => t('Views field to populate tooltips'),
       '#type' => 'select',
       '#default_value' => $this->options['tooltips']['marker_tooltip'],
       '#options' => $fields,
