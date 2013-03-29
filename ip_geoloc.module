@@ -393,7 +393,10 @@ function ip_geoloc_pretty_print($location) {
 function ip_geoloc_marker_colors() {
   $color_list = &drupal_static(__FUNCTION__);
   if (!isset($color_list)) {
-    $color_list = array('' => '<' . t('default') . '>');
+    $color_list = array(
+      '' => '<' . t('default') . '>',
+      0 => '<' . t('no marker') . '>'
+    );
     $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
     if ($directory_handle = opendir($marker_directory)) {
       while (($filename = readdir($directory_handle)) !== FALSE) {

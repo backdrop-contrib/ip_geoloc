@@ -4,47 +4,58 @@
   Drupal.leaflet._create_point_orig = Drupal.leaflet.create_point;
 
   Drupal.leaflet.create_point = function(marker) {
-
-    if (!marker.tag) {
+    
+    if (!marker.alternative) {
       return Drupal.leaflet._create_point_orig(marker);
     }
     var latLng = new L.LatLng(marker.lat, marker.lon);
     this.bounds.push(latLng);
-    var lMarker;
 
-    if (marker.tagOnly) {
-      var icon = new L.DivIcon({html: marker.tag, className: marker.cssClass});
+    if (!marker.tag) {
+      if (marker.icon == false) {
+        // Need to create a marker "stub" or we'll have no map at all!
+        var stub = new L.Icon({iconUrl: '//'});
+        return new L.Marker(latLng, {icon: stub, title: marker.tooltip});
+      }
+      if (marker.icon) {
+        return new L.Marker(latLng, {icon: marker.icon, title: marker.tooltip});
+      }
+      return new L.Marker(latLng, {title: marker.tooltip});
+    }
+    // Handler marker tag
+    if (marker.icon == false) {
+      var divIcon = new L.DivIcon({html: marker.tag, className: marker.cssClass});
       // Prevent div style tag being set, so that upper left corner becomes anchor.
-      icon.options.iconSize = null;
-      lMarker = new L.Marker(latLng, {icon: icon});
+      divIcon.options.iconSize = null;
+      return new L.Marker(latLng, {icon: divIcon, title: marker.tooltip});
     }
-    else if (marker.icon) {
-      var icon = new L.Icon.Tagged(marker.tag, {iconUrl: marker.icon.iconUrl, className: marker.cssClass});
-      // override applicable marker defaults
-      if (marker.icon.iconSize) {
-        icon.options.iconSize = new L.Point(parseInt(marker.icon.iconSize.x), parseInt(marker.icon.iconSize.y));
-      }
-      if (marker.icon.iconAnchor) {
-        icon.options.iconAnchor = new L.Point(parseFloat(marker.icon.iconAnchor.x), parseFloat(marker.icon.iconAnchor.y));
-      }
-      if (marker.icon.popupAnchor) {
-        icon.options.popupAnchor = new L.Point(parseFloat(marker.icon.popupAnchor.x), parseFloat(marker.icon.popupAnchor.y));
-      }
-      if (marker.icon.shadowUrl !== undefined) {
-        icon.options.shadowUrl = marker.icon.shadowUrl;
-      }
-      if (marker.icon.shadowSize) {
-        icon.options.shadowSize = new L.Point(parseInt(marker.icon.shadowSize.x), parseInt(marker.icon.shadowSize.y));
-      }
-      if (marker.icon.shadowAnchor) {
-        icon.options.shadowAnchor = new L.Point(parseInt(marker.icon.shadowAnchor.x), parseInt(marker.icon.shadowAnchor.y));
-      }
-      lMarker = new L.Marker(latLng, {icon: icon});
+    
+    if (!marker.icon) { // use default icon
+      var icon = new L.Icon.Tagged(marker.tag, {className: marker.cssClass});
+      return new L.Marker(latLng, {icon: icon, title: marker.tooltip});
     }
-    else {
-      lMarker = new L.Marker(latLng);
+
+    var icon = new L.Icon.Tagged(marker.tag, {iconUrl: marker.icon.iconUrl, className: marker.cssClass});
+    // Override applicable marker defaults
+    if (marker.icon.iconSize) {
+      icon.options.iconSize = new L.Point(parseInt(marker.icon.iconSize.x), parseInt(marker.icon.iconSize.y));
     }
-    return lMarker;
+    if (marker.icon.iconAnchor) {
+      icon.options.iconAnchor = new L.Point(parseFloat(marker.icon.iconAnchor.x), parseFloat(marker.icon.iconAnchor.y));
+    }
+    if (marker.icon.popupAnchor) {
+      icon.options.popupAnchor = new L.Point(parseFloat(marker.icon.popupAnchor.x), parseFloat(marker.icon.popupAnchor.y));
+    }
+    if (marker.icon.shadowUrl !== undefined) {
+      icon.options.shadowUrl = marker.icon.shadowUrl;
+    }
+    if (marker.icon.shadowSize) {
+      icon.options.shadowSize = new L.Point(parseInt(marker.icon.shadowSize.x), parseInt(marker.icon.shadowSize.y));
+    }
+    if (marker.icon.shadowAnchor) {
+      icon.options.shadowAnchor = new L.Point(parseInt(marker.icon.shadowAnchor.x), parseInt(marker.icon.shadowAnchor.y));
+    }
+    return new L.Marker(latLng, {icon: icon, title: marker.tooltip});
   };
 
 })(jQuery);
@@ -58,6 +69,14 @@ L.Icon.Tagged = L.Icon.extend({
  
   // Create an icon as per normal, but wrap it in an outerdiv together with the tag.
   createIcon: function() {
+    if (!this.options.iconUrl) {
+      var iconDefault = new L.Icon.Default();
+      this.options.iconUrl = iconDefault._getIconUrl('icon');
+      this.options.iconSize = iconDefault.options.iconSize;
+		  this.options.iconAnchor = iconDefault.options.iconAnchor;
+		  this.options.popupAnchor = iconDefault.options.popupAnchor; // does this work?
+      this.options.shadowSize = iconDefault.options.shadowSize;
+    }
     var img = this._createIcon('icon');
     var tag = document.createElement('div');
     tag.innerHTML = this._tag;

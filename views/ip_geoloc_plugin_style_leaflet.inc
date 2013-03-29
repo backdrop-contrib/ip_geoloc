@@ -31,9 +31,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['map'] = array('default' => '');
     $options['map_height'] = array('default' => 300);
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
+    $options['tooltips'] = array('contains' => array(
+      'marker_tooltip' => array('default' => ''),
+    ));
     $options['tags'] = array('contains' => array(
       'marker_tag' => array('default' => ''),
-      'tag_only' => array('default' => FALSE),
       'tag_css_class' => array('default' => 'tag-inside-marker')
     ));
     return $options;
@@ -62,7 +64,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ip_geoloc_marker_colors();
 
     $form['visitor_marker_color'] = array(
-      '#title' => t('Visitor marker color'),
+      '#title' => t('Visitor marker'),
       '#type' => 'select',
       '#multiple' => FALSE,
       '#default_value' => $this->options['visitor_marker_color'],
@@ -106,25 +108,33 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
 
     $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE);
+    $form['tooltips'] = array(
+      '#title' => t('Marker tool-tips'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
+      '#description' => t('In addition to its balloon each marker may have a tool-tip. A tool-tip is a short text that shows when visitors hover their mouse over a marker.'),
+    );
+    $form['tooltips']['marker_tooltip'] = array(
+      '#title' => t('Views field to populate tool-tips'),
+      '#type' => 'select',
+      '#default_value' => $this->options['tooltips']['marker_tooltip'],
+      '#options' => $fields,
+      '#description' => t('Example: "Content: Title"'),
+    );
     $form['tags'] = array(
       '#title' => t('Marker tags'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['tags']['marker_tag']),
-      '#description' => t('In addition to its balloon each marker may have its own tag. A tag is a number or short text shown above, below or inside the marker. Select a suitable <strong>Default location marker color</strong> above, unless you tick <em>Show tags without markers</em> below.'),
+      '#description' => t('Each marker may have a tag. A tag is a number or short text shown permanently above, below or inside the marker.'),
     );
     $form['tags']['marker_tag'] = array(
-      '#title' => t('Views field used to populate tags'),
+      '#title' => t('Views field to populate tags'),
       '#type' => 'select',
       '#default_value' => $this->options['tags']['marker_tag'],
       '#options' => $fields,
       '#description' => t('Example: "Content: Title". Use "Global: View result counter" if you want to number your locations.'),
-    );
-    $form['tags']['tag_only'] = array(
-      '#title' => t('Show tags without markers'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['tags']['tag_only'],
-      '#description' => t('If ticked tags will be output without their marker icons.'),
     );
     $form['tags']['tag_css_class'] = array(
       '#title' => t('Tag position and style'),
@@ -167,9 +177,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $zoom = $this->options['zoom'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
+    $marker_tooltip = $this->options['tooltips']['marker_tooltip'];
     $marker_tag = $this->options['tags']['marker_tag'];
     $tag_css_classes = $this->options['tags']['tag_css_class'];
-    $tag_only = $this->options['tags']['tag_only'];
     
     $module_path = drupal_get_path('module', 'ip_geoloc');
     $icon_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
@@ -213,8 +223,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lat' => $visitor_location['latitude'],
         'lon' => $visitor_location['longitude'],
         'popup' => t('Your retrieved location'),
-      //'tag' => t('You are here'),
-        'cssClass' => 'tag-below-marker',
+        'tooltip' => t('Your retrieved location'),
       );
       if ($visitor_marker_color != '') {
         $visitor_feature['icon'] = array(
@@ -235,17 +244,22 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'popup' => $location->balloon_text,
       //'leaflet_id' => $key
       );
+      if (!empty($location->marker_tooltip)) {
+        $feature['alternative'] = TRUE; // to load up ip_geoloc_leaflet_tagged_marker.js
+        $use_marker_alternative = $feature['tooltip'] = $location->marker_tooltip;
+      }
       if (!empty($location->marker_tag)) {
-        $feature['tag'] = $location->marker_tag;
+        $feature['alternative'] = TRUE; // to load up ip_geoloc_leaflet_tagged_marker.js
+        $use_marker_alternative = $feature['tag'] = $location->marker_tag;
       }
       if (!empty($tag_css_classes)) {
         $feature['cssClass'] = $tag_css_classes;
       }
-      // Whether the 'tag' is to be shown by itself or with its marker
-      if (!empty($tag_only)) {
-        $feature['tagOnly'] = $tag_only;
+      if ($marker_color === '0') { // "no marker" as opposed to "default"
+        $use_marker_alternative = $feature['alternative'] = TRUE; // to load up ip_geoloc_leaflet_tagged_marker.js
+        $feature['icon'] = FALSE;
       }
-      if (!empty($location->marker_color) || !empty($marker_color)) {
+      elseif (!empty($location->marker_color) || !empty($marker_color)) {
         // Switch from default icon
         $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
         $feature['icon'] = array(
@@ -276,8 +290,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features)); // [#1802732]
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
-
-    if ($marker_tag) {
+    if (!empty($use_marker_alternative)) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
     }

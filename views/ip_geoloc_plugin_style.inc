@@ -24,7 +24,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#title' => t('Name of latitude field in Views query'),
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
-    '#description' => t('If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>. If your View involves other modules or relationships, prefix the name with the relevant table name(s), delimited by underscores. If you use <a href="!url2">EFQ Views Backend</a> you may have to omit the <em>field_</em> prefix.', array(
+    '#description' => t('If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>. If your View involves other modules or relationships, prefix the name with the relevant table name(s), delimited by underscores. If you use <a href="!url2">EFQ Views Backend</a> you may have to omit the <strong>field_</strong> prefix.', array(
       '!url1' => url('admin/reports/fields'),
       '!url2' => url('http://drupal.org/project/efq_views')
     ))
@@ -132,7 +132,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   }
   $is_openlayers = $form_state['renderer'] == 'openlayers';
   $form['default_marker_color'] = array(
-    '#title' => t('Default location marker color'),
+    '#title' => t('Default location marker'),
     '#type' => 'select',
     '#multiple' => FALSE, // !$is_openlayers,
     '#size' => 1, // $is_openlayers ? 1 : 2, // may not be granted, 4 is minimum in some browsers
@@ -409,9 +409,8 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
   $view_id = $views_plugin_style->view->name;
   $display_id = $views_plugin_style->display->id;
-  $differentiator = FALSE;
-  $marker_tag = FALSE;
 
+  $differentiator = FALSE;
   if (!empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
     $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
     $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
@@ -419,11 +418,18 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $differentiator_color_associations[$display_id] = array($differentiator => array());
     }
   }
-  $marker_field = FALSE;
+  $tooltip_field = FALSE;
+  if (isset($views_plugin_style->options['tooltips']['marker_tooltip'])) {
+    $marker_tooltip = $views_plugin_style->options['tooltips']['marker_tooltip'];
+    if (isset($views_plugin_style->view->field[$marker_tooltip])) {
+      $tooltip_field = $views_plugin_style->view->field[$marker_tooltip];
+    }
+  }
+  $tag_field = FALSE;
   if (isset($views_plugin_style->options['tags']['marker_tag'])) {
     $marker_tag = $views_plugin_style->options['tags']['marker_tag'];
     if (isset($views_plugin_style->view->field[$marker_tag])) {
-      $marker_field = $views_plugin_style->view->field[$marker_tag];
+      $tag_field = $views_plugin_style->view->field[$marker_tag];
     }
   }
   $locations = array();
@@ -439,10 +445,14 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       if ($differentiator) {
         _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
       }
-      if ($marker_field) {
-        $views_plugin_style->view->row_index = $i; // don't know why, but this is required
-        $tag = $marker_field->theme($row);
-        $location->marker_tag = _ip_geoloc_plugin_style_add_label_and_styling($marker_field, $tag);
+      $views_plugin_style->view->row_index = $i; // don't know why, but this is required
+      if ($tooltip_field) {
+        $tooltip = $tooltip_field->theme($row);
+        $location->marker_tooltip = strip_tags(_ip_geoloc_plugin_style_add_label($tooltip_field, $tooltip));
+      }
+      if ($tag_field) {
+        $tag = $tag_field->theme($row);
+        $location->marker_tag = _ip_geoloc_plugin_style_add_label_and_styling($tag_field, $tag);
       }
       $locations[] = $location;
     }
@@ -629,6 +639,21 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
 }
 
 /**
+ * Prefix the field value with its label, where requested. No styling.
+ *
+ * @param $field
+ * @param $field_content
+ * @return string, $field_content prefixed with the label defined for the field
+ */
+function _ip_geoloc_plugin_style_add_label($field, $field_content) {
+  $label = $field->label();
+  if ($label && $field->options['element_label_colon']) {
+    $label .= ': ';
+  }
+  return $label . $field_content;
+}
+
+/**
  * Style field value, label and wrapper around both, where requested.
  *
  * Note: the "Add default classes" tickbox, options['element_default_classes'],
@@ -655,6 +680,7 @@ function _ip_geoloc_plugin_style_add_label_and_styling($field, $field_content) {
     $label .= ': ';
   }
   $label_and_field_content = $label . $field_content;
+ 
   if ($label_type = $field->element_label_type(TRUE, TRUE)) {
     $element = '<' . $label_type;
     if ($label_class = $field->element_label_classes(NULL)) {
