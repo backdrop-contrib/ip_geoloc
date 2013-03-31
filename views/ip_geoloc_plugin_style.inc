@@ -24,7 +24,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#title' => t('Name of latitude field in Views query'),
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
-    '#description' => t('If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>. If your View involves other modules or relationships, prefix the name with the relevant table name(s), delimited by underscores. If you use <a href="!url2">EFQ Views Backend</a> you may have to omit the <strong>field_</strong> prefix.', array(
+    '#description' => t('If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>. If your View involves other modules or relationships, prefix the name with the relevant table name(s), delimited by underscores.', array(
       '!url1' => url('admin/reports/fields'),
       '!url2' => url('http://drupal.org/project/efq_views')
     ))
@@ -457,7 +457,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
     else {
-      drupal_set_message(t("IP Geolocation: %latitude does not appar in the Views result set or its lat/lng values could not be found.", array('%latitude' => $latitude)), 'warning', FALSE);
+      drupal_set_message(t("IP Geolocation: %latitude does not appear in the Views result set or its lat/lng values could not be found.", array('%latitude' => $latitude)), 'warning', FALSE);
     }
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
@@ -467,9 +467,6 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 }
 
 function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
-  $location = new stdClass();
-  // First look for $latitude and $longitude as node FIELD values:
-  $field_name = 'field_' . $latitude;
 
   $delta = &drupal_static(__FUNCTION__);
   if (isset($delta)) {
@@ -484,23 +481,16 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
       break;
     }
   }
+  $field_name = 'field_' . $latitude;
   if (!isset($delta) || !isset($row->{$field_name}) || $delta >= count($row->{$field_name})) {
     $delta = 0;
   }
-  $lang = 'und';
-  if (!empty($row->{$field_name}[$lang][$delta])) { // EntityFieldQuery Views Backend
-    // For Geofield module lat/long are as follows (note: no extra field_ prefix)
-    // <field_name>['und]['0']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
-    $base = $row->{$field_name}[$lang][$delta];
+  $base = _ip_geoloc_plugin_style_base($row, $field_name, $delta);
+  if (empty($base)) { // drop the "field_" prefix and try again
+    $base = _ip_geoloc_plugin_style_base($row, $latitude, $delta);
   }
-  elseif (!empty($row->{$field_name}[$delta]['raw'])) {
-    $base = $row->{$field_name}[$delta]['raw'];
-    // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
-    // Geofield     : field_<field_name>[0]['raw']['geom'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
-    // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
-    // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
-  }
-  if (isset($base)) {
+  $location = new stdClass();
+  if (!empty($base)) {
 
     if (isset($base['geo_type'])) { // Geofield
       $is_point = ($base['geo_type'] == 'point');
@@ -514,7 +504,7 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
       }
       // $is_point==FALSE may indicate a MULTIPOINT cluster, which has its
       // averaged center on 'lat' and 'lon' indices.
-      $location->longitude = $is_point ? $parts[0] : $base['lon'];
+      $location->longitude = $is_point ? (float)$parts[0] : $base['lon'];
       $location->latitude  = $is_point ? (float)$parts[1] : $base['lat'];
     }
     elseif (isset($base['lng'])) { // GeoLocation
@@ -537,6 +527,23 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
     $location->longitude = $row->{$longitude};
   }
   return isset($location->latitude) ? $location : NULL;
+}
+
+function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
+  if (!empty($row->{$field_name}[$delta]['raw'])) {
+    return $row->{$field_name}[$delta]['raw'];
+    // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
+    // Geofield     : field_<field_name>[0]['raw']['geom'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+    // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
+    // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
+  }
+  $lang = LANGUAGE_NONE;
+  if (!empty($row->{$field_name}[$lang][$delta])) { // EntityFieldQuery Views Backend
+    // For Geofield module lat/long are as follows (note: no extra field_ prefix)
+    // <field_name>['und]['0']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+    return $row->{$field_name}[$lang][$delta];
+  }
+  return NULL;
 }
 
 function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator, $differentiator_color_associations) {
