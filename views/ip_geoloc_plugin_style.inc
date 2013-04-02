@@ -221,7 +221,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
           $differentiator_value = array();
           if (is_array($values)) {
             foreach ($values as $name => $value) {
-              if (!empty($value) && strpos($value, '|') === FALSE) {
+              if (isset($value) && strpos($value, '|') === FALSE) {
                 $differentiator_value[$name] = $value;
               }
             }
@@ -496,6 +496,9 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
       $is_point = ($base['geo_type'] == 'point');
       if ($is_point) { // wkt more accurate than lat,lon in Geofield 7.x-1.x
         $point = empty($base['geom']) ? $base['wkt'] : $base['geom'];
+        // @todo Consider using
+        // $geometry = geoPHP::load($base['geom']);
+        // $location = json_decode($geometry->out('json'));
         $is_point = (drupal_substr(trim($point), 0, 7) == 'POINT (');
         if ($is_point) {
           $parts = explode(' ', drupal_substr($point, 7));
@@ -530,6 +533,9 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
 }
 
 function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
+  if (!isset($row) || !isset($field_name) || !isset($delta)) {
+    return NULL;
+  }
   if (!empty($row->{$field_name}[$delta]['raw'])) {
     return $row->{$field_name}[$delta]['raw'];
     // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
