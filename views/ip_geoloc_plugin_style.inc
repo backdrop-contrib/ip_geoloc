@@ -76,10 +76,10 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     )) . '<br/>';
     $field = field_info_field($differentiator);
     if (!$field || $field['module'] == 'text') {
-      $description .= t('You may enter a range of values by separating "from" and "to" by a <strong>double hyphen</strong>.<br/>Example: <strong>A--ZZ</strong><br/>You may omit "from" or "to" to created open-ended ranges.');
+      $description .= t('You may enter a range of values by separating "from" and "to" by a <strong>double hyphen</strong>.<br/>Example: <strong>A--ZZ</strong><br/>You may omit "from" or "to" to create open-ended ranges.');
     }
     elseif ($field['module'] == 'number') {
-      $description .= t('You may enter a numeric range of by separating "from" and "to" by a <strong>double hyphen</strong>.<br/>Example: <strong>2.5--7.95</strong><br/>You may omit "from" or "to" to created open-ended ranges.');
+      $description .= t('You may enter a numeric range of by separating "from" and "to" by a <strong>double hyphen</strong>.<br/>Example: <strong>2.5--7.95</strong><br/>You may omit "from" or "to" to create open-ended ranges.');
     }
   }
   $form['differentiator']['differentiator_field'] = array(
