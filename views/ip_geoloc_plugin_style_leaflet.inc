@@ -140,7 +140,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('Tag position and style'),
       '#type' => 'textfield',
       '#default_value' => $this->options['tags']['tag_css_class'],
-      '#description' => t('The CCS class or classes applied to each tag. <br/>Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. <br/>If you tick <em>Show tags without markers</em> you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. <br/>You may also create your own CSS classes and use them here.'),
+      '#description' => t('The CCS class or classes applied to each tag. <br/>Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. <br/>If you selected to have no markers, i.e. tags only, you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. <br/>You may also create your own CSS classes and use them here.'),
     );
   }
 
@@ -245,18 +245,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       //'leaflet_id' => $key
       );
       if (!empty($location->marker_tooltip)) {
-        $feature['alternative'] = TRUE; // to load up ip_geoloc_leaflet_tagged_marker.js
-        $use_marker_alternative = $feature['tooltip'] = $location->marker_tooltip;
+        $has_special_markers = TRUE;
+        $feature['tooltip'] = $location->marker_tooltip;
       }
       if (!empty($location->marker_tag)) {
-        $feature['alternative'] = TRUE; // to load up ip_geoloc_leaflet_tagged_marker.js
-        $use_marker_alternative = $feature['tag'] = $location->marker_tag;
+        $has_special_markers = TRUE;
+        $feature['tag'] = $location->marker_tag;
       }
       if (!empty($tag_css_classes)) {
         $feature['cssClass'] = $tag_css_classes;
       }
       if ($marker_color === '0') { // "no marker" as opposed to "default"
-        $use_marker_alternative = $feature['alternative'] = TRUE; // to load up ip_geoloc_leaflet_tagged_marker.js
+        $has_special_markers = TRUE;
         $feature['icon'] = FALSE;
       }
       elseif (!empty($location->marker_color) || !empty($marker_color)) {
@@ -290,7 +290,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features)); // [#1802732]
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
-    if (!empty($use_marker_alternative)) {
+    if (!empty($has_special_markers)) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
     }

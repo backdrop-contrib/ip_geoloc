@@ -1,13 +1,10 @@
 (function ($) {
 
-  // Override Drupal.leaflet.create_point only if a marker tag is supplied.
   Drupal.leaflet._create_point_orig = Drupal.leaflet.create_point;
 
   Drupal.leaflet.create_point = function(marker) {
-    
-    if (!marker.alternative) {
-      return Drupal.leaflet._create_point_orig(marker);
-    }
+
+    // Follow create_point()
     var latLng = new L.LatLng(marker.lat, marker.lon);
     this.bounds.push(latLng);
 
@@ -17,12 +14,12 @@
         var stub = new L.Icon({iconUrl: '//'});
         return new L.Marker(latLng, {icon: stub, title: marker.tooltip});
       }
-      if (marker.icon) {
-        return new L.Marker(latLng, {icon: marker.icon, title: marker.tooltip});
+      if (!marker.icon) {
+        // Default icon without tag
+        return new L.Marker(latLng, {title: marker.tooltip});
       }
-      return new L.Marker(latLng, {title: marker.tooltip});
     }
-    // Handler marker tag
+    // Tagged marker (with or without icon) or untagged marker with specified icon.
     if (marker.icon == false) {
       var divIcon = new L.DivIcon({html: marker.tag, className: marker.cssClass});
       // Prevent div style tag being set, so that upper left corner becomes anchor.
@@ -30,13 +27,14 @@
       return new L.Marker(latLng, {icon: divIcon, title: marker.tooltip});
     }
     
-    if (!marker.icon) { // use default icon
-      var icon = new L.Icon.Tagged(marker.tag, {className: marker.cssClass});
-      return new L.Marker(latLng, {icon: icon, title: marker.tooltip});
+    if (marker.tag && !marker.icon) { // use default icon and tag it
+      var tagged_icon = new L.Icon.Tagged(marker.tag, {className: marker.cssClass});
+      return new L.Marker(latLng, {icon: tagged_icon, title: marker.tooltip});
     }
-
-    var icon = new L.Icon.Tagged(marker.tag, {iconUrl: marker.icon.iconUrl, className: marker.cssClass});
-    // Override applicable marker defaults
+    var icon = marker.tag
+      ? new L.Icon.Tagged(marker.tag, {iconUrl: marker.icon.iconUrl, className: marker.cssClass})
+      : new L.Icon({iconUrl: marker.icon.iconUrl});
+    // All of the below is like create_point (leaflet.drupal.js), but with tooltip.
     if (marker.icon.iconSize) {
       icon.options.iconSize = new L.Point(parseInt(marker.icon.iconSize.x), parseInt(marker.icon.iconSize.y));
     }
