@@ -344,6 +344,11 @@ function _ip_geoloc_get_field_value($field) {
  */
 function _ip_geoloc_statistics_backfill($from_timestamp, $location) {
 
+  // If Better Statistics is set to skip logging to the database, then exit now.
+  if (!variable_get('statistics_log_to_db', TRUE)) {
+    return;
+  }
+
   // Fetch the fields defined in {accesslog}.
   $accesslog_fields = variable_get('better_statistics_fields', better_statistics_get_default_fields());
 
