@@ -141,7 +141,7 @@ function ip_geoloc_init() {
       ip_geoloc_debug(t('IP Geolocation: initiating services to locate current position and reverse-geocode to address...'));
       ip_geoloc_get_current_location('ip-geoloc-current-location');
 
-      _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
+      _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE) - (timer_read('page') / 1000));
     }
     _ip_geoloc_set_session_value('last_position_check', time());
   };
@@ -201,6 +201,13 @@ function ip_geoloc_current_location_ajax_recipient() {
     watchdog('IP Geolocation', 'Browser @ %address, received after %sec seconds.',  array('%address' => $location['formatted_address'], '%sec' => $time_elapsed), WATCHDOG_INFO);
     ip_geoloc_debug(t('IP Geolocaton: global position and reverse-geocoding callback received after %sec seconds: !location',
       array('%sec' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
+    // If better_statistics module is enabled, we can backfill geolocation information
+    // to {accesslog} entries occurred since the positioning was requested.
+    if (!empty($since) and module_exists('better_statistics')) {
+      require_once 'plugins/ip_geoloc.statistics.inc';
+      _ip_geoloc_statistics_backfill($since, $location);
+    }
+
   }
   _ip_geoloc_set_session_value('position_pending_since', NULL);
 
@@ -223,12 +230,12 @@ function ip_geoloc_current_location_ajax_recipient() {
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
   if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
-    $location['provider'] = 'smart_ip';
     if (module_exists('smart_ip')) {
       if (empty($location['ip_address'])) {
         $location['ip_address'] = ip_address();
       }
       $location = smart_ip_get_location($location['ip_address']); // see also: ip_geoloc_smart_ip_get_location_alter()
+      $location['provider'] = 'smart_ip';
       return TRUE;
     }
     ip_geoloc_debug(t('IP Geolocation: Smart IP configured as a backup, but is not enabled.'));

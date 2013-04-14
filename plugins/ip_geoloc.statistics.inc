@@ -296,15 +296,13 @@ function _ip_geoloc_get_field_value($field) {
   }
   list($ip_geoloc_key, $type, $size) = $ip_geoloc_item;
 
-  $geoloc = ip_geoloc_get_visitor_location(); // uses internal cache
-
-  // If not, is there a location record on the db.
+  // If caching, the module will not be loaded. In such case,
+  // ip_geoloc_get_visitor_location() will be undefined.
+  if (function_exists('ip_geoloc_get_visitor_location')) {
+    $geoloc = ip_geoloc_get_visitor_location(); // uses internal cache
+  }
   if (empty($geoloc)) {
-    $geoloc = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip', array(':ip' => ip_address()))->fetchAssoc();
-    // If not, no data available.
-    if (!$geoloc) {
-      return NULL;
-    }
+    return NULL;
   }
 
   // Is there data for this key. If not, return NULL.
@@ -329,5 +327,56 @@ function _ip_geoloc_get_field_value($field) {
       return $geoloc[$ip_geoloc_key];
     default:
       return NULL;
+  }
+}
+
+/**
+ * Backfills position information to past {accesslog} entries.
+ *
+ * Given that location information is received asynchronously, here
+ * we 'backfill' such information to all accesslog entries since when
+ * the location request was initiated.
+ *
+ * @param integer $from_timestamp
+ *   The timestamp of the location request.
+ * @param array $location
+ *   The location infromation array.
+ */
+function _ip_geoloc_statistics_backfill($from_timestamp, $location) {
+
+  // Fetch the fields defined in {accesslog}.
+  $accesslog_fields = variable_get('better_statistics_fields', better_statistics_get_default_fields());
+
+  // Loops through location keys to check which ones need to be updated.
+  $fields = array();
+  foreach ($location as $key => $value) {
+    $field_name = _ip_geoloc_key_map(NULL, $key);
+    if ($field_name and isset($accesslog_fields[$field_name])) {
+      $fields[$field_name] = $value;
+    }
+  }
+
+  // Loops through fields not in location to blank them.
+  $ip_geoloc_fields = array_keys(_ip_geoloc_key_map());
+  foreach ($ip_geoloc_fields as $i => $field_name) {
+    if (!isset($fields[$field_name]) and isset($accesslog_fields[$field_name])) {
+      $fields[$field_name] = NULL;
+    }
+  }
+
+  // Run update. Take one extra second to from_timestamp to ensure initial hit
+  // requesting location is included.
+  if (!empty($fields)) {
+    try {
+      $num_updated = db_update('accesslog')
+        ->fields($fields)
+        ->condition('timestamp', $from_timestamp - 1, '>=')
+        ->condition('sid', session_id(), '=')
+        ->execute();
+    }
+    catch (Exception $e) {
+      watchdog('IP Geolocation', 'There was an error updating statistics data:<br/>@error', array(
+        '@error' => $e->getMessage()), WATCHDOG_ERROR);
+    }
   }
 }
