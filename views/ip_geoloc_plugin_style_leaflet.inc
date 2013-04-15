@@ -26,7 +26,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ));
     $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
-    $options['zoom'] = array('default' => 2);
     $options['visitor_marker_color'] = array('default' => 'none');
     $options['map'] = array('default' => 'OSM Mapnik'); // leaflet.module default
     $options['map_height'] = array('default' => 300);
@@ -38,6 +37,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'marker_tag' => array('default' => ''),
       'tag_css_class' => array('default' => 'tag-inside-marker')
     ));
+    $options['map_options'] = array('contains' => array(
+      'maxzoom' => array('default' => 18),
+      'zoom' => array('default' => 2),
+      'scrollwheelzoom' => array('default' => TRUE),
+      'dragging' => array('default' => TRUE)
+    ));
     return $options;
   }
 
@@ -48,16 +53,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
     $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
-
     unset($form['center_option']['#description']);
-
-    $form['zoom'] = array(
-      '#title' => t('Initial zoom level (0..18)'),
-      '#type' => 'textfield',
-      '#size' => 2,
-      '#default_value' => $this->options['zoom'],
-      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.')
-    );
 
     $visitor_marker_colors = array(
       'none' => '<' . t('none') . '>') +
@@ -122,6 +118,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#options' => $fields,
       '#description' => t('Example: "Content: Title"'),
     );
+
     $form['tags'] = array(
       '#title' => t('Marker tags'),
       '#type' => 'fieldset',
@@ -140,7 +137,40 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('Tag position and style'),
       '#type' => 'textfield',
       '#default_value' => $this->options['tags']['tag_css_class'],
-      '#description' => t('The CCS class or classes applied to each tag. <br/>Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. <br/>If you selected to have no markers, i.e. tags only, you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. <br/>You may also create your own CSS classes and use them here.'),
+      '#description' => t('The CSS class or classes applied to each tag. Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. If you opted to have no markers, i.e. tags only, you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. You may also create your own CSS classes and use them here.'),
+    );
+
+    $form['map_options'] = array(
+      '#title' => t('More map options'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($this->options['map_options']['zoom'])
+    );
+    $form['map_options']['maxzoom'] = array(
+      '#title' => t('Maximum zoom level (0..18)'),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['maxzoom'],
+      '#description' => t('Note that not all maps support all zoom levels.')
+    );
+    $form['map_options']['zoom'] = array(
+      '#title' => t('Initial zoom level (0..@maxzoom)', array('@maxzoom' => $this->options['map_options']['maxzoom'])),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['zoom'],
+      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.')
+    );
+    $form['map_options']['scrollwheelzoom'] = array(
+      '#title' => t('Enable scroll wheel zoom'),
+      '#type' => 'select',
+      '#default_value' => $this->options['map_options']['scrollwheelzoom'],
+      '#options' => array(TRUE => 'Yes', FALSE => 'No'),
+    );
+    $form['map_options']['dragging'] = array(
+      '#title' => t('Dragging/Panning of the map'),
+      '#type' => 'select',
+      '#default_value' => $this->options['map_options']['dragging'],
+      '#options' => array(TRUE => 'Yes', FALSE => 'No'),
     );
   }
 
@@ -148,11 +178,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    * Validate the options form.
    */
   function options_validate(&$form, &$form_state) {
-    if ($form_state['values']['style_options']['zoom'] != '' && (!is_numeric($form_state['values']['style_options']['zoom']) || $form_state['values']['style_options']['zoom'] < 0)) {
-      form_error($form['zoom'], t('Zoom level must be a non-negative number.'));
-    }
-    if (!is_numeric($form_state['values']['style_options']['map_height']) || $form_state['values']['style_options']['map_height'] <= 0) {
+    $map_height = $form_state['values']['style_options']['map_height'];
+    if (!is_numeric($map_height) || $map_height <= 0) {
       form_error($form['map_height'], t('Map height cannot be blank and must be a positive number.'));
+    }
+    $max_zoom = $form_state['values']['style_options']['map_options']['maxzoom'];
+    if ($max_zoom != '' && (!is_numeric($max_zoom) || $max_zoom < 0)) {
+      form_error($form['map_options']['maxzoom'], t('Maximum zoom level must be a non-negative number.'));
+    }
+    $zoom = $form_state['values']['style_options']['map_options']['zoom'];
+    if ($zoom != '' && (!is_numeric($zoom) || $zoom < 0 || $zoom > $max_zoom)) {
+      form_error($form['map_options']['zoom'], t('Initial zoom level must be a non-negative number less than or equal to Maximum zoom level.'));
     }
   }
 
@@ -160,11 +196,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    * Transform the View result in a list of marker locations and render on map.
    */
   function render() {
-
     if (empty($this->options['map']) || !($map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']))) {
       return t('No Leaflet map was selected or map configuration was not found.');
     }
-
     if (!empty($this->view->live_preview)) {
       return t('The preview function is incompatible with Leaflet maps so cannot be used. Please visit the page path or the block to view your map.');
     }
@@ -174,7 +208,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $marker_color = $this->options['default_marker_color'];
     $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
-    $zoom = $this->options['zoom'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
     $marker_tooltip = $this->options['tooltips']['marker_tooltip'];
@@ -184,6 +217,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $module_path = drupal_get_path('module', 'ip_geoloc');
     $icon_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
     $icon_path = file_create_url($icon_path);
+    
+    $max_zoom = (int)$this->options['map_options']['maxzoom'];
+    $zoom = (int)$this->options['map_options']['zoom'];
+    $scroll_wheel_zoom = (bool)$this->options['map_options']['scrollwheelzoom'];
+    $dragging = (bool)$this->options['map_options']['dragging'];
 
     if (!empty($locations) &&
         ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
@@ -281,6 +319,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     else {
       $map['settings']['zoom'] = $zoom;
     }
+    $map['settings']['maxZoom'] = $max_zoom;
+    $map['settings']['scrollWheelZoom'] = $scroll_wheel_zoom;
+    $map['settings']['dragging'] = $dragging;
 
     if (!empty($cluster_radius)) {
       $map['settings']['maxClusterRadius'] = $cluster_radius;
