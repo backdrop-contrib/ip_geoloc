@@ -139,7 +139,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['tags']['tag_css_class'],
       '#description' => t('The CSS class or classes applied to each tag. Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. If you opted to have no markers, i.e. tags only, you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. You may also create your own CSS classes and use them here.'),
     );
-
+    $selected_map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']);
+    $zoom_top = 18;
+    if (isset($selected_map['settings']['maxZoom'])) {
+      $zoom_top = $selected_map['settings']['maxZoom'];
+    }
     $form['map_options'] = array(
       '#title' => t('More map options'),
       '#type' => 'fieldset',
@@ -147,14 +151,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#collapsed' => empty($this->options['map_options']['zoom'])
     );
     $form['map_options']['maxzoom'] = array(
-      '#title' => t('Maximum zoom level (0..18)'),
+      '#title' => t('Maximum zoom level (0..@zoomtop)', array('@zoomtop' => $zoom_top)),
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['map_options']['maxzoom'],
       '#description' => t('Note that not all maps support all zoom levels.')
     );
+    $initial_zoom_max = $zoom_top;
+    if (is_numeric($this->options['map_options']['maxzoom'])) {
+      $initial_zoom_max = min($zoom_top, $this->options['map_options']['maxzoom']);
+    }
     $form['map_options']['zoom'] = array(
-      '#title' => t('Initial zoom level (0..@maxzoom)', array('@maxzoom' => $this->options['map_options']['maxzoom'])),
+      '#title' => t('Initial zoom level (0..@maxzoom)', array('@maxzoom' => $initial_zoom_max)),
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['map_options']['zoom'],
@@ -182,9 +190,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!is_numeric($map_height) || $map_height <= 0) {
       form_error($form['map_height'], t('Map height cannot be blank and must be a positive number.'));
     }
+    $selected_map = ip_geoloc_plugin_style_leaflet_map_get_info($form_state['values']['style_options']['map']);
+    $zoom_top = 18;
+    if (isset($selected_map['settings']['maxZoom'])) {
+      $zoom_top = $selected_map['settings']['maxZoom'];
+    }
     $max_zoom = $form_state['values']['style_options']['map_options']['maxzoom'];
-    if ($max_zoom != '' && (!is_numeric($max_zoom) || $max_zoom < 0)) {
-      form_error($form['map_options']['maxzoom'], t('Maximum zoom level must be a non-negative number.'));
+    if ($max_zoom != '' && (!is_numeric($max_zoom) || $max_zoom < 0 || $max_zoom > $zoom_top)) {
+      form_error($form['map_options']['maxzoom'], t('Maximum zoom level for %map must be in range 0..@zoomtop', array(
+        '%map' => $selected_map['label'], '@zoomtop' => $zoom_top)));
     }
     $zoom = $form_state['values']['style_options']['map_options']['zoom'];
     if ($zoom != '' && (!is_numeric($zoom) || $zoom < 0 || $zoom > $max_zoom)) {
