@@ -433,6 +433,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     }
   }
   $locations = array();
+  $error_count = 0;
   foreach ($views_plugin_style->view->result as $i => $row) {
 
     $location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude);
@@ -456,9 +457,14 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       }
       $locations[] = $location;
     }
-    else {
-      drupal_set_message(t("IP Geolocation: %latitude does not appear in the Views result set or its lat/lng values could not be found.", array('%latitude' => $latitude)), 'warning', FALSE);
+    elseif ($error_count++ == 0) {
+      drupal_set_message(t("IP Geolocation: Views result row #@i: %latitude field or its lat/lng values are missing.", array(
+       '@i' => $i + 1, '%latitude' => $latitude)), 'warning');
     }
+  }
+  if ($error_count > 1) {
+    drupal_set_message(t('A total of @error_count %latitude lat/lng values were missing from the Views result set.', array(
+      '@error_count' => $error_count, '%latitude' => $latitude)), 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
