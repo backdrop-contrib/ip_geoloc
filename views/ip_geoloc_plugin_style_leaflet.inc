@@ -307,12 +307,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if (!empty($tag_css_classes)) {
         $feature['cssClass'] = $tag_css_classes;
       }
-      if ($marker_color === '0') { // "no marker" as opposed to "default"
+      if ((isset($location->marker_color) &&_ip_geoloc_is_no_marker($location->marker_color)) ||
+          (!isset($location->marker_color) && _ip_geoloc_is_no_marker($marker_color))) {
+        // "No marker" as opposed to "default" marker.
         $has_special_markers = TRUE;
         $feature['icon'] = FALSE;
       }
       elseif (!empty($location->marker_color) || !empty($marker_color)) {
-        // Switch from default icon
+        // Switch from default icon to specified color
         $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
         $feature['icon'] = array(
           'iconUrl' => $icon_path . "/$color.png",
@@ -380,6 +382,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ));
     return $output;
   }
+}
+
+function _ip_geoloc_is_no_marker($marker_color) {
+  return isset($marker_color) && ($marker_color === FALSE || $marker_color === 0);
 }
 
 /**
