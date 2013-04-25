@@ -230,7 +230,7 @@ function ip_geoloc_current_location_ajax_recipient() {
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
   if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
-    if (module_exists('smart_ip')) {
+    if (function_exists('smart_ip_get_location')) {
       if (empty($location['ip_address'])) {
         $location['ip_address'] = ip_address();
       }
@@ -248,7 +248,7 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
  * Module GeoIP API does not expose a hook, but it does expose an API.
  */
 function ip_geoloc_use_geoip_api_if_enabled(&$location) {
-  if (!module_exists('geoip')) {
+  if (!function_exists('geoip_city')) {
     return FALSE;
   }
   $location['provider'] = 'geoip';

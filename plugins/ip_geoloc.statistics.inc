@@ -296,17 +296,42 @@ function _ip_geoloc_get_field_value($field) {
   }
   list($ip_geoloc_key, $type, $size) = $ip_geoloc_item;
 
-  // If caching, the module will not be loaded. In such case,
-  // ip_geoloc_get_visitor_location() will be undefined.
-  if (function_exists('ip_geoloc_get_visitor_location')) {
-    $geoloc = ip_geoloc_get_visitor_location(); // uses internal cache
-  }
-  if (empty($geoloc)) {
-    return NULL;
-  }
+  static $geoloc; // see [#1970180]
 
-  // Is there data for this key. If not, return NULL.
-  if (!isset($geoloc[$ip_geoloc_key])) {
+  if (!isset($geoloc)) {
+    // If caching, the module will not be loaded. In such case,
+    // ip_geoloc_get_visitor_location() will be undefined, and an alternative
+    // method to retrieve data should be used.
+    if (function_exists('ip_geoloc_get_visitor_location')) {
+      $geoloc = ip_geoloc_get_visitor_location(); // uses internal cache
+    }
+    else {
+      // Include common.inc.
+      require_once DRUPAL_ROOT . '/includes/common.inc';
+      $list = system_list('module_enabled');
+      // Include 'IP Geolocation Views and Maps' module file.
+      require_once DRUPAL_ROOT . '/' . $list['ip_geoloc']->filename;
+      // If 'Smart IP' module is enabled and set up as backup, include its
+      // module file.
+      if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE) && isset($list['smart_ip'])) {
+        require_once DRUPAL_ROOT . '/' . $list['smart_ip']->filename;
+      }
+      // If 'GeoIP API' module is enabled, include its module file.
+      if (isset($list['geoip'])) {
+        require_once DRUPAL_ROOT . '/' . $list['geoip']->filename;
+      }
+      // Retrieve geolocation.
+      // ip_geoloc_get_location_by_ip() will either fetch a stored geolocation
+      // from {ip_geoloc}, or manage conversation with backup modules to
+      // retrieve the information and store back to {ip_geoloc}.
+      $geoloc = ip_geoloc_get_location_by_ip(ip_address(), $resample = FALSE, $store = TRUE, $reverse_geocode = FALSE);
+      if (!empty($geoloc) and (!isset($geoloc['provider']) or empty($geoloc['provider']))) {
+        $geoloc['provider'] = 'ip_geoloc';
+      }
+    }
+  }
+  // No gelocation data available, return NULL.
+  if (empty($geoloc) || !isset($geoloc[$ip_geoloc_key])) {
     return NULL;
   }
 
