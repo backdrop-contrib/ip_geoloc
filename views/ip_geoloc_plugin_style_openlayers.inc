@@ -119,7 +119,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
         $feature = array(
           // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js
           'attributes' => array('description' => $location->balloon_text),
-          'projection' => '4326',
+          'projection' => 'EPSG:4326',
           'wkt' => 'POINT(' . $location->longitude . ' ' . $location->latitude . ')'
         );
         $layer = isset($location->marker_color) && is_numeric($location->marker_color) ? $location->marker_color : 1;
