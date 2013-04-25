@@ -461,13 +461,13 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
     elseif ($error_count++ == 0) {
-      drupal_set_message(t("IP Geolocation: Views result row #@i: %latitude field or its lat/lng values are missing.", array(
-       '@i' => $i + 1, '%latitude' => $latitude)), 'warning');
+      $first_error = $i + 1;
     }
   }
-  if ($error_count > 1) {
-    drupal_set_message(t('A total of @error_count %latitude lat/lng values were missing from the Views result set.', array(
-      '@error_count' => $error_count, '%latitude' => $latitude)), 'warning');
+  global $user;
+  if ($error_count > 1 && $user->uid == 1) {
+    drupal_set_message(t('A total of @error_count View result rows did not have their %latitude lat/lng set and could therefore not be shown on the map. The first was row #@first. To improve efficiency you may want to apply a "not empty" filter to %latitude.', array(
+      '@error_count' => $error_count, '@first' => $first_error, '%latitude' => $latitude)), 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
