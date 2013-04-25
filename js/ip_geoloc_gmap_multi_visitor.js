@@ -1,4 +1,3 @@
-
 (function ($) {
 
   Drupal.behaviors.addGMapMultiVisitor = {
@@ -45,11 +44,11 @@
         google.maps.event.addListener(marker, 'click',  function(event) {
           new google.maps.InfoWindow({
             content: balloonTexts['LL' + event.latLng],
-            position: event.latLng
+            position: event.latLng,
+            maxWidth: 200 // [#1777664]
           }).open(map);
         });
       }
     }
   }
 })(jQuery);
-

@@ -1,4 +1,3 @@
-
 (function ($) {
 
   Drupal.behaviors.addGMapMultiLocation = {
@@ -86,12 +85,12 @@
         marker = new google.maps.Marker({ map: map, icon: pinImage, shadow: shadowImage, position: position, title: mouseOverText });
 
         // Funny index is because listener callback only gives us position
-        balloonTexts['LL' + position] = locations[key].balloon_text;
-
+        balloonTexts['LL' + position] = '<div class="balloon">'  + locations[key].balloon_text + '</div>';
         google.maps.event.addListener(marker, 'click', function(event) {
           new google.maps.InfoWindow({
             content: balloonTexts['LL' + event.latLng],
-            position: event.latLng
+            position: event.latLng,
+            maxWidth: 200 // [#1777664]
           }).open(map);
         });
       }
