@@ -45,7 +45,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     // an auto-rebuild of the form. Can't put this in an ajax handler, as these
     // are called AFTER the form rebuild, so too late.
     if (strpos($form_state['triggering_element']['#id'], 'differentiator-differentiator-field') > 0) {
-      // Get here when is was the differentiator drop-down that was changed.
+      // Get here when it was the differentiator drop-down that was changed.
       $differentiator = $form_state['triggering_element']['#value'];
       unset($form_state['num_associations']);
     }
@@ -159,8 +159,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#description' => $is_openlayers
       ? t('*) If you want a fixed center, visit the "Center & Bounds" tab of the <a href="@url">map edit page</a>.', array(
           '@url' => url('admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit')))
-      : t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example: %center_example', array(
-          '%center_example' => '{ "mapTypeId":"roadmap", "centerLat":-37.8, "centerLng":145 }'))
+      : t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example:<br/>%center_example', array(
+          '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }'))
   );
 
   return $form;
@@ -210,13 +210,16 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
   $display_id = $form_state['display_id'];
   $differentiator = $form_state['differentiator'];
 
+  // Erase differentiator values for this display, then rebuild based on form.
   $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
+  unset($differentiator_color_associations[$display_id][$differentiator]);
 
   if (!empty($form_state['values']['color_table'])) {
     $i = 0;
     foreach ($form_state['values']['color_table'] as $association) {
 
-      if (is_array($association[$differentiator])) { // e.g association['field_address']['und'][0]['postal_code']
+      if (is_array($association[$differentiator])) { 
+        // E.g association['field_address']['und'][0]['postal_code']
         foreach ($association[$differentiator][LANGUAGE_NONE] as $values) {
           $differentiator_value = array();
           if (is_array($values)) {
