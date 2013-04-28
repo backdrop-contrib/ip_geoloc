@@ -26,6 +26,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ));
     $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
+    $options['empty_map_center'] = array('default' => '');
     $options['visitor_marker_color'] = array('default' => 'none');
     $options['map'] = array('default' => 'OSM Mapnik'); // leaflet.module default
     $options['map_height'] = array('default' => 300);
@@ -263,6 +264,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lon' => $visitor_location['longitude']
       );
     }
+    if (empty($locations)) {
+      $ll = trim($this->options['empty_map_center']);
+      if (empty($ll)) {
+        return; // No map whatsoever
+      }
+      if ($ll != t('visitor')) {
+        // Empty map centered on coordinates provided
+        list($map['center']['lat'], $map['center']['lon']) = preg_split("/[\s,]+/", $ll);
+      }
+    //else Empty map centered on visitor location, as set above
+    }
+
     $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
     $marker_width  = (int)$marker_dimensions[0];
     $marker_height = (int)$marker_dimensions[1];

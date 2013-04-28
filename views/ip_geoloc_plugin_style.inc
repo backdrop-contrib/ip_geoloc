@@ -162,7 +162,14 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       : t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example:<br/>%center_example', array(
           '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }'))
   );
-
+  $form['empty_map_center'] = array(
+    '#title' => t('Show map centered on these coordinates, if there are no locations to show'),
+    '#type' => 'textfield',
+    '#size' => 30,
+    '#default_value' => $views_plugin_style->options['empty_map_center'],
+    '#description' => t('Enter latitude then longitude separated by a space or comma, or the word %visitor.<br/>If left blank, the map canvas will be suppressed when there are no locations to show. If you wish, you may use the <strong>No results behavior</strong> panel in the Advanced Views UI section to show an alternative text or content.', array(
+      '%visitor' => t('visitor')))
+  );
   return $form;
 }
 

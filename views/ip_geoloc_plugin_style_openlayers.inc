@@ -45,6 +45,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
     $form_state['renderer'] = 'openlayers';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
+    unset($form['empty_map_center']); // OpenLayers has "Hide empty map for Views" for this
 
     $form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT] = t('Use lat/lon coordinate arguments from a contextual filter');
     $argument_handlers = $this->view->display_handler->get_handlers('argument');
@@ -105,10 +106,10 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       }
       elseif ($center_option == IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT) {
         if ($handler = $this->view->display_handler->get_handler('argument', $this->options['argument'])) {
-        $latitude = $handler->value['lat'];
-        $longitude = $handler->value['lon'];
-        $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
-        $center_set = TRUE;
+          $latitude = $handler->value['lat'];
+          $longitude = $handler->value['lon'];
+          $map['center']['initial']['centerpoint'] = "$longitude,$latitude";
+          $center_set = TRUE;
         }
       }
       foreach ($locations as $location) {

@@ -307,7 +307,7 @@ function ip_geoloc_views_plugins() {
         'uses grouping' => FALSE,
         'uses row plugin' => FALSE,
         'type' => 'normal',
-        'even empty' => TRUE, // render output, even if empty
+        'even empty' => TRUE, // may be overridden in ip_geoloc_plugin_style_map::render()
       )
     )
   );
@@ -324,7 +324,7 @@ function ip_geoloc_views_plugins() {
       'uses grouping' => FALSE,
       'uses row plugin' => FALSE,
       'type' => 'normal',
-      'even empty' => TRUE, // render output, even if empty
+      'even empty' => TRUE, // may be overridden in ip_geoloc_plugin_style_leaflet::render()
     );
   }
   if (module_exists('openlayers')) {
@@ -340,7 +340,7 @@ function ip_geoloc_views_plugins() {
       'uses grouping' => FALSE,
       'uses row plugin' => FALSE,
       'type' => 'normal',
-      'even empty' => TRUE, // render output, even if empty
+      'even empty' => TRUE,  // may be overridden in ip_geoloc_plugin_style_openlayers::render()
     );
   }
 
