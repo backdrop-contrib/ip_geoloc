@@ -167,7 +167,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#type' => 'textfield',
     '#size' => 30,
     '#default_value' => $views_plugin_style->options['empty_map_center'],
-    '#description' => t('Enter latitude then longitude separated by a space or comma, or the word %visitor.<br/>If left blank, the map canvas will be suppressed when there are no locations to show. If you wish, you may use the <strong>No results behavior</strong> panel in the Advanced Views UI section to show an alternative text or content.', array(
+    '#description' => t('Enter latitude then longitude separated by a space or comma, or the word %visitor.<br/>If left blank, the map canvas will be suppressed when there are no locations to show. If you wish, you may use the <strong>No results behavior</strong> panel in the Advanced section of the Views UI to show an alternative text or content.', array(
       '%visitor' => t('visitor')))
   );
   return $form;
@@ -473,7 +473,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   }
   global $user;
   if ($error_count > 1 && $user->uid == 1) {
-    drupal_set_message(t('A total of @error_count View result rows did not have their %latitude lat/lng set and could therefore not be shown on the map. The first was row #@first. To improve efficiency you may want to apply a "not empty" filter to %latitude.', array(
+    drupal_set_message(t('A total of @error_count View result rows did not have their %latitude lat/lng set and could therefore not be shown on the map. The first was row #@first. If you are sure that you have typed the name of the field correctly, then you can improve execution efficiency by applying a "not empty" filter to %latitude.', array(
       '@error_count' => $error_count, '@first' => $first_error, '%latitude' => $latitude)), 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
@@ -552,18 +552,20 @@ function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
   if (!isset($row) || !isset($field_name) || !isset($delta)) {
     return NULL;
   }
-  if (!empty($row->{$field_name}[$delta]['raw'])) {
-    return $row->{$field_name}[$delta]['raw'];
-    // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
-    // Geofield     : field_<field_name>[0]['raw']['geom'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
-    // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
-    // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
-  }
-  $lang = LANGUAGE_NONE;
-  if (!empty($row->{$field_name}[$lang][$delta])) { // EntityFieldQuery Views Backend
-    // For Geofield module lat/long are as follows (note: no extra field_ prefix)
-    // <field_name>['und]['0']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
-    return $row->{$field_name}[$lang][$delta];
+  if (isset($row->{$field_name}) && is_array($row->{$field_name})) {
+    if (!empty($row->{$field_name}[$delta]['raw'])) {
+      return $row->{$field_name}[$delta]['raw'];
+      // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
+      // Geofield     : field_<field_name>[0]['raw']['geom'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+      // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
+      // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
+    }
+    $lang = LANGUAGE_NONE;
+    if (!empty($row->{$field_name}[$lang][$delta])) { // EntityFieldQuery Views Backend
+      // For Geofield module lat/long are as follows (note: no extra field_ prefix)
+      // <field_name>['und]['0']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+      return $row->{$field_name}[$lang][$delta];
+    }
   }
   return NULL;
 }
