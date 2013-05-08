@@ -644,6 +644,8 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   $views_plugin_style->rendered_fields = array();
   $field_ids = array_keys($views_plugin_style->view->field);
   $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
+  $latitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude']);
+  $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
 
   foreach ($views_plugin_style->view->result as $i => &$row) {
     $views_plugin_style->view->row_index = $i; // God knows why we need this...
@@ -653,9 +655,10 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       $field_value = $field->theme($row);
 
       // Add the special 'views_' fields that normally aren't in the results
-      // set to the row, if required for the $differentiator.
+      // set to the row, if required for the $differentiator or lat/lon that
+      // have math expressions applied through the Views UI.
       $special_field_id = 'views_' . $field_id;
-      if ($special_field_id == $differentiator && empty($row->{$special_field_id})) {
+      if (($special_field_id == $differentiator || $special_field_id == $latitude || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
         $row->{$special_field_id}[] = $field_value;
       }
       // If Excluded is ticked, we don't style and add the field to the rendered_fields.
