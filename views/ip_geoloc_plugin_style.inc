@@ -472,7 +472,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     }
   }
   global $user;
-  if ($error_count > 1 && $user->uid == 1) {
+  if ($error_count > 0 && $user->uid == 1) {
     drupal_set_message(t('A total of @error_count View result rows did not have their %latitude lat/lng set and could therefore not be shown on the map. The first was row #@first. If you are sure that you have typed the name of the field correctly, then you can improve execution efficiency by applying a "not empty" filter to %latitude.', array(
       '@error_count' => $error_count, '@first' => $first_error, '%latitude' => $latitude)), 'warning');
   }
