@@ -187,6 +187,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    * Validate the options form.
    */
   function options_validate(&$form, &$form_state) {
+    ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
     $map_height = $form_state['values']['style_options']['map_height'];
     if (!is_numeric($map_height) || $map_height <= 0) {
       form_error($form['map_height'], t('Map height cannot be blank and must be a positive number.'));

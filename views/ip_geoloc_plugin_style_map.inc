@@ -84,6 +84,13 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   }
 
   /**
+   * Validate the options form.
+   */
+  function options_validate(&$form, &$form_state) {
+    ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
+  }
+
+  /**
    * Transform the View result in a list of marker locations and render these on
    * a map.
    */

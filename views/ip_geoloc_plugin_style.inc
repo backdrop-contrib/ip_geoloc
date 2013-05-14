@@ -20,20 +20,58 @@ define('IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT', 5);
 
 function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state) {
 
+  $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler, TRUE);
+
+  $field_options = $fields;
+  $field_options['---'] = '[' . t('Type a field name') . ']';
+  $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_latitude'];
+  if (!isset($field_options[$selected_option])) {
+    $selected_option = '---';
+  }
   $form['ip_geoloc_views_plugin_latitude'] = array(
     '#title' => t('Name of latitude field in Views query'),
+    '#type' => 'select',
+    '#options' => $field_options,
+    '#default_value' => $selected_option,
+  );
+  $form['ip_geoloc_views_plugin_latitude_text'] = array(
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
-    '#description' => t('If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>. If your View involves other modules or relationships, prefix the name with the relevant table name(s), delimited by underscores.', array(
-      '!url1' => url('admin/reports/fields'),
-      '!url2' => url('http://drupal.org/project/efq_views')
+    '#states' => array(
+      'visible' => array(
+        ':input[name="style_options[ip_geoloc_views_plugin_latitude]"]' => array('value' => '---'),
+      )
+    )
+  );
+  $form['ip_geoloc_views_plugin_latitude_desc'] = array(
+    '#type' => 'item',
+    '#markup' => t('Select the field holding the latitude from the dropdown above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>.', array(
+       '!url1' => url('admin/reports/fields'),
+       '!url2' => url('http://drupal.org/project/efq_views')
     ))
   );
+  $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
+  if (!isset($field_options[$selected_option])) {
+    $selected_option = '---';
+  }
   $form['ip_geoloc_views_plugin_longitude'] = array(
     '#title' => t('Name of longitude field in Views query'),
+    '#type' => 'select',
+    '#options' => $field_options,
+    '#default_value' => $selected_option,
+  );
+  $form['ip_geoloc_views_plugin_longitude_text'] = array(
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude'],
-    '#description' => t('See comments above. When using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules you can leave this field empty.')
+    '#states' => array(
+      'visible' => array(
+        ':input[name="style_options[ip_geoloc_views_plugin_longitude]"]' => array('value' => '---'),
+      )
+    )
+  );
+  $form['ip_geoloc_views_plugin_longitude_desc'] = array(
+    '#type' => 'item',
+    '#markup' => t('See comments above. When using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules select <em>&lt;none&gt;</em>.'),
   );
 
   $differentiator = isset($form_state['differentiator'])
@@ -63,7 +101,6 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#suffix' => '</div>'
   );
 
-  $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler, TRUE);
   $instances = ip_geoloc_get_field_instances($differentiator);
   $instance = reset($instances);
 
@@ -171,6 +208,18 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       '%visitor' => t('visitor')))
   );
   return $form;
+}
+
+/**
+ * Validation for ip_geoloc_plugin_style_bulk_of_form().
+ */
+function ip_geoloc_plugin_style_bulk_of_form_validate(&$form, &$form_state) {
+  if ($form_state['values']['style_options']['ip_geoloc_views_plugin_latitude'] == '---') {
+    $form_state['values']['style_options']['ip_geoloc_views_plugin_latitude'] = $form_state['values']['style_options']['ip_geoloc_views_plugin_latitude_text'];
+  }
+  if ($form_state['values']['style_options']['ip_geoloc_views_plugin_longitude'] == '---') {
+    $form_state['values']['style_options']['ip_geoloc_views_plugin_longitude'] = $form_state['values']['style_options']['ip_geoloc_views_plugin_longitude_text'];
+  }
 }
 
 /**
