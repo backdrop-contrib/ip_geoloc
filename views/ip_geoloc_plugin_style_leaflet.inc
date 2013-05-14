@@ -59,6 +59,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $visitor_marker_colors = array(
       'none' => '<' . t('none') . '>') +
       ip_geoloc_marker_colors();
+    unset($visitor_marker_colors['0']);
 
     $form['visitor_marker_color'] = array(
       '#title' => t('Visitor marker'),
