@@ -45,9 +45,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $form['ip_geoloc_views_plugin_latitude_desc'] = array(
     '#type' => 'item',
-    '#markup' => t('Select the field holding the latitude from the dropdown above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url1">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>.', array(
-       '!url1' => url('admin/reports/fields'),
-       '!url2' => url('http://drupal.org/project/efq_views')
+    '#markup' => t('Select the field holding the latitude from the dropdown above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>.', array(
+       '!url' => url('admin/reports/fields')
     ))
   );
   $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
@@ -521,9 +520,17 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     }
   }
   global $user;
-  if ($error_count > 0 && $user->uid == 1) {
-    drupal_set_message(t('A total of @error_count View result rows did not have their %latitude lat/lng set and could therefore not be shown on the map. The first was row #@first. If you are sure that you have typed the name of the field correctly, then you can improve execution efficiency by applying a "not empty" filter to %latitude.', array(
-      '@error_count' => $error_count, '@first' => $first_error, '%latitude' => $latitude)), 'warning');
+  if ($error_count && $user->uid == 1) {
+    $row_count = count($views_plugin_style->view->result);
+    if ($error_count >= $row_count) {
+      drupal_set_message(t('None of the @total View result rows had their %latitude lat/lng set. Therefore the map could not be displayed. Is %latitude the correct field name?', array(
+        '@total' => $row_count, '%latitude' => $latitude)), 'warning');
+    }
+    else {
+      drupal_set_message(t('Out of a total of @total View result rows, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', array(
+        '@error_count' => $error_count, '@total' => $row_count, '@first' => $first_error, '%latitude' => $latitude)), 'warning');
+    }
+    drupal_set_message(t('The above message is shown only to user 1'), 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
