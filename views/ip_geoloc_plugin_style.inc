@@ -516,7 +516,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $locations[] = $location;
     }
     elseif ($error_count++ == 0) {
-      $first_error = $i + 1;
+      $first_error = $i;
     }
   }
   global $user;
@@ -525,12 +525,18 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     if ($error_count >= $row_count) {
       drupal_set_message(t('None of the @total View result rows had their %latitude lat/lng set. Therefore the map could not be displayed. Is %latitude the correct field name?', array(
         '@total' => $row_count, '%latitude' => $latitude)), 'warning');
+      $first_error = 0;
     }
     else {
       drupal_set_message(t('Out of a total of @total View result rows, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', array(
-        '@error_count' => $error_count, '@total' => $row_count, '@first' => $first_error, '%latitude' => $latitude)), 'warning');
+        '@error_count' => $error_count, '@total' => $row_count, '@first' => $first_error+1, '%latitude' => $latitude)), 'warning');
     }
     drupal_set_message(t('The above message is shown only to user 1'), 'warning');
+    $row_contents = t('First error row: ') . '<br/>';
+    foreach ($views_plugin_style->view->result[$first_error] as $field_name => $value) {
+      $row_contents .= "<strong>$field_name</strong> = " . print_r($value, TRUE) . '<br/>';
+    }
+    ip_geoloc_debug($row_contents, 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
@@ -590,12 +596,13 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
       $location->latitude  = $base['latitude'];
       $location->longitude = $base['longitude'];
     }
-    else { // Other module
+    elseif (isset($row->{'field_' . $latitude }[$delta]['raw']['value'])) { // Other module
       // Field values tend to be inside ...[0]['raw']['value']:
       $location->latitude  = $row->{'field_' . $latitude }[$delta]['raw']['value'];
       $location->longitude = $row->{'field_' . $longitude}[$delta]['raw']['value'];
     }
   }
+  // empty $base:
   elseif (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
     // If not node fields then db table fields...
     $location->latitude  = $row->{$latitude};
