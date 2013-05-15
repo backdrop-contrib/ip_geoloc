@@ -8,6 +8,8 @@
  */
 require_once 'ip_geoloc_plugin_style.inc';
 
+define('LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER', 0x01);
+
 class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   /**
@@ -283,26 +285,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_height = (int)$marker_dimensions[1];
 
     $features = array();
-    if ($visitor_marker_color != 'none' && isset($visitor_location['latitude'])) {
-      // See leaflet/README.txt for examples of Leaflet "features"
-      $visitor_feature = array(
-        'type' => 'point',
-        'lat' => $visitor_location['latitude'],
-        'lon' => $visitor_location['longitude'],
-        'popup' => t('Your retrieved location'),
-        'tooltip' => t('Your retrieved location'),
-      );
-      if ($visitor_marker_color != '') {
-        $visitor_feature['icon'] = array(
-          'iconUrl' => $icon_path . "/$visitor_marker_color.png",
-          'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
-          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center of baseline
-          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
-        );
-      }
-      $features[] = $visitor_feature;
-    }
-
     foreach ($locations as $key => $location) {
       $feature = array(
         'type' => 'point',
@@ -342,6 +324,26 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         );
       }
       $features[] = $feature;
+    }
+    if ($visitor_marker_color != 'none' && isset($visitor_location['latitude'])) {
+      // See leaflet/README.txt for examples of Leaflet "features"
+      $visitor_feature = array(
+        'type' => 'point',
+        'lat' => $visitor_location['latitude'],
+        'lon' => $visitor_location['longitude'],
+        'popup' => t('Your retrieved location'),
+        'tooltip' => t('Your retrieved location'),
+        'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER // see leaflet_markercluster.drupal.js
+      );
+      if ($visitor_marker_color != '') {
+        $visitor_feature['icon'] = array(
+          'iconUrl' => $icon_path . "/$visitor_marker_color.png",
+          'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
+          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center of baseline
+          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
+        );
+      }
+      $features[] = $visitor_feature;
     }
     // If auto-box is chosen ($center_option==0), zoom only when there are 0 or 1 markers [#1863374]
     if (empty($center_option) && count($features) > 1) {
