@@ -494,9 +494,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $error_count = 0;
   foreach ($views_plugin_style->view->result as $i => $row) {
 
-    $location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude);
-
-    if ($location) {
+    if ($location = (object)_ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude)) {
       // Remaining row values go into the balloon
       if (!empty($views_plugin_style->rendered_fields[$i])) {
         $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
@@ -544,6 +542,13 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   return $locations;
 }
 
+/**
+ *
+ * @param array $row, View result row
+ * @param string $latitude, name of the row field that holds latitude
+ * @param string $longitude, name of the row field that holds longitude
+ * @return location object -- @todo return array for consistency with Leaflet?
+ */
 function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
 
   $delta = &drupal_static(__FUNCTION__);
@@ -571,22 +576,37 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   if (!empty($base)) {
 
     if (isset($base['geo_type'])) { // Geofield
-      $is_point = ($base['geo_type'] == 'point');
-      if ($is_point) { // wkt more accurate than lat,lon in Geofield 7.x-1.x
-        $point = empty($base['geom']) ? $base['wkt'] : $base['geom'];
-        // @todo Consider using
-        // $geometry = geoPHP::load($base['geom']);
-        // $location = json_decode($geometry->out('json'));
-        $is_point = (drupal_substr(trim($point), 0, 7) == 'POINT (');
-        if ($is_point) {
-          $parts = explode(' ', drupal_substr($point, 7));
-          $is_point = count($parts) > 1;
+
+      // Quick fix: take advantage of Leaflet module, if enabled.
+      // @todo generalise Leaflet code and incorporate here.
+      if (function_exists('leaflet_process_geofield')) {
+        // Support WKT lines and polygons in Leaflet. Call requires:
+        // $base['geo_type'] eg 'point' or 'linestring'
+        // $base['geom'] eg. 'POINT(145 -37)' or 'LINESTRING(145 -37, 146, -38)'
+        if (!isset($base['wkt'])) {
+          $base['wkt'] = $base['geom']; // until fixed in leaflet_process_geofield()
         }
+        $location = leaflet_process_geofield(array($base));
+        $location = (object)reset($location);
       }
-      // $is_point==FALSE may indicate a MULTIPOINT cluster, which has its
-      // averaged center on 'lat' and 'lon' indices.
-      $location->longitude = $is_point ? (float)$parts[0] : $base['lon'];
-      $location->latitude  = $is_point ? (float)$parts[1] : $base['lat'];
+      else {
+        $is_point = ($base['geo_type'] == 'point');
+        if ($is_point) { // wkt more accurate than lat,lon in Geofield 7.x-1.x
+          $point = empty($base['geom']) ? $base['wkt'] : $base['geom'];
+          // @todo Consider using the following:
+          // $geometry = geoPHP::load($base['geom']);
+          // $location = json_decode($geometry->out('json'));
+          $is_point = (drupal_substr(trim($point), 0, 7) == 'POINT (');
+          if ($is_point) {
+            $parts = explode(' ', drupal_substr($point, 7));
+            $is_point = count($parts) > 1;
+          }
+        }
+        // $is_point==FALSE may indicate a MULTIPOINT cluster, which has its
+        // averaged center on 'lat' and 'lon' indices.
+        $location->longitude = $is_point ? (float)$parts[0] : $base['lon'];
+        $location->latitude  = $is_point ? (float)$parts[1] : $base['lat'];
+      }
     }
     elseif (isset($base['lng'])) { // GeoLocation
       $location->latitude  = $base['lat'];
@@ -603,12 +623,12 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
     }
   }
   // empty $base:
-  elseif (!empty($row->{$latitude}) && !empty($row->{$longitude})) {
+  elseif (isset($row->{$latitude}) && isset($row->{$longitude})) {
     // If not node fields then db table fields...
     $location->latitude  = $row->{$latitude};
     $location->longitude = $row->{$longitude};
   }
-  return isset($location->latitude) ? $location : NULL;
+  return isset($location->type) || isset($location->latitude) ? $location : NULL;
 }
 
 function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {

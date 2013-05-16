@@ -247,8 +247,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         ($visitor_marker_color == 'none' && count($locations) == 1))) {
       $first_location = reset($locations);
       $map['center'] = array(
-        'lat' => $first_location->latitude,
-        'lon' => $first_location->longitude
+        'lat' => isset($first_location->lat) ? $first_location->lat : $first_location->latitude,
+        'lon' => isset($first_location->lon) ? $first_location->lon : $first_location->longitdue
       );
     }
     elseif (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {
@@ -286,13 +286,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $features = array();
     foreach ($locations as $key => $location) {
-      $feature = array(
-        'type' => 'point',
-        'lat' => $location->latitude,
-        'lon' => $location->longitude,
-        'popup' => $location->balloon_text,
-      //'leaflet_id' => $key
-      );
+      if (empty($location->type)) {
+        $feature = array(
+          'type' => 'point',
+          'lat' => $location->latitude,
+          'lon' => $location->longitude,
+        );
+      }
+      else { // parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
+        $feature = (array)$location;
+      }
+      $feature['popup'] = $location->balloon_text;
+
       if (!empty($location->marker_tooltip)) {
         $has_special_markers = TRUE;
         $feature['tooltip'] = $location->marker_tooltip;
