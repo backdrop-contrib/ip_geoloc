@@ -245,11 +245,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($locations) &&
         ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
         ($visitor_marker_color == 'none' && count($locations) == 1))) {
-      $first_location = reset($locations);
-      $map['center'] = array(
-        'lat' => isset($first_location->lat) ? $first_location->lat : $first_location->latitude,
-        'lon' => isset($first_location->lon) ? $first_location->lon : $first_location->longitdue
-      );
+      $map['center'] = _ip_geoloc_get_center(reset($locations));
     }
     elseif (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {
       list($center_lat, $center_lon) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
@@ -286,7 +282,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $features = array();
     foreach ($locations as $key => $location) {
-      if (empty($location->type)) {
+      if (empty($location->type) && isset($location->latitude)) {
         $feature = array(
           'type' => 'point',
           'lat' => $location->latitude,
@@ -393,7 +389,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         leaflet_markercluster_preprocess_leaflet_map($vars);
       }
       else {
-        drupal_set_message(t('Cannot cluster - Leaflet Markercluster module not enabled.'), 'warning');
+        drupal_set_message(t('Cannot cluster - Leaflet MarkerCluster module not enabled.'), 'warning');
       }
     }
 
@@ -403,6 +399,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'view' => $this->view
     ));
     return $output;
+  }
+}
+
+function _ip_geoloc_get_center($location) {
+  if (empty($location->type) || $location->type == 'point') {
+    $lat = isset($location->lat) ? $location->lat : (isset($location->latitude)  ? $location->latitude  : 0.0);
+    $lon = isset($location->lon) ? $location->lon : (isset($location->longitude) ? $location->longitude : 0.0);
+    return array('lat' => $lat, 'lon' => $lon);
+  }
+  if (!empty($location->component[0]['points'][0])) {
+    return $location->component[0]['points'][0];
   }
 }
 
