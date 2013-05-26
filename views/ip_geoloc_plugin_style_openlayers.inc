@@ -120,15 +120,26 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
         }
       }
       foreach ($locations as $location) {
+        if (isset($location->lon)) {
+          $lon = $location->lon;
+          $lat = $location->lat;
+        }
+        elseif (isset($location->longitude)) {
+          $lon = $location->longitude;
+          $lat = $location->latitude;
+        }
+        else {
+          continue;
+        }
         if (empty($center_set) && $center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION) {
-          $map['center']['initial']['centerpoint'] = $location->longitude . ',' . $location->latitude;
+          $map['center']['initial']['centerpoint'] = "$lon,$lat";
           $center_set = TRUE;
         }
         $feature = array(
           // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js
           'attributes' => array('description' => $location->balloon_text),
           'projection' => 'EPSG:4326',
-          'wkt' => 'POINT(' . $location->longitude . ' ' . $location->latitude . ')'
+          'wkt' => "POINT($lon $lat)"
         );
         $layer = isset($location->marker_color) && is_numeric($location->marker_color) ? $location->marker_color : 1;
         $map['layers'][IP_GEOLOC_MARKER_LAYER . $layer]['features'][] = $feature;
