@@ -27,6 +27,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'differentiator_field' => array('default' => '')
     ));
     $options['default_marker_color'] = array('default' => '');
+    $options['default_marker_icon'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['empty_map_center'] = array('default' => '');
     $options['visitor_marker_color'] = array('default' => 'none');
@@ -289,8 +290,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           'lon' => $location->longitude,
         );
       }
-      else { // parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
+      else { // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
         $feature = (array)$location;
+      }
+      if (!isset($feature['lat']) || !isset($feature['lon'])) {
+        continue;
       }
       $feature['popup'] = $location->balloon_text;
 

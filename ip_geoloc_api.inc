@@ -282,8 +282,10 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   ip_geoloc_debug(t('- marker dimensions : w@w x h@h px', array('@w' => $marker_width, '@h' => $marker_height)));
   ip_geoloc_debug(t('- @count locations found', array('@count' => count($locations))));
   foreach ($locations as $location) {
-    $color = isset($location->marker_color) ? $location->marker_color : t('default') . " ($marker_color)";
-    $msg = '- ' . t('marker') . ' ' . $color . ' (' . $location->latitude . ', ' . $location->longitude . ')<br/>' . $location->balloon_text . '<br/>';
+    $color = empty($location->marker_color) ? t('default') . " [$marker_color]" : $location->marker_color;
+    $coords = isset($location->latitude) ? $location->latitude . ', ' . $location->longitude : '';
+    $text = isset($location->balloon_text) ? $location->balloon_text : '';
+    $msg = '- ' . t('marker') . " $color ($coords)<br/>$text<br/>";
     ip_geoloc_debug($msg);
   }
 

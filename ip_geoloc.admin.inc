@@ -103,10 +103,12 @@ function ip_geoloc_admin_configure() {
     );
   }
   else {
+    // @todo: cater for case where the module directory has been renamed?
+    $marker_path = drupal_get_path('module', 'ip_geoloc');
     $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_directory'] = array(
       '#type' => 'textfield',
       '#title' => t('Path to marker icons'),
-      '#default_value' => variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers'),
+      '#default_value' => variable_get('ip_geoloc_marker_directory', "$marker_path/markers"),
       '#description' => t('Should normally NOT start with a slash. All marker images must be .png files.')
     );
     $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_dimensions'] = array(

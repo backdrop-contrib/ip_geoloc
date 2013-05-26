@@ -94,8 +94,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   // The id in the prefix must match the AJAX submit handlers below.
   $form['differentiator'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Location differentiator and color associations'),
-    '#description' => t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker colors on the map. Examples of location differentiators are content type, taxonomy terms, gender. You may specify numeric and alphabetic <strong>ranges</strong> to match, too. So you can colour locations by age or height range, or by names or titles starting with some letter.'),
+    '#title' => t('Location differentiator and associated markers'),
+    '#description' => t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type, taxonomy terms, gender. You may specify numeric and alphabetic <strong>ranges</strong> to match, too. So you can colour locations by dollar or age ranges, or by first letter.'),
     '#prefix' => '<div id="differentiator-wrapper">',
     '#suffix' => '</div>'
   );
@@ -107,7 +107,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     $description = t('Optionally select a location differentiator.');
   }
   else {
-    $description = t('Below associate %differentiator values with marker colors on the map.', array(
+    $description = t('Below associate %differentiator values with marker images.', array(
       '%differentiator' => empty($instance) ? $fields[$differentiator] :  $instance['label']
     )) . '<br/>';
     $field = field_info_field($differentiator);
@@ -174,13 +174,28 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#size' => 1, // $is_openlayers ? 1 : 2, // may not be granted, 4 is minimum in some browsers
     '#default_value' => $views_plugin_style->options['default_marker_color'],
     '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
-    '#description' => t('Select one color to apply to all location markers whose colors are not overridden by the <strong>Location differentiator</strong> above.'),
+    '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>Location differentiator</strong> above.'),
     '#attributes' => array(
       'class' => $is_openlayers ? array('marker-color ol') : array('marker-color gmap')),
     '#attached' => array(
       'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
     )
   );
+/* Work in progress
+  if ($form_state['renderer'] == 'leaflet') {
+    $form['default_marker_icon'] = array(
+      '#title' => t('Default marker icon'),
+      '#type' => 'select',
+      '#multiple' => FALSE,
+      '#default_value' => $views_plugin_style->options['default_marker_icon'],
+      '#options' => array('icon1', 'icon2', 'icon3'),
+      '#description' => t('Select an icon to superimpose on all location markers that are not overridden by the <strong>Location differentiator</strong> above.'),
+      '#attached' => array(
+        'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
+      )
+    );
+  }
+ */
   $form['center_option'] = array(
     '#title' => t('Map centering options'),
     '#type' => 'radios',
@@ -439,7 +454,7 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
 
   $headers = array(
     t('%differentiator value', array('%differentiator' => $differentiator_label)),
-    t('Associated marker color')
+    t('Associated marker image')
   );
   $rows = array();
   foreach ($form_children as $key) {
@@ -675,7 +690,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
     else {
       $differentiator_value = '';
       if (!isset($row->{'field_' . $differentiator})) {
-        drupal_set_message(t('IP Geolocation Views and Maps: no differentiator values found for %diff. Cannot set marker colors.', array(
+        drupal_set_message(t('IP Geolocation Views and Maps: no differentiator values found for %diff. Cannot set marker images.', array(
           '%diff' => $differentiator)), 'warning', FALSE);
       }
     }
