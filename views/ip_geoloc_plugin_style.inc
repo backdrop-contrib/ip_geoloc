@@ -181,21 +181,20 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
     )
   );
-/* Work in progress
+  /* This needs to move to ip_geoloc_plugin_style_leaflet.inc
   if ($form_state['renderer'] == 'leaflet') {
     $form['default_marker_icon'] = array(
-      '#title' => t('Default marker icon'),
-      '#type' => 'select',
+      '#title' => t('Default marker icon character(s)'),
+      '#type' => 'textfield',
       '#multiple' => FALSE,
       '#default_value' => $views_plugin_style->options['default_marker_icon'],
-      '#options' => array('icon1', 'icon2', 'icon3'),
       '#description' => t('Select an icon to superimpose on all location markers that are not overridden by the <strong>Location differentiator</strong> above.'),
       '#attached' => array(
-        'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
-      )
+        'css' => array('sites/all/libraries/font-awesome/css/font-awesome.min.css')
+      ),
+      '#weight' => -100
     );
-  }
- */
+  }*/
   $form['center_option'] = array(
     '#title' => t('Map centering options'),
     '#type' => 'radios',
@@ -509,7 +508,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $error_count = 0;
   foreach ($views_plugin_style->view->result as $i => $row) {
 
-    if ($location = (object)_ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude)) {
+    if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude)) {
       // Remaining row values go into the balloon
       if (!empty($views_plugin_style->rendered_fields[$i])) {
         $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
@@ -544,12 +543,12 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       drupal_set_message(t('Out of a total of @total View result rows, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', array(
         '@error_count' => $error_count, '@total' => $row_count, '@first' => $first_error+1, '%latitude' => $latitude)), 'warning');
     }
-    drupal_set_message(t('The above message is shown only to user 1'), 'warning');
     $row_contents = t('First error row: ') . '<br/>';
     foreach ($views_plugin_style->view->result[$first_error] as $field_name => $value) {
       $row_contents .= "<strong>$field_name</strong> = " . print_r($value, TRUE) . '<br/>';
     }
-    ip_geoloc_debug($row_contents, 'warning');
+    drupal_set_message($row_contents, 'warning');
+    drupal_set_message(t('The above messages are shown only to user 1'), 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
@@ -562,7 +561,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
  * @param array $row, View result row
  * @param string $latitude, name of the row field that holds latitude
  * @param string $longitude, name of the row field that holds longitude
- * @return location object -- @todo return array for consistency with Leaflet?
+ * @return location object or NULL -- @todo return array for consistency with Leaflet?
  */
 function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
 

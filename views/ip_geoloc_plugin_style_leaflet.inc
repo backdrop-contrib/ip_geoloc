@@ -13,7 +13,7 @@ define('LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER', 0x01);
 class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   /**
-   * Set default OpenLayer options.
+   * Set default Leaflet options.
    */
   function option_definition() {
     $options = parent::option_definition();
