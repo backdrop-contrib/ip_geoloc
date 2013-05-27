@@ -518,8 +518,19 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
     $count = 0;
     $x = $y = $z = 0.0;
     foreach ($locations as $location) {
-      $lat = deg2rad($location->latitude);
-      $lng = deg2rad($location->longitude);
+      if (isset($location->lon)) {
+        $lng = $location->lon;
+        $lat = $location->lat;
+      }
+      elseif (isset($location->longitude)) {
+        $lng = $location->longitude;
+        $lat = $location->latitude;
+      }
+      else {
+        continue;
+      }
+      $lng = deg2rad($lng);
+      $lat = deg2rad($lat);
       // Convert to Cartesian coords and total the 3 dimensions independently.
       $x += cos($lat) * cos($lng);
       $y += cos($lat) * sin($lng);
@@ -538,14 +549,23 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
   $top = $bottom = $location->latitude;
   $left = $right = $location->longitude;
   while ($location = next($locations)) {
-    $lat = $location->latitude;
+    if (isset($location->lon)) {
+      $lng = $location->lon;
+      $lat = $location->lat;
+    }
+    elseif (isset($location->longitude)) {
+      $lng = $location->longitude;
+      $lat = $location->latitude;
+    }
+    else {
+      continue;
+    }
     if ($lat > $top) {
       $top = $lat;
     }
     elseif ($lat < $bottom) {
       $bottom = $lat;
     }
-    $lng = $location->longitude;
     if ($lng < $left) {
       $left = $lng;
     }
