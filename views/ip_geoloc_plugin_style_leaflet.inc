@@ -293,7 +293,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       else { // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
         $feature = (array)$location;
       }
-      if (empty($location->type) && !isset($feature['lat'])) {
+      // At this point $feature['type'] should be set.
+      if ($feature['type'] != 'point') { // linestring, polygon ...
+        $feature['flags'] = LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER;
+      } 
+      elseif (!isset($feature['lat'])) { // points must have coords
         continue;
       }
       $feature['popup'] = $location->balloon_text;
