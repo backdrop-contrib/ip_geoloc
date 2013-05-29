@@ -33,6 +33,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#type' => 'select',
     '#options' => $field_options,
     '#default_value' => $selected_option,
+    '#weight' => 10
   );
   $form['ip_geoloc_views_plugin_latitude_text'] = array(
     '#type' => 'textfield',
@@ -41,13 +42,15 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       'visible' => array(
         ':input[name="style_options[ip_geoloc_views_plugin_latitude]"]' => array('value' => '---'),
       )
-    )
+    ),
+    '#weight' => 11
   );
   $form['ip_geoloc_views_plugin_latitude_desc'] = array(
     '#type' => 'item',
-    '#markup' => t('Select the field holding the latitude from the dropdown above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. Valid field names are on <a href="!url">this page</a>. For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>.', array(
+    '#markup' => t('Select the field holding the latitude from the dropdown above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. If necessary, check the <a target="_field_names" href="!url">list of all field names</a>. <br/>For IP Geolocation Views and Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>.', array(
        '!url' => url('admin/reports/fields')
-    ))
+    )),
+    '#weight' => 12
   );
   $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
   if (!isset($field_options[$selected_option])) {
@@ -58,6 +61,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#type' => 'select',
     '#options' => $field_options,
     '#default_value' => $selected_option,
+    '#weight' => 15
   );
   $form['ip_geoloc_views_plugin_longitude_text'] = array(
     '#type' => 'textfield',
@@ -66,11 +70,13 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       'visible' => array(
         ':input[name="style_options[ip_geoloc_views_plugin_longitude]"]' => array('value' => '---'),
       )
-    )
+    ),
+    '#weight' => 16
   );
   $form['ip_geoloc_views_plugin_longitude_desc'] = array(
     '#type' => 'item',
     '#markup' => t('See comments above. When using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules select <em>&lt;none&gt;</em>.'),
+    '#weight' => 17
   );
 
   $differentiator = isset($form_state['differentiator'])
@@ -90,14 +96,35 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $form_state['differentiator'] = $differentiator;
   $form_state['no_cache'] = FALSE; // or AJAX won't work!
 
+  $is_openlayers = $form_state['renderer'] == 'openlayers';
+
+  $form['default_marker_color'] = array(
+    '#title' => t('Default location marker'),
+    '#type' => 'select',
+    '#multiple' => FALSE, // !$is_openlayers,
+    '#size' => 1, // $is_openlayers ? 1 : 2, // may not be granted, 4 is minimum in some browsers
+    '#default_value' => $views_plugin_style->options['default_marker_color'],
+    '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
+    '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>location differentiator</strong> below.'),
+    '#attributes' => array(
+      'class' => $is_openlayers ? array('marker-color ol') : array('marker-color gmap')),
+    '#attached' => array(
+      'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
+    ),
+    '#weight' => 20
+  );
+
   // Add wrapper for differentiator drop-down, association table and buttons.
   // The id in the prefix must match the AJAX submit handlers below.
   $form['differentiator'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location differentiator and associated markers'),
-    '#description' => t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type, taxonomy terms, gender. You may specify numeric and alphabetic <strong>ranges</strong> to match, too. So you can colour locations by dollar or age ranges, or by first letter.'),
+    '#description' => t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy terms. You may enter numeric and alphabetic <strong>ranges</strong> too, e.g. price ranges.<br/><strong>Leaflet</strong> only: you may add a special character, eg. from <a target="_font_awesome" href="!url">Font Awesome</a>, to superimpose a font-icon on the marker image.', array(
+      '!url' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'))
+    ),
     '#prefix' => '<div id="differentiator-wrapper">',
-    '#suffix' => '</div>'
+    '#suffix' => '</div>',
+    '#weight' => 30
   );
 
   $instances = ip_geoloc_get_field_instances($differentiator);
@@ -166,35 +193,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       );
     }
   }
-  $is_openlayers = $form_state['renderer'] == 'openlayers';
-  $form['default_marker_color'] = array(
-    '#title' => t('Default location marker'),
-    '#type' => 'select',
-    '#multiple' => FALSE, // !$is_openlayers,
-    '#size' => 1, // $is_openlayers ? 1 : 2, // may not be granted, 4 is minimum in some browsers
-    '#default_value' => $views_plugin_style->options['default_marker_color'],
-    '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
-    '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>Location differentiator</strong> above.'),
-    '#attributes' => array(
-      'class' => $is_openlayers ? array('marker-color ol') : array('marker-color gmap')),
-    '#attached' => array(
-      'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
-    )
-  );
-  /* This needs to move to ip_geoloc_plugin_style_leaflet.inc
-  if ($form_state['renderer'] == 'leaflet') {
-    $form['default_marker_icon'] = array(
-      '#title' => t('Default marker icon character(s)'),
-      '#type' => 'textfield',
-      '#multiple' => FALSE,
-      '#default_value' => $views_plugin_style->options['default_marker_icon'],
-      '#description' => t('Select an icon to superimpose on all location markers that are not overridden by the <strong>Location differentiator</strong> above.'),
-      '#attached' => array(
-        'css' => array('sites/all/libraries/font-awesome/css/font-awesome.min.css')
-      ),
-      '#weight' => -100
-    );
-  }*/
+
   $form['center_option'] = array(
     '#title' => t('Map centering options'),
     '#type' => 'radios',
@@ -210,15 +209,17 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       ? t('*) If you want a fixed center, visit the "Center & Bounds" tab of the <a href="@url">map edit page</a>.', array(
           '@url' => url('admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit')))
       : t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example:<br/>%center_example', array(
-          '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }'))
+          '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }')),
+    '#weight' => 40
   );
   $form['empty_map_center'] = array(
-    '#title' => t('Show map centered on these coordinates, if there are no locations to show'),
+    '#title' => t('No locations behaviour'),
     '#type' => 'textfield',
     '#size' => 30,
     '#default_value' => $views_plugin_style->options['empty_map_center'],
-    '#description' => t('Enter latitude then longitude separated by a space or comma, or the word %visitor.<br/>If left blank, the map canvas will be suppressed when there are no locations to show. If you wish, you may use the <strong>No results behavior</strong> panel in the Advanced section of the Views UI to show an alternative text or content.', array(
-      '%visitor' => t('visitor')))
+    '#description' => t('a) Show empty map: enter <em>latitude, longitude</em> of the map center.<br/>b) Show empty map centered on visitor location: enter the word %visitor.<br/>c) Show nothing: if this field is left blank, the map canvas will be suppressed when there are no locations to show. If you wish, you may use the <strong>No results behavior</strong> panel in the Advanced section of the Views UI to show an alternative text or content.', array(
+      '%visitor' => t('visitor'))),
+    '#weight' => 110
   );
   return $form;
 }
@@ -304,6 +305,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
           if (!empty($differentiator_value)) {
             $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = $differentiator_value;
             $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
+            $differentiator_color_associations[$display_id][$differentiator][$i]['special char'] = $association['special char'];
             $i++;
           }
         }
@@ -313,6 +315,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
         if (!empty($differentiator_value)) {
           $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = array($differentiator_value);
           $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
+          $differentiator_color_associations[$display_id][$differentiator][$i]['special char'] = $association['special char'];
           $i++;
         }
       }
@@ -412,12 +415,17 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
       'class' => $is_openlayers ? array('marker-color ol') : array('marker-color gmap')
     )
   );
-
+  $form['special char'] = array(
+    '#type' => 'textfield',
+    '#size' => 8,
+    '#default_value' => empty($association) ? NULL : $association['special char'],
+  );
   // We'll manually set the #parents property of these fields so that their
   // values appear in the $form_state['values']['color_table'] array.
   $form[$differentiator]['#parents'] = array('color_table', $row, $differentiator);
   $form['color']['#parents'] = array('color_table', $row, 'color');
-
+  $form['special char']['#parents'] = array('color_table', $row, 'special char');
+  
   return $form;
 }
 
@@ -453,13 +461,15 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
 
   $headers = array(
     t('%differentiator value', array('%differentiator' => $differentiator_label)),
-    t('Associated marker image')
+    t('Associated marker image'),
+    t('Associated special char')
   );
   $rows = array();
   foreach ($form_children as $key) {
     $row = array('data' => array(), 'class' => array());
     $row['data'][] = drupal_render($form[$key][$differentiator]);
     $row['data'][] = drupal_render($form[$key]['color']);
+    $row['data'][] = drupal_render($form[$key]['special char']);
     $rows[] = $row;
   }
 
@@ -636,7 +646,7 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
       $location->longitude = $row->{'field_' . $longitude}[$delta]['raw']['value'];
     }
   }
-  // empty $base:
+  // empty $base, e.g. Location module
   elseif (isset($row->{$latitude}) && isset($row->{$longitude})) {
     // If not node fields then db table fields...
     $location->latitude  = $row->{$latitude};
@@ -713,6 +723,9 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
         }
         if ($match) {
           $location->marker_color = $association['color'];
+          if (!empty($association['special char'])) {
+            $location->marker_special_char = $association['special char'];
+          }
         }
       }
     }

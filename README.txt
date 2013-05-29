@@ -7,13 +7,13 @@ found at http://drupal.org/project/ip_geoloc.
 
 INSTALLATION & CONFIGURATION
 ============================
-First, if you are using IP Geolocation mainly for its Views mapping interface to
-other modules, then here's a configuration shortcut.
-Download and enable IP Geolocation like any other module. Visit its
+First, if you are using IPGV&M mainly for its Views mapping interface to other
+modules, then here's a configuration shortcut.
+Download and enable IPGV&M like any other module. Visit its
 configuration page, .../admin/config/system/ip_geoloc.
-If you intend to use IP Geolocation's built-in interface to Google Maps, untick
-all "Data collection option" boxes.
-If you intend to use IP Geolocation with the OpenLayers module and also wish to
+If you intend to use IPGV&M's built-in interface to Google Maps, untick all
+"Data collection option" boxes.
+If you intend to use IPGV&M with the OpenLayers module and also wish to
 show and center on the visitor's HTML-5 retrieved location, then you do need to
 tick the first "Data collection option" and select applicable roles below it.
 
@@ -30,7 +30,7 @@ If you DO want to auto-record visitor address details then complete the steps
 under A and B below.
 
 A. Present and future: reporting and mapping of location information about
-guests visiting after you enabled IP Geolocation
+guests visiting after you enabled IPGV&M
 
 1. Install and enable like any other module, use Drush if you wish. Remain
 connected to the internet.
@@ -39,8 +39,8 @@ connected to the internet.
 Statistics, section System, verify that the access log is enabled. Select the
 "Discard access logs older than" option as you please. "Never" is good.
 
-3. Visit the IP Geolocation configuration page at Configuration >> IP
-Geolocation. If you don't see any errors or warnings (usually yellow) you're
+3. Visit the IPGV&M configuration page at Configuration >> IP Geolocation V&M
+If you don't see any errors or warnings (usually yellow) you're
 good to proceed. Don't worry about any of the configuration options for now,
 the defaults are fine.
 
@@ -60,15 +60,15 @@ Modify these views as you please.
 B. Historic data: location info about visits to your site from way back when
 
 Note, that this step relies on you having had the Statistics module enabled
-before you installed IP Geolocation, as the access log is used as the source of
-IP addresses that have visited your site previously.
+before you installed IPGV&M, as the access log is used as the source of IP
+addresses that have visited your site previously.
 There are a couple of options here. Use either http://drupal.org/project/smart_ip
 and the IPinfoDB web service it uses, or http://drupal.org/project/geoip, which
 takes its data from a file you download for free.
 
 1a. If you decide to employ Smart IP....
 Install and enable Smart IP. There is no need to enable the Device Geolocation
-submodule as IP Geolocation already has that functionality, plus more. At
+submodule as IPGV&M already has that functionality, plus more. At
 Configuration >> Smart IP you'll find two options to upload historic lat/long
 data. The one using the IPinfoDB web service is probably the quickest. The API
 key required on the Smart IP configuration page is free and is sent to you
@@ -83,7 +83,7 @@ it in sites/all/libraries/geoip. Go to the GeoIP configuration page and type
 the name of the file you've just downloaded, GeoLiteCity.dat. Save. That should
 be it.
 
-2. With either Smart IP or GeoIP configured, visit Configuration >> IP Geolocation.
+2. With either Smart IP or GeoIP configured, visit Configuration >> IPGV&M.
 Tick the check boxes as appropriate.
 
 3. On the same page, start a small batch import of, say, size 10. Data for the
@@ -91,7 +91,7 @@ most recent visitors will be loaded first, so you don't have to complete the
 import to check it's all working. For instance, the block "Map showing locations
 of 10 most recent visitors" should now show more markers.
 
-4. Go back the Configuration >> IP Geolocation and complete the import process
+4. Go back the Configuration >> IPGV&M and complete the import process
 with a larger batch size until the IP Geolocation database is up to date with
 the access log. It will automatically remain in synch from now on.
 
@@ -107,9 +107,9 @@ your_Geofield/Geolocation_field". Only one copy is required, you do NOT need
 both a latitude version plus a longitude version. The "Formatter", if it pops
 up, is relevant only if you want the location field to appear in the marker
 balloons.
-Then, after selecting the View Format "Map (Google, via IP Geolocation)", "Map
-(Leaflet, via IP Geolocation)" or "Map (OpenLayers, via IP Geolocation)" enter
-field_name in the "Name of latitude field in Views query".
+Then, after selecting the View Format "Map (Google, via IPGV&M)", "Map (Leaflet,
+via IPGV&M)" or "Map (OpenLayers, via IPGV&M)" select or type field_name in the
+"Name of latitude field in Views query".
 Fill out the remaining options to your liking. Save. Done.
 
 LEAFLET TIPS
@@ -165,6 +165,13 @@ admin/config/system/ip_geoloc. Expand the "Alternative markers" fieldset.
 Enter the path to your map_markers directory and the dimensions of your markers.
 The marker set will now be available in your map settings, in particular in the
 differentiator settings.
+
+"FONT AWESOME" ICONS SUPERIMPOSED ON YOUR MARKER IMAGES (LEAFLET)
+=================================================================
+To install Font Awesome visit http://fortawesome.github.io/Font-Awesome and
+press the "Download" button. Unzip the downloaded file into the Drupal
+libraries directory, typically sites/all/libraries, so that the path to the
+essential style sheet becomes sites/all/libraries/font-awesome/css/font-awesome.css
 
 UTILITY FUNCTIONS
 =================

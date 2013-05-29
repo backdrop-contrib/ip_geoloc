@@ -1,21 +1,22 @@
-.leaflet-tagged-marker div {
+.leaflet-tagged-marker div,
+.leaflet-tagged-marker i {
   position: relative;
-  font-size: 10px;
-  top: -31px;
-  left: -31px;
+  font-size: 11px;
+  top: -35px;
+  left: -39px;
   min-width: 60px;
   text-align: center;
   height: 0;  /* so that tag doesn't affect position of marker */
 }
-.leaflet-tagged-marker .tag-above-marker {
-  top: -48px;
+.leaflet-tagged-marker div.tag-above-marker {
+  top: -56px;
   color: red;
 }
-.leaflet-tagged-marker .tag-below-marker {
+.leaflet-tagged-marker div.tag-below-marker {
   top: -1px;
   color: red;
 }
-.leaflet-tagged-marker .tag-inside-marker {
+.leaflet-tagged-marker div.tag-inside-marker {
   /* z-index: 1; /* needed if img follows tag */
 }
 
@@ -38,4 +39,10 @@
   border-top: 1px solid red;
   border-left: 1px solid red;
   background-color: white;
+}
+
+.leaflet-tagged-marker [class^="icon-"] { /* targeting anything Font-Awesome */
+  display: block;
+  font-size: 16px;
+  color: seashell; /* or red or black or anything! */
 }

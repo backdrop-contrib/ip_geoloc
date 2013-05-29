@@ -546,8 +546,8 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
   }
   // Alternative method based on top & bottom latitude and left & right longitude
   $location = reset($locations);
-  $top = $bottom = $location->latitude;
-  $left = $right = $location->longitude;
+  $top = $bottom = isset($location->lat) ? $location->lat : $location->latitude;
+  $left = $right = isset($location->lon) ? $location->lon : $location->longitude;
   while ($location = next($locations)) {
     if (isset($location->lon)) {
       $lng = $location->lon;
