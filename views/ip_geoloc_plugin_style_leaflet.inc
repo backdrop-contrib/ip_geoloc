@@ -258,8 +258,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $tag_css_classes = $this->options['tags']['tag_css_class'];
     
     $module_path = drupal_get_path('module', 'ip_geoloc');
-    $icon_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
-    $icon_path = file_create_url($icon_path);
+    $marker_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
+    $marker_path = file_create_url($marker_path);
     
     $max_zoom = (int)$this->options['map_options']['maxzoom'];
     $zoom = (int)$this->options['map_options']['zoom'];
@@ -331,6 +331,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if (!empty($marker_special_char)) {
         $has_special_markers = TRUE;
         $feature['specialChar'] = $marker_special_char;
+        if (!empty($location->marker_special_char_class)) {
+          $feature['specialCharClass'] = $location->marker_special_char_class;
+        }
+        // Load the 20k of CSS that comes with Font Awesome, which in return
+        // tells the browser to fetch either the WOFF (34k), TTF (65k) or SVG
+        // (162k) files that define the font faces.
         drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
       }
       if (!empty($location->marker_tooltip)) {
@@ -354,7 +360,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Switch from default icon to specified color
         $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
         $feature['icon'] = array(
-          'iconUrl' => $icon_path . "/$color.png",
+          'iconUrl' => $marker_path . "/$color.png",
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height), // width, height
           'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center baseline
           'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
@@ -377,7 +383,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       );
       if ($visitor_marker_color != '') {
         $visitor_feature['icon'] = array(
-          'iconUrl' => $icon_path . "/$visitor_marker_color.png",
+          'iconUrl' => $marker_path . "/$visitor_marker_color.png",
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
           'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center of baseline
           'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center

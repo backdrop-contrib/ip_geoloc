@@ -1,3 +1,5 @@
+/* This thing is getting a bit big and complicated... time to refactor! */
+
 (function ($) {
 
   Drupal.leaflet._create_point_orig = Drupal.leaflet.create_point;
@@ -16,25 +18,25 @@
         return new L.Marker(latLng, {icon: stub, title: marker.tooltip});
       }
       if (!marker.icon) {
-        // Marker with default icon without tag.
+        // Marker with default img, without tag.
         // Note: marker.specialChar cannot be handled in this case and is ignored.
         return new L.Marker(latLng, {title: marker.tooltip});
       }
     }
     if (marker.icon == false) {
-      // Marker without icon, but with tag. marker.specialChar does not apply.
+      // Marker without img, but with tag. marker.specialChar does not apply.
       var divIcon = new L.DivIcon({html: marker.tag, className: marker.cssClass});
       // Prevent div style tag being set, so that upper left corner becomes anchor.
       divIcon.options.iconSize = null;
       return new L.Marker(latLng, {icon: divIcon, title: marker.tooltip});
     }
     
-    if (marker.tag && !marker.icon) { // use default icon and tag marker
-      var tagged_icon = new L.Icon.Tagged(marker.tag, marker.specialChar, {className: marker.cssClass});
+    if (marker.tag && !marker.icon) { // use default img, custom tag the marker
+      var tagged_icon = new L.Icon.Tagged(marker.tag, marker.specialChar, {className: marker.cssClass, specialCharClassName: marker.specialCharClass});
       return new L.Marker(latLng, {icon: tagged_icon, title: marker.tooltip});
     }
-    var icon = marker.tag || marker.specialChar
-      ? new L.Icon.Tagged(marker.tag, marker.specialChar, {iconUrl: marker.icon.iconUrl, className: marker.cssClass})
+    var icon = marker.tag || marker.specialChar // custim img and custom tag
+      ? new L.Icon.Tagged(marker.tag, marker.specialChar, {iconUrl: marker.icon.iconUrl, className: marker.cssClass, specialCharClassName: marker.specialCharClass})
       : new L.Icon({iconUrl: marker.icon.iconUrl});
       
     // All of the below is like create_point (leaflet.drupal.js), but with tooltip.
@@ -87,6 +89,16 @@ L.Icon.Tagged = L.Icon.extend({
     var img = this._createIcon('icon');
     outer.appendChild(img);
 
+    if (this._specialChar) {
+      // Convention seems to be to use the i element.
+      // Other elements like div and span work also, just make sure
+      // that display:block is set implicitly or explictly!
+      var specialChar = document.createElement('i');
+      specialChar.innerHTML = this._specialChar;
+
+      specialChar.setAttribute('class', this.options.specialCharClassName ? this.options.specialCharClassName : 'icon-light'); // for Font-Awesome
+      outer.appendChild(specialChar);
+    }
     if (this._tag) {
       var tag = document.createElement('div');
       tag.innerHTML = this._tag;
@@ -96,16 +108,6 @@ L.Icon.Tagged = L.Icon.extend({
       outer.appendChild(tag);
     }
     
-    if (this._specialChar) {
-      // Convention seems to be to use the i element.
-      // Other elements like div and span work also, just make sure
-      // that display:block is set implicitly or explictly!
-      var specialChar = document.createElement('i');
-      specialChar.innerHTML = this._specialChar;
-      specialChar.setAttribute('class', 'icon-light'); // for Font-Awesome
-      outer.appendChild(specialChar);
-    }
-
     return outer;
   },
 

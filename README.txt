@@ -2,13 +2,13 @@
 IP GEOLOCATION VIEWS AND MAPS
 =============================
 This documentation concentrates on the installation and configuration of the
-IP Geolocation module. A full description of the module and its features can be
-found at http://drupal.org/project/ip_geoloc.
+IP Geolocation Views and Maps (IPGV&M) module. A full description of the module
+and its features can be found at http://drupal.org/project/ip_geoloc.
 
 INSTALLATION & CONFIGURATION
 ============================
-First, if you are using IPGV&M mainly for its Views mapping interface to other
-modules, then here's a configuration shortcut.
+First, if you are using IPGV&M primarily for its Views mapping interface to
+other modules and the features it adds, then here's a configuration shortcut.
 Download and enable IPGV&M like any other module. Visit its
 configuration page, .../admin/config/system/ip_geoloc.
 If you intend to use IPGV&M's built-in interface to Google Maps, untick all
@@ -17,14 +17,17 @@ If you intend to use IPGV&M with the OpenLayers module and also wish to
 show and center on the visitor's HTML-5 retrieved location, then you do need to
 tick the first "Data collection option" and select applicable roles below it.
 
-You are now ready to map your View of Location, Geofield or Geolocation data and
-optionally center that map on the visitor's location.
+You are now ready to map your View of Location, Geofield, Geolocation Field or
+GetLocations data and optionally center that map on the visitor's location.
+Visit the IPGV&M configuration page to specify an alternative marker set. When
+using Leaflet you can superimpose Font Awesome font characters on top of your
+markers.
 
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you may want
 to configure an alternative lat/long lookup based on IP address. For this follow
 installation instruction B1a or B1b below, depending on whether you'd like to
-employ Smart IP or GeoIP for this. And you're done!
+employ Smart IP or GeoIP for this.
 
 If you DO want to auto-record visitor address details then complete the steps
 under A and B below.
@@ -276,7 +279,6 @@ Additionally, we enforce a request rate limit to prevent abuse of the service.
 If you exceed the 24-hour limit or otherwise abuse the service, the Geocoding
 API may stop working for you temporarily. If you continue to exceed this limit,
 your access to the Geocoding API may be blocked.
-
 Note: the Geocoding API may only be used in conjunction with a Google map;
 geocoding results without displaying them on a map is prohibited. For complete
 details on allowed usage, consult the Maps API Terms of Service License

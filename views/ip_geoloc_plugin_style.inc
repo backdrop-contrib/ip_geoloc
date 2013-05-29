@@ -119,7 +119,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $form['differentiator'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location differentiator and associated markers'),
-    '#description' => t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy terms. You may enter numeric and alphabetic <strong>ranges</strong> too, e.g. price ranges.<br/><strong>Leaflet</strong> only: you may add a special character, eg. from <a target="_font_awesome" href="!url">Font Awesome</a>, to superimpose a font-icon on the marker image.', array(
+    '#description' => t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.<br/><strong>Leaflet</strong> only: you may input a special character, eg. from <a target="_font_awesome" href="!url">Font Awesome</a>, to be superimposed as a font-icon on the marker image. You can sets its color by entering a CSS class, eg. <strong>icon-dark</strong>.', array(
       '!url' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'))
     ),
     '#prefix' => '<div id="differentiator-wrapper">',
@@ -306,6 +306,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
             $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = $differentiator_value;
             $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
             $differentiator_color_associations[$display_id][$differentiator][$i]['special char'] = $association['special char'];
+            $differentiator_color_associations[$display_id][$differentiator][$i]['special char class'] = $association['special char']['special char class'];
             $i++;
           }
         }
@@ -316,6 +317,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
           $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = array($differentiator_value);
           $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
           $differentiator_color_associations[$display_id][$differentiator][$i]['special char'] = $association['special char'];
+          $differentiator_color_associations[$display_id][$differentiator][$i]['special char class'] = $association['special char class'];
           $i++;
         }
       }
@@ -397,6 +399,7 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
   else {
     $form[$differentiator] = array(
       '#type' => 'textfield',
+      '#size' => 40,
       '#default_value' => $differentiator_value,
       '#element_validate' => array('ip_geoloc_range_widget_validate'),
       '#attributes' => array(
@@ -420,12 +423,18 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
     '#size' => 8,
     '#default_value' => empty($association) ? NULL : $association['special char'],
   );
+  $form['special char class'] = array(
+    '#type' => 'textfield',
+    '#size' => 15,
+    '#default_value' => empty($association) ? NULL : $association['special char class'],
+  );
   // We'll manually set the #parents property of these fields so that their
   // values appear in the $form_state['values']['color_table'] array.
   $form[$differentiator]['#parents'] = array('color_table', $row, $differentiator);
   $form['color']['#parents'] = array('color_table', $row, 'color');
   $form['special char']['#parents'] = array('color_table', $row, 'special char');
-  
+  $form['special char class']['#parents'] = array('color_table', $row, 'special char class');
+
   return $form;
 }
 
@@ -462,7 +471,8 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
   $headers = array(
     t('%differentiator value', array('%differentiator' => $differentiator_label)),
     t('Associated marker image'),
-    t('Associated special char')
+    t('Special char'),
+    t('Special char CSS class')
   );
   $rows = array();
   foreach ($form_children as $key) {
@@ -470,6 +480,7 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
     $row['data'][] = drupal_render($form[$key][$differentiator]);
     $row['data'][] = drupal_render($form[$key]['color']);
     $row['data'][] = drupal_render($form[$key]['special char']);
+    $row['data'][] = drupal_render($form[$key]['special char class']);
     $rows[] = $row;
   }
 
@@ -523,7 +534,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       if (!empty($views_plugin_style->rendered_fields[$i])) {
         $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
       }
-      if ($differentiator) {
+      if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
         _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
       }
       $views_plugin_style->view->row_index = $i; // don't know why, but this is required
@@ -725,6 +736,9 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
           $location->marker_color = $association['color'];
           if (!empty($association['special char'])) {
             $location->marker_special_char = $association['special char'];
+          }
+          if (!empty($association['special char class'])) {
+            $location->marker_special_char_class = $association['special char class'];
           }
         }
       }
