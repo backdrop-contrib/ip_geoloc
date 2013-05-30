@@ -78,8 +78,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
-    $desc =  t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url">Font Awesome</a> or any other source. Paste either the font icon or the unicode.', array(
-      '!url' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet')));
+    $desc =  t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> or any other source, such as <a target="_fsymbols" href="!url2">Facebook symbols</a>. Paste either the font icon or the unicode.', array(
+      '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
+      '!url2' => url('http://fsymbols.com'),
+    ));
     if (!ip_geoloc_get_font_awesome_library_path()) {
       $desc .= ' ' . t('Please follow instructions in the <a href="!url">README</a> to install the <em>Font Awesome</em> library.', array(
         '!url' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt')

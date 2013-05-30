@@ -94,31 +94,28 @@ function ip_geoloc_admin_configure() {
     '#title' => t('Alternative markers'),
     '#description' => t('')
   );
-  if (module_exists('openlayers')) {
-    $form['ip_geoloc_advanced']['markers']['ip_geoloc_num_location_marker_layers'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Maximum number of OpenLayers location marker layers you may need.'),
-      '#default_value' => variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS),
-      '#description' => t('Only relevant when you have selected "differentiator" fields in your views.')
-    );
-  }
-  else {
-    // @todo: cater for case where the module directory has been renamed?
-    $marker_path = drupal_get_path('module', 'ip_geoloc');
-    $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_directory'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Path to marker icons'),
-      '#default_value' => variable_get('ip_geoloc_marker_directory', "$marker_path/markers"),
-      '#description' => t('Should normally NOT start with a slash. All marker images must be .png files.')
-    );
-    $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_dimensions'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Marker icon width and height'),
-      '#default_value' => variable_get('ip_geoloc_marker_dimensions', '21 x 34'),
-      '#field_suffix' => 'px',
-      '#description' => t('These dimensions apply to all markers in the set. The marker anchor is expected to be the middle of the icon baseline. The default marker size is 21 x 34 for the <em>/markers</em> directory and 32 x 42 for the <em>/amarkers</em> directory.')
-    );
-  }
+  $form['ip_geoloc_advanced']['markers']['ip_geoloc_num_location_marker_layers'] = array(
+    '#type' => 'textfield',
+    '#title' => t('<strong>OpenLayers only</strong>: maximum number of marker layers you may need.'),
+    '#default_value' => variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS),
+    '#description' => t('Only relevant when you have selected "differentiator" fields in your view.')
+  );
+  // @todo: cater for case where the module directory has been renamed?
+  $marker_path = drupal_get_path('module', 'ip_geoloc');
+  $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_directory'] = array(
+    '#type' => 'textfield',
+    '#title' => t('<strong>Google Maps, Leaflet</strong>: path to marker images'),
+    '#default_value' => variable_get('ip_geoloc_marker_directory', "$marker_path/markers"),
+    '#description' => t('Should normally NOT start with a slash. All marker images must be .png files.')
+  );
+  $form['ip_geoloc_advanced']['markers']['ip_geoloc_marker_dimensions'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Marker image width and height'),
+    '#default_value' => variable_get('ip_geoloc_marker_dimensions', '21 x 34'),
+    '#field_suffix' => 'px',
+    '#description' => t('These dimensions apply to all markers in the set. The marker anchor is expected to be the middle of the image baseline. The default marker size is 21 x 34 for the <em>/markers</em> directory and 32 x 42 for the <em>/amarkers</em> directory.')
+  );
+  
   $form['ip_geoloc_advanced']['ip_geoloc_page_refresh'] = array(
     '#type' => 'checkbox',
     '#title' => t('Auto-refresh the page as soon as an HTML5 location update has come in.'),

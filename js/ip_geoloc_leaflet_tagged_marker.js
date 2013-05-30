@@ -91,11 +91,10 @@ L.Icon.Tagged = L.Icon.extend({
 
     if (this._specialChar) {
       // Convention seems to be to use the i element.
-      // Other elements like div and span work also, just make sure
-      // that display:block is set implicitly or explictly!
+      // Other elements like div and span work also, just make sure that
+      // display:block is set implicitly or explictly.
       var specialChar = document.createElement('i');
       specialChar.innerHTML = this._specialChar;
-
       specialChar.setAttribute('class', this.options.specialCharClassName ? this.options.specialCharClassName : 'icon-light'); // for Font-Awesome
       outer.appendChild(specialChar);
     }
