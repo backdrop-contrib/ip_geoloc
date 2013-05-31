@@ -546,6 +546,12 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
         $tag = $tag_field->theme($row);
         $location->marker_tag = _ip_geoloc_plugin_style_add_label_and_styling($tag_field, $tag);
       }
+      if (isset($row->nid)) {
+        $location->id = $row->nid;
+      }
+      else if (isset($row->tid)) {
+        $location->id = $row->tid;
+      }
       $locations[] = $location;
     }
     elseif ($error_count++ == 0) {

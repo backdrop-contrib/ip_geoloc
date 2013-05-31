@@ -320,6 +320,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $features = array();
     foreach ($locations as $key => $location) {
+
       if (empty($location->type) && isset($location->latitude)) {
         $feature = array(
           'type' => 'point',
@@ -330,6 +331,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       else { // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
         $feature = (array)$location;
       }
+      if (isset($location->id)) { // allow marker events to identify the corresponding node
+        $feature['leaflet_id'] = $location->id;
+      }
+
       // At this point $feature['type'] should be set.
       if ($feature['type'] != 'point') { // linestring, polygon ...
         $feature['flags'] = LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER;
