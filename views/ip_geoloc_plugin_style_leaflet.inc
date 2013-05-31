@@ -268,6 +268,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $scroll_wheel_zoom = (bool)$this->options['map_options']['scrollwheelzoom'];
     $dragging = (bool)$this->options['map_options']['dragging'];
 
+
     if (!empty($locations) &&
         ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
         ($visitor_marker_color == 'none' && count($locations) == 1))) {
@@ -305,6 +306,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
     $marker_width  = (int)$marker_dimensions[0];
     $marker_height = (int)$marker_dimensions[1];
+
+    switch (variable_get('ip_geoloc_marker_anchor_pos', 'bottom')) {
+      case 'top':
+        $marker_anchor = 0;
+        break;
+      case 'middle':
+        $marker_anchor = (int)(($marker_height + 1) / 2);
+        break;
+      default:
+        $marker_anchor = $marker_height;
+    }
 
     $features = array();
     foreach ($locations as $key => $location) {
@@ -364,7 +376,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['icon'] = array(
           'iconUrl' => $marker_path . "/$color.png",
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height), // width, height
-          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center baseline
+          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_anchor),
           'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
         //'shadowUrl'
         //'shodowSize'
@@ -387,7 +399,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $visitor_feature['icon'] = array(
           'iconUrl' => $marker_path . "/$visitor_marker_color.png",
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
-          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_height), // center of baseline
+          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_anchor),
           'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
         );
       }
