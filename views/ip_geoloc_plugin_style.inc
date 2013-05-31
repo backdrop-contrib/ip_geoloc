@@ -116,12 +116,14 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
 
   // Add wrapper for differentiator drop-down, association table and buttons.
   // The id in the prefix must match the AJAX submit handlers below.
+  $desc = t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.<br/><strong>Leaflet</strong> only: you may input a special character, eg. from <a target="_font_awesome" href="!url1">Font Awesome</a> or <a target="_fsymbols" href="!url2">fsymbols</a>, to be superimposed as a font-icon on the marker image. Copy and paste either the font icon or the unicode. You can override the icon color by entering a CSS class, eg. <strong>icon-dark</strong> or <strong>icon-light</strong>.', array(
+    '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
+    '!url2' => url('http://fsymbols.com'))
+  );
   $form['differentiator'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location differentiator and associated markers'),
-    '#description' => t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.<br/><strong>Leaflet</strong> only: you may input a special character, eg. from <a target="_font_awesome" href="!url">Font Awesome</a>, to be superimposed as a font-icon on the marker image. You can set its color by entering a CSS class, eg. <strong>icon-dark</strong>.', array(
-      '!url' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'))
-    ),
+    '#description' => $desc,
     '#prefix' => '<div id="differentiator-wrapper">',
     '#suffix' => '</div>',
     '#weight' => 30
@@ -206,7 +208,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED => t('Use the center of gravity based on all locations (this option is sensitive to location clusters)')
     ),
     '#description' => $is_openlayers
-      ? t('*) If you want a fixed center, visit the "Center & Bounds" tab of the <a href="@url">map edit page</a>.', array(
+      ? t('*) If you want a fixed center, visit the "Center & Bounds" vertical tab on the <a target="_ol_map_edit" href="@url">map edit page</a>. This is also where you set the initial zoom level.', array(
           '@url' => url('admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit')))
       : t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example:<br/>%center_example', array(
           '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }')),
@@ -306,7 +308,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
             $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = $differentiator_value;
             $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
             $differentiator_color_associations[$display_id][$differentiator][$i]['special char'] = $association['special char'];
-            $differentiator_color_associations[$display_id][$differentiator][$i]['special char class'] = $association['special char']['special char class'];
+            $differentiator_color_associations[$display_id][$differentiator][$i]['special char class'] = $association['special char class'];
             $i++;
           }
         }
@@ -425,7 +427,7 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
   );
   $form['special char class'] = array(
     '#type' => 'textfield',
-    '#size' => 15,
+    '#size' => 20,
     '#default_value' => empty($association) ? NULL : $association['special char class'],
   );
   // We'll manually set the #parents property of these fields so that their

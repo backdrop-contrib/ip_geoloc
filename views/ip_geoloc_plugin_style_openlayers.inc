@@ -50,7 +50,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
     $form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT] = t('Use lat/lon coordinate arguments from a contextual filter');
     $argument_handlers = $this->view->display_handler->get_handlers('argument');
     if (!empty($argument_handlers)) {
-      $argument_options = array();
+      $argument_options = array('' => '<' . t('none') . '>');
       foreach ($argument_handlers as $key => $handler) {
         $argument_options[$key] = $handler->definition['group'] . ': ' . $handler->definition['title'];
       }
@@ -59,6 +59,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
        '#title' => t('Choose a contextual filter to pull data from'),
        '#options' => $argument_options,
        '#default_value' => $this->options['argument'],
+       '#weight' => 100
       );
     }
   }

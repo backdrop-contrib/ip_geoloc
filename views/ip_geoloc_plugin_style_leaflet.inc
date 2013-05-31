@@ -78,7 +78,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
-    $desc =  t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> or any other source, such as <a target="_fsymbols" href="!url2">Facebook symbols</a>. Paste either the font icon or the unicode.', array(
+    $desc =  t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> or any other source, such as <a target="_fsymbols" href="!url2">fsymbols</a>. Copy and paste either the font icon or the unicode.', array(
       '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
       '!url2' => url('http://fsymbols.com'),
     ));
