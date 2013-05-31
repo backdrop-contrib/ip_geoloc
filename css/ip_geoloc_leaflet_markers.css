@@ -22,6 +22,11 @@
   display: block; /* block and zero width to avoid marker position shifting */
   width: 0;
 }
+/* adjust for the Google-style markers that live in the /markers directory */
+.markers .leaflet-tagged-marker i {
+  top: -32px;
+  font-size: 13px;
+}
 
 .leaflet-tagged-marker div.tag-above-marker {
   top: -56px;
