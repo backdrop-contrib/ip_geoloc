@@ -321,18 +321,22 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $features = array();
     foreach ($locations as $key => $location) {
 
-      if (empty($location->type) && isset($location->latitude)) {
+      if (isset($location->latitude) || isset($location->lat)) {
         $feature = array(
           'type' => 'point',
-          'lat' => $location->latitude,
-          'lon' => $location->longitude,
+          'lat' => isset($location->latitude)  ? $location->latitude  : $location->lat,
+          'lon' => isset($location->longitude) ? $locaiton->longitude : $location->lon
         );
       }
-      else { // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
-        $feature = (array)$location;
+      elseif (isset($location->component)) {
+        // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
+        $feature = array(
+          'type' => $location->type,
+          'component' => $location->component
+        );
       }
       if (isset($location->id)) { // allow marker events to identify the corresponding node
-        $feature['leaflet_id'] = $location->id;
+        $feature['feature_id'] = $location->id;
       }
 
       // At this point $feature['type'] should be set.
@@ -344,18 +348,24 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       $feature['popup'] = $location->balloon_text;
 
-      $marker_special_char = empty($location->marker_special_char)
-        ? $this->options['default_marker_special_char']
-        : $location->marker_special_char;
-      if (!empty($marker_special_char)) {
+      if (!empty($location->marker_special_char) || !empty($location->marker_special_char_class)) {
         $has_special_markers = TRUE;
-        $feature['specialChar'] = $marker_special_char;
+        if (!empty($location->marker_special_char)) {
+          $feature['specialChar'] = $location->marker_special_char;
+        }
         if (!empty($location->marker_special_char_class)) {
           $feature['specialCharClass'] = $location->marker_special_char_class;
+          if (strpos($feature['specialCharClass'], 'icon-') !== FALSE) {
+            // Load the 20k of CSS that comes with Font Awesome, which in return
+            // tells the browser to fetch either the WOFF (34k), TTF (65k) or SVG
+            // (162k) files that define the font faces.
+            drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
+          }
         }
-        // Load the 20k of CSS that comes with Font Awesome, which in return
-        // tells the browser to fetch either the WOFF (34k), TTF (65k) or SVG
-        // (162k) files that define the font faces.
+      }
+      else if (!empty($this->options['default_marker_special_char'])) {
+        $feature['specialChar'] = $this->options['default_marker_special_char'];
+        $feature['specialCharClass'] = 'icon-light'; // no UI field, assuming Font Awesome
         drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
       }
       if (!empty($location->marker_tooltip)) {

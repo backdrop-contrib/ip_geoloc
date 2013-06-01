@@ -19,6 +19,7 @@
 }
 .leaflet-tagged-marker i {
   font-size: 17px;
+  font-style: normal;
   display: block; /* block and zero width to avoid marker position shifting */
   width: 0;
 }

@@ -116,10 +116,10 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
 
   // Add wrapper for differentiator drop-down, association table and buttons.
   // The id in the prefix must match the AJAX submit handlers below.
-  $desc = t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.<br/><strong>Leaflet</strong> only: you may input a special character, eg. from <a target="_font_awesome" href="!url1">Font Awesome</a> or <a target="_fsymbols" href="!url2">fsymbols</a>, to be superimposed as a font-icon on the marker image. Copy and paste either the font icon or the unicode. You can override the icon color by entering a CSS class, eg. <strong>icon-dark</strong> or <strong>icon-light</strong>.', array(
-    '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
-    '!url2' => url('http://fsymbols.com'))
-  );
+  $desc = t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.<br/><strong>Leaflet</strong> only: you may input a special character, eg. from <a target="_fsymbols" href="!url1">fsymbols</a> or <a target="_font_awesome" href="!url2">Font Awesome</a>, to be superimposed as a font-icon on the marker image. For <em>fsymbols</em> copy and paste the desired font-icon into the Special Char field. For <em>Font Awesome</em> icons leave the Special Char field empty. Instead type the <em>Font Awesome</em> icon name in the Special Char CSS Class field, optionally appending a color class. Example: <strong>icon-beer icon-light</strong>.', array(
+    '!url1' => url('http://fsymbols.com'),
+    '!url2' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet')
+  ));
   $form['differentiator'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location differentiator and associated markers'),
@@ -427,7 +427,7 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
   );
   $form['special char class'] = array(
     '#type' => 'textfield',
-    '#size' => 20,
+    '#size' => 25,
     '#default_value' => empty($association) ? NULL : $association['special char class'],
   );
   // We'll manually set the #parents property of these fields so that their
@@ -631,9 +631,6 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
         }
         $location = leaflet_process_geofield(array($base));
         $location = (object)reset($location);
-        // @todo standardise on lat/lon
-        $location->latitude = $location->lat;
-        $location->longitude = $location->lon;
       }
       else {
         $is_point = ($base['geo_type'] == 'point');

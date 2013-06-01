@@ -32,11 +32,11 @@
     }
     
     if (marker.tag && !marker.icon) { // use default img, custom tag the marker
-      var tagged_icon = new L.Icon.Tagged(marker.tag, marker.specialChar, {className: marker.cssClass, specialCharClassName: marker.specialCharClass});
+      var tagged_icon = new L.Icon.Tagged(marker.tag, marker.specialChar, {className: marker.cssClass, specialCharClass: marker.special_char_class});
       return new L.Marker(latLng, {icon: tagged_icon, title: marker.tooltip});
     }
-    var icon = marker.tag || marker.specialChar // custim img and custom tag
-      ? new L.Icon.Tagged(marker.tag, marker.specialChar, {iconUrl: marker.icon.iconUrl, className: marker.cssClass, specialCharClassName: marker.specialCharClass})
+    var icon = marker.tag || marker.specialChar || marker.specialCharClass // custom img and custom tag or specialChar
+      ? new L.Icon.Tagged(marker.tag, marker.specialChar, {iconUrl: marker.icon.iconUrl, className: marker.cssClass, specialCharClass: marker.specialCharClass})
       : new L.Icon({iconUrl: marker.icon.iconUrl});
       
     // All of the below is like create_point (leaflet.drupal.js), but with tooltip.
@@ -89,15 +89,16 @@ L.Icon.Tagged = L.Icon.extend({
     var img = this._createIcon('icon');
     outer.appendChild(img);
 
-    if (this._specialChar) {
+    if (this._specialChar || this.options.specialCharClass) {
       // Convention seems to be to use the i element.
       // Other elements like div and span work also, just make sure that
       // display:block is set implicitly or explictly.
       var specialChar = document.createElement('i');
-      specialChar.innerHTML = this._specialChar;
-      // For Font Awesome we must have at least one class starting with "icon-"
-      var cssClass = this.options.specialCharClassName ? this.options.specialCharClassName : 'icon-light'
-      specialChar.setAttribute('class', cssClass);
+      specialChar.innerHTML = this._specialChar ? this._specialChar.trim() : '';
+      // Note: for Font Awesome we must have a class starting with "icon-"
+      if (this.options.specialCharClass) {
+        specialChar.setAttribute('class', this.options.specialCharClass);
+      }
       outer.appendChild(specialChar);
     }
     if (this._tag) {
