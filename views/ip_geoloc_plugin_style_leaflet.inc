@@ -82,7 +82,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
       '!url2' => url('http://fsymbols.com'),
     ));
-    if (!ip_geoloc_get_font_awesome_library_path()) {
+    if (!ip_geoloc_get_ccs_library_path('font-awesome')) {
       $desc .= ' ' . t('Please follow instructions in the <a href="!url">README</a> to install the <em>Font Awesome</em> library.', array(
         '!url' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt')
       ));

@@ -49,12 +49,11 @@ function ip_geoloc_help($path, $arg) {
  */
 function ip_geoloc_library() {
 
-  if (!($css_path = ip_geoloc_get_font_awesome_library_path())) {
+  if (!($css_path = ip_geoloc_get_ccs_library_path('font-awesome'))) {
     return NULL;
   }
   $libraries['ip_geoloc_font_awesome'] = array(
     'title' => 'IP Geolocation Views & Maps Font Awesome extension',
-    'version' => 0, // we don't have a version
     'css' => array(
       "$css_path/font-awesome.css" => array(
         'type' => 'file',
@@ -65,8 +64,8 @@ function ip_geoloc_library() {
   return $libraries;
 }
 
-function ip_geoloc_get_font_awesome_library_path() {
-  $path = libraries_get_path('font-awesome');
+function ip_geoloc_get_ccs_library_path($lib_path = 'font-awesome') {
+  $path = libraries_get_path($lib_path);
   return $path ? "$path/css" : FALSE;
 }
 
