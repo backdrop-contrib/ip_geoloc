@@ -325,7 +325,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature = array(
           'type' => 'point',
           'lat' => isset($location->latitude)  ? $location->latitude  : $location->lat,
-          'lon' => isset($location->longitude) ? $locaiton->longitude : $location->lon
+          'lon' => isset($location->longitude) ? $location->longitude : $location->lon
         );
       }
       elseif (isset($location->component)) {
