@@ -407,7 +407,7 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
         ? array()
         : is_array($differentiator_value) ? $differentiator_value : array($differentiator_value);
       if (isset($instance['default_value'])) {
-        $items[0] += is_array($instance['default_value'])
+        $items[0] += is_array($instance['default_value']) && !empty($instance['default_value'])
           ? reset($instance['default_value'])
           : $instance['default_value'];
       }
