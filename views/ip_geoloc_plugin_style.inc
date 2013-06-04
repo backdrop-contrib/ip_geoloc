@@ -314,7 +314,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
           }
         }
       }
-      else { // plain text field
+      else { // plain text field or plain taxonomy select
         $differentiator_value = trim($association[$differentiator]);
         if (!empty($differentiator_value)) {
           $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = array($differentiator_value);
@@ -368,46 +368,67 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
 function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row, $differentiator, $association = NULL) {
 
   $differentiator_value = empty($association) ? NULL : $association['differentiator_value'];
+  $attr_class = $is_openlayers ? array('differentiator ol') : array('differentiator gmap');
 
   if (strpos($differentiator, 'field_') === 0) {
-
     $field = field_info_field($differentiator);
-
     $instances = ip_geoloc_get_field_instances($differentiator);
     $instance = reset($instances);
-    $instance['label'] = ''; // no label, unless other modules override this
-    $instance['required'] = FALSE; // don't want asterisk to appear
-    // Make sure the text field is wide enough, especially for the case of a
-    // range, which needs to receive two values and a separator.
-    if (isset($instance['widget']['settings']['size']) && $instance['widget']['settings']['size'] < 15) {
-      $instance['widget']['settings']['size'] = 15;
-    }
-    $items[0] = empty($differentiator_value)
-      ? array()
-      : is_array($differentiator_value) ? $differentiator_value : array($differentiator_value);
-    if (isset($instance['default_value'])) {
-      $items[0] += is_array($instance['default_value']) ? reset($instance['default_value']) : $instance['default_value'];
-    }
+    $widget = $instance['widget']['type'];
 
-    $form['#parents'] = array();
-    $form_state = array();
-
-    $form = field_default_form($instance['entity_type'], NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
-
-    if ($field['module'] == 'number' || $field['module'] == 'text') {
-      $form[$differentiator][LANGUAGE_NONE][0][key($field['columns'])]['#element_validate'] = array('ip_geoloc_range_widget_validate');
+    if (strpos($widget, 'taxonomy') !== FALSE) { // covers core and Autocomplete Deluxe
+      $vid = 0;
+      $vocabulary_name = $field['settings']['allowed_values'][0]['vocabulary'];
+      foreach (taxonomy_get_vocabularies() as $vid => $vocabulary) {
+        if ($vocabulary->machine_name == $vocabulary_name) {
+          break;
+        }
+      }
+      $options = array();
+      foreach (taxonomy_get_tree($vid) as $term) {
+        $options[$term->tid] = str_repeat('-', $term->depth) . $term->name;
+      }
+      $form[$differentiator] = array(
+        '#type' => empty($options) ? 'textfield' : 'select',
+        '#options' => $options,
+        '#default_value' => $differentiator_value,
+        '#attributes' => array('class' => $attr_class)
+      );
     }
-    $form[$differentiator]['#attributes']['class'][] = $is_openlayers ? 'differentiator ol' : 'differentiator gmap';
+    else {
+      $instance['label'] = ''; // no label, unless other modules override this
+      $instance['required'] = FALSE; // don't want asterisk to appear
+      // Make sure the text field is wide enough, especially for the case of a
+      // range, which needs to receive two values and a separator.
+      if (isset($instance['widget']['settings']['size']) && $instance['widget']['settings']['size'] < 15) {
+        $instance['widget']['settings']['size'] = 15;
+      }
+      $items[0] = empty($differentiator_value)
+        ? array()
+        : is_array($differentiator_value) ? $differentiator_value : array($differentiator_value);
+      if (isset($instance['default_value'])) {
+        $items[0] += is_array($instance['default_value'])
+          ? reset($instance['default_value'])
+          : $instance['default_value'];
+      }
+      $form['#parents'] = array();
+      $form_state = array();
+
+      $form = field_default_form($instance['entity_type'], NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
+
+      if ($field['module'] == 'number' || $field['module'] == 'text') {
+        $form[$differentiator][LANGUAGE_NONE][0][key($field['columns'])]['#element_validate'] = array('ip_geoloc_range_widget_validate');
+      }
+      $form[$differentiator]['#attributes']['class'][] = $attr_class;
+    }
   }
-  else {
+  else { // not a field, maybe an expression
     $form[$differentiator] = array(
       '#type' => 'textfield',
       '#size' => 40,
       '#default_value' => $differentiator_value,
       '#element_validate' => array('ip_geoloc_range_widget_validate'),
-      '#attributes' => array(
-        'class' => $is_openlayers ? array('differentiator ol') : array('differentiator gmap')
-      )
+      '#attributes' => array('class'=> $attr_class)
     );
   }
   $form['color'] = array(
@@ -728,16 +749,24 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
       foreach ($differentiator_color_associations as $association) {
         $match = TRUE;
         if (is_array($differentiator_value)) {
-          // Eg AddressField, has multiple subvalues. All must match the
-          // corresponding differentiator subvalues.
-          foreach ($association['differentiator_value'] as $name => $subvalue) {
-            if (isset($differentiator_value[$name]) && !ip_geoloc_is_in_range($differentiator_value[$name], $subvalue)) {
-              $match = FALSE;
-              break;
+          if (empty($differentiator_value['tid'])) {
+            // Eg AddressField, has multiple subvalues. All must match the
+            // corresponding differentiator subvalues.
+            foreach ($association['differentiator_value'] as $name => $subvalue) {
+              if (!isset($differentiator_value[$name]) || !ip_geoloc_is_in_range($differentiator_value[$name], $subvalue)) {
+                $match = FALSE;
+                break;
+              }
             }
           }
+          else {
+            // 'tid' set: taxonomy widget (plain or autocomplete)
+            // $association['differentiator_value'] can have index 0 or 'tid'
+            $range = reset($association['differentiator_value']);
+            $match = ip_geoloc_is_in_range($differentiator_value['tid'], $range);
+          }
         }
-        else { // simple values
+        else { // single value, either as simple value or array of length 1
           $range = $association['differentiator_value'];
           $match = ip_geoloc_is_in_range($differentiator_value, $range);
         }
