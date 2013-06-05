@@ -9,7 +9,7 @@
 .leaflet-tagged-marker i {  /* element used for the special font-icon chars */
   position: relative;
   top: -35px;
-  left: -40px;
+  left: -41px;
   min-width: 80px; /* -2x left */
   text-align: center;
   height: 0;  /* to avoid marker position shifting */
@@ -25,8 +25,8 @@
 }
 /* adjust for the Google-style markers that live in the /markers directory */
 .markers .leaflet-tagged-marker i {
-  top: -32px;
-  font-size: 13px;
+  font-size: 11px;
+  top: -30px;
 }
 
 .leaflet-tagged-marker div.tag-above-marker {
