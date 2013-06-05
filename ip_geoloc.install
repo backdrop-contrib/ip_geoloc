@@ -96,8 +96,10 @@ function ip_geoloc_uninstall() {
  * GeoIP City provides:
  *  TBA
  *
- * Goolge provides:
+ * Googlee provides:
  *  TBA
+ *
+ * Note: some of the varchar should be varbinary, see drupal.org/node/1793674
  */
 function ip_geoloc_schema() {
   $schema['ip_geoloc'] = array(

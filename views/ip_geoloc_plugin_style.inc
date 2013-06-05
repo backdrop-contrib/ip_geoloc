@@ -653,6 +653,15 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
         }
         $location = leaflet_process_geofield(array($base));
         $location = (object)reset($location);
+        // @todo get rid of this duality, use lat/lon throughout
+        if (isset($location->lat)) {
+          $location->latitude = $location->lat;
+          unset($location->lat);
+        }
+        if (isset($location->lon)) {
+          $location->longitude = $location->lon;
+          unset($location->lon);
+        }
       }
       else {
         $is_point = ($base['geo_type'] == 'point');

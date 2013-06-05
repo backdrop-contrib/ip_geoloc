@@ -246,7 +246,9 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     $center_option = 0, $center_latlng = array(0, 0), $visitor_location_gps = TRUE) {
 
   if ($visitor_location_gps) {
-    drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
+    // End of life for the unified geo.js library. It slows things down and
+    // has become less relevant as all modern devices support the HTML5/W3C API
+    // drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
     drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
   }
   else {
@@ -340,7 +342,9 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  */
 function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
   $js_options = array('group' => JS_LIBRARY);
-  drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
+  // End of life for the unified geo.js library. It slows things down and
+  // has become less relevant as all modern devices support the HTML5/W3C API
+  // drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
