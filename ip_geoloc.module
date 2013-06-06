@@ -78,7 +78,7 @@ function ip_geoloc_menu() {
   $items = array();
   // Put the administrative settings under System on the Configuration page.
   $items['admin/config/system/ip_geoloc'] = array(
-    'title' => 'IP Geolocation Views and Maps',
+    'title' => 'IP Geolocation Views & Maps',
     'description' => 'Configure map markers and how geolocation information is updated.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ip_geoloc_admin_configure'),

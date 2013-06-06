@@ -94,7 +94,7 @@
           },
           error: function (http) {
             if (http.status > 0 && http.status != 200) {
-              alert(Drupal.t('IP Geolocation: an HTTP error @status occurred.', { '@status': http.status }));
+              alert(Drupal.t('IPGV&M: an HTTP error @status occurred.', { '@status': http.status }));
             }
           },
           complete: function() {

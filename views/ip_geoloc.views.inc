@@ -295,7 +295,7 @@ function ip_geoloc_views_plugins() {
   $plugins = array(
     'style' => array(
       'ip_geoloc_map' => array(
-        'title' => t('Map (Google API, via IP Geolocation)'),
+        'title' => t('Map (Google API, via IPGV&M)'),
         'help' => t('Displays the view as a Google map.'),
         'help topic' => 'style-ip-geoloc-map',
         'handler' => 'ip_geoloc_plugin_style_map',
@@ -313,7 +313,7 @@ function ip_geoloc_views_plugins() {
   );
   if (module_exists('leaflet')) {
     $plugins['style']['ip_geoloc_leaflet'] = array(
-      'title' => t('Map (Leaflet API, via IP Geolocation)'),
+      'title' => t('Map (Leaflet API, via IPGV&M)'),
       'help' => t('Displays the view as a map via the Leaflet API.'),
       'handler' => 'ip_geoloc_plugin_style_leaflet',
       'path' => $path . '/views',
@@ -329,7 +329,7 @@ function ip_geoloc_views_plugins() {
   }
   if (module_exists('openlayers')) {
     $plugins['style']['ip_geoloc_openlayers'] = array(
-      'title' => t('Map (OpenLayers API, via IP Geolocation)'),
+      'title' => t('Map (OpenLayers API, via IPGV&M)'),
       'help' => t('Displays the view as a map via the OpenLayers API.'),
       'handler' => 'ip_geoloc_plugin_style_openlayers',
       'path' => $path . '/views',

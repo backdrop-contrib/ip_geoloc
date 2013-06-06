@@ -2,7 +2,7 @@
 IP GEOLOCATION VIEWS AND MAPS
 =============================
 This documentation concentrates on the installation and configuration of the
-IP Geolocation Views and Maps (IPGV&M) module. A full description of the module
+IP Geolocation Views & Maps (IPGV&M) module. A full description of the module
 and its features can be found at http://drupal.org/project/ip_geoloc.
 
 INSTALLATION & CONFIGURATION
@@ -95,7 +95,7 @@ import to check it's all working. For instance, the block "Map showing locations
 of 10 most recent visitors" should now show more markers.
 
 4. Go back the Configuration >> IPGV&M and complete the import process
-with a larger batch size until the IP Geolocation database is up to date with
+with a larger batch size until the IP geolocation database is up to date with
 the access log. It will automatically remain in synch from now on.
 
 CONFIGURING YOUR VIEW TO DISPLAY AS A MAP
@@ -163,7 +163,7 @@ ALTERNATIVE MARKER ICONS (LEAFLET, GOOGLE MAPS)
 Find on the web a marker icon set you like, eg http://mapicons.nicolasmollet.com
 Download and extract the icon image files, which must have extension .png, into
 a directory anywhere in your Drupal instal, e.g. sites/default/files/map_markers.
-Now visit the the IP Geolocation Views and Maps configuration page at
+Now visit the the IP Geolocation Views & Maps configuration page at
 admin/config/system/ip_geoloc. Expand the "Alternative markers" fieldset.
 Enter the path to your map_markers directory and the dimensions of your markers.
 The marker set will now be available in your map settings, in particular in the
@@ -240,7 +240,7 @@ All you have to do is flesh out the following function.
 
     $location['provider'] = 'MYMODULE';
 
-    // Then fill out some or all of the location fields that IP Geolocation
+    // Then fill out some or all of the location fields that IPGV&M
     // knows how to store.
     $location['latitude'] =  ....;
     $location['longitude'] = ....;
@@ -259,12 +259,12 @@ All you have to do is flesh out the following function.
 ?>
 
 That's all!
-Note that when IP Geolocation calls this function the $location object may be
+Note that when IPGV&M calls this function the $location object may be
 partially fleshed out. If $location['ip_address'] is empty, this means that
-IP Geolocation is still waiting for more details to arrive from the Google
-reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then IP
-Geolocation does not expect any further details and will store the $location
-with your modifications (if any) on the IP Geolocation database. You must set
+IPGV&M is still waiting for more details to arrive from the Google
+reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then
+IPGV&M does not expect any further details and will store the $location
+with your modifications (if any) on the IP geolocation database. You must set
 $location['formatted_address'] in order for the location to be stored.
 
 RESTRICTIONS IMPOSED BY GOOGLE

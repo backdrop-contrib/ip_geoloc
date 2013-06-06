@@ -134,7 +134,7 @@
 
       // Fall back on IP address lookup, for instance when user declined to share location (error 1)
       function handlePositionError(error) {
-        //alert(Drupal.t('IP Geolocation, multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
+        //alert(Drupal.t('IPGV&M multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
         var latLng = settings.ip_geoloc_multi_location_center_latlng;
         if (latLng) {
           handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);

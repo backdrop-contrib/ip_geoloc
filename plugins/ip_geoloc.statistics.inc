@@ -305,7 +305,7 @@ function _ip_geoloc_get_field_value($db_field_name) {
       // Include common.inc.
       require_once DRUPAL_ROOT . '/includes/common.inc';
       $list = system_list('module_enabled');
-      // Include 'IP Geolocation Views and Maps' module file.
+      // Include 'IP Geolocation Views & Maps' module file.
       require_once DRUPAL_ROOT . '/' . $list['ip_geoloc']->filename;
       // If 'Smart IP' module is enabled and set up as backup, include its
       // module file.
@@ -436,7 +436,7 @@ function _ip_geoloc_statistics_backfill($from_timestamp, $location) {
         ->execute();
     }
     catch (Exception $e) {
-      watchdog('IP Geolocation', 'There was an error updating statistics data:<br/>@error', array(
+      watchdog('IPGV&M', 'There was an error updating statistics data:<br/>@error', array(
         '@error' => $e->getMessage()), WATCHDOG_ERROR);
     }
   }

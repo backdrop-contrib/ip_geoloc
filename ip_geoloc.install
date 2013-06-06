@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Install and uninstall hooks for IP Geolocation.
+ * Install and uninstall hooks for IP Geolocation Views & Maps.
  */
 
 /**
@@ -33,7 +33,7 @@ function ip_geoloc_requirements($phase) {
   $requirements['ip_geoloc_lbs']['title'] = $t('IP Geolocation Views & Maps data collection methods employed');
   $requirements['ip_geoloc_lbs']['value'] = implode(', ', $geolocation_methods);
   if (empty($geolocation_methods)) {
-    $warning = $t('You currently have no data collection methods enabled. Therefore no new address information can be added to the IP Geolocation database.');
+    $warning = $t('You currently have no data collection methods enabled. Therefore no new address information can be added to the IP geolocation database.');
     if (empty($requirements['ip_geoloc']['description'])) {
       $requirements['ip_geoloc_lbs']['severity'] = REQUIREMENT_WARNING;
       $requirements['ip_geoloc_lbs']['description'] = $warning;
