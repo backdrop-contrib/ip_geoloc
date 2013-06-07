@@ -346,7 +346,7 @@ function ip_geoloc_views_plugins() {
 
   $plugins['argument default'] = array(
     'postal_code' => array(
-      'title' => t('Visitor location attribute (via IP Geolocation)'),
+      'title' => t('Visitor location attribute (via IPGV&M)'),
       'handler' => 'ip_geoloc_plugin_argument_default_ip_geoloc',
       'path' => $path . '/views'
     )

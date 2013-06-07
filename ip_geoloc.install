@@ -42,22 +42,23 @@ function ip_geoloc_requirements($phase) {
       $requirements['ip_geoloc_lbs']['description'] .= ' ' . $warning;
     }
   }
-  $css_file = FALSE;
-  $requirements['ip_geoloc_font_awesome']['title'] = t('IP Geolocation Views & Maps <em>Font Awesome</em> extension');
-  if ($css_path = ip_geoloc_get_ccs_library_path('font-awesome')) {
-    $css_file = "$css_path/font-awesome.min.css";
+  if ($phase != 'install') {
+    $css_file = FALSE;
+    $requirements['ip_geoloc_font_awesome']['title'] = t('IP Geolocation Views & Maps <em>Font Awesome</em> extension');
+    if ($css_path = ip_geoloc_get_ccs_library_path('font-awesome')) {
+      $css_file = "$css_path/font-awesome.min.css";
+    }
+    if (file_exists($css_file)) {
+      $requirements['ip_geoloc_font_awesome']['value'] = $t('Installed');
+      $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_OK;
+    }
+    else {
+      $requirements['ip_geoloc_font_awesome']['value'] = $css_path
+        ? $t('%dir found, but required .css file not present: %file', array('%dir' => $css_path, '%file' => $css_file))
+        : $t('The optional <em>Font Awesome</em> directory not found, so you will not be able to superimpose any Font Awesome symbols on top of your markers');
+      $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_WARNING;
+    }
   }
-  if (file_exists($css_file)) {
-    $requirements['ip_geoloc_font_awesome']['value'] = $t('Installed');
-    $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_OK;
-  }
-  else {
-    $requirements['ip_geoloc_font_awesome']['value'] = $css_path
-      ? $t('%dir found, but required .css file not present: %file', array('%dir' => $css_path, '%file' => $css_file))
-      : $t('The optional <em>Font Awesome</em> directory not found, so you will not be able to superimpose any Font Awesome symbols on top of your markers');
-    $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_WARNING;
-  }
-
   return $requirements;
 }
 
