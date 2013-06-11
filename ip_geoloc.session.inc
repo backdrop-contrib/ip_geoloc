@@ -10,8 +10,8 @@
 /**
  *
  * @param type $name
- *   if FALSE all IP Geolocation session variables are deleted;
- *   if NULL the array of all IP Geolocation session variables is returned
+ *   if FALSE all IPGV&M session variables are deleted;
+ *   if NULL the array of all IPGV&M session variables is returned
  * @param type $value, if
  * @return type
  */

@@ -38,11 +38,11 @@ function ip_geoloc_store_location($location) {
 
   $result = 0;
   if (empty($location['ip_address']) || empty($location['formatted_address'])) {
-    // ip_geoloc_debug('IP Geolocation: location object must contain both IP address and formatted address -- not stored.');
+    // ip_geoloc_debug('IPGV&M: location object must contain both IP address and formatted address -- not stored.');
   }
   else {
     if ($location['ip_address'] != '127.0.0.1' && (!isset($location['latitude']) || !isset($location['latitude']))) {
-      watchdog('IP Geolocation', 'latitude or longitude missing for IP address %ip (location still stored)', array('%ip' => $location['ip_address']), WATCHDOG_WARNING);
+      watchdog('IPGV&M', 'latitude or longitude missing for IP address %ip (location still stored)', array('%ip' => $location['ip_address']), WATCHDOG_WARNING);
     }
     // See if this IP is already on the db
     $result = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip', array(':ip' => $location['ip_address']));
@@ -71,7 +71,7 @@ function ip_geoloc_store_location($location) {
       $empty_location['formatted_address'] = '';
       $location['id'] = $existing_location['id'];
       $full_location = array_merge($empty_location, $location);
-      ip_geoloc_debug(t('IP Geolocation: updating db with above location'));
+      ip_geoloc_debug(t('IPGV&M: updating db with above location'));
     }
     try {
       $result = drupal_write_record('ip_geoloc', $full_location, $existing_location ? array('id') : array());
@@ -82,7 +82,7 @@ function ip_geoloc_store_location($location) {
       $result = FALSE;
     }
     if ($result === FALSE) {
-      drupal_set_message(t('IP Geolocation: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
+      drupal_set_message(t('IPGV&M: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
     }
   }
   return $result;
@@ -281,7 +281,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
       $marker_anchor = $marker_height;
   }
 
-  ip_geoloc_debug(t('IP Geolocation: passing the following to Google Maps:'));
+  ip_geoloc_debug(t('IPGV&M: passing the following to Google Maps:'));
   ip_geoloc_debug(t('- map options %options:', array('%options' => $map_options)));
   ip_geoloc_debug(t('- center option: @option' , array('@option' => $center_option)));
   ip_geoloc_debug(t('- visitor marker: %marker', array('%marker' => $visitor_marker)));
@@ -363,9 +363,9 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
 /**
  * Returns the location details associated with the supplied IP address.
  *
- * Performs a lookup in IP Geolocation's own database to see if the supplied IP
+ * Performs a lookup in IPGV&M's own database to see if the supplied IP
  * address has visited already and if so returns their location details (as an
- * array). If the IP address is not yet in the IP Geolocation database, then
+ * array). If the IP address is not yet in the IP geolocation database, then
  * retrieve lat/long using either Smart IP or GeoIP API (if enabled) and
  * reverse-geocode the lat/long (if the Google Maps service is enabled) into a
  * location. If the third argument is TRUE, then store the new location.
@@ -449,7 +449,7 @@ function ip_geoloc_get_address($latitude, $longitude) {
  */
 function ip_geoloc_reverse_geocode($latitude, $longitude) {
   if (empty($latitude) || empty($latitude)) {
-    drupal_set_message(t('IP Geolocation: cannot reverse-geocode to address as no lat/long was specified.'), 'warning');
+    drupal_set_message(t('IPGV&M: cannot reverse-geocode to address as no lat/long was specified.'), 'warning');
     return FALSE;
   }
   $query_start = microtime(TRUE);
@@ -457,36 +457,36 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
   $response = drupal_http_request($url);
   if (!empty($response->error)) {
     $msg_args = array('%url' => $url, '@code' => $response->code, '%error' => $response->error);
-    drupal_set_message(t('IP Geolocation: the HTTP request %url returned the following error (code @code): %error.', $msg_args), 'error');
-    watchdog('IP Geolocation', 'Error (code @code): %error. Request: %url', $msg_args, WATCHDOG_ERROR);
+    drupal_set_message(t('IPGV&M: the HTTP request %url returned the following error (code @code): %error.', $msg_args), 'error');
+    watchdog('IPGV&M', 'Error (code @code): %error. Request: %url', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   $data = drupal_json_decode($response->data);
   if ($data['status'] == 'OVER_QUERY_LIMIT') {
     $msg_args = array('%url' => $url);
     if (user_access('administer site configuration')) {
-      drupal_set_message(t('IP Geolocation: Server is over its query limit. Request: %url', $msg_args), 'error');
+      drupal_set_message(t('IPGV&M: Server is over its query limit. Request: %url', $msg_args), 'error');
     }
-    watchdog('IP Geolocation', 'Server is over its query limit. Request: %url', $msg_args, WATCHDOG_ERROR);
+    watchdog('IPGV&M', 'Server is over its query limit. Request: %url', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   if ($data['status'] == 'ZERO_RESULTS' || !isset($data['results'][0])) {
     $msg_args = array('@protocol' => $response->protocol, '%url' => $url);
-    drupal_set_message(t('IP Geolocation: the @protocol request %url succeeded, but returned no results.', $msg_args), 'warning');
-    watchdog('IP Geolocation', 'No results from @protocol request %url.', $msg_args, WATCHDOG_WARNING);
+    drupal_set_message(t('IPGV&M: the @protocol request %url succeeded, but returned no results.', $msg_args), 'warning');
+    watchdog('IPGV&M', 'No results from @protocol request %url.', $msg_args, WATCHDOG_WARNING);
     return FALSE;
   }
   if ($data['status'] != 'OK') {
     $msg_args = array('%url' => $url, '%error' => $data['status']);
-    drupal_set_message(t('IP Geolocation: unknown error %error. Request: %url..', $msg_args), 'error');
-    watchdog('IP Geolocation', 'Unknown error %error. Request: %url.', $msg_args, WATCHDOG_ERROR);
+    drupal_set_message(t('IPGV&M: unknown error %error. Request: %url..', $msg_args), 'error');
+    watchdog('IPGV&M', 'Unknown error %error. Request: %url.', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   $google_address = $data['results'][0];
   if (empty($google_address['formatted_address'])) {
     $msg_args = array('@lat' => $latitude, '@long' => $longitude);
-    ip_geoloc_debug(t('IP Geolocation: (@lat, @long) could not be reverse-geocoded to a street address.', $msg_args), 'warning');
-    watchdog('IP Geolocation', '(@lat, @long) could not be reverse-geocoded to a street address..', $msg_args, WATCHDOG_WARNING);
+    ip_geoloc_debug(t('IPGV&M: (@lat, @long) could not be reverse-geocoded to a street address.', $msg_args), 'warning');
+    watchdog('IPGV&M', '(@lat, @long) could not be reverse-geocoded to a street address..', $msg_args, WATCHDOG_WARNING);
   }
   else {
     $sec = number_format(microtime(TRUE) - $query_start, 1);
@@ -495,8 +495,8 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
       '%sec' => $sec,
       '%address' => $google_address['formatted_address']
     );
-    ip_geoloc_debug(t('IP Geolocation: %address reverse-geocoded from (@lat, @long) in %sec s.', $msg_args));
-    watchdog('IP Geolocation', '%address reverse-geocoded from (@lat, @long) in %sec s.', $msg_args, WATCHDOG_INFO);
+    ip_geoloc_debug(t('IPGV&M: %address reverse-geocoded from (@lat, @long) in %sec s.', $msg_args));
+    watchdog('IPGV&M', '%address reverse-geocoded from (@lat, @long) in %sec s.', $msg_args, WATCHDOG_INFO);
   }
   return $google_address;
 }

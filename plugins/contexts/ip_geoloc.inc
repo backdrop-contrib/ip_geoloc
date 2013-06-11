@@ -8,7 +8,7 @@
  *
  */
 $plugin = array(
-  'title' => t('IP Geolocation'),
+  'title' => t('IP geolocation'),
   'description' => t('The geolocation information for the current user'),
   'context' => 'ip_geoloc_ip_geoloc_context',
   'keyword' => 'ip_geoloc',

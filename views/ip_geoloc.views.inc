@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Views data from IP geolocation module
+ * Views data from IP Geolocation Views & Maps module
  */
 
 function ip_geoloc_views_data() {
@@ -289,6 +289,8 @@ function ip_geoloc_views_data() {
 
 /**
  * Implements hook_views_plugins().
+ *
+ * 3 Views style/format plugins and 1 contextual filter default argument plugin.
  */
 function ip_geoloc_views_plugins() {
   $path = drupal_get_path('module', 'ip_geoloc');
@@ -345,7 +347,7 @@ function ip_geoloc_views_plugins() {
   }
 
   $plugins['argument default'] = array(
-    'postal_code' => array(
+    'location_attribute' => array(
       'title' => t('Visitor location attribute (via IPGV&M)'),
       'handler' => 'ip_geoloc_plugin_argument_default_ip_geoloc',
       'path' => $path . '/views'

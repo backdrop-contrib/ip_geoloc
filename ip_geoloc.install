@@ -7,6 +7,8 @@
 
 /**
  * Implements hook_requirements().
+ *
+ * $phase typically is one of 'install', 'runtime', 'update'.
  */
 function ip_geoloc_requirements($phase) {
   $t = get_t();
@@ -42,6 +44,7 @@ function ip_geoloc_requirements($phase) {
       $requirements['ip_geoloc_lbs']['description'] .= ' ' . $warning;
     }
   }
+  // Avoid 'undefined function: ip_geoloc_get_css_library_path' during install.
   if ($phase != 'install') {
     $css_file = FALSE;
     $requirements['ip_geoloc_font_awesome']['title'] = t('IP Geolocation Views & Maps <em>Font Awesome</em> extension');
