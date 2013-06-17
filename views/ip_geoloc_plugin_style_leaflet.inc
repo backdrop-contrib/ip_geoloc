@@ -248,6 +248,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       return t('The preview function is incompatible with Leaflet maps so cannot be used. Please visit the page path or the block to view your map.');
     }
 
+    // Attempt to fix [#1992804]
+    $this->render_fields($this->view->result);
+    
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
 
