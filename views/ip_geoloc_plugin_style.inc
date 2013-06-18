@@ -524,7 +524,8 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $latitude  = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude' ]);
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
 
-  $view_id = $views_plugin_style->view->name;
+  $view = &$views_plugin_style->view;
+  $view_id = $view->name;
   $display_id = $views_plugin_style->display->id;
 
   $differentiator = FALSE;
@@ -538,22 +539,39 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $tooltip_field = FALSE;
   if (isset($views_plugin_style->options['tooltips']['marker_tooltip'])) {
     $marker_tooltip = $views_plugin_style->options['tooltips']['marker_tooltip'];
-    if (isset($views_plugin_style->view->field[$marker_tooltip])) {
-      $tooltip_field = $views_plugin_style->view->field[$marker_tooltip];
+    if (isset($view->field[$marker_tooltip])) {
+      $tooltip_field = $view->field[$marker_tooltip];
     }
   }
   $tag_field = FALSE;
   if (isset($views_plugin_style->options['tags']['marker_tag'])) {
     $marker_tag = $views_plugin_style->options['tags']['marker_tag'];
-    if (isset($views_plugin_style->view->field[$marker_tag])) {
-      $tag_field = $views_plugin_style->view->field[$marker_tag];
+    if (isset($view->field[$marker_tag])) {
+      $tag_field = $view->field[$marker_tag];
     }
   }
   $locations = array();
   $error_count = $first_error = 0;
-  foreach ($views_plugin_style->view->result as $i => $row) {
 
-    if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude)) {
+  if (isset($view->field[$latitude])) {
+    $loc_field = $view->field[$latitude];
+    $loc_field_name = $loc_field->definition['field_name'];
+    $loc_field_alias = $loc_field->field_alias;
+  }
+  foreach ($view->result as $i => $row) {
+    
+    $view->row_index = $i; // this is required for some Views functions
+    $loc_field_value = NULL;
+    
+    // The following 2 lines are efficient versions of this function call:
+    //   $loc_field_value = $loc_field->get_value($row);
+    if (isset($loc_field_alias)) {
+      $entity = $row->_field_data[$loc_field_alias]['entity'];
+      $loc_field_value = reset($entity->{$loc_field_name});
+      $loc_field_value = reset($loc_field_value);
+    }
+   
+    if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $loc_field_value)) {
       // Remaining row values go into the balloon
       if (!empty($views_plugin_style->rendered_fields[$i])) {
         $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
@@ -561,7 +579,6 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
         _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
       }
-      $views_plugin_style->view->row_index = $i; // don't know why, but this is required
       if ($tooltip_field) {
         $tooltip = $tooltip_field->theme($row);
         $location->marker_tooltip = strip_tags(_ip_geoloc_plugin_style_add_label($tooltip_field, $tooltip));
@@ -584,9 +601,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   }
   global $user;
   if ($error_count > 0 && $user->uid == 1) {
-    $row_count = count($views_plugin_style->view->result);
-    $title = !empty($views_plugin_style->display->display_options['title'])
-      ? $views_plugin_style->view->get_human_name() . ' (' . $views_plugin_style->display->display_title . ')'
+    $row_count = count($view->result);
+    $title = empty($views_plugin_style->display->display_options['title'])
+      ? $view->get_human_name() . ' (' . $views_plugin_style->display->display_title . ')'
       : $views_plugin_style->display->display_options['title'];
     $t_args = array(
       '%view_title' => $title,
@@ -600,7 +617,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', $t_args);
 
     $row_contents = t('First error row: ') . '<br/>';
-    foreach ($views_plugin_style->view->result[$first_error] as $field_name => $value) {
+    foreach ((array)$view->result[$first_error] as $field_name => $value) {
       $row_contents .= "<strong>$field_name</strong> = " . print_r($value, TRUE) . '<br/>';
     }
     drupal_set_message($msg, 'warning');
@@ -608,19 +625,22 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     drupal_set_message(t('The above messages are shown only to user 1.'), 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
-  drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
+  drupal_alter('ip_geoloc_marker_locations', $locations, $view);
 
   return $locations;
 }
 
 /**
+ * Extract coordinates from the View result row.
+ *
+ * @todo This function is in flux and a bit messy at the moment....
  *
  * @param array $row, View result row
  * @param string $latitude, name of the row field that holds latitude
  * @param string $longitude, name of the row field that holds longitude
  * @return location object or NULL -- @todo return array for consistency with Leaflet?
  */
-function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
+function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $loc_field_value = NULL) {
 
   $delta = &drupal_static(__FUNCTION__);
   if (isset($delta)) {
@@ -639,12 +659,15 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
   if (!isset($delta) || !isset($row->{$field_name}) || $delta >= count($row->{$field_name})) {
     $delta = 0;
   }
+  $location = new stdClass();
+
   $base = _ip_geoloc_plugin_style_base($row, $field_name, $delta);
   if (empty($base)) { // drop the "field_" prefix and try again
     $base = _ip_geoloc_plugin_style_base($row, $latitude, $delta);
   }
-  $location = new stdClass();
-
+  if (empty($base)) {
+    $base = $loc_field_value;
+  }
   if (empty($base)) {
     // empty $base, e.g. Location module
     if (isset($row->{$latitude}) && isset($row->{$longitude})) {
@@ -954,3 +977,148 @@ function ip_geoloc_get_field_instances($field_name) {
   }
   return $instances;
 }
+/*
+// Normal geofield (field_geo) in Views results
+$_field_data = array (
+  [nid] => array (
+   [entity_type] => node,
+   [entity] => stdClass Object (
+    [vid] => 364
+    [uid] => 1
+    [title] => David Jones
+    [log] =>
+    [status] => 1
+    [comment] => 1
+    [promote] => 0
+    [sticky] => 0
+    [nid] => 364 [type] => store
+    [language] => und
+    [created] => 1361261776
+    [changed] => 1362033347
+    [tnid] => 0
+    [translate] => 0
+    [revision_timestamp] => 1362033347
+    [revision_uid] => 1
+    [body] => array ( [und] => array ( [0] => array (
+       [value] => David Jones is arguably Australia's most prestigious department store.
+       [summary] =>
+       [format] => filtered_html
+       [safe_value] => David Jones is arguably Australia's most prestigious department store.
+       [safe_summary] =>
+    ) ) )
+    [field_geo] => Array ( [und] => Array ( [0] => Array (
+      [geom] => POINT (144.964818 -37.8136792)
+      [geo_type] => point
+      [lat] => -37.813679200000
+      [lon] => 144.964818000000
+      [left] => 144.964818000000
+      [top] => -37.813679200000
+      [right] => 144.964818000000
+      [bottom] => -37.813679200000
+      [geohash] => r1r0fu0pm56c7
+    ) ) )
+    [field_store_address] => Array ( [und] => Array ( [0] => Array ( [country] => AU [administrative_area] => VIC [sub_administrative_area] => [locality] => Melbourne [dependent_locality] => [postal_code] => 3000 [thoroughfare] => Bourke Street Mall [premise] => [sub_premise] => [organisation_name] => [name_line] => [first_name] => [last_name] => [data] => ) ) ) [
+    [field_departments] => Array ( [und] => Array ( [0] => Array ( [tid] => 7 ) [1] => Array ( [tid] => 8 ) [2] => Array ( [tid] => 4 ) [3] => Array ( [tid] => 3 ) [4] => Array ( [tid] => 1 ) [5] => Array ( [tid] => 9 ) [6] => Array ( [tid] => 5 ) [7] => Array ( [tid] => 2 ) ) )
+    [cid] => 0
+    [last_comment_timestamp] => 1361261776
+    [last_comment_name] =>
+    [last_comment_uid] => 1
+    [comment_count] => 0
+    [locations] => Array ( )
+    [location] => Array ( )
+    [name] => admin
+    [picture] => 0
+    [data] => b:0;
+    [num_revisions] => 1
+    [current_revision_id] => 364
+    [is_current] => 1
+    [is_pending] =>
+    [revision_moderation] =>
+   )
+  )
+ );
+ // Search API ...
+ $_field_data = Array (
+   [field_geo_test] => Array (
+      [entity_type] => node
+      [entity] => stdClass Object (
+        [vid] => 574
+        [uid] => 1
+        [title] => Map Test1
+        [log] =>
+        [status] => 1
+        [comment] => 1
+        [promote] => 0
+        [sticky] => 0
+        [nid] => 499
+        [type] => map_test
+        [language] => und
+        [created] => 1371530846
+        [changed] => 1371532298
+        [tnid] => 0
+        [translate] => 0
+        [revision_timestamp] => 1371532298
+        [revision_uid] => 1
+        [body] => Array ( )
+        [field_address_test] => Array ( [und] => Array ( [0] => Array ( [country] => US [administrative_area] => HI [sub_administrative_area] => [locality] => Honolulu [dependent_locality] => [postal_code] => 96815 [thoroughfare] => 2259 Kalakaua Avenue [premise] => [sub_premise] => [organisation_name] => [name_line] => [first_name] => [last_name] => [data] => ) ) )
+        [field_geo_test] => Array ( [und] => Array ( [0] => Array (
+          [geom] => POINT (-157.8290146 21.2774797)
+          [geo_type] => point
+          [lat] => 21.277479700000
+          [lon] => -157.829014600000
+          [left] => -157.829014600000
+          [top] => 21.277479700000
+          [right] => -157.829014600000
+          [bottom] => 21.277479700000
+          [geohash] => 87zc092qm3sym
+        ) ) )
+        [rdf_mapping] => Array ( [rdftype] => Array ( [0] => sioc:Item [1] => foaf:Document ) [title] => Array ( [predicates] => Array ( [0] => dc:title ) ) [created] => Array ( [predicates] => Array ( [0] => dc:date [1] => dc:created ) [datatype] => xsd:dateTime [callback] => date_iso8601 ) [changed] => Array ( [predicates] => Array ( [0] => dc:modified ) [datatype] => xsd:dateTime [callback] => date_iso8601 ) [body] => Array ( [predicates] => Array ( [0] => content:encoded ) ) [uid] => Array ( [predicates] => Array ( [0] => sioc:has_creator ) [type] => rel ) [name] => Array ( [predicates] => Array ( [0] => foaf:name ) ) [comment_count] => Array ( [predicates] => Array ( [0] => sioc:num_replies ) [datatype] => xsd:integer ) [last_activity] => Array ( [predicates] => Array ( [0] => sioc:last_activity_date ) [datatype] => xsd:dateTime [callback] => date_iso8601 ) )
+        [cid] => 0
+        [last_comment_timestamp] => 1371530846
+        [last_comment_name] =>
+        [last_comment_uid] => 1
+        [comment_count] => 0
+        [name] => narkoff
+        [picture] => 0
+        [data] => a:1:{s:14:"geoip_location";a:12:{s:7:"country";s:0:"";s:12:"country_code";s:0:"";s:6:"region";s:0:"";s:11:"region_code";s:0:"";s:4:"city";s:0:"";s:3:"zip";s:0:"";s:8:"latitude";N;s:9:"longitude";N;s:10:"ip_address";s:9:"127.0.0.1";s:9:"timestamp";i:1371074763;s:11:"postal_code";s:0:"";s:17:"formatted_address";s:0:"";}} ) ) )
+
+// Search API also
+ $_entity_properties = Array (
+   [search_api_relevance] => 1
+   [search_api_excerpt] =>
+   [search_api_item_id] => 499
+   [nid] => 499
+   [entity object] => stdClass Object (
+    [vid] => 574
+    [uid] => 1
+    [title] => Map Test1
+    [log] =>
+    [status] => 1
+    [comment] => 1
+    [promote] => 0
+    [sticky] => 0
+    [nid] => 499
+    [type] => map_test
+    [language] => und
+    [created] => 1371530846
+    [changed] => 1371532298
+    [tnid] => 0
+    [translate] => 0
+    [revision_timestamp] => 1371532298
+    [revision_uid] => 1
+    [body] => Array ( )
+    [field_address_test] => Array ( [und] => Array ( [0] => Array ( [country] => US [administrative_area] => HI [sub_administrative_area] => [locality] => Honolulu [dependent_locality] => [postal_code] => 96815 [thoroughfare] => 2259 Kalakaua Avenue [premise] => [sub_premise] => [organisation_name] => [name_line] => [first_name] => [last_name] => [data] => ) ) )
+    [field_geo_test] => Array ( [und] => Array ( [0] => Array (
+      [geom] => POINT (-157.8290146 21.2774797)
+      [geo_type] => point
+      [lat] => 21.277479700000
+      [lon] => -157.829014600000
+      [left] => -157.829014600000
+      [top] => 21.277479700000
+      [right] => -157.829014600000
+      [bottom] => 21.277479700000
+      [geohash] => 87zc092qm3sym
+    ) ) )
+    [rdf_mapping] => Array ( [rdftype] => Array ( [0] => sioc:Item [1] => foaf:Document ) [title] => Array ( [predicates] => Array ( [0] => dc:title ) ) [created] => Array ( [predicates] => Array ( [0] => dc:date [1] => dc:created ) [datatype] => xsd:dateTime [callback] => date_iso8601 ) [changed] => Array ( [predicates] => Array ( [0] => dc:modified ) [datatype] => xsd:dateTime [callback] => date_iso8601 ) [body] => Array ( [predicates] => Array ( [0] => content:encoded ) ) [uid] => Array ( [predicates] => Array ( [0] => sioc:has_creator ) [type] => rel ) [name] => Array ( [predicates] => Array ( [0] => foaf:name ) ) [comment_count] => Array ( [predicates] => Array ( [0] => sioc:num_replies ) [datatype] => xsd:integer ) [last_activity] => Array ( [predicates] => Array ( [0] => sioc:last_activity_date ) [datatype] => xsd:dateTime [callback] => date_iso8601 ) ) [cid] => 0 [last_comment_timestamp] => 1371530846 [last_comment_name] => [last_comment_uid] => 1 [comment_count] => 0 [name] => narkoff [picture] => 0 [data] => a:1:{s:14:"geoip_location";a:12:{s:7:"country";s:0:"";s:12:"country_code";s:0:"";s:6:"region";s:0:"";s:11:"region_code";s:0:"";s:4:"city";s:0:"";s:3:"zip";s:0:"";s:8:"latitude";N;s:9:"longitude";N;s:10:"ip_address";s:9:"127.0.0.1";s:9:"timestamp";i:1371074763;s:11:"postal_code";s:0:"";s:17:"formatted_address";s:0:"";}} ) )
+ * 
+ */
