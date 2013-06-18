@@ -550,7 +550,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     }
   }
   $locations = array();
-  $error_count = 0;
+  $error_count = $first_error = 0;
   foreach ($views_plugin_style->view->result as $i => $row) {
 
     if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude)) {
@@ -583,23 +583,29 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     }
   }
   global $user;
-  if ($error_count && $user->uid == 1) {
+  if ($error_count > 0 && $user->uid == 1) {
     $row_count = count($views_plugin_style->view->result);
-    if ($error_count >= $row_count) {
-      drupal_set_message(t('None of the @total View result rows had their %latitude lat/lng set. Therefore the map could not be displayed. Is %latitude the correct field name?', array(
-        '@total' => $row_count, '%latitude' => $latitude)), 'warning');
-      $first_error = 0;
-    }
-    else {
-      drupal_set_message(t('Out of a total of @total View result rows, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', array(
-        '@error_count' => $error_count, '@total' => $row_count, '@first' => $first_error+1, '%latitude' => $latitude)), 'warning');
-    }
+    $title = !empty($views_plugin_style->display->display_options['title'])
+      ? $views_plugin_style->view->get_human_name() . ' (' . $views_plugin_style->display->display_title . ')'
+      : $views_plugin_style->display->display_options['title'];
+    $t_args = array(
+      '%view_title' => $title,
+      '@total' => $row_count,
+      '@error_count' => $error_count,
+      '@first' => $first_error+1,
+      '%latitude' => $latitude
+    );
+    $msg = ($error_count >= $row_count)
+      ? t('None of the @total result rows in view %view_title had their %latitude lat/lng set. Therefore the map could not be displayed. Is %latitude the correct field name?', $t_args)
+      : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', $t_args);
+
     $row_contents = t('First error row: ') . '<br/>';
     foreach ($views_plugin_style->view->result[$first_error] as $field_name => $value) {
       $row_contents .= "<strong>$field_name</strong> = " . print_r($value, TRUE) . '<br/>';
     }
+    drupal_set_message($msg, 'warning');
     drupal_set_message($row_contents, 'warning');
-    drupal_set_message(t('The above messages are shown only to user 1'), 'warning');
+    drupal_set_message(t('The above messages are shown only to user 1.'), 'warning');
   }
   // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $views_plugin_style->view);
@@ -638,10 +644,25 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
     $base = _ip_geoloc_plugin_style_base($row, $latitude, $delta);
   }
   $location = new stdClass();
-  if (!empty($base)) {
 
-    if (isset($base['geo_type'])) { // Geofield
-
+  if (empty($base)) {
+    // empty $base, e.g. Location module
+    if (isset($row->{$latitude}) && isset($row->{$longitude})) {
+      // If not node fields then db table fields...
+      $location->latitude  = $row->{$latitude};
+      $location->longitude = $row->{$longitude};
+    }
+  }
+  else {
+    if (is_string($base)) {
+      // Expect a rendered result like "Latitude: -37.8<br/>Longitude: 144.96"
+      $parts = explode(':', $base);
+      if (isset($parts[2])) {
+        $location->latitude = (float)$parts[1];
+        $location->longitude = (float)$parts[2];
+      }
+    }
+    elseif (isset($base['geo_type'])) { // Geofield
       // Quick fix: take advantage of Leaflet module, if enabled.
       // @todo generalise Leaflet code and incorporate here.
       if (function_exists('leaflet_process_geofield')) {
@@ -696,12 +717,6 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude) {
       $location->longitude = $row->{'field_' . $longitude}[$delta]['raw']['value'];
     }
   }
-  // empty $base, e.g. Location module
-  elseif (isset($row->{$latitude}) && isset($row->{$longitude})) {
-    // If not node fields then db table fields...
-    $location->latitude  = $row->{$latitude};
-    $location->longitude = $row->{$longitude};
-  }
   return isset($location->type) || isset($location->latitude) ? $location : NULL;
 }
 
@@ -722,6 +737,11 @@ function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
       // For Geofield module lat/long are as follows (note: no extra field_ prefix)
       // <field_name>['und]['0']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
       return $row->{$field_name}[$lang][$delta];
+    }
+    // Last resort, retrieve from rendered, as opposed to raw, result
+    if (!empty($row->{$field_name}[$delta]['rendered'])) {
+      $base = $row->{$field_name}[$delta]['rendered'];
+      return empty($base['#markup']) ? $base : $base['#markup'];
     }
   }
   return NULL;

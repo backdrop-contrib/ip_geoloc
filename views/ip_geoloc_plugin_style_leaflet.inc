@@ -247,9 +247,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($this->view->live_preview)) {
       return t('The preview function is incompatible with Leaflet maps so cannot be used. Please visit the page path or the block to view your map.');
     }
-
-    // Attempt to fix [#1992804]
-    $this->render_fields($this->view->result);
     
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
@@ -466,7 +463,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         leaflet_markercluster_preprocess_leaflet_map($vars);
       }
       else {
-        drupal_set_message(t('Cannot cluster - Leaflet MarkerCluster module not enabled.'), 'warning');
+        $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
+        drupal_set_message(t('Cannot cluster markers in View %display_name - Leaflet MarkerCluster module not enabled.', array('%display_name' => $display_name)), 'warning');
       }
     }
 
