@@ -82,9 +82,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
       '!url2' => url('http://fsymbols.com'),
     ));
+    $path = drupal_get_path('module', 'ip_geoloc');
     if (!ip_geoloc_get_ccs_library_path('font-awesome')) {
       $desc .= ' ' . t('Please follow instructions in the <a href="!url">README</a> to install the <em>Font Awesome</em> library.', array(
-        '!url' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt')
+        '!url' => url("$path/README.txt")
       ));
     }
     $form['default_marker_special_char'] = array(
@@ -185,6 +186,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ip_geoloc_marker_colors();
     unset($visitor_marker_colors['0']);
 
+    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers')
+      ? 'ip_geoloc_admin_a.css'
+      : 'ip_geoloc_admin.css';
+
     $form['visitor_marker_color'] = array(
       '#title' => t('Visitor marker'),
       '#type' => 'select',
@@ -192,10 +197,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['visitor_marker_color'],
       '#options' => $visitor_marker_colors,
       '#description' => t(''),
-      '#attributes' => array('class' => array('marker-color gmap')),
-      '#attached' => array(
-        'css' => array(drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_admin.css')
-      ),
+      '#attributes' => array('class' => array('marker-color')),
+      '#attached' => array('css' => array("$path/css/$css_file")),
       '#weight' => 90
     );
 
@@ -247,7 +250,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($this->view->live_preview)) {
       return t('The preview function is incompatible with Leaflet maps so cannot be used. Please visit the page path or the block to view your map.');
     }
-    
+
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
 
@@ -258,11 +261,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_tooltip = $this->options['tooltips']['marker_tooltip'];
     $marker_tag = $this->options['tags']['marker_tag'];
     $tag_css_classes = $this->options['tags']['tag_css_class'];
-    
+
     $module_path = drupal_get_path('module', 'ip_geoloc');
     $marker_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
     $marker_path = file_create_url($marker_path);
-    
+
     $max_zoom = (int)$this->options['map_options']['maxzoom'];
     $zoom = (int)$this->options['map_options']['zoom'];
     $scroll_wheel_zoom = (bool)$this->options['map_options']['scrollwheelzoom'];
@@ -342,7 +345,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       // At this point $feature['type'] should be set.
       if ($feature['type'] != 'point') { // linestring, polygon ...
         $feature['flags'] = LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER;
-      } 
+      }
       elseif (!isset($feature['lat'])) { // points must have coords
         continue;
       }
@@ -363,7 +366,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           }
         }
       }
-      else if (!empty($this->options['default_marker_special_char'])) {
+      elseif (!empty($this->options['default_marker_special_char'])) {
         $feature['specialChar'] = $this->options['default_marker_special_char'];
         $feature['specialCharClass'] = 'icon-light'; // no UI field, assuming Font Awesome
         drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
