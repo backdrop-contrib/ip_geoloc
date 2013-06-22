@@ -600,6 +600,21 @@ function ip_geoloc_ctools_plugin_directory($module, $plugin) {
 }
 
 /**
+ * Implements hook_geofield_handler_argument_proximity_alter().
+ *
+ * We use this to place the visitor marker at the centre of the contextual
+ * proximity filter circle, so that the user has visual feedback as to the
+ * exact proximity centre as interpreted by Geocoder. Example: "/Oregon".
+ */
+function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_proximity_handler, $lat_lon_dist) {
+   $location = array(
+     'latitude' => reset($lat_lon_dist),
+     'longitude' => next($lat_lon_dist),
+   );
+   _ip_geoloc_set_session_value('location', $location);
+}
+
+/**
  * Implements hook_views_api().
  */
 function ip_geoloc_views_api() {
