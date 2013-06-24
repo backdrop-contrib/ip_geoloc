@@ -13,7 +13,6 @@
       else {
         // Use the geo.js unified API. This covers the W3C Geolocation API as well
         // as some specific devices like Palm and Blackberry.
-        // Assumes
         var data = new Object;
         if (typeof(geo_position_js) != 'object') {
           data['error'] = Drupal.t('IPGV&M: device does not support W3C API and the unified geo_position_js device API is not loaded.');

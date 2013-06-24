@@ -13,8 +13,8 @@
 function ip_geoloc_requirements($phase) {
 
   $requirements = array();
-  // Avoid 'undefined function: ip_geoloc_get_css_library_path' during install
-  // and some warnings not relevant while updating.
+  // Avoid 'undefined function: ip_geoloc_get_css_library_path' during 'install'
+  // and some warnings not relevant while executing an 'update'.
   if ($phase != 'runtime') {
     return $requirements;
   }
@@ -62,7 +62,7 @@ function ip_geoloc_requirements($phase) {
   else {
     $requirements['ip_geoloc_font_awesome']['value'] = $css_path
       ? $t('%dir found, but required .css file not present: %file', array('%dir' => $css_path, '%file' => $css_file))
-      : $t('The optional <em>Font Awesome</em> directory not found, so you will not be able to superimpose any Font Awesome symbols on top of your markers');
+      : $t('The optional <em>Font Awesome</em> directory was not found, so you will not be able to superimpose any Font Awesome symbols on top of your markers');
     $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_WARNING;
   }
   return $requirements;
