@@ -607,11 +607,7 @@ function ip_geoloc_ctools_plugin_directory($module, $plugin) {
  * exact proximity centre as interpreted by Geocoder. Example: "/Oregon".
  */
 function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_proximity_handler, $lat_lon_dist) {
-   $location = array(
-     'latitude' => reset($lat_lon_dist),
-     'longitude' => next($lat_lon_dist),
-   );
-   _ip_geoloc_set_session_value('location', $location);
+  //_ip_geoloc_set_session_value('location', $lat_lon_dist);
 }
 
 /**

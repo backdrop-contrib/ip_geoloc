@@ -29,7 +29,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'textfield',
     '#title' => t('<strong>Google Maps, Leaflet</strong>: marker image width and height'),
     '#default_value' => variable_get('ip_geoloc_marker_dimensions', '21 x 34'),
-    '#field_suffix' => 'px',
+    '#field_suffix' => t('px'),
     '#description' => t('These dimensions apply to all markers in the set. The default marker size is 21 x 34 for the <em>/markers</em> directory and 32 x 42 for the <em>/amarkers</em> directory.')
   );
   $form['markers']['ip_geoloc_marker_anchor_pos']= array(
@@ -120,7 +120,8 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
     '#type' => 'textfield',
     '#size' => 10,
-    '#title' => t('Minimum elapsed time in seconds before geolocation data for the same user will be collected again.'),
+    '#field_suffix' => t('seconds'),
+    '#title' => t('Minimum elapsed time before geolocation data for the same user will be collected again.'),
     '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
     '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to stop repeat location collection.')
   );
