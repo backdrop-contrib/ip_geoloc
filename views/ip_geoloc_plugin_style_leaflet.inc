@@ -343,7 +343,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
 
       // At this point $feature['type'] should be set.
-      if ($feature['type'] != 'point') { // linestring, polygon ...
+      if (!empty($feature['type']) && $feature['type'] != 'point') { // linestring, polygon ...
         $feature['flags'] = LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER;
       }
       elseif (!isset($feature['lat'])) { // points must have coords
