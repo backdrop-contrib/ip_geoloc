@@ -323,21 +323,22 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $features = array();
     foreach ($locations as $key => $location) {
-
+      $feature = array();
       if (isset($location->latitude) || isset($location->lat)) {
-        $feature = array(
-          'type' => 'point',
-          'lat' => isset($location->latitude)  ? $location->latitude  : $location->lat,
-          'lon' => isset($location->longitude) ? $location->longitude : $location->lon
-        );
+        $feature['type'] = 'point';
+        $feature['lat'] = isset($location->latitude)  ? $location->latitude  : $location->lat;
+        $feature['lon'] = isset($location->longitude) ? $location->longitude : $location->lon;
       }
       elseif (isset($location->component)) {
         // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
-        $feature = array(
-          'type' => $location->type,
-          'component' => $location->component
-        );
+        $feature['type'] =  $location->type;
+        $feature['component'] = $location->component;
       }
+      elseif (isset($location->points)) {
+        $feature['type'] = $location->type;
+        $feature['points'] = $location->points;
+      }
+      
       if (isset($location->id)) { // allow marker events to identify the corresponding node
         $feature['feature_id'] = $location->id;
       }
