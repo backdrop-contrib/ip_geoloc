@@ -10,13 +10,14 @@
  */
 class ip_geoloc_plugin_argument_default_ip_geoloc extends views_plugin_argument_default {
 
-  public function option_definition() {
+
+  function option_definition() {
     $options = parent::option_definition();
     $options['type'] = array('default' => 'postal');
     return $options;
   }
 
-  public function options_form(&$form, &$form_state) {
+  function options_form(&$form, &$form_state) {
     $form['type'] = array(
       '#type' => 'select',
       '#title' => t('Location attribute to use'),
@@ -31,7 +32,7 @@ class ip_geoloc_plugin_argument_default_ip_geoloc extends views_plugin_argument_
     );
   }
 
-  public function get_argument() {
+  function get_argument() {
     $location = ip_geoloc_get_visitor_location();
     if (!empty($location)) {
       switch ($this->options['type']) {

@@ -70,7 +70,10 @@ function ip_geoloc_library() {
 
 /**
  * Get CSS library path.
+ *
  * @param string $lib_path
+ *   Defaults to 'font-awesome'.
+ *
  * @return string
  *   Path location or FALSE if not found.
  */
@@ -120,7 +123,7 @@ function ip_geoloc_init() {
   $location = ip_geoloc_get_visitor_location();
   $reverse_geocode_client_timeout = ip_geoloc_reverse_geocode_timeout();
 
-  // Sample location when due or as soon as a reverse_geocode timeout is detected.
+  // Sample location when due or as soon asreverse_geocode timeout is detected.
   if (_ip_geoloc_check_location($location) || $reverse_geocode_client_timeout) {
 
     if ($use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
@@ -136,17 +139,6 @@ function ip_geoloc_init() {
     if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || empty($last_position_check)) {
       // The calls below are synchronous, $location is filled immediately upon return.
       if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-        /*
-        if ($use_google_to_reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
-          // Initialise street address details. These are based on the IP,
-          // so may reflect the provider location, rather than browser location.
-          // This is a synchronous server-side call, so may result in the Google
-          // maximum number of calls per day being reached.
-          if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
-            ip_geoloc_flatten_google_address($google_address, $location);
-          }
-        }
-        */
         if ($reverse_geocode_client_timeout) {
           watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
             '%sec' => number_format($reverse_geocode_client_timeout, 1),
@@ -159,11 +151,11 @@ function ip_geoloc_init() {
       }
       _ip_geoloc_set_session_value('position_pending_since', NULL);
     }
-
-    if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0) /* Avoid HTTP 503 */) {
+    // 2nd condition is to avoid HTTP 503 error.
+    if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0)) {
       // Insert some javascript to first retrieve the user's lat/long coords,
       // HTML5 style (requiring the user to accept a browser prompt) and then
-      // use Google Maps API to reverse-geocode these coords into a street address.
+      // use Google Maps API to reverse-geocode these coords into an address.
       // This is all done via client-side calls, so the Drupal server
       // will not rake up any calls against its Google-imposed quotum, ie the
       // OVER_QUERY_LIMIT.
@@ -237,8 +229,9 @@ function ip_geoloc_current_location_ajax_recipient() {
     watchdog('IPGV&M', 'Browser @ %address, received after %sec seconds.', array('%address' => $location['formatted_address'], '%sec' => $time_elapsed), WATCHDOG_INFO);
     ip_geoloc_debug(t('IP Geolocaton: global position and reverse-geocoding callback received after %sec seconds: !location',
       array('%sec' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
-    // If better_statistics module is enabled, we can backfill geolocation information
-    // to {accesslog} entries occurred since the positioning was requested.
+    // If better_statistics module is enabled, we can backfill geolocation
+    // information to {accesslog} entries occurred since the positioning was
+    // requested.
     if (!empty($since) and module_exists('better_statistics')) {
       require_once 'plugins/ip_geoloc.statistics.inc';
       _ip_geoloc_statistics_backfill($since, $location);
@@ -264,6 +257,9 @@ function ip_geoloc_current_location_ajax_recipient() {
  * @param array $location
  *   if $location['ip_address'] isn't filled out the current user's
  *   IP address will be used
+ *
+ * @return bool
+ *   TRUE upon success, FALSE otherwise.
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
   if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
@@ -284,6 +280,13 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
 
 /**
  * Module GeoIP API does not expose a hook, but it does expose an API.
+ *
+ * @param array $location
+ *   if $location['ip_address'] isn't filled out the current user's
+ *   IP address will be used.
+ *
+ * @return bool
+ *   TRUE upon success, FALSE otherwise.
  */
 function ip_geoloc_use_geoip_api_if_enabled(&$location) {
   if (!function_exists('geoip_city')) {
@@ -307,6 +310,8 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
 
 /**
  * Return whether a the visitor's location is due for an update.
+ *
+ * @param array $location
  *
  * Updates are only performed on selected configured pages.
  * An update is due when more than a configurable number of seconds have
@@ -362,6 +367,8 @@ function ip_geoloc_reverse_geocode_timeout() {
 /**
  * Poor man's address formatter.
  *
+ * @param array $location
+ *
  * It doesn't take local format conventions into account. Luckily this is only
  * called as a fallback when lat/long could not be established or the Google
  * reverse-geocode function returned an error.
@@ -390,7 +397,9 @@ function ip_geoloc_format_address(&$location) {
  * they remain consistent with the street address components.
  *
  * @param array $google_address
+ *
  * @param array $ip_geoloc_address
+ *
  * @return boolean
  *   TRUE, unless google_address or ip_geoloc_address are empty
  */
@@ -421,6 +430,7 @@ function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) 
  * Print the location array nicely.
  *
  * @param array $location
+ *
  * @return string
  */
 function ip_geoloc_pretty_print($location) {
@@ -510,8 +520,10 @@ function ip_geoloc_smart_ip_get_location_alter(&$location) {
  *
  * @param string $value
  *   The value to check in $range
+ *
  * @param string $range
  *   Of the form '1.5--4.5' (range is inclusive of end points)
+ *
  * @return bool
  *   TRUE if the value is in range
  */
@@ -578,7 +590,8 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
     // validation accordingly.
     if (is_numeric($from) || is_numeric($to)) {
       // If one end is numeric, then the other must also be, or be empty.
-      $ok =
+      $ok
+        =
         (empty($from) && empty($to)) ||
         (empty($from) && is_numeric($to)) || (empty($to) && is_numeric($from)) ||
         (is_numeric($from) && is_numeric($to) && $from <= $to);
@@ -597,7 +610,9 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
  * Special debug function.
  *
  * @param string $message
+ *
  * @param string $type
+ *   Defaults to 'status'.
  */
 function ip_geoloc_debug($message, $type = 'status') {
   global $user;

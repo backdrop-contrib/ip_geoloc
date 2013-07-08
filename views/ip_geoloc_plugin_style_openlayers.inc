@@ -14,7 +14,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   /**
    * Set default OpenLayer options.
    */
-  public function option_definition() {
+  function option_definition() {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
@@ -38,7 +38,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   /**
    * Create the options form.
    */
-  public function options_form(&$form, &$form_state) {
+  function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $form['map'] = array(
@@ -62,11 +62,11 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
         $argument_options[$key] = $handler->definition['group'] . ': ' . $handler->definition['title'];
       }
       $form['argument'] = array(
-       '#type' => 'select',
-       '#title' => t('Choose a contextual filter to pull data from'),
-       '#options' => $argument_options,
-       '#default_value' => $this->options['argument'],
-       '#weight' => 100,
+        '#type' => 'select',
+        '#title' => t('Choose a contextual filter to pull data from'),
+        '#options' => $argument_options,
+        '#default_value' => $this->options['argument'],
+        '#weight' => 100,
       );
     }
   }
@@ -74,18 +74,14 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   /**
    * Validate the options form.
    */
-  public function options_validate(&$form, &$form_state) {
+  function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
   }
 
   /**
-   * Transform the View result in a list of marker locations and render these on a map.
+   * Transform the View result in a list of markers and render these on a map.
    */
   public function render() {
-
-    if (!empty($this->view->live_preview)) {
-    // return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
-    }
 
     // This somewhat mimics function openlayers_render_map_data() and class
     // openlayers_views_style_map, function render()
@@ -143,7 +139,8 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
           $center_set = TRUE;
         }
         $feature = array(
-          // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js
+          // Only 'name' and 'description' are valid attribute names.
+          // @see openlayers_behavior_popup.js
           'attributes' => array('description' => $location->balloon_text),
           'projection' => 'EPSG:4326',
           'wkt' => "POINT($lon $lat)",

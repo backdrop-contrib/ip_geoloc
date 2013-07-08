@@ -1,6 +1,8 @@
 <?php
 /**
  * @file
+ * ip_geoloc.views.inc
+ *
  * Views data from IP Geolocation Views & Maps module
  */
 
@@ -33,7 +35,8 @@ function ip_geoloc_views_data() {
       'type' => 'LEFT',
     ),
     // Make all of our fields instantly available in an Order Revisions view.
-    // ip_geoloc.ip_address connects to commerce_order_revision.revision_hostname
+    // ip_geoloc.ip_address connects to
+    // commerce_order_revision.revision_hostname
     'commerce_order_revision' => array(
       'left_field' => 'revision_hostname',
       'field' => 'ip_address',
@@ -48,9 +51,9 @@ function ip_geoloc_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-   'filter' => array(
-     'handler' => 'views_handler_filter_string',
-   ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
     'argument' => array(
       'handler' => 'views_handler_argument_string',
     ),
@@ -316,8 +319,8 @@ function ip_geoloc_views_plugins() {
         'type' => 'normal',
         // May be overridden in ip_geoloc_plugin_style_map::render().
         'even empty' => TRUE,
-      )
-    )
+      ),
+    ),
   );
   if (module_exists('leaflet')) {
     $plugins['style']['ip_geoloc_leaflet'] = array(

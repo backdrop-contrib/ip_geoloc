@@ -11,13 +11,13 @@
 // enviroments using certificates.
 // Google's gears_init.js is now included at the top of geo.js
 // Size 15k uncompressed.
-define('IP_GEOLOC_GEO_JS',             'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js');
-define('IP_GEOLOC_JQUERY_BLOCK_UI',    'http://malsup.github.com/jquery.blockUI.js');
+define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js');
+define('IP_GEOLOC_JQUERY_BLOCK_UI', 'http://malsup.github.com/jquery.blockUI.js');
 // Size 5k.
-define('IP_GEOLOC_GOOGLE_MAPS',        'https://maps.googleapis.com/maps/api/js?sensor=false');
+define('IP_GEOLOC_GOOGLE_MAPS', 'https://maps.googleapis.com/maps/api/js?sensor=false');
 // Size 5k.
-define('IP_GEOLOC_GOOGLE_MAPS_GPS',    'https://maps.googleapis.com/maps/api/js?sensor=true');
-define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'https://maps.googleapis.com/maps/api/geocode/json?sensor=false');
+define('IP_GEOLOC_GOOGLE_MAPS_GPS', 'https://maps.googleapis.com/maps/api/js?sensor=true');
+define('IP_GEOLOC_GOOGLE_MAPS_SERVER','https://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
  * Store the supplied IP geolocation info on the database.
@@ -28,6 +28,7 @@ define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'https://maps.googleapis.com/maps/api/geo
  *   array with up to 13 location info fields; must at least
  *   contain a non-empty $location['ip_address'] and a non-empty
  *   $location['formatted_address'] for anything to happen
+ *
  * @return int|bool
  *   0, when no insert or update was necessary
  *   SAVED_NEW (=1), when a new location record was inserted into the db
@@ -41,7 +42,8 @@ function ip_geoloc_store_location($location) {
 
   $result = 0;
   if (empty($location['ip_address']) || empty($location['formatted_address'])) {
-    // ip_geoloc_debug('IPGV&M: location object must contain both IP address and formatted address -- not stored.');
+    // ip_geoloc_debug('IPGV&M: location object must contain both IP address
+    //   and formatted address -- not stored.');
   }
   else {
     if ($location['ip_address'] != '127.0.0.1' && (!isset($location['latitude']) || !isset($location['latitude']))) {
@@ -59,7 +61,8 @@ function ip_geoloc_store_location($location) {
       $full_location = &$location;
     }
     else {
-      // When updating, drupal_write_record() does not erase fields not present in $location.
+      // When updating, drupal_write_record() does not erase fields not present
+      // in $location.
       $empty_location['latitude'] = '';
       $empty_location['longitude'] = '';
       $empty_location['country'] = '';
@@ -219,28 +222,37 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
  * @param array $locations
  *   array of location objects each containing lat/long pair
  *   and optional balloon text.
+ *
  * @param string $div_id
  *   id of the div placeholder, can be anything as long as it's unique
+ *
  * @param string $map_options
  *   as a JSON string, .e.g '{"mapTypeId":"roadmap", "zoom":15}'
+ *
  * @param string $map_style
  *   CSS style applied to the div, e.g "height:250px; width:300px"
+ *
  * @param string $marker_color
  *   default color used for all locations that haven't had their
  *   color overridden, defaults to Google default (i.e. red marker with dot).
+ *
  * @param bool|string $visitor_marker
  *   FALSE (no marker), TRUE (standard red marker) or a 'RRGGBB' color code
+ *
  * @param int $center_option
  *   0: fixed cenrer, must be provided thorugh $map_options)
  *   1: auto-center the map on the first location in the $locations array
  *   2: auto-center the map on the visitor's current location
+ *
  * @param array $center_latlng
  *   array of length 2 with lat/long coords used as a backup
  *   when $visitor_marker is set or $center_option == 2 and location could not
  *   be determined or $visitor_location_gps == FALSE
+ *
  * @param bool $visitor_location_gps
  *   whether the HTML5-style location provider is to be
  *   used, if FALSE $center_latlng is used
+ *
  * @return string
  *   map placeholder div
  */
@@ -355,10 +367,6 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
   $refresh_page = variable_get('ip_geoloc_page_refresh', FALSE) && !path_is_admin($_GET['q']);
-  // if ($refresh_page) {
-  //   No longer using this jQuery API, see file js/ip_geoloc_current_location.js
-  //   drupal_add_js(IP_GEOLOC_JQUERY_BLOCK_UI, $js_options);
-  // }
   $settings = array(
     'ip_geoloc_menu_callback' => $menu_callback,
     'ip_geoloc_refresh_page' => $refresh_page,
@@ -429,12 +437,15 @@ function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = F
  *
  * @param string|double $latitude
  *   e.g. "-37.87" or -37.87
+ *
  * @param string|double $longitude
  *   e.g. "144.98" or 144.98
+ *
+ * @return string
+ *   Formatted address component as received from Google or empty string.
  */
 function ip_geoloc_get_address($latitude, $longitude) {
-  return $google_address = ip_geoloc_reverse_geocode($latitidue, $longitude)
-    ? $google_address['formatted_address'] : '';
+  return $google_address = ip_geoloc_reverse_geocode($latitidue, $longitude) ? $google_address['formatted_address'] : '';
 }
 
 /**
@@ -451,8 +462,12 @@ function ip_geoloc_get_address($latitude, $longitude) {
  *
  * @param string|double $latitude
  *   e.g. "-37.87" or -37.87
+ *
  * @param string|double $longitude
  *   e.g. "144.98" or 144.98
+ *
+ * @return array|bool
+ *   Array of address components as received from Google or FALSE.
  */
 function ip_geoloc_reverse_geocode($latitude, $longitude) {
   if (empty($latitude) || empty($latitude)) {
@@ -531,8 +546,10 @@ function ip_geoloc_get_visitor_location() {
  *
  * @param array $locations
  *   array of location objects each with latitude and longitude
+ *
  * @param bool $center_of_gravity
  *   if TRUE use the center of gravity algorithm
+ *
  * @return array
  *   containing latitude and longitude of the center
  */
@@ -619,9 +636,11 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
  *
  * @param array $location
  *   must contain 'latitude' and 'longitude' keys and values
+ *
  * @param array $ref_location
  *   if an array, must contain 'latitude' and 'longitude' keys and values,
  *   otherwise defaults to ip_geoloc_get_visitor_location()
+ *
  * @return float
  *   distance in meters.
  */
@@ -647,9 +666,13 @@ function ip_geoloc_distance($location, $ref_location = 'current visitor') {
  * ensuring compatibility of results.
  *
  * @param float longitude1
+ *
  * @param float latitude1
+ *
  * @param float longitude2
+ *
  * @param float latitude2
+ *
  * @return float
  *   distance in meters
  *
@@ -667,7 +690,8 @@ function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitud
   $radius = ip_geoloc_earth_radius(0.5 * ($latitude1 + $latitude2));
   $distance = acos($cosangle) * $radius;
   /*
-  if ($distance < 1000) { // see http://en.wikipedia.org/wiki/Haversine_formula
+  if ($distance < 1000) {
+    // see http://en.wikipedia.org/wiki/Haversine_formula
     $sinlat = sin(0.5*($lat1 - $lat2));
     $sinlong = sin(0.5*($long1 - $long2));
     $sinangle = $sinlat*$sinlat + cos($long1)*cos($long2)*$sinlong*$sinlong;
@@ -682,6 +706,7 @@ function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitud
  *
  * @param float $latitude
  *   The latitude for which to calculate Earth's radius
+ *
  * @return float
  *   The radius of Earth at the given latitude
  */
@@ -695,7 +720,7 @@ function ip_geoloc_earth_radius($latitude) {
 /**
  * Get semimajor radius.
  *
- * @return number
+ * @return float
  */
 function ip_geoloc_earth_radius_semimajor() {
   return 6378137.0;

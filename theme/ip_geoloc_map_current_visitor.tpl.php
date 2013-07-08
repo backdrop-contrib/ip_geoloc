@@ -1,5 +1,8 @@
 <?php
 /**
+ * @file
+ * ip_geoloc_map_current_visitor.tpl.php
+ * 
  * This template is used mainly inside a block rather than a view.
  * Lat/long are optional fallbacks in case the HTML5 lookup fails.
  */

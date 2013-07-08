@@ -58,8 +58,8 @@
           // lat/long and address are revealed when clicking marker
           var lat = coords.latitude.toFixed(4);
           var lng = coords.longitude.toFixed(4);
-          var latLongText = Drupal.t('lat. !lat, long. !long', { '!lat': lat, '!long': lng }) + '<br/>'
-            + Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
+          var latLongText = Drupal.t('lat. !lat, long. !long', { '!lat': lat, '!long': lng }) + '<br/>' +
+            Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
           var infoPopUp = new google.maps.InfoWindow({ content: addressText + '<br/>' + latLongText });
           google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) });
           // google.maps.event.addListener(map, 'center_changed', function() {

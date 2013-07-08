@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * @file
  * Capture IP Geoloc statistics in the access log.
@@ -224,8 +223,9 @@ function ip_geoloc_better_statistics_fields() {
  * Helper function to map db fields to array keys.
  *
  * Maps accesslog db fields as exposed by hook_better_statistics_fields() to
- * the corresponding array key of the array returned by ip_geoloc_get_visitor_location()
- * inclusive of expected type and size, and vice-versa.
+ * the corresponding array key of the array returned by
+ * ip_geoloc_get_visitor_location(), inclusive of expected type and size and
+ * vice-versa.
  *
  * @param string $db_field_name
  *   The name of the db field for which to return the corresponding array
@@ -254,9 +254,21 @@ function _ip_geoloc_key_map($db_field_name = NULL, $ip_geoloc_key = NULL) {
       'geoloc_locality'           => array('locality', 'string', 64),
       'geoloc_street'             => array('route', 'string', 64),
       'geoloc_street_number'      => array('street_number', 'string', 32),
-      'geoloc_admin_area_level_1' => array('administrative_area_level_1', 'string', 64),
-      'geoloc_admin_area_level_2' => array('administrative_area_level_2', 'string', 64),
-      'geoloc_admin_area_level_3' => array('administrative_area_level_3', 'string', 64),
+      'geoloc_admin_area_level_1' => array(
+        'administrative_area_level_1',
+        'string',
+        64
+       ),
+      'geoloc_admin_area_level_2' => array(
+        'administrative_area_level_2',
+        'string',
+        64
+       ),
+      'geoloc_admin_area_level_3' => array(
+        'administrative_area_level_3',
+        'string',
+        64
+      ),
       'geoloc_formatted_address'  => array('formatted_address', 'string', 128),
       'geoloc_provider'           => array('provider', 'string', 64),
       'geoloc_accuracy'           => array('accuracy', 'float', 'big'),

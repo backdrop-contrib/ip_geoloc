@@ -5,7 +5,8 @@
 */
 
 .leaflet-tagged-marker div, /* element used for marker tags */
-.leaflet-tagged-marker i {  /* element used for the special font-icon chars */
+.leaflet-tagged-marker i {
+  /* element used for the special font-icon chars */
   position: relative;
   top: -35px;
   left: -41px;
@@ -35,9 +36,6 @@
 .leaflet-tagged-marker div.tag-below-marker {
   top: -1px;
   color: red;
-}
-.leaflet-tagged-marker div.tag-inside-marker {
-  /* z-index: 1; /* needed if img follows tag */
 }
 
 .leaflet-marker-icon.tag-rounded-corners {

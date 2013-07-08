@@ -16,7 +16,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   /**
    * Set default Leaflet options.
    */
-  public function option_definition() {
+  function option_definition() {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
@@ -69,7 +69,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $maps = array();
     foreach (ip_geoloc_plugin_style_leaflet_map_get_info() as $key => $map) {
-      $maps[$key] = t($map['label']);
+      $maps[$key] = $map['label'];
     }
     $form['map'] = array(
       '#title' => t('Map'),
@@ -86,20 +86,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 4,
       '#default_value' => $this->options['map_height'],
       '#description' => t('The default produces a map of 300 pixels high with a width extending to its bounding container.'),
-      '#weight' => -1
+      '#weight' => -1,
     );
 
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
-    $desc =  t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> or any other source, such as <a target="_fsymbols" href="!url2">fsymbols</a>. Copy and paste either the font icon or the unicode, like <strong>&amp;#xf015;</strong>', array(
+    $desc = t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> or any other source, such as <a target="_fsymbols" href="!url2">fsymbols</a>. Copy and paste either the font icon or the unicode, like <strong>&amp;#xf015;</strong>', array(
       '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
       '!url2' => url('http://fsymbols.com'),
     ));
     $path = drupal_get_path('module', 'ip_geoloc');
     if (!ip_geoloc_get_ccs_library_path('font-awesome')) {
       $desc .= ' ' . t('Please follow instructions in the <a href="!url">README</a> to install the <em>Font Awesome</em> library.', array(
-        '!url' => url("$path/README.txt")
+        '!url' => url("$path/README.txt"),
       ));
     }
     $form['default_marker_special_char'] = array(
@@ -201,9 +201,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ip_geoloc_marker_colors();
     unset($visitor_marker_colors['0']);
 
-    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers')
-      ? 'ip_geoloc_admin_a.css'
-      : 'ip_geoloc_admin.css';
+    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_a.css' : 'ip_geoloc_admin.css';
 
     $form['visitor_marker_color'] = array(
       '#title' => t('Visitor marker'),
@@ -232,7 +230,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   /**
    * Validate the options form.
    */
-  public function options_validate(&$form, &$form_state) {
+  function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
     $map_height = $form_state['values']['style_options']['map_height'];
     if (!is_numeric($map_height) || $map_height <= 0) {
@@ -346,8 +344,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['lon'] = isset($location->longitude) ? $location->longitude : $location->lon;
       }
       elseif (isset($location->component)) {
-        // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng().
-        $feature['type'] =  $location->type;
+        // Possibly parsed by leaflet_process_geofield()
+        // see _ip_geoloc_plugin_style_extract_lat_lng().
+        $feature['type'] = $location->type;
         $feature['component'] = $location->component;
       }
       elseif (isset($location->points)) {
@@ -380,8 +379,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           $feature['specialCharClass'] = $location->marker_special_char_class;
           if (strpos($feature['specialCharClass'], 'icon-') !== FALSE) {
             // Load the 20k of CSS that comes with Font Awesome, which in return
-            // tells the browser to fetch either the WOFF (34k), TTF (65k) or SVG
-            // (162k) files that define the font faces.
+            // tells the browser to fetch either the WOFF (34k), TTF (65k) or
+            // SVG (162k) files that define the font faces.
             drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
           }
         }
@@ -416,7 +415,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           'iconUrl' => $marker_path . "/$color.png",
           // Width and height.
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
-          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_anchor),
+          'iconAnchor' => array('x' => (int) (($marker_width + 1) / 2), 'y' => $marker_anchor),
           // Just above topline, center.
           'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1),
         // 'shadowUrl'
@@ -448,7 +447,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       $features[] = $visitor_feature;
     }
-    // If auto-box is chosen ($center_option==0), zoom only when there are 0 or 1 markers [#1863374]
+    // If auto-box is chosen ($center_option==0), zoom only when there are
+    // 0 or 1 markers [#1863374]
     if (empty($center_option) && count($features) > 1) {
       unset($map['settings']['zoom']);
     }
@@ -524,7 +524,8 @@ function _ip_geoloc_get_center($location) {
  * Checks if marker color is a good value.
  *
  * @param mixed $marker_color
- *   The color of the marker
+ *   The color of the marker.
+ *
  * @return bool
  *   TRUE if marker color is "0", zero, or FALSE
  *   FALSE if marker colour equals '' or NULL
@@ -534,7 +535,7 @@ function _ip_geoloc_is_no_marker($marker_color) {
 }
 
 /**
- * Wrapper around the only programmatic dependency we have on the Leaflet module.
+ * Wrapper around the only programmatic dependency we have on Leaflet module.
  *
  * Note: this indirectly calls ip_geoloc_leaflet_map_info_alter($map_info).
  */

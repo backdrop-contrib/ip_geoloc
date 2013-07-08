@@ -135,7 +135,7 @@ function ip_geoloc_block_view($delta = '') {
         'map_options' => $map_options,
         'map_style' => $map_style,
         // Fallback lat/long, in case the HTML5 location retrieval fails.
-        'latitude'  => empty($location['latitude' ]) ? NULL : $location['latitude'],
+        'latitude'  => empty($location['latitude']) ? NULL : $location['latitude'],
         'longitude' => empty($location['longitude']) ? NULL : $location['longitude'],
       ));
       break;
@@ -174,6 +174,7 @@ function ip_geoloc_block_view($delta = '') {
  *
  * @param string $var_name
  *   The variable name to save
+ *
  * @param string $map_options
  *   The map options to save
  */
@@ -190,6 +191,7 @@ function ip_geoloc_save_map_options($var_name, $map_options) {
  *
  * @param int $how_many
  *   how many locations to retrieve
+ *
  * @return object
  *   object of locations found
  */
@@ -213,7 +215,6 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
          . $location->formatted_address . '<br/>'
          . t('#visits') . ' ' . (empty($location->visit_count) ? '?' : $location->visit_count)
          . ', ' . t('last visit') . ' ' . (empty($location->last_visit) ? '?' : format_date($location->last_visit, 'short'));
-        // $loc-rendered->balloon_text = filter_xss($loc_rendered->balloon_text);
         $locations[$location->ip_address] = $loc_rendered;
       }
     }
@@ -295,13 +296,9 @@ function ip_geoloc_lookup($form, &$form_state) {
       $last_visit = format_date($last_visit, 'short');
       $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
     }
-    else {
-      // $form_state['storage']['last_visit'] = t('There is no record of this IP address visiting this site.');
-    }
   }
-  $form_state['storage']['formatted_address'] = isset($location['formatted_address'])
-    ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address']))
-    : '';
+  $form_state['storage']['formatted_address'] 
+    = isset($location['formatted_address']) ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address'])) : '';
   // To preserve entered values and storage array.
   $form_state['rebuild'] = TRUE;
 }

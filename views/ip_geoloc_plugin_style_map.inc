@@ -14,7 +14,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   /**
    * Set default map options.
    */
-  public function option_definition() {
+  function option_definition() {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
@@ -46,7 +46,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   /**
    * Create the options form.
    */
-  public function options_form(&$form, &$form_state) {
+  function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $form_state['renderer'] = 'google';
@@ -100,12 +100,12 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   /**
    * Validate the options form.
    */
-  public function options_validate(&$form, &$form_state) {
+  function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
   }
 
   /**
-   * Transform the View result in a list of marker locations and render these on a map.
+   * Transform the View result in a list of markers and render these on a map.
    */
   public function render() {
 
@@ -135,7 +135,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       // Perform database IP lookup as backup/replacement for HTML5 location
       // Visitor may be moving so ignore existing lat/long.
       $resample = TRUE;
-      // Do not store lat/long and city as it will obliterate the reverse-geocoded one.
+      // Do not store lat/long and city as it will obliterate the
+      // reverse-geocoded one.
       $store = FALSE;
       // We only need lat/long, not full street address.
       $reverse_geocode = FALSE;

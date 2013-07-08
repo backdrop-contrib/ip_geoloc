@@ -177,7 +177,8 @@ differentiator settings.
 To install Font Awesome visit http://fortawesome.github.io/Font-Awesome and
 press the "Download" button. Unzip the downloaded file into the Drupal
 libraries directory, typically sites/all/libraries, so that the path to the
-essential style sheet becomes sites/all/libraries/font-awesome/css/font-awesome.css
+essential style sheet becomes
+sites/all/libraries/font-awesome/css/font-awesome.css
 
 UTILITY FUNCTIONS
 =================
@@ -207,24 +208,24 @@ centered on it. Or you can choose one of the other centering options, as per
 normal.
 
 <?php
-  /**
-   * Implements hook_ip_geoloc_marker_locations_alter().
-   */
-  function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
-    if ($view->name != 'my_view') {
-       return;
-    }
-    if (count($marker_locations) >= 2) {
-      $marker_locations[0]->marker_color = 'orange';
-      $marker_locations[1]->marker_color = 'yellow';
-    }
-    $observatory = new stdClass();
-    $observatory->latitude = 51.4777;
-    $observatory->longitude = -0.0015;
-    $observatory->balloon_text = t('The zero-meridian passes through the courtyard of the <strong>Greenwich</strong> observatory.');
-    $observatory->marker_color = 'white';
-    array_unshift($marker_locations, $observatory);
+/**
+ * Implements hook_ip_geoloc_marker_locations_alter().
+ */
+function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
+  if ($view->name != 'my_view') {
+     return;
   }
+  if (count($marker_locations) >= 2) {
+    $marker_locations[0]->marker_color = 'orange';
+    $marker_locations[1]->marker_color = 'yellow';
+  }
+  $observatory = new stdClass();
+  $observatory->latitude = 51.4777;
+  $observatory->longitude = -0.0015;
+  $observatory->balloon_text = t('The zero-meridian passes through the courtyard of the <strong>Greenwich</strong> observatory.');
+  $observatory->marker_color = 'white';
+  array_unshift($marker_locations, $observatory);
+}
 ?>
 
 If you want to hook your own gelocation data provider into IP Geolocation, then
@@ -232,34 +233,36 @@ you can -- it's simple, using another hook.
 All you have to do is flesh out the following function.
 
 <?php
-  /**
-   * Implements hook_get_ip_geolocation_alter().
-   */
-  function MYMODULE_get_ip_geolocation_alter(&$location) {
+/**
+ * Implements hook_get_ip_geolocation_alter().
+ */
+function MYMODULE_get_ip_geolocation_alter(&$location) {
 
-    if (empty($location['ip_address'])) {
-      return;
-    }
-    // ... your code here to retrieve geolocation data ...
-
-    $location['provider'] = 'MYMODULE';
-
-    // Then fill out some or all of the location fields that IPGV&M
-    // knows how to store.
-    $location['latitude'] =  ....;
-    $location['longitude'] = ....;
-    $location['country'] = ....;
-    $location['country_code'] = ....;
-    $location['region'] = ....;
-    $location['region_code'] = ....;
-    $location['city'] = ... ;
-    $location['locality'] = ....; // eg suburb
-    $location['route'] = ....;     // eg street
-    $location['street_number'] = ....;
-    $location['postal_code'] = ....; // eg ZIP
-    $location['administrative_area_level_1'] = ....; // eg state or province
-    $location['formatted_address'] = ....; // address as a human-readible string
+  if (empty($location['ip_address'])) {
+    return;
   }
+  // ... your code here to retrieve geolocation data ...
+  $location['provider'] = 'MYMODULE';
+
+  // Fill out some or all of the location fields that IPGV&M knows how to store.
+  $location['latitude'] =  ;
+  $location['longitude'] = ;
+  $location['country'] = ;
+  $location['country_code'] = ;
+  $location['region'] = ;
+  $location['region_code'] = ;
+  $location['city'] = ;
+  // 'locality' is usually the suburb.
+  $location['locality'] = ;
+  // 'route' is usually the street.
+  $location['route'] = ;
+  $location['street_number'] = ;
+  $location['postal_code'] = ;
+  // 'administrative_area_level_1' is usually the state or province.
+  $location['administrative_area_level_1'] = ;
+  // Finally the complete address as a human-readible string.
+  $location['formatted_address'] = ;
+}
 ?>
 
 That's all!

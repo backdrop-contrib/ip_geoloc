@@ -55,7 +55,7 @@ function ip_geoloc_ip_geoloc_context_convert_list() {
 }
 
 /**
- * Convert a context into a string to be used as a keyword by content types, etc.
+ * Convert a context into string to be used as keyword by content types, etc.
  */
 function ip_geoloc_ip_geoloc_context_convert($context, $type) {
   if ($context->data) {

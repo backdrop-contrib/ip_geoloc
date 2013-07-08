@@ -1,6 +1,7 @@
 <?php
  /**
   * @file
+  * ip_geoloc_map_multi_visitor.tpl.php
   *
   * This template is typically used to output a map of visitor locations in a
   * non-view context, e.g. through a block.
@@ -11,7 +12,8 @@
   *   visitor location
   * - $div_id: id of the div in which the map will be injected; arbitrary but
   *   must be unique
-  * - $map_options: passed to Google Maps API, eg '{"mapTypeId":"roadmap", "zoom": 10}'
+  * - $map_options: passed to Google Maps API, for example:
+  *   '{"mapTypeId":"roadmap", "zoom": 10}'
   * - $map_style: CSS style string, like 'height: 200px; width: 500px'
   */
 ?>

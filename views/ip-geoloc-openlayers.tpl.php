@@ -1,6 +1,7 @@
 <?php
  /**
   * @file
+  * ip-geoloc-openlayers.tpl.php
   *
   * This template is used to output a map of marker locations taken from a view.
   *

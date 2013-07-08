@@ -12,7 +12,7 @@ define('IP_GEOLOC_MARKER_LAYER', 'ip_geoloc_marker_layer');
 define('IP_GEOLOC_DEF_NUM_MARKER_LAYERS', 3);
 
 /**
- * Implements hook_openlayers_map_preprocess_alter($map).
+ * Implements hook_openlayers_map_preprocess_alter().
  *
  * Add or alter map before main processing. Add styles, behaviors, layers....
  * Called from openlayers_build_map().
@@ -22,7 +22,6 @@ define('IP_GEOLOC_DEF_NUM_MARKER_LAYERS', 3);
 function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
 
   // $map['center']['initial']['zoom'] = 5;
-
   // Introduce a number of layers that will be created below in function
   // ip_geoloc_openlayers_layers().
   $map['layers'][IP_GEOLOC_VISITOR_MARKER_LAYER] = IP_GEOLOC_VISITOR_MARKER_LAYER;
@@ -35,7 +34,8 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
     // configured on page /admin/structure/openlayers/maps/<map_name>/edit,
     // vertical tab "Layers & Styles", bottom section "Overlay layers"
     // Programmatically, you'd do this like so:
-    // $map['layer_switcher'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
+    // $map['layer_switcher'][IP_GEOLOC_MARKER_LAYER . $layer] =
+    //   IP_GEOLOC_MARKER_LAYER . $layer;
   }
 }
 
@@ -58,15 +58,6 @@ function ip_geoloc_ctools_plugin_api($module, $api) {
  * globals are used.
  */
 function ip_geoloc_openlayers_layers() {
-  /* Hardly worth caching this and shouldn't as user's position may change.
-   * Could do it for location marker layers only...
-  if (arg(0) != 'admin') {
-    $cache = cache_get('ip_geoloc_layer_cache');
-    if (isset($cache->data)) {
-      return $cache->data;
-    }
-  }
-  */
   $layers = array();
   $visitor_layer = new stdClass();
   $visitor_layer->api_version = 1;

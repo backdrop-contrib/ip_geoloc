@@ -83,9 +83,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#weight' => 17,
   );
 
-  $differentiator = isset($form_state['differentiator'])
-    ? $form_state['differentiator']
-    : $views_plugin_style->options['differentiator']['differentiator_field'];
+  $differentiator = isset($form_state['differentiator']) ? $form_state['differentiator'] : $views_plugin_style->options['differentiator']['differentiator_field'];
 
   if (isset($form_state['triggering_element'])) {
     // Get here when any form element with #ajax was changed/clicked causing
@@ -115,9 +113,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   if (!$is_openlayers) {
     $path = drupal_get_path('module', 'ip_geoloc');
-    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers')
-      ? 'ip_geoloc_admin_a.css'
-      : 'ip_geoloc_admin.css';
+    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_a.css' : 'ip_geoloc_admin.css';
     $form['default_marker_color']['#attached']['css'] = array("$path/css/$css_file");
   }
 
@@ -145,7 +141,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   }
   else {
     $description = t('Below associate %differentiator values with marker images.', array(
-      '%differentiator' => empty($instance) ? $fields[$differentiator] :  $instance['label'],
+      '%differentiator' => empty($instance) ? $fields[$differentiator] : $instance['label'],
     )) . '<br/>';
     $field = field_info_field($differentiator);
     if (!$field || $field['module'] == 'text') {
@@ -207,7 +203,17 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       );
     }
   }
-
+  if ($is_openlayers) {
+    $desc = t('*) If you want a fixed center, visit the "Center & Bounds" vertical tab on the <a target="_ol_map_edit" href="@url">map edit page</a>. This is also where you set the initial zoom level.', array(
+      '@url' => url(
+        'admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit'
+       )));
+  }
+  else {
+    $desc = t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example:<br/>%center_example', array(
+      '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }'
+    ));
+  }
   $form['center_option'] = array(
     '#title' => t('Map centering options'),
     '#type' => 'radios',
@@ -219,11 +225,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       IP_GEOLOC_MAP_CENTER_OF_LOCATIONS => t('Use the center of the rectangle whose sides are defined by the left-most, right-most, top and bottom locations (this option is insensitive to location clusters).'),
       IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED => t('Use the center of gravity based on all locations (this option is sensitive to location clusters)'),
     ),
-    '#description' => $is_openlayers
-      ? t('*) If you want a fixed center, visit the "Center & Bounds" vertical tab on the <a target="_ol_map_edit" href="@url">map edit page</a>. This is also where you set the initial zoom level.', array(
-          '@url' => url('admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit')))
-      : t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example:<br/>%center_example', array(
-          '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }')),
+    '#description' => $desc,
     '#weight' => 40,
   );
   $form['empty_map_center'] = array(
@@ -271,7 +273,7 @@ function _ip_geoloc_plugin_style_remove_association_submit($form, &$form_state) 
 }
 
 /**
- * Ajax callback in response to new rows or the differentiator drop-down being changed.
+ * Ajax callback in response to new rows or the diff. drop-down being changed.
  *
  * At this point the $form has already been rebuilt. All we have to do here is
  * tell AJAX what part of the browser form needs to be updated.
@@ -348,7 +350,7 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
   $is_openlayers = $form_state['renderer'] == 'openlayers';
 
   // First the saved rows...
-  // @todo: if $field['cardinality'] > 1, compress multiple differentiator values
+  // @todo: if $field['cardinality'] > 1, compress multiple diff. values
   // for the same color together in a single row.
   $view_id = $form_state['view']->name;
   $display_id = $form_state['display_id'];
@@ -424,13 +426,9 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
       if (isset($instance['widget']['settings']['size']) && $instance['widget']['settings']['size'] < 15) {
         $instance['widget']['settings']['size'] = 15;
       }
-      $items[0] = empty($differentiator_value)
-        ? array()
-        : is_array($differentiator_value) ? $differentiator_value : array($differentiator_value);
+      $items[0] = empty($differentiator_value) ? array() : is_array($differentiator_value) ? $differentiator_value : array($differentiator_value);
       if (isset($instance['default_value'])) {
-        $items[0] += is_array($instance['default_value']) && !empty($instance['default_value'])
-          ? reset($instance['default_value'])
-          : $instance['default_value'];
+        $items[0] += is_array($instance['default_value']) && !empty($instance['default_value']) ? reset($instance['default_value']) : $instance['default_value'];
       }
       $form['#parents'] = array();
       $form_state = array();
@@ -473,10 +471,14 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
   );
   // We'll manually set the #parents property of these fields so that their
   // values appear in the $form_state['values']['color_table'] array.
-  $form[$differentiator]['#parents'] = array('color_table', $row, $differentiator);
-  $form['color']['#parents'] = array('color_table', $row, 'color');
-  $form['special char']['#parents'] = array('color_table', $row, 'special char');
-  $form['special char class']['#parents'] = array('color_table', $row, 'special char class');
+  $form[$differentiator]['#parents'] = array(
+    'color_table', $row, $differentiator);
+  $form['color']['#parents'] = array(
+    'color_table', $row, 'color');
+  $form['special char']['#parents'] = array(
+    'color_table', $row, 'special char');
+  $form['special char class']['#parents'] = array(
+    'color_table', $row, 'special char class');
 
   return $form;
 }
@@ -541,6 +543,7 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
  *
  * @param string $views_plugin_style
  *   the style of views plugin
+ *
  * @return array
  *   array of location objects, each containing lat/long and balloon_text
  */
@@ -592,7 +595,6 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     // @todo Refactor this into something like
     // $base = _ip_geoloc_plugin_style_get_base($row, $latitude, $longitude)
     // $location = _ip_geoloc_plugin_style_extract_lat_lng($base);
-
     if (isset($loc_field_alias)) {
       // The 2 lines below are stripped back fast versions of this call:
       // $loc_field_value = $loc_field->get_value($row);
@@ -632,9 +634,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   global $user;
   if ($error_count > 0 && $user->uid == 1) {
     $row_count = count($view->result);
-    $title = empty($views_plugin_style->display->display_options['title'])
-      ? $view->get_human_name() . ' (' . $views_plugin_style->display->display_title . ')'
-      : $views_plugin_style->display->display_options['title'];
+    $title = empty($views_plugin_style->display->display_options['title']) ? $view->get_human_name() . ' (' . $views_plugin_style->display->display_title . ')' : $views_plugin_style->display->display_options['title'];
     $t_args = array(
       '%view_title' => $title,
       '@total' => $row_count,
@@ -642,9 +642,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       '@first' => $first_error + 1,
       '%latitude' => $latitude,
     );
-    $msg = ($error_count >= $row_count)
-      ? t('None of the @total result rows in view %view_title had their %latitude lat/lng set. Therefore the map could not be displayed. Is %latitude the correct field name?', $t_args)
-      : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', $t_args);
+    $msg = ($error_count >= $row_count) ? t('None of the @total result rows in view %view_title had their %latitude lat/lng set. Therefore the map could not be displayed. Is %latitude the correct field name?', $t_args) : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitude lat/lng set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to apply an "is not empty" filter criterion to %latitude.', $t_args);
 
     $row_contents = t('First error row:') . '<br/>';
     foreach ((array) $view->result[$first_error] as $field_name => $value) {
@@ -654,7 +652,8 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     drupal_set_message($row_contents, 'warning');
     drupal_set_message(t('The above messages are shown only to user 1.'), 'warning');
   }
-  // Allow other modules to implement hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
+  // Allow other modules to implement
+  // hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
   drupal_alter('ip_geoloc_marker_locations', $locations, $view);
 
   return $locations;
@@ -671,6 +670,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
  *   name of the row field that holds latitude
  * @param string $longitude
  *   name of the row field that holds longitude
+ *
  * @return object|NULL
  *   location -- @todo return array for consistency with Leaflet?
  */
@@ -795,9 +795,12 @@ function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
     if (!empty($row->{$field_name}[$delta]['raw'])) {
       return $row->{$field_name}[$delta]['raw'];
       // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
-      // Geofield     : field_<field_name>[0]['raw']['geom'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
-      // Geolocation  : field_<field_name>[0]['raw']['lat']      and field_<field_name>[0]['raw']['lng']
-      // Get Locations: field_<field_name>[0]['raw']['latitude'] and field_<field_name>[0]['raw']['longitude']
+      // Geofield     : field_<field_name>[0]['raw']['geom'],
+      //                eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+      // Geolocation  : field_<field_name>[0]['raw']['lat'] and
+      //                field_<field_name>[0]['raw']['lng']
+      // Get Locations: field_<field_name>[0]['raw']['latitude'] and
+      //                field_<field_name>[0]['raw']['longitude']
     }
     $lang = LANGUAGE_NONE;
     if (!empty($row->{$field_name}[$lang][$delta])) {
@@ -898,9 +901,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
  * Typical candidates for exclusion are the latitude and longitude fields.
  *
  * @param string $views_plugin_style
- *   The views plugin style
- * @param array $result
- *   The rendered_fields array
+ *   The views plugin style.
  */
 function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   if (!$views_plugin_style->uses_fields() || isset($views_plugin_style->rendered_fields)) {
@@ -927,7 +928,8 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       if (($special_field_id == $differentiator || $special_field_id == $latitude || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
         $row->{$special_field_id}[] = $field_value;
       }
-      // If Excluded is ticked, we don't style and add the field to the rendered_fields.
+      // If Excluded is ticked, we don't style and add the field to the
+      // rendered_fields.
       if (!$field->options['exclude']) {
         $styled_field_value = _ip_geoloc_plugin_style_add_label_and_styling($field, $field_value);
         $views_plugin_style->rendered_fields[$i][$field_id] = $styled_field_value;
@@ -942,9 +944,10 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
  * Prefix the field value with its label, where requested. No styling.
  *
  * @param string $field
- *   The field
+ *   The field.
  * @param string $field_content
- *   The content of the field
+ *   The content of the field.
+ *
  * @return string
  *   $field_content prefixed with the label defined for the field
  */
