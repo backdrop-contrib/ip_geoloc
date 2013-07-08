@@ -51,7 +51,7 @@ function ip_geoloc_requirements($phase) {
     }
   }
   $css_file = FALSE;
-  $requirements['ip_geoloc_font_awesome']['title'] = t('IP Geolocation Views & Maps <em>Font Awesome</em> extension');
+  $requirements['ip_geoloc_font_awesome']['title'] = $t('IP Geolocation Views & Maps <em>Font Awesome</em> extension');
   if ($css_path = ip_geoloc_get_ccs_library_path('font-awesome')) {
     $css_file = "$css_path/font-awesome.min.css";
   }
@@ -83,7 +83,7 @@ function ip_geoloc_install() {
  * Implements hook_uninstall().
  */
 function ip_geoloc_uninstall() {
-  // Delete all ip_geoloc_* variables at once
+  // Delete all ip_geoloc_* variables at once.
   db_query("DELETE FROM {variable} WHERE name LIKE 'ip_geoloc_%%'");
 }
 
@@ -112,101 +112,101 @@ function ip_geoloc_schema() {
   $schema['ip_geoloc'] = array(
     'description' => 'Store visitor IP addresses and geolocation information',
       'fields' => array(
-        'id'          => array(
-        'description' => 'Unique id',
-        'type'        => 'serial',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
+        'id' => array(
+          'description' => 'Unique id',
+          'type'        => 'serial',
+          'unsigned'    => TRUE,
+          'not null'    => TRUE,
+        ),
+        'ip_address' => array(
+          'description' => 'IP address',
+          'type'        => 'varchar',
+          'length'      => '32',
+          'not null'    => TRUE,
+        ),
+        'latitude' => array(
+          'description' => 'Latitude',
+          'type'        => 'float',
+          'size'        => 'big',
+          'not null'    => FALSE,
+        ),
+        'longitude' => array(
+          'description' => 'Longitude',
+          'type'        => 'float',
+          'size'        => 'big',
+          'not null'    => FALSE,
+        ),
+        'country' => array(
+          'description' => 'Country',
+          'type'        => 'varchar',
+          'length'      => 64,
+          'not null'    => FALSE,
+        ),
+        'country_code' => array(
+          'description' => 'ISO 3166 2-Character Country Code',
+          'type'        => 'varchar',
+          'length'      => 3,
+          'not null'    => FALSE,
+        ),
+        'region' => array(
+          'description' => 'Region',
+          'type'        => 'varchar',
+          'length'      => 64,
+          'not null'    => FALSE,
+        ),
+        'region_code' => array(
+          'description' => '2-Character Region Code',
+          'type'        => 'varchar',
+          'length'      => 3,
+          'not null'    => FALSE,
+        ),
+        'city' => array(
+          'description' => 'City',
+          'type'        => 'varchar',
+          'length'      => 64,
+          'not null'    => FALSE,
+        ),
+        'postal_code' => array(
+          'description' => 'Post code',
+          'type'        => 'varchar',
+          'length'      => 12,
+          'not null'    => FALSE,
+        ),
+        'locality' => array(
+          'description' => 'Suburb',
+          'type'        => 'varchar',
+          'length'      => 64,
+          'not null'    => FALSE,
+        ),
+        'route' => array(
+          'description' => 'Street',
+          'type'        => 'varchar',
+          'length'      => 64,
+          'not null'    => FALSE,
+        ),
+        'street_number' => array(
+          'description' => 'Street number',
+          'type'        => 'varchar',
+          'length'      => 32,
+          'not null'    => FALSE,
+        ),
+        'administrative_area_level_1' => array(
+          'description' => 'State or province',
+          'type'        => 'varchar',
+          'length'      => 64,
+          'not null'    => FALSE,
+        ),
+        'formatted_address' => array(
+          'description' => 'Address',
+          'type'        => 'varchar',
+          'length'      => 128,
+          'not null'    => FALSE,
+        ),
       ),
-      'ip_address' => array(
-        'description' => 'IP address',
-        'type'        => 'varchar',
-        'length'      => '32',
-        'not null'    => TRUE,
-      ),
-      'latitude' => array(
-        'description' => 'Latitude',
-        'type'        => 'float',
-        'size'        => 'big',
-        'not null'    => FALSE,
-      ),
-      'longitude' => array(
-        'description' => 'Longitude',
-        'type'        => 'float',
-        'size'        => 'big',
-        'not null'    => FALSE,
-      ),
-      'country' => array(
-        'description' => 'Country',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
-      ),
-      'country_code' => array(
-        'description' => 'ISO 3166 2-Character Country Code',
-        'type'        => 'varchar',
-        'length'      => 3,
-        'not null'    => FALSE,
-      ),
-      'region' => array(
-        'description' => 'Region',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
-      ),
-      'region_code' => array(
-        'description' => '2-Character Region Code',
-        'type'        => 'varchar',
-        'length'      => 3,
-        'not null'    => FALSE,
-      ),
-      'city' => array(
-        'description' => 'City',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
-      ),
-      'postal_code' => array(
-        'description' => 'Post code',
-        'type'        => 'varchar',
-        'length'      => 12,
-        'not null'    => FALSE,
-      ),
-      'locality' => array(
-        'description' => 'Suburb',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
-      ),
-      'route' => array(
-        'description' => 'Street',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
-      ),
-      'street_number' => array(
-        'description' => 'Street number',
-        'type'        => 'varchar',
-        'length'      => 32,
-        'not null'    => FALSE,
-      ),
-      'administrative_area_level_1' => array(
-        'description' => 'State or province',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
-      ),
-      'formatted_address' => array(
-        'description' => 'Address',
-        'type'        => 'varchar',
-        'length'      => 128,
-        'not null'    => FALSE,
-      ),
-    ),
     'primary key' => array('id'),
     'indexes' => array(
-      'ip_address' => array('ip_address')
-    )
+      'ip_address' => array('ip_address'),
+    ),
   );
   return $schema;
 }

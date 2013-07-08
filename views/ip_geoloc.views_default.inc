@@ -2,10 +2,11 @@
 
 /**
  * @file
- *  Canned view to display an alternative visitor log of your site, which
- *  contains for each IP address, the number of visits (clicks), the dates of
- *  first and last visit and a map of the centered around the visitor's
- *  location.
+ * Canned view to display an alternative visitor log of your site.
+ *
+ * Which contains for each IP address, the number of visits (clicks), the dates
+ * of first and last visit and a map of the centered around the visitor's
+ * location.
  */
 
 /**
@@ -110,7 +111,6 @@ function ip_geoloc_views_default_views() {
   );
   $views[$view->name] = $view;
 
-
   /*
    * View 'Map (Google) centered on visitor's location'
    */
@@ -142,7 +142,7 @@ function ip_geoloc_views_default_views() {
   $handler->display->display_options['style_options']['visitor_marker'] = '00FF00';
   $handler->display->display_options['style_options']['gps_roles'] = array(
     1 => '1',
-    2 => '2'
+    2 => '2',
   );
   $handler->display->display_options['style_options']['map_options'] = '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true, "scaleControl":true}';
   /* Field: Content: Title */
@@ -276,7 +276,7 @@ function ip_geoloc_views_default_views() {
   /*
    * View 'Visitor log'
    */
-  $view = new view;
+  $view = new view();
   $view->name = 'visitor_log';
   $view->description = 'Shows IP and street addresses of recent visitors with visit counts and maps.';
   $view->tag = 'IP Geolocation Views and Maps';
@@ -665,7 +665,7 @@ function ip_geoloc_views_default_views() {
   /*
    * Visitor-log (lite)
    */
-  $view = new view;
+  $view = new view();
   $view->name = 'visitor_log_lite';
   $view->description = 'Shows IP and street addresses of recent visitors.';
   $view->tag = 'IP Geolocation Views and Maps';
@@ -836,9 +836,8 @@ function ip_geoloc_views_default_views() {
 
   $views[$view->name] = $view;
 
-
   /* View Order Locations formatted as a map with marker balloons. */
-  $view = new view;
+  $view = new view();
   $view->name = 'order_locations';
   $view->description = '';
   $view->tag = 'IP Geolocation Views and Maps';

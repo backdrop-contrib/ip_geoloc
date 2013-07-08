@@ -1,18 +1,18 @@
 <?php
 
-/*
+/**
  * @file
  * ip_geoloc.openlayers.inc
  *
  * Hook implementations for the OpenLayers interface.
  */
-DEFINE('IP_GEOLOC_VISITOR_MARKER_LAYER', 'ip_geoloc_visitor_marker_layer');
-DEFINE('IP_GEOLOC_MARKER_LAYER', 'ip_geoloc_marker_layer');
-DEFINE('IP_GEOLOC_DEF_NUM_MARKER_LAYERS', 3);
 
+define('IP_GEOLOC_VISITOR_MARKER_LAYER', 'ip_geoloc_visitor_marker_layer');
+define('IP_GEOLOC_MARKER_LAYER', 'ip_geoloc_marker_layer');
+define('IP_GEOLOC_DEF_NUM_MARKER_LAYERS', 3);
 
 /**
- * Implements hook_openlayers_map_preprocess_alter($map)
+ * Implements hook_openlayers_map_preprocess_alter($map).
  *
  * Add or alter map before main processing. Add styles, behaviors, layers....
  * Called from openlayers_build_map().
@@ -21,7 +21,7 @@ DEFINE('IP_GEOLOC_DEF_NUM_MARKER_LAYERS', 3);
  */
 function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
 
-//$map['center']['initial']['zoom'] = 5;
+  // $map['center']['initial']['zoom'] = 5;
 
   // Introduce a number of layers that will be created below in function
   // ip_geoloc_openlayers_layers().
@@ -29,7 +29,7 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
 
   $num_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
   for ($layer = 1; $layer <= $num_marker_layers; $layer++) {
-    $map['layers'         ][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
+    $map['layers'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
     $map['layer_activated'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
     // Markers may be switched on/off via a tickbox on the rendered map, if so
     // configured on page /admin/structure/openlayers/maps/<map_name>/edit,
@@ -65,7 +65,8 @@ function ip_geoloc_openlayers_layers() {
     if (isset($cache->data)) {
       return $cache->data;
     }
-  } */
+  }
+  */
   $layers = array();
   $visitor_layer = new stdClass();
   $visitor_layer->api_version = 1;
@@ -76,7 +77,7 @@ function ip_geoloc_openlayers_layers() {
   $visitor_layer->data = array(
     'isBaselayer' => FALSE,
     'layer_type' => 'openlayers_layer_type_raw',
-    'projection' => array('EPSG:900913')
+    'projection' => array('EPSG:900913'),
   );
   // Add the visitor's location as a single feature in its own layer, so
   // that it may be separately styled (eg marker colour) and activated on page
@@ -88,7 +89,7 @@ function ip_geoloc_openlayers_layers() {
     $visitor_layer->data['features'][] = array(
       'attributes' => array('name' => t('Your retrieved location.')),
       'wkt' => "POINT($longitude $latitude)",
-      'projection' => 'EPSG:4326'
+      'projection' => 'EPSG:4326',
     );
   }
   $layers[$visitor_layer->name] = $visitor_layer;
@@ -104,14 +105,14 @@ function ip_geoloc_openlayers_layers() {
     $marker_layer->data = array(
       'isBaselayer' => FALSE,
       'layer_type' => 'openlayers_layer_type_raw',
-      'projection' => array('EPSG:900913')
+      'projection' => array('EPSG:900913'),
     );
     // Features, ie. location markers, are added based on the view output, see
     // file ip_geoloc_plugin_style_openlaysers.inc
     $layers[$marker_layer->name] = $marker_layer;
   }
 
-  //cache_set('ip_geoloc_layer_cache', $layers);
+  // cache_set('ip_geoloc_layer_cache', $layers);
   return $layers;
 }
 
@@ -134,8 +135,8 @@ function ip_geoloc_openlayers_layer_types() {
         'file' => 'openlayers_layer_type_raw.inc',
         'class' => 'openlayers_layer_type_raw',
         'parent' => 'openlayers_layer_type',
-      )
-    )
+      ),
+    ),
   );
 }
 
@@ -145,5 +146,4 @@ function ip_geoloc_openlayers_layer_types() {
  * Called at the end of openlayers_build_map().
  */
 function ip_geoloc_openlayers_map_alter(&$map) {
-  return;
 }

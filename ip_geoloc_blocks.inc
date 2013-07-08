@@ -11,19 +11,19 @@
 function ip_geoloc_block_info() {
   $blocks['current_visitor_map'] = array(
     'info' => t("Map (Google) centered on visitor's location"),
-    'cache' => DRUPAL_NO_CACHE
+    'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['recent_visitors_map'] = array(
     'info' => t('Map (Google) of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 20))),
-    'cache' => DRUPAL_NO_CACHE
+    'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['address_lookup'] = array(
     'info' => t('Address lookup based on IP'),
-    'cache' => DRUPAL_NO_CACHE
+    'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['geocode_address'] = array(
     'info' => t('Refine location via street address'),
-    'cache' => DRUPAL_NO_CACHE
+    'cache' => DRUPAL_NO_CACHE,
   );
   return $blocks;
 }
@@ -41,7 +41,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'checkbox',
       '#title' => t('Address editable'),
       '#default_value' => variable_get('ip_geoloc_visitor_address_editable', TRUE),
-      '#description' => t('If ticked the visitor may tweak and re-submit their address. It will be geocoded to lat/long to become their new location.<br/>If not ticked, this field simply displays the current reverse-geocoded address, without a submit button.')
+      '#description' => t('If ticked the visitor may tweak and re-submit their address. It will be geocoded to lat/long to become their new location.<br/>If not ticked, this field simply displays the current reverse-geocoded address, without a submit button.'),
     );
     return $form;
   }
@@ -51,7 +51,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'textfield',
       '#title' => t('Number of recent visitor locations to show on the map.'),
       '#default_value' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 20),
-      '#description' => t('Must be greater than 0. Clustering is not supported, all markers are shown individually.')
+      '#description' => t('Must be greater than 0. Clustering is not supported, all markers are shown individually.'),
     );
   }
   $form['ip_geoloc_' . $delta . '_div_style'] = array(
@@ -59,7 +59,7 @@ function ip_geoloc_block_configure($delta = '') {
     '#title' => t('CSS style attribute(s) applied to the HTML DIV element that is placeholding the map'),
     '#default_value' => variable_get('ip_geoloc_' . $delta . '_div_style', IP_GEOLOC_MAP_DIV_DEFAULT_STYLE),
     '#description' => t('The default %default_style results in a map of 300 pixels high, with a width bounded by the element that contains it. Do not enter quotes or equal signs.',
-      array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE))
+      array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE)),
   );
 
   switch ($delta) {
@@ -71,8 +71,10 @@ function ip_geoloc_block_configure($delta = '') {
         '#title' => t('Map options'),
         '#default_value' => variable_get('ip_geoloc_current_visitor_map_options', IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS),
         '#description' => t("The default %default_options produces a street map zoomed in to level 15. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-          array('%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
-                '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+          array(
+            '%default_options' => IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS,
+            '!google_map_docs' => IP_GEOLOC_DOC_GOOGLE_MAP_OPTIONS,
+          )),
       );
       break;
 
@@ -83,8 +85,10 @@ function ip_geoloc_block_configure($delta = '') {
         '#title' => t('Map options'),
         '#default_value' => variable_get('ip_geoloc_recent_visitors_map_options', IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS),
         '#description' => t("The default %default_options produces a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your quotes match.",
-          array('%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
-                '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS))
+          array(
+            '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
+            '!google_map_docs' => IP_GEOLOC_DOC_GOOGLE_MAP_OPTIONS,
+          )),
       );
       break;
   }
@@ -102,7 +106,7 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
     variable_set('ip_geoloc_visitor_address_editable', $edit['ip_geoloc_visitor_address_editable']);
     return;
   }
-  // Save options common to all maps
+  // Save options common to all maps.
   variable_set('ip_geoloc_' . $delta . '_div_style', $edit['ip_geoloc_' . $delta . '_div_style']);
   ip_geoloc_save_map_options('ip_geoloc_' . $delta . '_options', $edit['ip_geoloc_' . $delta . '_options']);
 
@@ -130,9 +134,9 @@ function ip_geoloc_block_view($delta = '') {
         'div_id' => 'ip-geoloc-block-current-visitor-map',
         'map_options' => $map_options,
         'map_style' => $map_style,
-        // Fallback lat/long, in case the HTML5 location retrieval fails
+        // Fallback lat/long, in case the HTML5 location retrieval fails.
         'latitude'  => empty($location['latitude' ]) ? NULL : $location['latitude'],
-        'longitude' => empty($location['longitude']) ? NULL : $location['longitude']
+        'longitude' => empty($location['longitude']) ? NULL : $location['longitude'],
       ));
       break;
 
@@ -146,7 +150,7 @@ function ip_geoloc_block_view($delta = '') {
           'locations' => $locations,
           'div_id' => 'ip-geoloc-block-recent-visitors-map',
           'map_options' => $map_options,
-          'map_style' => $map_style
+          'map_style' => $map_style,
         ));
       }
       break;
@@ -161,11 +165,18 @@ function ip_geoloc_block_view($delta = '') {
       $block['content'] = drupal_get_form('ip_geoloc_geocode_address');
       break;
 
-
   }
   return $block;
 }
 
+/**
+ * Save map options to a Drupal variable.
+ *
+ * @param string $var_name
+ *   The variable name to save
+ * @param string $map_options
+ *   The map options to save
+ */
 function ip_geoloc_save_map_options($var_name, $map_options) {
   $map_options_decoded = drupal_json_decode($map_options);
   if ($map_options_decoded == NULL) {
@@ -174,6 +185,14 @@ function ip_geoloc_save_map_options($var_name, $map_options) {
   variable_set($var_name, $map_options);
 }
 
+/**
+ * Get recent visitor locations.
+ *
+ * @param int $how_many
+ *   how many locations to retrieve
+ * @return object
+ *   object of locations found
+ */
 function ip_geoloc_get_recent_visitor_locations($how_many) {
   $locations = array();
   if (db_table_exists('accesslog')) {
@@ -219,19 +238,19 @@ function ip_geoloc_address_lookup($form, &$form_state) {
     '#default_value' => '',
     '#size' => 16,
     '#required' => FALSE,
-    '#prefix' => isset($prefix) ? $prefix : NULL
+    '#prefix' => isset($prefix) ? $prefix : NULL,
   );
   if (user_access('administer site configuration')) {
     $form['store'] = array(
       '#type' => 'checkbox',
       '#title' => t('If found, store on IP geolocation database for future reference.'),
-      '#default_value' => FALSE
+      '#default_value' => FALSE,
     );
   }
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Lookup'),
-    '#submit' => array('ip_geoloc_lookup')
+    '#submit' => array('ip_geoloc_lookup'),
   );
   return $form;
 }
@@ -250,13 +269,13 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Current approximate address'),
     '#default_value' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
-    '#disabled' => !$is_address_editable
+    '#disabled' => !$is_address_editable,
   );
   if ($is_address_editable) {
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Refine'),
-      '#submit' => array('ip_geoloc_geocode')
+      '#submit' => array('ip_geoloc_geocode'),
     );
   }
   $form['#attributes']['class'][] = 'ip-geoloc-address';
@@ -264,6 +283,9 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Lookup geoloc data.
+ */
 function ip_geoloc_lookup($form, &$form_state) {
   $store = !empty($form_state['values']['store']);
   $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), TRUE, $store);
@@ -280,7 +302,8 @@ function ip_geoloc_lookup($form, &$form_state) {
   $form_state['storage']['formatted_address'] = isset($location['formatted_address'])
     ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address']))
     : '';
-  $form_state['rebuild'] = TRUE; // to preserve entered values and storage array
+  // To preserve entered values and storage array.
+  $form_state['rebuild'] = TRUE;
 }
 
 /**
@@ -290,8 +313,10 @@ function ip_geoloc_lookup($form, &$form_state) {
  * Modules may implement their own variations by implementing hook_form_alter()
  * and appending their own handler to $form['#submit'].
  *
- * @param type $form
+ * @param array $form
+ *   A form array
  * @param array $form_state
+ *   The form's current state
  */
 function ip_geoloc_geocode($form, &$form_state) {
 
@@ -310,7 +335,7 @@ function ip_geoloc_geocode($form, &$form_state) {
       'latitude' => $point->coords[1],
       'longitude' => $point->coords[0],
       'formatted_address' => $point->data['geocoder_formatted_address'],
-      'accuracy' => $point->data['geocoder_accuracy']
+      'accuracy' => $point->data['geocoder_accuracy'],
     );
     // Flatten the point object into a straight location array.
     foreach ($point->data['geocoder_address_components'] as $component) {
@@ -324,5 +349,6 @@ function ip_geoloc_geocode($form, &$form_state) {
     }
     _ip_geoloc_set_session_value('location', $location);
   }
-  $form_state['rebuild'] = FALSE; // form always uses location from session
+  // Form always uses location from session.
+  $form_state['rebuild'] = FALSE;
 }

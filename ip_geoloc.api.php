@@ -14,13 +14,14 @@
  * To hook in your own gelocation data provider or to modify the existing one.
  *
  * @param array $location
+ *   The location to alter.
  */
 function hook_get_ip_geolocation_alter(&$location) {
   if (empty($location['ip_address'])) {
     return;
   }
   $location['provider'] = 'MYMODULE';
-  //....
+  // ....
   $location['city'] = $location['locality'];
 }
 
@@ -28,10 +29,13 @@ function hook_get_ip_geolocation_alter(&$location) {
  * Modify the array of locations coming from the View before they're mapped.
  *
  * @param array $marker_locations
- * @param object $view, the view that $marker_locations was generated from
+ *   An array of marker locations.
+ * @param object $view
+ *   The view from which $marker_locations was generated.
  */
 function hook_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
-  if ($view->name == 'my_beautiful_view') { // machine name of your view here
+  // Machine name of your view here.
+  if ($view->name == 'my_beautiful_view') {
     if (count($marker_locations) >= 2) {
       $marker_locations[0]->marker_color = 'orange';
       $marker_locations[1]->marker_color = 'yellow';
@@ -48,4 +52,3 @@ function hook_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
 /**
  * @} End of "addtogroup hooks".
  */
-

@@ -14,17 +14,20 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   /**
    * Set default OpenLayer options.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
-    $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
-    $options['ip_geoloc_views_plugin_latitude' ] = array('default' => $latitude);
+    // For field-based modules.
+    $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude);
+    $options['ip_geoloc_views_plugin_latitude'] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
 
-    $options['differentiator'] = array('contains' => array(
-      'differentiator_field' => array('default' => '')
-    ));
+    $options['differentiator'] = array(
+      'contains' => array(
+        'differentiator_field' => array('default' => ''),
+      ),
+    );
     $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['argument'] = array('default' => '');
@@ -32,7 +35,10 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  /**
+   * Create the options form.
+   */
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $form['map'] = array(
@@ -45,7 +51,8 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
     $form_state['renderer'] = 'openlayers';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
-    unset($form['empty_map_center']); // OpenLayers has "Hide empty map for Views" for this
+    // OpenLayers has "Hide empty map for Views" for this.
+    unset($form['empty_map_center']);
 
     $form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT] = t('Use lat/lon coordinate arguments from a contextual filter');
     $argument_handlers = $this->view->display_handler->get_handlers('argument');
@@ -59,7 +66,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
        '#title' => t('Choose a contextual filter to pull data from'),
        '#options' => $argument_options,
        '#default_value' => $this->options['argument'],
-       '#weight' => 100
+       '#weight' => 100,
       );
     }
   }
@@ -67,31 +74,30 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   /**
    * Validate the options form.
    */
-  function options_validate(&$form, &$form_state) {
+  public function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
   }
 
   /**
-   * Transform the View result in a list of marker locations and render these on
-   * a map.
+   * Transform the View result in a list of marker locations and render these on a map.
    */
-  function render() {
+  public function render() {
 
     if (!empty($this->view->live_preview)) {
-    //return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
+    // return t('The preview function is incompatible with the map format so cannot be used. Please visit the page path or block to see the results.');
     }
 
     // This somewhat mimics function openlayers_render_map_data() and class
     // openlayers_views_style_map, function render()
     $map = openlayers_map_load(isset($this->options['map']) ? $this->options['map'] : variable_get('openlayers_default_map', 'default'));
 
-    // function openlayers_build_map() invokes:
-    // o hook_openlayers_map_preprocess_alter(&$map), which introduces the names
+    // Function openlayers_build_map() invokes:
+    // - hook_openlayers_map_preprocess_alter(&$map), which introduces the names
     //   of the layers we'll use: IP_GEOLOC_MARKER_LAYER_1..3 and
     //   IP_GEOLOC_VISITOR_MARKER_LAYER
-    // o hook_openlayers_layers(), which creates barebone layers for the above
-    // o hook_openlayers_map_alter(&$map), for modules to make final changes to
-    //   the map and its layers
+    // - hook_openlayers_layers(), which creates barebone layers for the above
+    // - hook_openlayers_map_alter(&$map), for modules to make final changes to
+    //   the map and its layers.
     $map = openlayers_build_map($map->data);
 
     // Return themed map if no errors found.
@@ -140,7 +146,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
           // Only 'name' and 'description' are valid attribute names, see openlayers_behavior_popup.js
           'attributes' => array('description' => $location->balloon_text),
           'projection' => 'EPSG:4326',
-          'wkt' => "POINT($lon $lat)"
+          'wkt' => "POINT($lon $lat)",
         );
         $layer = isset($location->marker_color) && is_numeric($location->marker_color) ? $location->marker_color : 1;
         $map['layers'][IP_GEOLOC_MARKER_LAYER . $layer]['features'][] = $feature;
@@ -158,7 +164,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
           }
         }
         if (empty($some_location_layers) && empty($map['layers'][IP_GEOLOC_VISITOR_MARKER_LAYER]['features'])) {
-          // Nothing to show
+          // Nothing to show.
           return '';
         }
       }
@@ -172,15 +178,16 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       // wrap the map in a container, and take into account %-dimensions
       $container_width = $map['width'];
       $container_height = $map['height'];
-      $map['width']  = (strpos($map['width'],  '%') > 0) ? '100%' : $map['width'];
+      $map['width']  = (strpos($map['width'], '%') > 0) ? '100%' : $map['width'];
       $map['height'] = (strpos($map['height'], '%') > 0) ? '100%' : $map['height'];
 
-      $output = theme(array('ip_geoloc_openlayers'), array( // ip-geoloc-openlayers.tpl.php
+      // Uses ip-geoloc-openlayers.tpl.php.
+      $output = theme(array('ip_geoloc_openlayers'), array(
         'view' => $this->view,
-      //'options' => $this->options,
+        // 'options' => $this->options,
         'map' => $map,
         'container_width' => $container_width,
-        'container_height' => $container_height
+        'container_height' => $container_height,
       ));
     }
     else {

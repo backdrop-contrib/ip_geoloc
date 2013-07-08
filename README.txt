@@ -65,9 +65,10 @@ B. Historic data: location info about visits to your site from way back when
 Note, that this step relies on you having had the Statistics module enabled
 before you installed IPGV&M, as the access log is used as the source of IP
 addresses that have visited your site previously.
-There are a couple of options here. Use either http://drupal.org/project/smart_ip
-and the IPinfoDB web service it uses, or http://drupal.org/project/geoip, which
-takes its data from a file you download for free.
+There are a couple of options here. Use either
+http://drupal.org/project/smart_ip and the IPinfoDB web service it uses, or
+http://drupal.org/project/geoip, which takes its data from a file you download
+for free.
 
 1a. If you decide to employ Smart IP....
 Install and enable Smart IP. There is no need to enable the Device Geolocation
@@ -161,8 +162,10 @@ and "Scale Line".
 ALTERNATIVE MARKER ICONS (LEAFLET, GOOGLE MAPS)
 ===============================================
 Find on the web a marker icon set you like, eg http://mapicons.nicolasmollet.com
-Download and extract the icon image files, which must have extension .png, into
-a directory anywhere in your Drupal instal, e.g. sites/default/files/map_markers.
+Download and extract the icon image files, which must have extension .png,
+into a directory anywhere in your Drupal instal,
+e.g. sites/default/files/map_markers.
+
 Now visit the the IP Geolocation Views & Maps configuration page at
 admin/config/system/ip_geoloc. Expand the "Alternative markers" fieldset.
 Enter the path to your map_markers directory and the dimensions of your markers.
@@ -204,8 +207,8 @@ centered on it. Or you can choose one of the other centering options, as per
 normal.
 
 <?php
-  /*
-   *  Implements hook_ip_geoloc_marker_locations_alter().
+  /**
+   * Implements hook_ip_geoloc_marker_locations_alter().
    */
   function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
     if ($view->name != 'my_view') {
@@ -222,14 +225,15 @@ normal.
     $observatory->marker_color = 'white';
     array_unshift($marker_locations, $observatory);
   }
+?>
 
 If you want to hook your own gelocation data provider into IP Geolocation, then
 you can -- it's simple, using another hook.
 All you have to do is flesh out the following function.
 
 <?php
-  /*
-   *  Implements hook_get_ip_geolocation_alter().
+  /**
+   * Implements hook_get_ip_geolocation_alter().
    */
   function MYMODULE_get_ip_geolocation_alter(&$location) {
 

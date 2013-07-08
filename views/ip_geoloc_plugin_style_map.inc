@@ -6,6 +6,7 @@
  *
  * Views Style plugin extension.
  */
+
 require_once 'ip_geoloc_plugin_style.inc';
 
 class ip_geoloc_plugin_style_map extends views_plugin_style {
@@ -13,23 +14,28 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   /**
    * Set default map options.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
-    $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
-    $options['ip_geoloc_views_plugin_latitude' ] = array('default' => $latitude);
+    // For field-based modules.
+    $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude);
+    $options['ip_geoloc_views_plugin_latitude'] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
 
-    $options['differentiator'] = array('contains' => array(
-      'differentiator_field' => array('default' => '')
-    ));
+    $options['differentiator'] = array(
+      'contains' => array(
+        'differentiator_field' => array('default' => ''),
+      ),
+    );
     $options['default_marker_color'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['visitor_marker'] = array('default' => '<none>');
-    $options['gps_roles'] = array('default' => array(
-      DRUPAL_ANONYMOUS_RID => DRUPAL_ANONYMOUS_RID,
-      DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID)
+    $options['gps_roles'] = array(
+      'default' => array(
+        DRUPAL_ANONYMOUS_RID => DRUPAL_ANONYMOUS_RID,
+        DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID,
+      ),
     );
     $options['map_options'] = array('default' => '');
     $options['map_div_style'] = array('default' => '');
@@ -37,7 +43,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  /**
+   * Create the options form.
+   */
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $form_state['renderer'] = 'google';
@@ -52,8 +61,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your (double) quotes match.<br/>These options apply a grey hue to all roads:<br/>%example_options", array(
         '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
         '%example_options' => IP_GEOLOC_EXAMPLE_MAP_OPTIONS,
-        '!google_map_docs' => DOC_GOOGLE_MAP_OPTIONS)),
-      '#weight' => 35
+        '!google_map_docs' => IP_GEOLOC_DOC_GOOGLE_MAP_OPTIONS)),
+      '#weight' => 35,
     );
 
     $form['map_div_style'] = array(
@@ -64,7 +73,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#default_value' => $this->options['map_div_style'],
       '#description' => t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.',
         array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE)),
-      '#weight' => 37
+      '#weight' => 37,
     );
 
     $form['visitor_marker'] = array(
@@ -74,7 +83,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#default_value' => $this->options['visitor_marker'],
       '#description' => t("Show visitor marker in the color specified. %color_code is bright green. Note that an additional web service call will be made to retrieve the marker image, unless this field is left blank, which will result in a standard red marker. Enter <em>&lt;none&gt;</em> if you do not wish to display the visitor's current location.",
         array('%color_code' => '00FF00')),
-      '#weight' => 90
+      '#weight' => 90,
     );
 
     $form['gps_roles'] = array(
@@ -83,7 +92,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#default_value' => $this->options['gps_roles'],
       '#options' => user_roles(),
       '#description' => t('This is subject to the visitor willing to share their location when prompted by their browser. If they decline, or if their roles aren\'t ticked, an IP address lookup will be attempted instead. In case the lookup fails, for instance because you have not enabled Smart IP or GeoIP, make sure you specify "centerLat" and "centerLng" in the <strong>Map options</strong> below to avoid an empty canvas.'),
-      '#weight' => 95
+      '#weight' => 95,
     );
 
   }
@@ -91,15 +100,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
   /**
    * Validate the options form.
    */
-  function options_validate(&$form, &$form_state) {
+  public function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
   }
 
   /**
-   * Transform the View result in a list of marker locations and render these on
-   * a map.
+   * Transform the View result in a list of marker locations and render these on a map.
    */
-  function render() {
+  public function render() {
 
     if (!empty($this->view->live_preview)) {
       return t('The preview function is incompatible with Google Maps so cannot be used. Please visit the page path or block to view your map.');
@@ -113,7 +121,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $marker_color = empty($this->options['default_marker_color']) ? '' : $this->options['default_marker_color'];
 
     if (empty($this->options['visitor_marker'])) {
-      $visitor_marker = TRUE; // default to standard red marker
+      // Default to standard red marker.
+      $visitor_marker = TRUE;
     }
     else {
       $visitor_marker = trim($this->options['visitor_marker']);
@@ -124,9 +133,12 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $center_latlng = FALSE;
     if ($visitor_marker || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
       // Perform database IP lookup as backup/replacement for HTML5 location
-      $resample = TRUE; // visitor may be moving so ignore existing lat/long
-      $store = FALSE; // do not store lat/long and city as it will obliterate the reverse-geocoded one
-      $reverse_geocode = FALSE; // we only need lat/long, not full street address
+      // Visitor may be moving so ignore existing lat/long.
+      $resample = TRUE;
+      // Do not store lat/long and city as it will obliterate the reverse-geocoded one.
+      $store = FALSE;
+      // We only need lat/long, not full street address.
+      $reverse_geocode = FALSE;
       $visitor_location = ip_geoloc_get_location_by_ip(ip_address(), $resample, $store, $reverse_geocode);
       if (isset($visitor_location['latitude']) && isset($visitor_location['longitude'])) {
         $center_latlng = array($visitor_location['latitude'], $visitor_location['longitude']);
@@ -136,10 +148,11 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     if (empty($locations)) {
       $ll = trim($this->options['empty_map_center']);
       if (empty($ll)) {
-        return; // No map whatsoever
+        // No map whatsoever.
+        return;
       }
       if ($ll != t('visitor')) {
-        // Empty map centered on coordinates provided
+        // Empty map centered on coordinates provided.
         list($center_lat, $center_lng) = preg_split("/[\s,]+/", $ll);
       }
     }
@@ -165,7 +178,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       'visitor_marker' => $visitor_marker,
       'center_option' => $center_option,
       'center_latlng' => $center_latlng,
-      'visitor_location_gps' => !empty($gps_roles_applicable)
+      'visitor_location_gps' => !empty($gps_roles_applicable),
     ));
     return $output;
   }

@@ -1,12 +1,11 @@
 <?php
 
-
 /**
  * @file
  * ip_geoloc/plugins/contexts/ip_geoloc.inc
  * CTools context plugin.
- *
  */
+
 $plugin = array(
   'title' => t('IP geolocation'),
   'description' => t('The geolocation information for the current user'),
@@ -17,6 +16,9 @@ $plugin = array(
   'convert' => 'ip_geoloc_ip_geoloc_context_convert',
 );
 
+/**
+ * Implements hook_context().
+ */
 function ip_geoloc_ip_geoloc_context($empty, $data = NULL, $conf = FALSE) {
   $context = new ctools_context('ip_geoloc');
   $context->plugin = 'ip_geoloc';

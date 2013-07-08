@@ -13,6 +13,7 @@
  * or as maps. Ready-to-use views, blocks and maps are provided.
  * For programmers there's an API.
  */
+
 define('IP_GEOLOC_CALLBACK_TIMEOUT', 60);
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
 define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*");
@@ -22,10 +23,12 @@ define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disabl
 define('IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":2,  "zoomControl":true, "scaleControl":true}');
 define('IP_GEOLOC_EXAMPLE_MAP_OPTIONS', '{"mapTypeId":"roadmap", "zoom":10, "styles":[{"featureType":"road", "stylers":[{"saturation":-80}] }] }');
 
-define('DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
+define('IP_GEOLOC_DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/documentation/javascript/reference.html#MapOptions');
 
-define('IP_GEOLOC_RANGE_SEPARATOR1', '--'); // same as used for dates
-define('IP_GEOLOC_RANGE_SEPARATOR2', ':');  // alternative delimiter
+// Same as used for dates.
+define('IP_GEOLOC_RANGE_SEPARATOR1', '--');
+// Alternative delimiter.
+define('IP_GEOLOC_RANGE_SEPARATOR2', ':');
 
 require_once 'ip_geoloc.session.inc';
 require_once 'ip_geoloc_api.inc';
@@ -40,7 +43,7 @@ function ip_geoloc_help($path, $arg) {
   if ($path == 'admin/help#ip_geoloc') {
     return t('Detailed information is on the <a href="@ip_geoloc">IP Geolocation project page</a> and in the <a href="@README">README</a> file', array(
       '@ip_geoloc' => url('http://drupal.org/project/ip_geoloc'),
-      '@README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt')
+      '@README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'),
     ));
   }
 }
@@ -59,12 +62,18 @@ function ip_geoloc_library() {
       "$css_path/font-awesome.css" => array(
         'type' => 'file',
         'media' => 'screen',
-      )
-    )
+      ),
+    ),
   );
   return $libraries;
 }
 
+/**
+ * Get CSS library path.
+ * @param string $lib_path
+ * @return string
+ *   Path location or FALSE if not found.
+ */
 function ip_geoloc_get_ccs_library_path($lib_path = 'font-awesome') {
   $path = libraries_get_path($lib_path);
   return $path ? "$path/css" : FALSE;
@@ -84,7 +93,7 @@ function ip_geoloc_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ip_geoloc_admin_configure'),
     'access arguments' => array('administer site configuration'),
-    'file' => 'ip_geoloc.admin.inc'
+    'file' => 'ip_geoloc.admin.inc',
   );
   $items['ip-geoloc-current-location'] = array(
     'title' => 'Current location recipient',
@@ -151,7 +160,7 @@ function ip_geoloc_init() {
       _ip_geoloc_set_session_value('position_pending_since', NULL);
     }
 
-    if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0) /* avoid HTTP 503 */) {
+    if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0) /* Avoid HTTP 503 */) {
       // Insert some javascript to first retrieve the user's lat/long coords,
       // HTML5 style (requiring the user to accept a browser prompt) and then
       // use Google Maps API to reverse-geocode these coords into a street address.
@@ -172,9 +181,10 @@ function ip_geoloc_init() {
     _ip_geoloc_set_session_value('last_position_check', time());
   };
 
-  // ip_geoloc_store_location() does nothing, if supplied IP address is empty.
+  // If supplied IP address is empty, ip_geoloc_store_location() does nothing.
   if (ip_geoloc_store_location($location) !== FALSE) {
-    $location['ip_address'] = NULL; // if successfully stored, don't store again
+    // If successfully stored, don't store again.
+    $location['ip_address'] = NULL;
   }
   _ip_geoloc_set_session_value('location', $location);
 }
@@ -224,7 +234,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     }
     $since = _ip_geoloc_get_session_value('position_pending_since');
     $time_elapsed = $since ? number_format(microtime(TRUE) - $since, 1) : t('many, many');
-    watchdog('IPGV&M', 'Browser @ %address, received after %sec seconds.',  array('%address' => $location['formatted_address'], '%sec' => $time_elapsed), WATCHDOG_INFO);
+    watchdog('IPGV&M', 'Browser @ %address, received after %sec seconds.', array('%address' => $location['formatted_address'], '%sec' => $time_elapsed), WATCHDOG_INFO);
     ip_geoloc_debug(t('IP Geolocaton: global position and reverse-geocoding callback received after %sec seconds: !location',
       array('%sec' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
     // If better_statistics module is enabled, we can backfill geolocation information
@@ -238,7 +248,8 @@ function ip_geoloc_current_location_ajax_recipient() {
   _ip_geoloc_set_session_value('position_pending_since', NULL);
 
   if (ip_geoloc_store_location($location) !== FALSE) {
-    $location['ip_address'] = NULL; // if successfully stored, don't store again
+    // If successfully stored, don't store again.
+    $location['ip_address'] = NULL;
   }
   _ip_geoloc_set_session_value('location', $location);
 }
@@ -250,8 +261,8 @@ function ip_geoloc_current_location_ajax_recipient() {
  * hook_smart_ip_get_location_alter($location), which we use to format the
  * address.
  *
- * @param
- *   $location, if $location['ip_address'] isn't filled out the current user's
+ * @param array $location
+ *   if $location['ip_address'] isn't filled out the current user's
  *   IP address will be used
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
@@ -260,13 +271,14 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
       if (empty($location['ip_address'])) {
         $location['ip_address'] = ip_address();
       }
-      $location = smart_ip_get_location($location['ip_address']); // see also: ip_geoloc_smart_ip_get_location_alter()
+      // See also: ip_geoloc_smart_ip_get_location_alter().
+      $location = smart_ip_get_location($location['ip_address']);
       $location['provider'] = 'smart_ip';
       return TRUE;
     }
     ip_geoloc_debug(t('IPGV&M: Smart IP configured as a backup, but is not enabled.'));
   }
-// $location['formatted_address'] = '';
+  // $location['formatted_address'] = '';
   return FALSE;
 }
 
@@ -283,7 +295,7 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
   }
   $geoip_location = (array) geoip_city($location['ip_address']);
   if (!empty($geoip_location)) {
-    // Where different convert GeoIP names to our equivalents
+    // Where different convert GeoIP names to our equivalents.
     $geoip_location['country'] = isset($geoip_location['country_name']) ? $geoip_location['country_name'] : '';
     unset($geoip_location['country_name']);
     $location = array_merge($geoip_location, $location);
@@ -314,7 +326,7 @@ function _ip_geoloc_check_location($location = NULL) {
   if (drupal_match_path($path_alias, $exclude_pages)) {
     return FALSE;
   }
-  $interval = (int)variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
+  $interval = (int) variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
   if ($interval == 0) {
     return !isset($location['country']);
   }
@@ -354,8 +366,7 @@ function ip_geoloc_reverse_geocode_timeout() {
  * called as a fallback when lat/long could not be established or the Google
  * reverse-geocode function returned an error.
  *
- * @param
- *   location object
+ * @param array $location
  */
 function ip_geoloc_format_address(&$location) {
   $location['formatted_address'] = isset($location['city']) ? $location['city'] : '';
@@ -378,11 +389,9 @@ function ip_geoloc_format_address(&$location) {
  * This may involve tweaking of the 'latitude' and 'longitude' entries so that
  * they remain consistent with the street address components.
  *
- * @param
- *   google_address
- * @param
- *   ip_geoloc_address
- * @return
+ * @param array $google_address
+ * @param array $ip_geoloc_address
+ * @return boolean
  *   TRUE, unless google_address or ip_geoloc_address are empty
  */
 function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) {
@@ -408,11 +417,17 @@ function ip_geoloc_flatten_google_address($google_address, &$ip_geoloc_address) 
   return FALSE;
 }
 
+/**
+ * Print the location array nicely.
+ *
+ * @param array $location
+ * @return string
+ */
 function ip_geoloc_pretty_print($location) {
   $t = '';
   foreach ($location as $label => $value) {
     if (!empty($value)) {
-      $t .= check_plain($label) . ":&nbsp;<strong>" . check_plain($value) . "</strong>&nbsp; ";
+      $t .= check_plain($label) . ':&nbsp;<strong>' . check_plain($value) . '</strong>&nbsp; ';
     }
   }
   return empty($t) ? t('nothing') : $t;
@@ -423,21 +438,23 @@ function ip_geoloc_pretty_print($location) {
  *
  * List is compiled based on available .png files in ip_geoloc/markers dir.
  *
- * @return array of color names indexed by machine names
+ * @return array
+ *   Array of color names indexed by machine names
  */
 function ip_geoloc_marker_colors() {
   $color_list = &drupal_static(__FUNCTION__);
   if (!isset($color_list)) {
     $color_list = array(
       '' => '<' . t('default') . '>',
-      0 => '<' . t('no marker') . '>'
+      0 => '<' . t('no marker') . '>',
     );
     $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
     if ($directory_handle = opendir($marker_directory)) {
       while (($filename = readdir($directory_handle)) !== FALSE) {
         if ($ext_pos = strrpos($filename, '.png')) {
           $color = drupal_substr($filename, 0, $ext_pos);
-          $color_list[$color] = t($color); // ok... relies on translations done elsewhere
+          // Ok... relies on translations done elsewhere.
+          $color_list[$color] = t($color);
         }
       }
       closedir($directory_handle);
@@ -450,13 +467,14 @@ function ip_geoloc_marker_colors() {
 /**
  * Return available OpenLayers marker layers for use in a select drop-down.
  *
- * @return array indexed by marker layer number (1..n)
+ * @return array
+ *   An array indexed by marker layer number (1..n)
  */
 function ip_geoloc_openlayers_marker_layers() {
   $num_location_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
   $marker_layers = array();
   for ($layer = 1; $layer <= $num_location_marker_layers; $layer++) {
-    $marker_layers[$layer] = t('Marker layer') . " #$layer";
+    $marker_layers[$layer] = t('Marker layer') . ' #$layer';
   }
   return $marker_layers;
 }
@@ -465,20 +483,11 @@ function ip_geoloc_openlayers_marker_layers() {
  * Implements hook_form_FORMID_alter().
  */
 function ip_geoloc_form_views_ui_edit_display_form_alter(&$form, &$form_state) {
-  // Append our own handler to deal with saving of the differentiator table
+  // Append our own handler to deal with saving of the differentiator table.
   if (isset($form['options']['style_options']['differentiator'])) {
     $form['buttons']['submit']['#submit'][] = 'ip_geoloc_plugin_style_differentiator_color_associations_submit';
   }
 }
-
-/**
- * Implements hook_form_FORMID_alter().
- *
-function ip_geoloc_form_views_ui_config_item_form_alter(&$form, &$form_state) {
-  if ($form_state['handler']->handler_type == 'argument') {
-    $definition = $form_state['handler']->definition;
-  }
-}*/
 
 /**
  * Implements hook_smart_ip_get_location_alter().
@@ -500,26 +509,32 @@ function ip_geoloc_smart_ip_get_location_alter(&$location) {
  * String comparison is based on the ASCII/UTF8 order, so is case-sensitive.
  *
  * @param string $value
- * @param string $range, of the form '1.5--4.5' (range is inclusive of end points)
+ *   The value to check in $range
+ * @param string $range
+ *   Of the form '1.5--4.5' (range is inclusive of end points)
  * @return bool
+ *   TRUE if the value is in range
  */
 function ip_geoloc_is_in_range($value, $range) {
   if (!isset($value) || !isset($range)) {
     return FALSE;
   }
-  if (is_array($range)) { // defensive programming to make sure we have a string
+  // Defensive programming to make sure we have a string.
+  if (is_array($range)) {
     $range = reset($range);
   }
   $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR1, $range);
   if (count($from_to) < 2) {
     $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR2, $range);
   }
-  if (count($from_to) == 1) { // single value
+  if (count($from_to) == 1) {
+    // Single value.
     return trim($value) == trim($range);
   }
   $from = trim($from_to[0]);
   $to = trim($from_to[1]);
-  if ($from == '' && $to == '') { // range separator without values
+  if ($from == '' && $to == '') {
+    // Range separator without values.
     return TRUE;
   }
   if ($from != '' && $to != '') {
@@ -550,9 +565,9 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
     // Not a range but a single value. This is ok. If we knew we were checking
     // for a number we would pass the input through is_numeric(), but we don't.
     /*
-      if (!is_numeric(trim($range))) {
-        form_error($element, t('Invalid number or range.'));
-       }
+    if (!is_numeric(trim($range))) {
+      form_error($element, t('Invalid number or range.'));
+    }
     */
   }
   else {
@@ -568,7 +583,8 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
         (empty($from) && is_numeric($to)) || (empty($to) && is_numeric($from)) ||
         (is_numeric($from) && is_numeric($to) && $from <= $to);
     }
-    elseif (!empty($from) && !empty($to)) { // alphabetic range validation
+    elseif (!empty($from) && !empty($to)) {
+      // Alphabetic range validation.
       $ok = ($from <= $to);
     }
     if (!$ok) {
@@ -577,6 +593,12 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
   }
 }
 
+/**
+ * Special debug function.
+ *
+ * @param string $message
+ * @param string $type
+ */
 function ip_geoloc_debug($message, $type = 'status') {
   global $user;
   $user_names = explode(',', check_plain(variable_get('ip_geoloc_debug')));
@@ -607,7 +629,7 @@ function ip_geoloc_ctools_plugin_directory($module, $plugin) {
  * exact proximity centre as interpreted by Geocoder. Example: "/Oregon".
  */
 function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_proximity_handler, $lat_lon_dist) {
-  //_ip_geoloc_set_session_value('location', $lat_lon_dist);
+  // _ip_geoloc_set_session_value('location', $lat_lon_dist);
 }
 
 /**
@@ -616,17 +638,19 @@ function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_
 function ip_geoloc_views_api() {
   return array(
     'api' => views_api_version(),
-    'path' => drupal_get_path('module', 'ip_geoloc') . '/views'
+    'path' => drupal_get_path('module', 'ip_geoloc') . '/views',
   );
 }
 
 /**
- * Implements hook_statistics_api() from Better Statistics module.
+ * Implements hook_statistics_api().
+ *
+ * From Better Statistics module.
  */
 function ip_geoloc_statistics_api() {
   return array(
-   'version' => 1,
-   'path' => drupal_get_path('module', 'ip_geoloc') . '/plugins',
-   'file' => 'ip_geoloc.statistics.inc',
+    'version' => 1,
+    'path' => drupal_get_path('module', 'ip_geoloc') . '/plugins',
+    'file' => 'ip_geoloc.statistics.inc',
   );
 }

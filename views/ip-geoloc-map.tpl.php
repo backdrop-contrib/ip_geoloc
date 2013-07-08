@@ -1,5 +1,7 @@
 <?php
  /**
+  * @file
+  *
   * This template is used to output a map of marker locations taken from a view.
   *
   * Variables available:

@@ -1,9 +1,9 @@
-
 /* Use this when you want several small maps on the same page, e.g. via Views */
 
 function displayGMap(latitude, longitude, elementId, balloonText) {
 
-  if (typeof(google) != 'object') { // when not connected to Internet
+  if (typeof(google) != 'object') {
+    // When not connected to Internet.
     return;
   }
   var mapOptions = {

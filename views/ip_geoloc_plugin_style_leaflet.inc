@@ -6,6 +6,7 @@
  *
  * Views Style plugin extension for Leaflet (if enabled).
  */
+
 require_once 'ip_geoloc_plugin_style.inc';
 
 define('LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER', 0x01);
@@ -15,42 +16,55 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   /**
    * Set default Leaflet options.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
-    $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude); // for field-based modules
-    $options['ip_geoloc_views_plugin_latitude' ] = array('default' => $latitude);
+    // For field-based modules.
+    $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude);
+    $options['ip_geoloc_views_plugin_latitude'] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
 
-    $options['differentiator'] = array('contains' => array(
-      'differentiator_field' => array('default' => '')
-    ));
+    $options['differentiator'] = array(
+      'contains' => array(
+        'differentiator_field' => array('default' => ''),
+      ),
+    );
     $options['default_marker_color'] = array('default' => '');
     $options['default_marker_special_char'] = array('default' => '');
     $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
     $options['empty_map_center'] = array('default' => '');
     $options['visitor_marker_color'] = array('default' => 'none');
-    $options['map'] = array('default' => 'OSM Mapnik'); // leaflet.module default
+    // The leaflet.module default.
+    $options['map'] = array('default' => 'OSM Mapnik');
     $options['map_height'] = array('default' => 300);
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
-    $options['tooltips'] = array('contains' => array(
-      'marker_tooltip' => array('default' => ''),
-    ));
-    $options['tags'] = array('contains' => array(
-      'marker_tag' => array('default' => ''),
-      'tag_css_class' => array('default' => 'tag-inside-marker')
-    ));
-    $options['map_options'] = array('contains' => array(
-      'maxzoom' => array('default' => 18),
-      'zoom' => array('default' => 2),
-      'scrollwheelzoom' => array('default' => TRUE),
-      'dragging' => array('default' => TRUE)
-    ));
+    $options['tooltips'] = array(
+      'contains' => array(
+        'marker_tooltip' => array('default' => ''),
+      ),
+    );
+    $options['tags'] = array(
+      'contains' => array(
+        'marker_tag' => array('default' => ''),
+        'tag_css_class' => array('default' => 'tag-inside-marker'),
+      ),
+    );
+    $options['map_options'] = array(
+      'contains' => array(
+        'maxzoom' => array('default' => 18),
+        'zoom' => array('default' => 2),
+        'scrollwheelzoom' => array('default' => TRUE),
+        'dragging' => array('default' => TRUE),
+      ),
+    );
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  /**
+   * Implements options_form().
+   */
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $maps = array();
@@ -63,7 +77,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#options' => $maps,
       '#default_value' => $this->options['map'],
       '#required' => TRUE,
-      '#weight' => -2
+      '#weight' => -2,
     );
     $form['map_height'] = array(
       '#title' => t('Map height'),
@@ -78,7 +92,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
-    $desc =  t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> or any other source, such as <a target="_fsymbols" href="!url2">fsymbols</a>. Copy and paste either the font icon or the unicode.', array(
+    $desc =  t('Optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> or any other source, such as <a target="_fsymbols" href="!url2">fsymbols</a>. Copy and paste either the font icon or the unicode, like <strong>&amp;#xf015;</strong>', array(
       '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
       '!url2' => url('http://fsymbols.com'),
     ));
@@ -94,7 +108,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 8,
       '#default_value' => $this->options['default_marker_special_char'],
       '#description' => $desc,
-      '#weight' => 22
+      '#weight' => 22,
     );
 
     $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
@@ -107,7 +121,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
       '#description' => t('In addition to its balloon each marker may have a tooltip. A tooltip is a short text that appears when visitors hover their mouse over a marker.'),
-      '#weight' => 60
+      '#weight' => 60,
     );
     $form['tooltips']['marker_tooltip'] = array(
       '#title' => t('Views field to populate tooltips'),
@@ -123,7 +137,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['tags']['marker_tag']),
       '#description' => t('Each marker may have a tag. A tag is a number or short text shown permanently above, below or inside the marker.'),
-      '#weight' => 70
+      '#weight' => 70,
     );
     $form['tags']['marker_tag'] = array(
       '#title' => t('Views field to populate tags'),
@@ -147,15 +161,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('More map options'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
-      '#collapsed' => TRUE, // empty($this->options['map_options']['zoom']),
-      '#weight' => 200
+      // Could be empty($this->options['map_options']['zoom']), ?
+      '#collapsed' => TRUE,
+      '#weight' => 200,
     );
     $form['map_options']['maxzoom'] = array(
       '#title' => t('Maximum zoom level (0..@zoomtop)', array('@zoomtop' => $zoom_top)),
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['map_options']['maxzoom'],
-      '#description' => t('Note that not all maps support all zoom levels.')
+      '#description' => t('Note that not all maps support all zoom levels.'),
     );
     $initial_zoom_max = $zoom_top;
     if (is_numeric($this->options['map_options']['maxzoom'])) {
@@ -166,19 +181,19 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['map_options']['zoom'],
-      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.')
+      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
     );
     $form['map_options']['scrollwheelzoom'] = array(
       '#title' => t('Enable scroll wheel zoom'),
       '#type' => 'select',
       '#default_value' => $this->options['map_options']['scrollwheelzoom'],
-      '#options' => array(TRUE => 'Yes', FALSE => 'No'),
+      '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
     );
     $form['map_options']['dragging'] = array(
       '#title' => t('Dragging/Panning of the map'),
       '#type' => 'select',
       '#default_value' => $this->options['map_options']['dragging'],
-      '#options' => array(TRUE => 'Yes', FALSE => 'No'),
+      '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
     );
 
     $visitor_marker_colors = array(
@@ -196,10 +211,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#multiple' => FALSE,
       '#default_value' => $this->options['visitor_marker_color'],
       '#options' => $visitor_marker_colors,
-      '#description' => t(''),
       '#attributes' => array('class' => array('marker-color')),
       '#attached' => array('css' => array("$path/css/$css_file")),
-      '#weight' => 90
+      '#weight' => 90,
     );
 
     $form['cluster_radius'] = array(
@@ -209,16 +223,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 4,
       '#default_value' => $this->options['cluster_radius'],
       '#description' => module_exists('leaflet_markercluster') ? t('Leave empty to disable clustering.') : t('Requires the <a href="!url">Leaflet MarkerCluster</a> module and corresponding javascript library.', array(
-        '!url' => url('http://drupal.org/project/leaflet_markercluster')
+        '!url' => url('http://drupal.org/project/leaflet_markercluster'),
       )),
-      '#weight' => 100
+      '#weight' => 100,
     );
   }
 
   /**
    * Validate the options form.
    */
-  function options_validate(&$form, &$form_state) {
+  public function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
     $map_height = $form_state['values']['style_options']['map_height'];
     if (!is_numeric($map_height) || $map_height <= 0) {
@@ -243,7 +257,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   /**
    * Transform the View result in a list of marker locations and render on map.
    */
-  function render() {
+  public function render() {
     if (empty($this->options['map']) || !($map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']))) {
       return t('No Leaflet map was selected or map configuration was not found.');
     }
@@ -266,11 +280,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
     $marker_path = file_create_url($marker_path);
 
-    $max_zoom = (int)$this->options['map_options']['maxzoom'];
-    $zoom = (int)$this->options['map_options']['zoom'];
-    $scroll_wheel_zoom = (bool)$this->options['map_options']['scrollwheelzoom'];
-    $dragging = (bool)$this->options['map_options']['dragging'];
-
+    $max_zoom = (int) $this->options['map_options']['maxzoom'];
+    $zoom = (int) $this->options['map_options']['zoom'];
+    $scroll_wheel_zoom = (bool) $this->options['map_options']['scrollwheelzoom'];
+    $dragging = (bool) $this->options['map_options']['dragging'];
 
     if (!empty($locations) &&
         ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
@@ -281,7 +294,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       list($center_lat, $center_lon) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
       $map['center'] = array(
         'lat' => $center_lat,
-        'lon' => $center_lon
+        'lon' => $center_lon,
       );
     }
 
@@ -291,32 +304,35 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
       $map['center'] = array(
         'lat' => $visitor_location['latitude'],
-        'lon' => $visitor_location['longitude']
+        'lon' => $visitor_location['longitude'],
       );
     }
     if (empty($locations)) {
       $ll = trim($this->options['empty_map_center']);
       if (empty($ll)) {
-        return; // No map whatsoever
+        // No map whatsoever.
+        return;
       }
       if ($ll != t('visitor')) {
-        // Empty map centered on coordinates provided
+        // Empty map centered on coordinates provided.
         list($map['center']['lat'], $map['center']['lon']) = preg_split("/[\s,]+/", $ll);
       }
-    //else Empty map centered on visitor location, as set above
+      // Else Empty map centered on visitor location, as set above.
     }
 
     $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
-    $marker_width  = (int)$marker_dimensions[0];
-    $marker_height = (int)$marker_dimensions[1];
+    $marker_width  = (int) $marker_dimensions[0];
+    $marker_height = (int) $marker_dimensions[1];
 
     switch (variable_get('ip_geoloc_marker_anchor_pos', 'bottom')) {
       case 'top':
         $marker_anchor = 0;
         break;
+
       case 'middle':
-        $marker_anchor = (int)(($marker_height + 1) / 2);
+        $marker_anchor = (int) (($marker_height + 1) / 2);
         break;
+
       default:
         $marker_anchor = $marker_height;
     }
@@ -326,11 +342,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $feature = array();
       if (isset($location->latitude) || isset($location->lat)) {
         $feature['type'] = 'point';
-        $feature['lat'] = isset($location->latitude)  ? $location->latitude  : $location->lat;
+        $feature['lat'] = isset($location->latitude) ? $location->latitude : $location->lat;
         $feature['lon'] = isset($location->longitude) ? $location->longitude : $location->lon;
       }
       elseif (isset($location->component)) {
-        // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng()
+        // Possibly parsed by leaflet_process_geofield(), see _ip_geoloc_plugin_style_extract_lat_lng().
         $feature['type'] =  $location->type;
         $feature['component'] = $location->component;
       }
@@ -338,16 +354,19 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['type'] = $location->type;
         $feature['points'] = $location->points;
       }
-      
-      if (isset($location->id)) { // allow marker events to identify the corresponding node
+
+      if (isset($location->id)) {
+        // Allow marker events to identify the corresponding node.
         $feature['feature_id'] = $location->id;
       }
 
       // At this point $feature['type'] should be set.
-      if (!empty($feature['type']) && $feature['type'] != 'point') { // linestring, polygon ...
+      if (!empty($feature['type']) && $feature['type'] != 'point') {
+        // Linestring, polygon ...
         $feature['flags'] = LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER;
       }
-      elseif (!isset($feature['lat'])) { // points must have coords
+      elseif (!isset($feature['lat'])) {
+        // Points must have coords.
         continue;
       }
       $feature['popup'] = $location->balloon_text;
@@ -369,7 +388,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       elseif (!empty($this->options['default_marker_special_char'])) {
         $feature['specialChar'] = $this->options['default_marker_special_char'];
-        $feature['specialCharClass'] = 'icon-light'; // no UI field, assuming Font Awesome
+        // No UI field, assuming Font Awesome.
+        $feature['specialCharClass'] = 'icon-light';
         drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
       }
       if (!empty($location->marker_tooltip)) {
@@ -390,16 +410,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['icon'] = FALSE;
       }
       elseif (!empty($location->marker_color) || !empty($marker_color)) {
-        // Switch from default icon to specified color
+        // Switch from default icon to specified color.
         $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
         $feature['icon'] = array(
           'iconUrl' => $marker_path . "/$color.png",
-          'iconSize' => array('x' => $marker_width, 'y' => $marker_height), // width, height
+          // Width and height.
+          'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
           'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_anchor),
-          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
-        //'shadowUrl'
-        //'shodowSize'
-        //'shadowAnchor
+          // Just above topline, center.
+          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1),
+        // 'shadowUrl'
+        // 'shodowSize'
+        // 'shadowAnchor
         );
       }
       $features[] = $feature;
@@ -412,14 +434,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lon' => $visitor_location['longitude'],
         'popup' => t('Your retrieved location'),
         'tooltip' => t('Your retrieved location'),
-        'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER // see leaflet_markercluster.drupal.js
+        // See leaflet_markercluster.drupal.js.
+        'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
       );
       if ($visitor_marker_color != '') {
         $visitor_feature['icon'] = array(
           'iconUrl' => $marker_path . "/$visitor_marker_color.png",
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
-          'iconAnchor' => array('x' => (int)(($marker_width + 1) / 2), 'y' => $marker_anchor),
-          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1), // just above topline, center
+          'iconAnchor' => array('x' => (int) (($marker_width + 1) / 2), 'y' => $marker_anchor),
+          // Just above topline, center.
+          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1),
         );
       }
       $features[] = $visitor_feature;
@@ -440,7 +464,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $map['settings']['animateAddingMarkers'] = TRUE;
 
-    $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features)); // [#1802732]
+    // See [#1802732].
+    $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
     if (!empty($has_special_markers)) {
@@ -475,15 +500,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $output = theme('ip_geoloc_leaflet', array(
       'map_id' => $map_id,
       'height' => $this->options['map_height'],
-      'view' => $this->view
+      'view' => $this->view,
     ));
     return $output;
   }
 }
 
+/**
+ * Get the center of a lat/lon pair.
+ */
 function _ip_geoloc_get_center($location) {
   if (empty($location->type) || $location->type == 'point') {
-    $lat = isset($location->lat) ? $location->lat : (isset($location->latitude)  ? $location->latitude  : 0.0);
+    $lat = isset($location->lat) ? $location->lat : (isset($location->latitude) ? $location->latitude : 0.0);
     $lon = isset($location->lon) ? $location->lon : (isset($location->longitude) ? $location->longitude : 0.0);
     return array('lat' => $lat, 'lon' => $lon);
   }
@@ -493,10 +521,13 @@ function _ip_geoloc_get_center($location) {
 }
 
 /**
- * Returns TRUE for a marker colour equal to "0", zero or FALSE.
- * Returns FALSE when marker colour equals '' or NULL
- * @param $marker_color
+ * Checks if marker color is a good value.
+ *
+ * @param mixed $marker_color
+ *   The color of the marker
  * @return bool
+ *   TRUE if marker color is "0", zero, or FALSE
+ *   FALSE if marker colour equals '' or NULL
  */
 function _ip_geoloc_is_no_marker($marker_color) {
   return isset($marker_color) && ($marker_color === '0' || $marker_color === 0 || $marker_color === FALSE);
@@ -511,6 +542,9 @@ function ip_geoloc_plugin_style_leaflet_map_get_info($map_name = NULL) {
   return leaflet_map_get_info($map_name);
 }
 
+/**
+ * Callback to compare locations based on weight.
+ */
 function _ip_geoloc_plugin_style_leaflet_compare($location1, $location2) {
   $weight1 = empty($location1->weight) ? 0 : $location1->weight;
   $weight2 = empty($location2->weight) ? 0 : $location2->weight;

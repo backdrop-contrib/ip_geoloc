@@ -243,23 +243,23 @@ function _ip_geoloc_key_map($db_field_name = NULL, $ip_geoloc_key = NULL) {
   static $keys;
   if (!isset($keys)) {
     $keys = array(
-      'geoloc_latitude'               => array('latitude', 'float', 'big'),
-      'geoloc_longitude'              => array('longitude', 'float', 'big'),
-      'geoloc_country'                => array('country', 'string' , 64),
-      'geoloc_country_code'           => array('country_code', 'string', 3),
-      'geoloc_region'                 => array('region', 'string' , 64),
-      'geoloc_region_code'            => array('region_code', 'string', 3),
-      'geoloc_city'                   => array('city', 'string' , 64),
-      'geoloc_postal_code'            => array('postal_code', 'string' , 12),
-      'geoloc_locality'               => array('locality', 'string' , 64),
-      'geoloc_street'                 => array('route', 'string' , 64),
-      'geoloc_street_number'          => array('street_number', 'string' , 32),
-      'geoloc_admin_area_level_1'     => array('administrative_area_level_1', 'string' , 64),
-      'geoloc_admin_area_level_2'     => array('administrative_area_level_2', 'string' , 64),
-      'geoloc_admin_area_level_3'     => array('administrative_area_level_3', 'string' , 64),
-      'geoloc_formatted_address'      => array('formatted_address', 'string' , 128),
-      'geoloc_provider'               => array('provider', 'string' , 64),
-      'geoloc_accuracy'               => array('accuracy', 'float' , 'big'),
+      'geoloc_latitude'           => array('latitude', 'float', 'big'),
+      'geoloc_longitude'          => array('longitude', 'float', 'big'),
+      'geoloc_country'            => array('country', 'string', 64),
+      'geoloc_country_code'       => array('country_code', 'string', 3),
+      'geoloc_region'             => array('region', 'string', 64),
+      'geoloc_region_code'        => array('region_code', 'string', 3),
+      'geoloc_city'               => array('city', 'string', 64),
+      'geoloc_postal_code'        => array('postal_code', 'string', 12),
+      'geoloc_locality'           => array('locality', 'string', 64),
+      'geoloc_street'             => array('route', 'string', 64),
+      'geoloc_street_number'      => array('street_number', 'string', 32),
+      'geoloc_admin_area_level_1' => array('administrative_area_level_1', 'string', 64),
+      'geoloc_admin_area_level_2' => array('administrative_area_level_2', 'string', 64),
+      'geoloc_admin_area_level_3' => array('administrative_area_level_3', 'string', 64),
+      'geoloc_formatted_address'  => array('formatted_address', 'string', 128),
+      'geoloc_provider'           => array('provider', 'string', 64),
+      'geoloc_accuracy'           => array('accuracy', 'float', 'big'),
     );
   }
   if ($db_field_name) {
@@ -284,22 +284,24 @@ function _ip_geoloc_key_map($db_field_name = NULL, $ip_geoloc_key = NULL) {
  * Return a value to be inserted into the accesslog based on a database
  * field name provided, for the currently stored location.
  *
- * @param $db_field_name
+ * @param string $db_field_name
  *   The name of the database field for which to return data.
  *
- * @return
+ * @return string|int|bool|float
  *   The data to be inserted into the accesslog for the provided field.
  */
 function _ip_geoloc_get_field_value($db_field_name) {
 
-  static $geoloc; // see [#1970180]
+  // See [#1970180].
+  static $geoloc;
 
   if (!isset($geoloc)) {
     // If caching, the module will not be loaded. In such case,
     // ip_geoloc_get_visitor_location() will be undefined, and an alternative
     // method to retrieve data should be used.
     if (function_exists('ip_geoloc_get_visitor_location')) {
-      $geoloc = ip_geoloc_get_visitor_location(); // uses internal cache
+      // Uses internal cache.
+      $geoloc = ip_geoloc_get_visitor_location();
     }
     else {
       // Include common.inc.
@@ -343,7 +345,7 @@ function _ip_geoloc_get_field_value($db_field_name) {
  * @param array $location
  *   The location array.
  *
- * @return
+ * @return string|bool|int|float
  *   The value of the ip_geoloc key required.
  */
 function _ip_geoloc_get_location_field_value($db_field_name, $location) {
@@ -382,10 +384,12 @@ function _ip_geoloc_get_location_field_value($db_field_name, $location) {
       }
     case 'boolean':
       return empty($location[$ip_geoloc_key]) ? 0 : 1;
+
     case 'float':
     case 'int':
       settype($location[$ip_geoloc_key], $type);
       return $location[$ip_geoloc_key];
+
     default:
       return NULL;
   }
@@ -398,7 +402,7 @@ function _ip_geoloc_get_location_field_value($db_field_name, $location) {
  * we 'backfill' such information to all accesslog entries since when
  * the location request was initiated.
  *
- * @param integer $from_timestamp
+ * @param int $from_timestamp
  *   The timestamp of the location request.
  * @param array $location
  *   The location infromation array.

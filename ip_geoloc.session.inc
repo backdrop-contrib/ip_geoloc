@@ -8,12 +8,15 @@
  */
 
 /**
+ * Set a value to the user's SESSION.
  *
- * @param type $name
+ * @param string $name
  *   if FALSE all IPGV&M session variables are deleted;
  *   if NULL the array of all IPGV&M session variables is returned
- * @param type $value, if
- * @return type
+ * @param $value
+ *   The value to set.
+ * @return array|null $variables
+ *   All session variables from ip_geoloc
  */
 function _ip_geoloc_set_session_value($name, $value = NULL) {
 
@@ -45,8 +48,15 @@ function _ip_geoloc_set_session_value($name, $value = NULL) {
   return $variables;
 }
 
+/**
+ * Get a value from the user's SESSION.
+ *
+ * @param string $name
+ *   The name of the variable to retrieve
+ * @return Ambigous
+ */
 function _ip_geoloc_get_session_value($name = NULL) {
-  // Get all variables, then return the one requested or all if $name==null
+  // Get all variables, then return the one requested or all if $name==null.
   $variables = _ip_geoloc_set_session_value(NULL);
   return empty($name) ? $variables : (isset($variables[$name]) ? $variables[$name] : NULL);
 }

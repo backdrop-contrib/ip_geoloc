@@ -8,7 +8,8 @@
         alert(Drupal.t('Syntax error in visitor map options.'));
         mapOptions = { mapTypeId: google.maps.MapTypeId.ROADMAP, zoom: 2 };
       }
-      if (typeof(google) != 'object') { // when not connected to Internet
+      if (typeof(google) != 'object') {
+        // When not connected to Internet.
         return;
       }
       var map = new google.maps.Map(document.getElementById(settings.ip_geoloc_multi_location_map_div), mapOptions);
@@ -24,7 +25,8 @@
       var i = 0;
       for (key in locations) {
         var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
-        if (++i == 1) { // use the first, i.e. most recent, visitor to center the map
+        if (++i == 1) {
+          // Use the first, i.e. most recent, visitor to center the map.
           map.setCenter(position);
           mouseOverText = Drupal.t('Latest Visitor');
         }
@@ -34,7 +36,8 @@
         marker = new google.maps.Marker({ map: map, position: position, title: mouseOverText });
 
         balloonTexts['LL' + position] = Drupal.t('Lat/long @lat/@lng', {
-          '@lat': locations[key].latitude, // @todo fix to 4 decimals?
+          // @todo: fix to 4 decimals?
+          '@lat': locations[key].latitude,
           '@lng': locations[key].longitude });
 
         if (locations[key].balloon_text) {
@@ -45,7 +48,8 @@
           new google.maps.InfoWindow({
             content: balloonTexts['LL' + event.latLng],
             position: event.latLng,
-            maxWidth: 200 // [#1777664]
+            // See [#1777664].
+            maxWidth: 200
           }).open(map);
         });
       }

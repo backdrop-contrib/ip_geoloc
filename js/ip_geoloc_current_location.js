@@ -1,4 +1,3 @@
-
 (function ($) {
 
   Drupal.behaviors.addCurrentLocation = {
@@ -68,12 +67,15 @@
           case 1:
             text = Drupal.t('user declined to share location');
             break;
+
           case 2:
             text = Drupal.t('position unavailable (connection lost?)');
             break;
+
           case 3:
             text = Drupal.t('timeout');
             break;
+
           default:
             text = Drupal.t('unknown error');
         }

@@ -31,29 +31,31 @@
 function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
   $theme = array();
   $theme['ip_geoloc_visitor_map'] = array(
-    'template' => 'ip_geoloc_map_multi_visitor', // theme/ip_geoloc_map_multi_visitor.tpl.php
+    // Located at theme/ip_geoloc_map_multi_visitor.tpl.php.
+    'template' => 'ip_geoloc_map_multi_visitor',
     'path' => $path . '/theme',
     'variables' => array(
       'locations' => NULL,
       'div_id' => NULL,
       'map_options' => NULL,
-      'map_style' => NULL
-    )
+      'map_style' => NULL,
+    ),
   );
   $theme['ip_geoloc_map_current_visitor'] = array(
-    'template' => 'ip_geoloc_map_current_visitor', // theme/ip_geoloc_map_current_visitor.tpl.php
+    // Located at theme/ip_geoloc_map_current_visitor.tpl.php.
+    'template' => 'ip_geoloc_map_current_visitor',
     'path' => $path . '/theme',
     'variables' => array(
       'div_id' => NULL,
       'map_options' => NULL,
       'map_style' => NULL,
-    )
+    ),
   );
 
   // For the differentiator color associations table in the Views UI
   // @see views/ip_geoloc_plugin_style.inc
   $theme['ip_geoloc_plugin_style_differentiator_color_table'] = array(
-    'render element' => 'form'
+    'render element' => 'form',
   );
 
   return $theme;
@@ -65,7 +67,6 @@ function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
  * Preprocesses variables for theme/ip_geoloc_map_multi_visitor.tpl.php
  */
 function template_preprocess_ip_geoloc_visitor_map(&$variables) {
-  return;
 }
 
 /**
@@ -74,5 +75,4 @@ function template_preprocess_ip_geoloc_visitor_map(&$variables) {
  * Preprocesses variables for theme/ip_geoloc_map_current_visitor.tpl.php
  */
 function template_preprocess_ip_geoloc_map_current_visitor(&$variables) {
-  return;
 }

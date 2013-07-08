@@ -1,10 +1,10 @@
-
 (function ($) {
 
   Drupal.behaviors.addGMapCurrentLocation = {
     attach: function (context, settings) {
 
-      if (typeof(google) != 'object') { // when not connected to Internet
+      if (typeof(google) != 'object') {
+        // When not connected to Internet.
         return;
       }
       // Start with a map canvas, then add marker and balloon with address info
@@ -62,9 +62,9 @@
             + Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
           var infoPopUp = new google.maps.InfoWindow({ content: addressText + '<br/>' + latLongText });
           google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) });
-          //google.maps.event.addListener(map, 'center_changed', function() {
-          //  alert('New coords: ' + map.getCenter().lat() + ', ' + map.getCenter().lng());
-          //});
+          // google.maps.event.addListener(map, 'center_changed', function() {
+          //   alert('New coords: ' + map.getCenter().lat() + ', ' + map.getCenter().lng());
+          // });
         });
       }
     }

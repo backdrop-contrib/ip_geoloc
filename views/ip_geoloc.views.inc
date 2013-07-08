@@ -4,6 +4,9 @@
  * Views data from IP Geolocation Views & Maps module
  */
 
+/**
+ * Implements hook_views_data().
+ */
 function ip_geoloc_views_data() {
   $data = array();
   $data['ip_geoloc']['table']['group']  = t('IP geolocations');
@@ -20,22 +23,22 @@ function ip_geoloc_views_data() {
     'accesslog' => array(
       'left_field' => 'hostname',
       'field' => 'ip_address',
-      'type' => 'INNER'
+      'type' => 'INNER',
     ),
     // Make all of our fields instantly available in an Orders view.
     // ip_geoloc.ip_address connects to commerce_order.hostname
     'commerce_order' => array(
       'left_field' => 'hostname',
       'field' => 'ip_address',
-      'type' => 'LEFT'
+      'type' => 'LEFT',
     ),
     // Make all of our fields instantly available in an Order Revisions view.
     // ip_geoloc.ip_address connects to commerce_order_revision.revision_hostname
     'commerce_order_revision' => array(
       'left_field' => 'revision_hostname',
       'field' => 'ip_address',
-      'type' => 'LEFT'
-    )
+      'type' => 'LEFT',
+    ),
   );
 
   $data['ip_geoloc']['ip_address'] = array(
@@ -47,13 +50,13 @@ function ip_geoloc_views_data() {
     ),
    'filter' => array(
      'handler' => 'views_handler_filter_string',
-    ),
+   ),
     'argument' => array(
       'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
-    )
+    ),
   );
 
   $data['ip_geoloc']['latitude'] = array(
@@ -68,7 +71,7 @@ function ip_geoloc_views_data() {
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
-    )
+    ),
   );
 
   $data['ip_geoloc']['longitude'] = array(
@@ -90,198 +93,198 @@ function ip_geoloc_views_data() {
     'title' => t('Address'),
     'help' => t('Address formatted as a string'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['country'] = array(
     'title' => t('Country'),
     'help' => t('Country'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['country_code'] = array(
     'title' => t('Country code'),
     'help' => t('Country code'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['region'] = array(
     'title' => t('Region'),
     'help' => t('Region'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['region_code'] = array(
     'title' => t('Region code'),
     'help' => t('Region code'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['city'] = array(
     'title' => t('City'),
     'help' => t('City'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['postal_code'] = array(
     'title' => t('Postal code'),
     'help' => t('Post code or ZIP'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['locality'] = array(
     'title' => t('Suburb'),
     'help' => t('Locality (e.g. suburb)'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['route'] = array(
     'title' => t('Street'),
     'help' => t('Route (street)'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['street_number'] = array(
     'title' => t('Street no.'),
     'help' => t('Street number'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   $data['ip_geoloc']['administrative_area_level_1'] = array(
     'title' => t('State'),
     'help' => t('administrative area level 1 (state or province)'),
     'field' => array(
-     'handler' => 'views_handler_field',
-     'click sortable' => TRUE,
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
-     'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter_string',
     ),
     'argument' => array(
-     'handler' => 'views_handler_argument_string',
+      'handler' => 'views_handler_argument_string',
     ),
     'sort' => array(
-     'handler' => 'views_handler_sort',
-    )
+      'handler' => 'views_handler_sort',
+    ),
   );
 
   return $data;
@@ -302,14 +305,17 @@ function ip_geoloc_views_plugins() {
         'help topic' => 'style-ip-geoloc-map',
         'handler' => 'ip_geoloc_plugin_style_map',
         'path' => $path . '/views',
-        'theme' => 'ip_geoloc_map', // ip-geoloc-map.tpl.php
+        // Uses ip-geoloc-map.tpl.php.
+        'theme' => 'ip_geoloc_map',
         'theme path' => $path . '/views',
         'uses fields' => TRUE,
-        'uses options' => TRUE, // map style and map options
+        // Map style and map options.
+        'uses options' => TRUE,
         'uses grouping' => FALSE,
         'uses row plugin' => FALSE,
         'type' => 'normal',
-        'even empty' => TRUE, // may be overridden in ip_geoloc_plugin_style_map::render()
+        // May be overridden in ip_geoloc_plugin_style_map::render().
+        'even empty' => TRUE,
       )
     )
   );
@@ -319,14 +325,16 @@ function ip_geoloc_views_plugins() {
       'help' => t('Displays the view as a map via the Leaflet API.'),
       'handler' => 'ip_geoloc_plugin_style_leaflet',
       'path' => $path . '/views',
-      'theme' => 'ip_geoloc_leaflet', // ip-geoloc-leaflet.tpl.php
+      // Uses ip-geoloc-leaflet.tpl.php.
+      'theme' => 'ip_geoloc_leaflet',
       'theme path' => $path . '/views',
       'uses fields' => TRUE,
       'uses options' => TRUE,
       'uses grouping' => FALSE,
       'uses row plugin' => FALSE,
       'type' => 'normal',
-      'even empty' => TRUE, // may be overridden in ip_geoloc_plugin_style_leaflet::render()
+      // May be overridden in ip_geoloc_plugin_style_leaflet::render().
+      'even empty' => TRUE,
     );
   }
   if (module_exists('openlayers')) {
@@ -335,14 +343,16 @@ function ip_geoloc_views_plugins() {
       'help' => t('Displays the view as a map via the OpenLayers API.'),
       'handler' => 'ip_geoloc_plugin_style_openlayers',
       'path' => $path . '/views',
-      'theme' => 'ip_geoloc_openlayers', // ip-geoloc-openlayers.tpl.php
+      // Uses ip-geoloc-openlayers.tpl.php.
+      'theme' => 'ip_geoloc_openlayers',
       'theme path' => $path . '/views',
       'uses fields' => TRUE,
       'uses options' => TRUE,
       'uses grouping' => FALSE,
       'uses row plugin' => FALSE,
       'type' => 'normal',
-      'even empty' => TRUE,  // may be overridden in ip_geoloc_plugin_style_openlayers::render()
+      // May be overridden in ip_geoloc_plugin_style_openlayers::render().
+      'even empty' => TRUE,
     );
   }
 
@@ -350,8 +360,8 @@ function ip_geoloc_views_plugins() {
     'location_attribute' => array(
       'title' => t('Visitor location attribute (via IPGV&M)'),
       'handler' => 'ip_geoloc_plugin_argument_default_ip_geoloc',
-      'path' => $path . '/views'
-    )
+      'path' => $path . '/views',
+    ),
   );
 
   return $plugins;
