@@ -482,7 +482,7 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
     $msg_args = array(
       '%url' => $url,
       '@code' => $response->code,
-      '%error' => $response->error
+      '%error' => $response->error,
     );
     drupal_set_message(t('IPGV&M: the HTTP request %url returned the following error (code @code): %error.', $msg_args), 'error');
     watchdog('IPGV&M', 'Error (code @code): %error. Request: %url', $msg_args, WATCHDOG_ERROR);

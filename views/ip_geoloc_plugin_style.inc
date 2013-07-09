@@ -793,14 +793,9 @@ function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
   if (isset($row->{$field_name}) && is_array($row->{$field_name})) {
     if (!empty($row->{$field_name}[$delta]['raw'])) {
       return $row->{$field_name}[$delta]['raw'];
-      // For Geofield, Geolocation Field or Get Location modules lat/long are
-      // as follows:
-      // Geofield     : field_<field_name>[0]['raw']['geom'],
-      //                eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
-      // Geolocation  : field_<field_name>[0]['raw']['lat'] and
-      //                field_<field_name>[0]['raw']['lng']
-      // Get Locations: field_<field_name>[0]['raw']['latitude'] and
-      //                field_<field_name>[0]['raw']['longitude']
+      // Geofield     : field_<field_name>[0]['raw']['geom']
+      // Geolocation  : field_<field_name>[0]['raw']['lat'] and ...]['lng']
+      // Get Locations: field_<field_name>[0]['raw']['latitude']
     }
     $lang = LANGUAGE_NONE;
     if (!empty($row->{$field_name}[$lang][$delta])) {

@@ -319,6 +319,7 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
  * normally immediately at the start of the session.
  *
  * @param array $location
+ *   Array of location components.
  *
  * @return bool
  *   TRUE if an update is due.
@@ -376,6 +377,7 @@ function ip_geoloc_reverse_geocode_timeout() {
  * reverse-geocode function returned an error.
  *
  * @param array $location
+ *   Array of location components.
  */
 function ip_geoloc_format_address(&$location) {
   $location['formatted_address'] = isset($location['city']) ? $location['city'] : '';

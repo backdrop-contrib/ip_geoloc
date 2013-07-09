@@ -245,23 +245,23 @@ function MYMODULE_get_ip_geolocation_alter(&$location) {
   $location['provider'] = 'MYMODULE';
 
   // Fill out some or all of the location fields that IPGV&M knows how to store.
-  $location['latitude'] =;
-  $location['longitude'] =;
-  $location['country'] =;
-  $location['country_code'] =;
-  $location['region'] =;
-  $location['region_code'] =;
-  $location['city'] =;
+  $location['latitude'] = ;
+  $location['longitude'] = ;
+  $location['country'] = ;
+  $location['country_code'] = ;
+  $location['region'] = ;
+  $location['region_code'] = ;
+  $location['city'] = ;
   // 'locality' is usually the suburb.
-  $location['locality'] =;
+  $location['locality'] = ;
   // 'route' is usually the street.
-  $location['route'] =;
-  $location['street_number'] =;
-  $location['postal_code'] =;
+  $location['route'] = ;
+  $location['street_number'] = ;
+  $location['postal_code'] = ;
   // 'administrative_area_level_1' is usually the state or province.
-  $location['administrative_area_level_1'] =;
-  // Finally the complete address as a human-readible string.
-  $location['formatted_address'] =;
+  $location['administrative_area_level_1'] = ;
+  // Finally the complete address as a human-readable string.
+  $location['formatted_address'] = ;
 }
 ?>
 
