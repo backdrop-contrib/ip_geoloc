@@ -35,7 +35,7 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
     // vertical tab "Layers & Styles", bottom section "Overlay layers"
     // Programmatically, you'd do this like so:
     // $map['layer_switcher'][IP_GEOLOC_MARKER_LAYER . $layer] =
-    //   IP_GEOLOC_MARKER_LAYER . $layer;
+    // IP_GEOLOC_MARKER_LAYER . $layer;
   }
 }
 

@@ -257,17 +257,17 @@ function _ip_geoloc_key_map($db_field_name = NULL, $ip_geoloc_key = NULL) {
       'geoloc_admin_area_level_1' => array(
         'administrative_area_level_1',
         'string',
-        64
-       ),
+        64,
+      ),
       'geoloc_admin_area_level_2' => array(
         'administrative_area_level_2',
         'string',
-        64
-       ),
+        64,
+      ),
       'geoloc_admin_area_level_3' => array(
         'administrative_area_level_3',
         'string',
-        64
+        64,
       ),
       'geoloc_formatted_address'  => array('formatted_address', 'string', 128),
       'geoloc_provider'           => array('provider', 'string', 64),

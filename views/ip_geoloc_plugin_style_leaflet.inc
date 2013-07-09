@@ -16,7 +16,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   /**
    * Set default Leaflet options.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
@@ -230,7 +230,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   /**
    * Validate the options form.
    */
-  function options_validate(&$form, &$form_state) {
+  public function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
     $map_height = $form_state['values']['style_options']['map_height'];
     if (!is_numeric($map_height) || $map_height <= 0) {

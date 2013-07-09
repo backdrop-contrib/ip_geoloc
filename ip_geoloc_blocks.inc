@@ -297,7 +297,7 @@ function ip_geoloc_lookup($form, &$form_state) {
       $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
     }
   }
-  $form_state['storage']['formatted_address'] 
+  $form_state['storage']['formatted_address']
     = isset($location['formatted_address']) ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address'])) : '';
   // To preserve entered values and storage array.
   $form_state['rebuild'] = TRUE;

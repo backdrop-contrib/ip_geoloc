@@ -256,6 +256,7 @@ function ip_geoloc_sync_with_accesslog() {
  * their geolocation data added to the ip_geoloc table.
  *
  * @return array
+ *   A list of hostnames still to be processed.
  */
 function ip_geoloc_ips_to_be_synched() {
   if (!db_table_exists('accesslog')) {

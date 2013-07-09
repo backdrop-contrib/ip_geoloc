@@ -17,7 +17,7 @@ define('IP_GEOLOC_JQUERY_BLOCK_UI', 'http://malsup.github.com/jquery.blockUI.js'
 define('IP_GEOLOC_GOOGLE_MAPS', 'https://maps.googleapis.com/maps/api/js?sensor=false');
 // Size 5k.
 define('IP_GEOLOC_GOOGLE_MAPS_GPS', 'https://maps.googleapis.com/maps/api/js?sensor=true');
-define('IP_GEOLOC_GOOGLE_MAPS_SERVER','https://maps.googleapis.com/maps/api/geocode/json?sensor=false');
+define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'https://maps.googleapis.com/maps/api/geocode/json?sensor=false');
 
 /**
  * Store the supplied IP geolocation info on the database.
@@ -43,7 +43,7 @@ function ip_geoloc_store_location($location) {
   $result = 0;
   if (empty($location['ip_address']) || empty($location['formatted_address'])) {
     // ip_geoloc_debug('IPGV&M: location object must contain both IP address
-    //   and formatted address -- not stored.');
+    // and formatted address -- not stored.');
   }
   else {
     if ($location['ip_address'] != '127.0.0.1' && (!isset($location['latitude']) || !isset($location['latitude']))) {
@@ -398,6 +398,7 @@ function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-loca
  *   value is taken from the tick box on the IP Geolocation configuration page.
  *   Reverse-geocoding is subject to a Google-imposed limit of 2500 calls per
  *   day from the same server IP address.
+ *
  * @return array
  *   location as an array
  */
@@ -478,7 +479,11 @@ function ip_geoloc_reverse_geocode($latitude, $longitude) {
   $url = IP_GEOLOC_GOOGLE_MAPS_SERVER . "&latlng=$latitude,$longitude";
   $response = drupal_http_request($url);
   if (!empty($response->error)) {
-    $msg_args = array('%url' => $url, '@code' => $response->code, '%error' => $response->error);
+    $msg_args = array(
+      '%url' => $url,
+      '@code' => $response->code,
+      '%error' => $response->error
+    );
     drupal_set_message(t('IPGV&M: the HTTP request %url returned the following error (code @code): %error.', $msg_args), 'error');
     watchdog('IPGV&M', 'Error (code @code): %error. Request: %url', $msg_args, WATCHDOG_ERROR);
     return FALSE;
@@ -588,7 +593,7 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
     $center_lng = atan2($y, $x);
     return array(rad2deg($center_lat), rad2deg($center_lng));
   }
-  // Alternative method based on top & bottom latitude and left & right longitude.
+  // Alternative method based on top & bottom lat and left & right lon.
   $location = reset($locations);
   $top = $bottom = isset($location->lat) ? $location->lat : $location->latitude;
   $left = $right = isset($location->lon) ? $location->lon : $location->longitude;
@@ -665,16 +670,20 @@ function ip_geoloc_distance($location, $ref_location = 'current visitor') {
  * Gratefully copied from the http://drupal.org/project/location module, thus
  * ensuring compatibility of results.
  *
- * @param float longitude1
+ * @param float $longitude1
+ *   Must be in range -180..180.
  *
- * @param float latitude1
+ * @param float $latitude1
+ *   Must be in range -90..90.
  *
- * @param float longitude2
+ * @param float $longitude2
+ *   Must be in range -180..180.
  *
- * @param float latitude2
+ * @param float $latitude2
+ *   Must be in range -90..90
  *
  * @return float
- *   distance in meters
+ *   Distance between the two points in meters.
  *
  * @see http://en.wikipedia.org/wiki/Great-circle_distance
  */
@@ -691,11 +700,11 @@ function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitud
   $distance = acos($cosangle) * $radius;
   /*
   if ($distance < 1000) {
-    // see http://en.wikipedia.org/wiki/Haversine_formula
-    $sinlat = sin(0.5*($lat1 - $lat2));
-    $sinlong = sin(0.5*($long1 - $long2));
-    $sinangle = $sinlat*$sinlat + cos($long1)*cos($long2)*$sinlong*$sinlong;
-    $distance = 2.0 * asin(sqrt($sinangle)) * $radius;
+  // see http://en.wikipedia.org/wiki/Haversine_formula
+  $sinlat = sin(0.5*($lat1 - $lat2));
+  $sinlong = sin(0.5*($long1 - $long2));
+  $sinangle = $sinlat*$sinlat + cos($long1)*cos($long2)*$sinlong*$sinlong;
+  $distance = 2.0 * asin(sqrt($sinangle)) * $radius;
   }
   */
   return $distance;
@@ -719,8 +728,6 @@ function ip_geoloc_earth_radius($latitude) {
 
 /**
  * Get semimajor radius.
- *
- * @return float
  */
 function ip_geoloc_earth_radius_semimajor() {
   return 6378137.0;
@@ -728,17 +735,13 @@ function ip_geoloc_earth_radius_semimajor() {
 
 /**
  * Get semiminor radius.
- *
- * @return float
  */
 function ip_geoloc_earth_radius_semiminor() {
   return (ip_geoloc_earth_radius_semimajor() * (1.0 - ip_geoloc_earth_flattening()));
 }
 
 /**
- * Flatten the Earth.
- *
- * @return float
+ * Flatten the earth.
  */
 function ip_geoloc_earth_flattening() {
   return (1.0 / 298.257223563);

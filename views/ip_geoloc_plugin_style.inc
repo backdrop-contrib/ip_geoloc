@@ -205,13 +205,12 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   }
   if ($is_openlayers) {
     $desc = t('*) If you want a fixed center, visit the "Center & Bounds" vertical tab on the <a target="_ol_map_edit" href="@url">map edit page</a>. This is also where you set the initial zoom level.', array(
-      '@url' => url(
-        'admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit'
-       )));
+      '@url' => url('admin/structure/openlayers/maps/' . $views_plugin_style->options['map'] . '/edit'),
+    ));
   }
   else {
     $desc = t('*) If you choose the first option you may center the map via the special <strong>Map options</strong> <em>"centerLat"</em> and <em>"centerLng"</em> for example:<br/>%center_example', array(
-      '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }'
+      '%center_example' => '{ "mapTypeId":"terrain", "centerLat":-37.8, "centerLng":145 }',
     ));
   }
   $form['center_option'] = array(
@@ -794,7 +793,8 @@ function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
   if (isset($row->{$field_name}) && is_array($row->{$field_name})) {
     if (!empty($row->{$field_name}[$delta]['raw'])) {
       return $row->{$field_name}[$delta]['raw'];
-      // For Geofield, Geolocation Field or Get Location modules lat/long are as follows:
+      // For Geofield, Geolocation Field or Get Location modules lat/long are
+      // as follows:
       // Geofield     : field_<field_name>[0]['raw']['geom'],
       //                eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
       // Geolocation  : field_<field_name>[0]['raw']['lat'] and
@@ -805,8 +805,10 @@ function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
     $lang = LANGUAGE_NONE;
     if (!empty($row->{$field_name}[$lang][$delta])) {
       // EntityFieldQuery Views Backend.
-      // For Geofield module lat/long are as follows (note: no extra field_ prefix)
-      // <field_name>['und]['0']['wkt'], eg POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+      // For Geofield module lat/long are as follows (note: no extra
+      // 'field_' prefix):
+      // <field_name>['und]['0']['wkt'], for example:
+      // POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
       return $row->{$field_name}[$lang][$delta];
     }
     // Last resort, retrieve from rendered, as opposed to raw, result.
@@ -966,9 +968,10 @@ function _ip_geoloc_plugin_style_add_label($field, $field_content) {
  * is NOT supported to avoid the balloons having excessive bulky markup.
  *
  * @param string $field
- *   The field
+ *   The field.
  * @param string $field_content
- *   The content of the field
+ *   The content of the field.
+ *
  * @return string
  *   $field_content wrapped in HTML with CSS classes
  */

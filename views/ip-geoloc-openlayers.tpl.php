@@ -1,15 +1,15 @@
 <?php
- /**
-  * @file
-  * ip-geoloc-openlayers.tpl.php
-  *
-  * This template is used to output a map of marker locations taken from a view.
-  *
-  * Variables available:
-  * - $map: the map object, contains id, name, height and width
-  * - $container_width, $container_height: dimensions of enclosing div
-  * - $view: the view object, if required (maybe to display title above map?)
-  */
+/**
+ * @file
+ * ip-geoloc-openlayers.tpl.php
+ *
+ * This template is used to output a map of marker locations taken from a view.
+ *
+ * Variables available:
+ * - $map: the map object, contains id, name, height and width
+ * - $container_width, $container_height: dimensions of enclosing div
+ * - $view: the view object, if required (maybe to display title above map?)
+ */
 ?>
 <div class="ip-geoloc-map openlayers-view">
   <div id="openlayers-container-<?php echo $map['id']; ?>"

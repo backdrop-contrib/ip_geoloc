@@ -213,7 +213,7 @@ normal.
  */
 function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
   if ($view->name != 'my_view') {
-     return;
+    return;
   }
   if (count($marker_locations) >= 2) {
     $marker_locations[0]->marker_color = 'orange';
@@ -245,23 +245,23 @@ function MYMODULE_get_ip_geolocation_alter(&$location) {
   $location['provider'] = 'MYMODULE';
 
   // Fill out some or all of the location fields that IPGV&M knows how to store.
-  $location['latitude'] =  ;
-  $location['longitude'] = ;
-  $location['country'] = ;
-  $location['country_code'] = ;
-  $location['region'] = ;
-  $location['region_code'] = ;
-  $location['city'] = ;
+  $location['latitude'] =;
+  $location['longitude'] =;
+  $location['country'] =;
+  $location['country_code'] =;
+  $location['region'] =;
+  $location['region_code'] =;
+  $location['city'] =;
   // 'locality' is usually the suburb.
-  $location['locality'] = ;
+  $location['locality'] =;
   // 'route' is usually the street.
-  $location['route'] = ;
-  $location['street_number'] = ;
-  $location['postal_code'] = ;
+  $location['route'] =;
+  $location['street_number'] =;
+  $location['postal_code'] =;
   // 'administrative_area_level_1' is usually the state or province.
-  $location['administrative_area_level_1'] = ;
+  $location['administrative_area_level_1'] =;
   // Finally the complete address as a human-readible string.
-  $location['formatted_address'] = ;
+  $location['formatted_address'] =;
 }
 ?>
 

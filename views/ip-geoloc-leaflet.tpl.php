@@ -1,6 +1,7 @@
 <?php
  /**
   * @file
+  * ip-geoloc-leaflet.tpl.php
   *
   * This template is used to output a placeholder for a map with location
   * markers taken from a View.

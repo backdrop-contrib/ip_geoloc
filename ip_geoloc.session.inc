@@ -14,7 +14,7 @@
  *   if FALSE all IPGV&M session variables are deleted;
  *   if NULL the array of all IPGV&M session variables is returned.
  *
- * @param $value
+ * @param mixed $value
  *   The value to set.
  *
  * @return array|null

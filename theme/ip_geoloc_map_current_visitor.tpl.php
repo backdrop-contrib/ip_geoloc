@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * ip_geoloc_map_current_visitor.tpl.php

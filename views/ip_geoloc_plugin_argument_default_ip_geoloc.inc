@@ -10,7 +10,6 @@
  */
 class ip_geoloc_plugin_argument_default_ip_geoloc extends views_plugin_argument_default {
 
-
   function option_definition() {
     $options = parent::option_definition();
     $options['type'] = array('default' => 'postal');
