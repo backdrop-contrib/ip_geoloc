@@ -581,9 +581,8 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $error_count = $first_error = 0;
 
   if (isset($view->field[$latitude])) {
-    $loc_field = $view->field[$latitude];
-    $loc_field_name = $loc_field->definition['field_name'];
-    $loc_field_alias = $loc_field->field_alias;
+    $loc_field_name = $view->field[$latitude]->definition['field_name'];
+    $loc_field_alias = $view->field[$latitude]->field_alias;
   }
   foreach ($view->result as $i => $row) {
 
@@ -595,11 +594,14 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     // $base = _ip_geoloc_plugin_style_get_base($row, $latitude, $longitude)
     // $location = _ip_geoloc_plugin_style_extract_lat_lng($base);
     if (isset($loc_field_alias)) {
-      // The 2 lines below are stripped back fast versions of this call:
+      // The lines below are stripped back fast versions of this call:
       // $loc_field_value = $loc_field->get_value($row);
       $entity = $row->_field_data[$loc_field_alias]['entity'];
-      $loc_field_value = reset($entity->{$loc_field_name});
-      $base = is_array($loc_field_value) ? reset($loc_field_value) : $loc_field_value;
+      // The field value may not be there, i.e. no coordinates entered
+      if (isset($entity->{$loc_field_name})) {
+        $loc_field_value = reset($entity->{$loc_field_name});
+        $base = is_array($loc_field_value) ? reset($loc_field_value) : $loc_field_value;
+      }
     }
 
     if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
