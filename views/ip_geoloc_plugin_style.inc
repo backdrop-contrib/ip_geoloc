@@ -579,7 +579,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   }
   $locations = array();
   $error_count = $first_error = 0;
-
+  $loc_field_name = $loc_field_alias = NULL;
   if (isset($view->field[$latitude])) {
     $loc_field_name = $view->field[$latitude]->definition['field_name'];
     $loc_field_alias = $view->field[$latitude]->field_alias;
