@@ -583,53 +583,72 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   if (isset($view->field[$latitude])) {
     $loc_field_name = $view->field[$latitude]->definition['field_name'];
     $loc_field_alias = $view->field[$latitude]->field_alias;
+    // Example: $loc_field_name == 'field_geo'; $loc_field_alias == 'nid';
   }
-  foreach ($view->result as $i => $row) {
 
-    // This is required for some Views functions.
-    $view->row_index = $i;
-    $base = NULL;
+  // Group the rows according to the grouping instructions, if specified.
+  $sets = $views_plugin_style->render_grouping(
+    $views_plugin_style->view->result,
+    $views_plugin_style->options['grouping'],
+    TRUE
+  );
+  if (!empty($views_plugin_style->options['grouping'])) {
+    // @todo - Add support for multiple grouping fields?
+    $group_field = $views_plugin_style->options['grouping'][0]['field'];
+  }
 
-    // @todo Refactor this into something like
-    // $base = _ip_geoloc_plugin_style_get_base($row, $latitude, $longitude)
-    // $location = _ip_geoloc_plugin_style_extract_lat_lng($base);
-    if (isset($loc_field_alias)) {
-      // The lines below are stripped back fast versions of this call:
-      // $loc_field_value = $loc_field->get_value($row);
-      $entity = $row->_field_data[$loc_field_alias]['entity'];
-      // The field value may not be there, i.e. no coordinates entered
-      if (isset($entity->{$loc_field_name})) {
-        $loc_field_value = reset($entity->{$loc_field_name});
-        $base = is_array($loc_field_value) ? reset($loc_field_value) : $loc_field_value;
+  foreach ($sets as $set) {
+    // Render as a grouping set.
+    if (!empty($set['group'])) {
+      // This is required for some Views functions.
+      $view->row_index = $i = key($set['rows']);
+
+      $row = reset($set['rows']);
+      $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
+
+      if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
+        // Remaining row values go into the balloon.
+        if (!empty($views_plugin_style->rendered_fields[$i])) {
+          $location->balloon_text = $views_plugin_style->rendered_fields[$i][$group_field];
+          foreach ($set['rows'] as $i => $row) {
+            $rendered_fields = $views_plugin_style->rendered_fields[$i];
+            unset($rendered_fields[$group_field]);
+            $location->balloon_text .= '<br />' . implode('<br/>', $rendered_fields);
+          }
+        }
+        if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
+          _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
+        }
+         _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
+        $locations[] = $location;
+      }
+      elseif ($error_count++ == 0) {
+        $first_error = $i;
       }
     }
+    // Render as a record set.
+    else {
+      foreach ($view->result as $i => $row) {
+        // This is required for some Views functions.
+        $view->row_index = $i;
 
-    if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
-      // Remaining row values go into the balloon.
-      if (!empty($views_plugin_style->rendered_fields[$i])) {
-        $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
+        $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
+
+        if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
+          // Remaining row values go into the balloon.
+          if (!empty($views_plugin_style->rendered_fields[$i])) {
+            $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
+          }
+          if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
+            _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
+          }
+          _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
+          $locations[] = $location;
+        }
+        elseif ($error_count++ == 0) {
+          $first_error = $i;
+        }
       }
-      if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
-        _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
-      }
-      if ($tooltip_field) {
-        $tooltip = $tooltip_field->theme($row);
-        $location->marker_tooltip = strip_tags(_ip_geoloc_plugin_style_add_label($tooltip_field, $tooltip));
-      }
-      if ($tag_field) {
-        $tag = $tag_field->theme($row);
-        $location->marker_tag = _ip_geoloc_plugin_style_add_label_and_styling($tag_field, $tag);
-      }
-      if (isset($row->nid)) {
-        $location->id = $row->nid;
-      }
-      elseif (isset($row->tid)) {
-        $location->id = $row->tid;
-      }
-      $locations[] = $location;
-    }
-    elseif ($error_count++ == 0) {
-      $first_error = $i;
     }
   }
   global $user;
@@ -659,6 +678,54 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
   return $locations;
 }
+
+function _ip_geoloc_plugin_style_get_base1($row, $location_field_name, $location_field_alias) {
+  $base = NULL;
+  if (isset($location_field_alias)) {
+    // The lines below are stripped back fast versions of this call:
+    // $loc_field_value = $loc_field->get_value($row);
+    $entity = $row->_field_data[$location_field_alias]['entity'];
+    // The field value may not be there, i.e. no coordinates entered.
+    if (isset($entity->{$location_field_name})) {
+      $location_field_value = reset($entity->{$location_field_name});
+      $base = is_array($location_field_value) ? reset($location_field_value) : $location_field_value;
+    }
+  }
+  return $base;
+}
+
+/**
+ * Plugin style base.
+ */
+function _ip_geoloc_plugin_style_get_base2($row, $field_name, $delta) {
+  if (!isset($row) || !isset($field_name) || !isset($delta)) {
+    return NULL;
+  }
+  if (isset($row->{$field_name}) && is_array($row->{$field_name})) {
+    if (!empty($row->{$field_name}[$delta]['raw'])) {
+      return $row->{$field_name}[$delta]['raw'];
+      // Geofield     : field_<field_name>[0]['raw']['geom']
+      // Geolocation  : field_<field_name>[0]['raw']['lat'] and ...]['lng']
+      // Get Locations: field_<field_name>[0]['raw']['latitude']
+    }
+    $lang = LANGUAGE_NONE;
+    if (!empty($row->{$field_name}[$lang][$delta])) {
+      // EntityFieldQuery Views Backend.
+      // For Geofield module lat/long are as follows (note: no extra
+      // 'field_' prefix):
+      // <field_name>['und]['0']['wkt'], for example:
+      // POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
+      return $row->{$field_name}[$lang][$delta];
+    }
+    // Last resort, retrieve from rendered, as opposed to raw, result.
+    if (!empty($row->{$field_name}[$delta]['rendered'])) {
+      $base = $row->{$field_name}[$delta]['rendered'];
+      return empty($base['#markup']) ? $base : $base['#markup'];
+    }
+  }
+  return NULL;
+}
+
 
 /**
  * Extract coordinates from the View result row.
@@ -696,10 +763,10 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $l
   }
   $location = new stdClass();
 
-  $base = _ip_geoloc_plugin_style_base($row, $field_name, $delta);
+  $base = _ip_geoloc_plugin_style_get_base2($row, $field_name, $delta);
   if (empty($base)) {
     // Drop the "field_" prefix and try again.
-    $base = _ip_geoloc_plugin_style_base($row, $latitude, $delta);
+    $base = _ip_geoloc_plugin_style_get_base2($row, $latitude, $delta);
   }
   if (empty($base)) {
     $base = $loc_field_value;
@@ -786,38 +853,6 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $l
 }
 
 /**
- * Plugin style base.
- */
-function _ip_geoloc_plugin_style_base($row, $field_name, $delta) {
-  if (!isset($row) || !isset($field_name) || !isset($delta)) {
-    return NULL;
-  }
-  if (isset($row->{$field_name}) && is_array($row->{$field_name})) {
-    if (!empty($row->{$field_name}[$delta]['raw'])) {
-      return $row->{$field_name}[$delta]['raw'];
-      // Geofield     : field_<field_name>[0]['raw']['geom']
-      // Geolocation  : field_<field_name>[0]['raw']['lat'] and ...]['lng']
-      // Get Locations: field_<field_name>[0]['raw']['latitude']
-    }
-    $lang = LANGUAGE_NONE;
-    if (!empty($row->{$field_name}[$lang][$delta])) {
-      // EntityFieldQuery Views Backend.
-      // For Geofield module lat/long are as follows (note: no extra
-      // 'field_' prefix):
-      // <field_name>['und]['0']['wkt'], for example:
-      // POINT (144.976 -37.813) or MULTIPOINT ( (),(),() )
-      return $row->{$field_name}[$lang][$delta];
-    }
-    // Last resort, retrieve from rendered, as opposed to raw, result.
-    if (!empty($row->{$field_name}[$delta]['rendered'])) {
-      $base = $row->{$field_name}[$delta]['rendered'];
-      return empty($base['#markup']) ? $base : $base['#markup'];
-    }
-  }
-  return NULL;
-}
-
-/**
  * Set the marker color.
  */
 function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator, $differentiator_color_associations) {
@@ -888,6 +923,23 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
   }
   if (isset($location->marker_color) && is_array($location->marker_color)) {
     $location->marker_color = reset($location->marker_color);
+  }
+}
+
+function _ip_geoloc_plugin_style_decorate(&$location, $row, $tooltip_field, $tag_field) {
+  if ($tooltip_field) {
+    $tooltip = $tooltip_field->theme($row);
+    $location->marker_tooltip = strip_tags(_ip_geoloc_plugin_style_add_label($tooltip_field, $tooltip));
+  }
+  if ($tag_field) {
+    $tag = $tag_field->theme($row);
+    $location->marker_tag = _ip_geoloc_plugin_style_add_label_and_styling($tag_field, $tag);
+  }
+  if (isset($row->nid)) {
+    $location->id = $row->nid;
+  }
+  elseif (isset($row->tid)) {
+    $location->id = $row->tid;
   }
 }
 

@@ -314,7 +314,7 @@ function ip_geoloc_views_plugins() {
         'uses fields' => TRUE,
         // Map style and map options.
         'uses options' => TRUE,
-        'uses grouping' => FALSE,
+        'uses grouping' => TRUE,
         'uses row plugin' => FALSE,
         'type' => 'normal',
         // May be overridden in ip_geoloc_plugin_style_map::render().
@@ -333,7 +333,7 @@ function ip_geoloc_views_plugins() {
       'theme path' => $path . '/views',
       'uses fields' => TRUE,
       'uses options' => TRUE,
-      'uses grouping' => FALSE,
+      'uses grouping' => TRUE,
       'uses row plugin' => FALSE,
       'type' => 'normal',
       // May be overridden in ip_geoloc_plugin_style_leaflet::render().
@@ -351,7 +351,7 @@ function ip_geoloc_views_plugins() {
       'theme path' => $path . '/views',
       'uses fields' => TRUE,
       'uses options' => TRUE,
-      'uses grouping' => FALSE,
+      'uses grouping' => TRUE,
       'uses row plugin' => FALSE,
       'type' => 'normal',
       // May be overridden in ip_geoloc_plugin_style_openlayers::render().
