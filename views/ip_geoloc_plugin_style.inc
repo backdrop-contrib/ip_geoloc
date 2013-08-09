@@ -24,6 +24,11 @@ define('IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT', 5);
  */
 function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state) {
 
+  // We only ever want to offer at most 1 grouping field.
+  if (!empty($form['grouping']) && count($form['grouping']) > 1) {
+    $form['grouping'] = array_slice($form['grouping'], 0, 1);
+  }
+
   $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler, TRUE);
 
   $field_options = $fields;
