@@ -492,7 +492,7 @@ function ip_geoloc_openlayers_marker_layers() {
   $num_location_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
   $marker_layers = array();
   for ($layer = 1; $layer <= $num_location_marker_layers; $layer++) {
-    $marker_layers[$layer] = t('Marker layer') . ' #$layer';
+    $marker_layers[$layer] = t('Marker layer') . " #$layer";
   }
   return $marker_layers;
 }
