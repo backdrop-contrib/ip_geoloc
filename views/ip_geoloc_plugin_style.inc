@@ -1076,8 +1076,8 @@ function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE
   $fields = array('' => '<' . t('none') . '>');
   $field_handlers = $view_display->get_handlers('field');
   foreach ($field_handlers as $field_id => $field_handler) {
-    if ($with_table_prefixes && strpos($field_id, 'field_') === FALSE) {
-      // Example: 'title' becomes 'node_title'
+    if ($with_table_prefixes && ($field_id != 'nid') && ($field_id != 'uid') && strpos($field_id, 'field_') === FALSE) {
+      // Example: 'title' becomes 'node_title'.
       $field_id = $field_handler->table . "_$field_id";
     }
     $fields[$field_id] = $field_handler->ui_name();
