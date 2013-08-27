@@ -155,6 +155,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     elseif ($field['module'] == 'number') {
       $description .= t('You may enter a numeric range of by separating "from" and "to" by a <strong>double hyphen</strong>.<br/>Example: <strong>2.5--7.95</strong><br/>You may omit "from" or "to" to create open-ended ranges.');
     }
+    $description .= '<br/>' . t('You can refer to View URL arguments via !1, !2 etc.');
   }
   $form['differentiator']['differentiator_field'] = array(
     '#title' => t('Location differentiator'),
@@ -622,7 +623,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
           }
         }
         if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
-          _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
+          _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
         }
          _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
         $locations[] = $location;
@@ -645,7 +646,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
             $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
           }
           if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
-            _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $differentiator_color_associations[$display_id][$differentiator]);
+            _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
           }
           _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
           $locations[] = $location;
@@ -860,11 +861,18 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $l
 /**
  * Set the marker color.
  */
-function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator, $differentiator_color_associations) {
+function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentiator, $view_args, $differentiator_color_associations) {
 
   if (!empty($differentiator)) {
 
-    if (!empty($row->{$differentiator})) {
+    if (preg_match('/^!([0-9])/', $differentiator, $matches)) {
+      // Check if an argument was appended to the URL. Internal count is from 0.
+      $position = $matches[1] - 1;
+      if (isset($view_args[$position])) {
+        $differentiator_value = $view_args[$position];
+      }
+    }
+    elseif (!empty($row->{$differentiator})) {
       $differentiator_value = $row->{$differentiator};
     }
     elseif (!empty($row->{'field_' . $differentiator})) {
@@ -896,7 +904,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
             // Eg AddressField, has multiple subvalues. All must match the
             // corresponding differentiator subvalues.
             foreach ($association['differentiator_value'] as $name => $subvalue) {
-              if (!isset($differentiator_value[$name]) || !ip_geoloc_is_in_range($differentiator_value[$name], $subvalue)) {
+              if (!isset($differentiator_value[$name]) || !ip_geoloc_is_in_range($differentiator_value[$name], $subvalue, $view_args)) {
                 $match = FALSE;
                 break;
               }
@@ -906,13 +914,13 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
             // 'tid' set: taxonomy widget (plain or autocomplete)
             // $association['differentiator_value'] can have index 0 or 'tid'
             $range = reset($association['differentiator_value']);
-            $match = ip_geoloc_is_in_range($differentiator_value['tid'], $range);
+            $match = ip_geoloc_is_in_range($differentiator_value['tid'], $range, $view_args);
           }
         }
         else {
           // Single value, either as simple value or array of length 1.
           $range = $association['differentiator_value'];
-          $match = ip_geoloc_is_in_range($differentiator_value, $range);
+          $match = ip_geoloc_is_in_range($differentiator_value, $range, $view_args);
         }
         if ($match) {
           $location->marker_color = $association['color'];
@@ -1081,6 +1089,10 @@ function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE
       $field_id = $field_handler->table . "_$field_id";
     }
     $fields[$field_id] = $field_handler->ui_name();
+  }
+  // Add special differentiators: up to 4 View arguments appended to the URL
+  for ($i = 1; $i <= 4; $i++) {
+    $fields["!$i"] = t('View URL argument #@num', array('@num' => $i));
   }
   return $fields;
 }

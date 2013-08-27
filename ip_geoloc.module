@@ -535,7 +535,7 @@ function ip_geoloc_smart_ip_get_location_alter(&$location) {
  * @return bool
  *   TRUE if the value is in range
  */
-function ip_geoloc_is_in_range($value, $range) {
+function ip_geoloc_is_in_range($value, $range, $view_args = NULL) {
   if (!isset($value) || !isset($range)) {
     return FALSE;
   }
@@ -547,12 +547,16 @@ function ip_geoloc_is_in_range($value, $range) {
   if (count($from_to) < 2) {
     $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR2, $range);
   }
+  if (($from = _ip_geoloc_extract_value($from_to[0], $view_args)) == NULL) {
+    return FALSE;
+  }
   if (count($from_to) == 1) {
     // Single value.
-    return trim($value) == trim($range);
+    return trim($value) == trim($from);
   }
-  $from = trim($from_to[0]);
-  $to = trim($from_to[1]);
+  if (($to = _ip_geoloc_extract_value($from_to[1], $view_args)) == NULL) {
+    return FALSE;
+  }
   if ($from == '' && $to == '') {
     // Range separator without values.
     return TRUE;
@@ -566,12 +570,19 @@ function ip_geoloc_is_in_range($value, $range) {
   return $value <= $to;
 }
 
+function _ip_geoloc_extract_value($string, $view_args) {
+  if (preg_match('/^!([0-9])/', $string, $matches)) {
+    $arg = $matches[1];
+    return isset($view_args[$arg - 1]) ? $view_args[$arg - 1] : arg($arg);
+  }
+  return $string;
+}
+
 /**
  * FAPI validation of a range element.
  *
- * We want to cover both numeric and alphabetic ranges, but do not know the
- * whether we're dealing with numbers or strings. So this validation is as
- * strict as it can be, not knowing that information.
+ * We want to cover numeric and alphabetic ranges, as well as the special
+ * replacement strings !1, !2 ... So we can't be very strict.
  */
 function ip_geoloc_range_widget_validate($element, &$form_state) {
 
@@ -588,6 +599,9 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
   else {
     $from = trim($from_to[0]);
     $to = trim($from_to[1]);
+    if (preg_match('/^![0-9]/', $from) || preg_match('/^![0-9]/', $to)) {
+      return;
+    }
     $ok = TRUE;
     // If either $from or $to is numeric then assume numeric range and apply
     // validation accordingly.
