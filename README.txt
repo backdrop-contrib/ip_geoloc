@@ -121,12 +121,11 @@ LEAFLET TIPS
 You need to download and install the Leaflet package on your system, but you
 only have to enable the main module, no need for the Leaflet Views submodule.
 Don't forget to download the Leaflet javascript library from
-http://leaflet.cloudmade.com/download.html. This zip file contains a directory
-named 'dist'. Drop this directory in your Drupal install in
-sites/all/libraries/leaflet, so that the path to the essential javascript file
-becomes sites/all/libraries/leaflet/dist/leaflet.js
-Remember to install and enable the Libraries API module too. If all's ok, you
-won't see any errors in the Status Report, .../admin/reports/status.
+http://leafletjs.com/download.html dropping it in sites/all/libraries and
+changing the folder name to leaflet. Remember to install and enable the
+Libraries API module too.
+If all's ok, you won't see any errors in the Status Report, i.e.
+.../admin/reports/status.
 
 OPENLAYERS TIPS
 ===============
