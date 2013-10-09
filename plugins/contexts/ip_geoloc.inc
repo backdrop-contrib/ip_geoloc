@@ -58,7 +58,7 @@ function ip_geoloc_ip_geoloc_context_convert_list() {
  * Convert a context into string to be used as keyword by content types, etc.
  */
 function ip_geoloc_ip_geoloc_context_convert($context, $type) {
-  if ($context->data) {
+  if (isset($context->data['location'][$type])) {
     return $context->data['location'][$type];
   }
   return NULL;
