@@ -131,6 +131,23 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
 
     $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
     $center_latlng = FALSE;
+
+    // Set the behaviour for the case that there are no locations to map.
+    if (empty($locations)) {
+      $ll = trim($this->options['empty_map_center']);
+      if (empty($ll)) {
+        // No map whatsoever.
+        return;
+      }
+      if ($ll == t('visitor')) {
+        $center_option = IP_GEOLOC_MAP_CENTER_ON_VISITOR;
+      }
+      else {
+        // Empty map centered on coordinates provided.
+        list($center_lat, $center_lng) = preg_split("/[\s,]+/", $ll);
+      }
+    }
+
     if ($visitor_marker || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) {
       // Perform database IP lookup as backup/replacement for HTML5 location
       // Visitor may be moving so ignore existing lat/long.
@@ -146,18 +163,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       }
     }
 
-    if (empty($locations)) {
-      $ll = trim($this->options['empty_map_center']);
-      if (empty($ll)) {
-        // No map whatsoever.
-        return;
-      }
-      if ($ll != t('visitor')) {
-        // Empty map centered on coordinates provided.
-        list($center_lat, $center_lng) = preg_split("/[\s,]+/", $ll);
-      }
-    }
-    elseif ($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) {
+    if (!empty($locations) && $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) {
       list($center_lat, $center_lng) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
     }
     if (isset($center_lat) && isset($center_lng)) {
