@@ -888,6 +888,10 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
         }
       }
     }
+    elseif (!empty($row->_entity_properties[$differentiator])) {
+      // Search API
+      $differentiator_value = $row->_entity_properties[$differentiator];
+    }
     else {
       $differentiator_value = '';
       if (!isset($row->{'field_' . $differentiator})) {
