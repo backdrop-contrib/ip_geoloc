@@ -164,7 +164,6 @@ Find on the web a marker icon set you like, eg http://mapicons.nicolasmollet.com
 Download and extract the icon image files, which must have extension .png,
 into a directory anywhere in your Drupal instal,
 e.g. sites/default/files/map_markers.
-
 Now visit the the IP Geolocation Views & Maps configuration page at
 admin/config/system/ip_geoloc. Expand the "Alternative markers" fieldset.
 Enter the path to your map_markers directory and the dimensions of your markers.
@@ -185,93 +184,26 @@ First of all, check out file ip_geoloc_api.inc for a number of useful utility
 functions for creating maps and markers, calculating distances between locations
 etc. All functions are documented and should be straightforward to use.
 
-HOOKS (see ip_geoloc.api.php)
-=============================
-To add, change or remove marker locations from the View-based set, you can
-implement hook_ip_geoloc_marker_locations_alter(&$marker_locations, &$view).
-Each element in the &marker_locations array is an object with the following
-fields:
+HOOKS
+=====
+See ip_geoloc.api.php
 
-  $marker_location->latitude
-  $marker_location->longitude
-  $marker_location->marker_color
-  $marker_location->balloon_text
+HIGH PERFORMANCE AJAX
+=====================
+IPGV&M will take advantage of the "High-performance Javascript callback
+handler", if installed. Here are its installation instructions for Apache,
+in bullet form. For Nginx, see http://drupal.org/node/1876418
 
-The $marker_location->marker_color has to be the name (without extension) of one
-of the files in the ip_geoloc/markers directory, or alternative, if configured
-at admin/config/system/ip_geoloc.
-The code below changes the color of the first two markers returned by the View
-to orange and yellow and then prepends an additional marker, not in the View.
-Because the marker is added at the front of the location array, the map can be
-centered on it. Or you can choose one of the other centering options, as per
-normal.
+o download and enable https://drupal.org/project/js (7.x-1.0-beta3 or later)
+o copy the file sites/all/modules/js/js.php to the document root, i.e where
+  index.php lives
+o visit admin/config/system/js which displays a number of lines tailored for
+  your server
+o copy those lines and paste them into the .htaccess file in the document-root,
+  immediately below the line "RewriteEngine on".
 
-<?php
-/**
- * Implements hook_ip_geoloc_marker_locations_alter().
- */
-function MYMODULE_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
-  if ($view->name != 'my_view') {
-    return;
-  }
-  if (count($marker_locations) >= 2) {
-    $marker_locations[0]->marker_color = 'orange';
-    $marker_locations[1]->marker_color = 'yellow';
-  }
-  $observatory = new stdClass();
-  $observatory->latitude = 51.4777;
-  $observatory->longitude = -0.0015;
-  $observatory->balloon_text = t('The zero-meridian passes through the courtyard of the <strong>Greenwich</strong> observatory.');
-  $observatory->marker_color = 'white';
-  array_unshift($marker_locations, $observatory);
-}
-?>
-
-If you want to hook your own gelocation data provider into IP Geolocation, then
-you can -- it's simple, using another hook.
-All you have to do is flesh out the following function.
-
-<?php
-/**
- * Implements hook_get_ip_geolocation_alter().
- */
-function MYMODULE_get_ip_geolocation_alter(&$location) {
-
-  if (empty($location['ip_address'])) {
-    return;
-  }
-  // ... your code here to retrieve geolocation data ...
-  $location['provider'] = 'MYMODULE';
-
-  // Fill out some or all of the location fields that IPGV&M knows how to store.
-  $location['latitude'] = ;
-  $location['longitude'] = ;
-  $location['country'] = ;
-  $location['country_code'] = ;
-  $location['region'] = ;
-  $location['region_code'] = ;
-  $location['city'] = ;
-  // 'locality' is usually the suburb.
-  $location['locality'] = ;
-  // 'route' is usually the street.
-  $location['route'] = ;
-  $location['street_number'] = ;
-  $location['postal_code'] = ;
-  // 'administrative_area_level_1' is usually the state or province.
-  $location['administrative_area_level_1'] = ;
-  // Finally the complete address as a human-readable string.
-  $location['formatted_address'] = ;
-}
-?>
-
-That's all!
-Note that when IPGV&M calls this function the $location object may be
-partially fleshed out. If $location['ip_address'] is empty, this means that
-IPGV&M is still waiting for more details to arrive from the Google
-reverse-geocoding AJAX call. If $location['ip_address'] is not empty, then
-IPGV&M does not expect any further details and will store the $location
-with your modifications (if any) on the IP geolocation database. You must set
-$location['formatted_address'] in order for the location to be stored.
+IPGV&M will now perform its AJAX calls more efficiently. To switch this feature
+off, comment out the newly added lines from the .htaccess file (# in front).
 
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================
