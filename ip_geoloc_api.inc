@@ -8,7 +8,7 @@
  */
 
 // Note: secure http was chosen, as plain http may cause warnings popping up in
-// enviroments using certificates.
+// environments using certificates.
 // Google's gears_init.js is now included at the top of geo.js
 // Size 15k uncompressed.
 define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js');
@@ -358,7 +358,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  * Note: will result in a HTTP error 503 when the site is in maintenance mode,
  *       as in maintenance mode menu items are not available.
  */
-function ip_geoloc_get_current_location($menu_callback = 'ip-geoloc-current-location') {
+function ip_geoloc_get_current_location($menu_callback = 'js/ip_geoloc/current_location') {
   $js_options = array('group' => JS_LIBRARY);
   // End of life for the unified geo.js library. It slows things down and
   // has become less relevant as all modern devices support the HTML5/W3C API

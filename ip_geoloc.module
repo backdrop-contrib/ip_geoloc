@@ -14,7 +14,7 @@
  * For programmers there's an API.
  */
 
-define('IP_GEOLOC_CALLBACK_TIMEOUT', 60);
+define('IP_GEOLOC_CALLBACK_TIMEOUT', 30);
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
 define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*");
 
@@ -98,13 +98,35 @@ function ip_geoloc_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'ip_geoloc.admin.inc',
   );
-  $items['ip-geoloc-current-location'] = array(
+  $items['js/ip_geoloc/current_location'] = array(
     'title' => 'Current location recipient',
     'page callback' => 'ip_geoloc_current_location_ajax_recipient',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
   return $items;
+}
+
+/**
+ * Implements hook_js().
+ */
+function ip_geoloc_js() {
+  return array(
+    // Responding to /js/ip_geoloc/current_location, we get here when the
+    // root .htaccess file is configured to reroute via the root js.php file
+    // Calling the same callback as defined in ip_geoloc_menu(), but using a
+    // a faster, more economic bootstrap phase.
+    'current_location' => array(
+      'callback' => 'ip_geoloc_current_location_ajax_recipient',
+      'bootstrap' => module_exists('better_statistics') ? DRUPAL_BOOTSTRAP_FULL : DRUPAL_BOOTSTRAP_SESSION,
+      'skip_hook_init' => TRUE,
+      'dependencies' => module_exists('session_cache') ? array('session_cache') : NULL,
+      //'includes' => array(),
+      //'access callback' => 'user_access',
+      //'access arguments' => array('access content'),
+      //'page arguments' => array(),
+    ),
+  );
 }
 
 /**
@@ -121,9 +143,17 @@ function ip_geoloc_menu() {
 function ip_geoloc_init() {
 
   $location = ip_geoloc_get_visitor_location();
+  
+  if ($error = _ip_geoloc_get_session_value('error')) {
+    // @todo How do we treat repeated 'user declined to share location' errors?
+    watchdog('IPGV&M', $error, NULL, WATCHDOG_NOTICE);
+    ip_geoloc_debug('IPGV&M, ' . ip_address() . ': ' . $error, 'warning');
+    _ip_geoloc_set_session_value('error', NULL);
+  }
+
   $reverse_geocode_client_timeout = ip_geoloc_reverse_geocode_timeout();
 
-  // Sample location when due or as soon asreverse_geocode timeout is detected.
+  // Sample location when due or when a reverse-geocode timeout is detected.
   if (_ip_geoloc_check_location($location) || $reverse_geocode_client_timeout) {
 
     if ($use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
@@ -138,6 +168,7 @@ function ip_geoloc_init() {
     $last_position_check = _ip_geoloc_get_session_value('last_position_check');
     if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || empty($last_position_check)) {
       // Calls below are synchronous, $location is filled upon return.
+      $location = array();
       if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
         if ($reverse_geocode_client_timeout) {
           watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
@@ -149,6 +180,7 @@ function ip_geoloc_init() {
       else {
         ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
       }
+      // Clear the 'position_pendinng_since' timer.
       _ip_geoloc_set_session_value('position_pending_since', NULL);
     }
     // 2nd condition is to avoid HTTP 503 error.
@@ -165,10 +197,10 @@ function ip_geoloc_init() {
       // the session.
       // Naturally all of this will only work if the browser is connected to
       // the internet and has javascript enabled.
-      ip_geoloc_debug(t('IPGV&M: initiating services to locate current position and reverse-geocode to address...'));
-      ip_geoloc_get_current_location('ip-geoloc-current-location');
+      ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
+      ip_geoloc_get_current_location();
 
-      _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE) - (timer_read('page') / 1000));
+      _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
     }
     _ip_geoloc_set_session_value('last_position_check', time());
   };
@@ -193,59 +225,39 @@ function ip_geoloc_init() {
  */
 function ip_geoloc_current_location_ajax_recipient() {
 
-  $location = array('provider' => 'google', 'ip_address' => ip_address());
-
   if (isset($_POST['error'])) {
     // Device/browser does not support getCurrentPosition(), timeout or
     // Google reverse-geocode error.
-    $error = check_plain($_POST['error']) . ' -- ';
-    if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-      // In case of HTML5 error fill out street address details based on the IP.
-      // These reflect the internet provider location, not the browser location.
-      // Server-side call, so subject to a Google-imposed limit of 2500/day
-      // coming from the same IP address.
-      // Note: don't have to check for applicable roles here, as the AJAX call
-      // to which we respond wouldn't have been instigated in the first place.
-      if (!empty($location['latitude']) && !empty($location['longitude'])) {
-        if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
-          ip_geoloc_flatten_google_address($google_address, $location);
-        }
-      }
-      $error .= t('Fallback: %address', array(
-        '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''));
-    }
-    else {
-      $error .= t('No fallback. Neither Smart IP nor GeoIP API are enabled.');
-    }
-    watchdog('IPGV&M', $error, NULL, WATCHDOG_NOTICE);
-    ip_geoloc_debug('IPGV&M, ' . $location['ip_address'] . ': ' . $error);
+    // watchdog() only works at full bootstrap, so store error here and handle
+    // in ip_geoloc_init() during next jclick/request.
+    $error = check_plain($_POST['error']);
+    _ip_geoloc_set_session_value('error', $error);
+    return $error;
   }
-  else {
-    // Flesh out $location with the returned street address components.
-    foreach ($_POST as $key => $value) {
-      $location[check_plain($key)] = check_plain($value);
-    }
-    $since = _ip_geoloc_get_session_value('position_pending_since');
-    $time_elapsed = $since ? number_format(microtime(TRUE) - $since, 1) : t('many, many');
-    watchdog('IPGV&M', 'Browser @ %address, received after %sec seconds.', array('%address' => $location['formatted_address'], '%sec' => $time_elapsed), WATCHDOG_INFO);
-    ip_geoloc_debug(t('IP Geolocaton: global position and reverse-geocoding callback received after %sec seconds: !location',
-      array('%sec' => $time_elapsed, '!location' => ip_geoloc_pretty_print($location))));
-    // If better_statistics module is enabled, we can backfill geolocation
-    // information to {accesslog} entries occurred since the positioning was
-    // requested.
-    if (!empty($since) and module_exists('better_statistics')) {
-      require_once 'plugins/ip_geoloc.statistics.inc';
-      _ip_geoloc_statistics_backfill($since, $location);
-    }
+  // Flesh out $location with the returned street address components.
+  $location = array('provider' => 'google', 'ip_address' => ip_address());
+  foreach ($_POST as $key => $value) {
+    $location[check_plain($key)] = check_plain($value);
+  }
+  ip_geoloc_debug(t('IPGV&M: received from position and reverse-geocoding callback: !location', array(
+    '!location' => ip_geoloc_pretty_print($location))));
 
+  // If better_statistics module is enabled, we can backfill geolocation
+  // information to {accesslog} entries occurred since the positioning was
+  // requested.
+  $since = _ip_geoloc_get_session_value('position_pending_since');
+  if ($since && module_exists('better_statistics')) {
+    require_once 'plugins/ip_geoloc.statistics.inc';
+    _ip_geoloc_statistics_backfill($since, $location);
   }
-  _ip_geoloc_set_session_value('position_pending_since', NULL);
 
   if (ip_geoloc_store_location($location) !== FALSE) {
     // If successfully stored, don't store again.
     $location['ip_address'] = NULL;
   }
   _ip_geoloc_set_session_value('location', $location);
+  // Reset 'position_pending_since' timer.
+  _ip_geoloc_set_session_value('position_pending_since', NULL);
 }
 
 /**
@@ -298,7 +310,7 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
     $location['ip_address'] = ip_address();
   }
   $geoip_location = (array) geoip_city($location['ip_address']);
-  if (!empty($geoip_location)) {
+  if (!empty($geoip_location) && reset($geoip_location)) {
     // Where different convert GeoIP names to our equivalents.
     $geoip_location['country'] = isset($geoip_location['country_name']) ? $geoip_location['country_name'] : '';
     unset($geoip_location['country_name']);
@@ -361,7 +373,7 @@ function ip_geoloc_reverse_geocode_timeout() {
   $pending_since = _ip_geoloc_get_session_value('position_pending_since');
   if (isset($pending_since)) {
     $time_elapsed = microtime(TRUE) - $pending_since;
-    ip_geoloc_debug(t('IPGV&M: location info now pending for %sec s.', array('%sec' => number_format($time_elapsed, 1))));
+    ip_geoloc_debug(t('IPGV&M: last reverse-geocode request was %sec s ago.', array('%sec' => number_format($time_elapsed, 1))));
     if ($time_elapsed > IP_GEOLOC_CALLBACK_TIMEOUT) {
       return $time_elapsed;
     }

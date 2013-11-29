@@ -27,8 +27,6 @@
       }
 
       function getLocation(position) {
-        //alert(Drupal.t('Received (@lat, @lng)', { '@lat': position.coords.latitude, '@lng': position.coords.longitude }));
-
         var location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 
         new google.maps.Geocoder().geocode({'latLng': location }, function(response, status) {
@@ -51,7 +49,6 @@
                 }
               }
             }
-            //alert(Drupal.t('Reverse-geocoded your location to address: @address', { '@address': ip_geoloc_address['formatted_address'] }));
           }
           else {
             ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
@@ -80,7 +77,8 @@
             text = Drupal.t('unknown error');
         }
         var data = new Object;
-        data['error'] = Drupal.t('getCurrentPosition() returned error !code: !text. @browser', {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
+        data['error'] = Drupal.t('getCurrentPosition() returned error !code: !text. @browser',
+          {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
         // Pass error back to PHP rather than alert();
         callback_php(callback_url, data, false);
       }
