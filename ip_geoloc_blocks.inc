@@ -134,7 +134,8 @@ function ip_geoloc_block_view($delta = '') {
         'div_id' => 'ip-geoloc-block-current-visitor-map',
         'map_options' => $map_options,
         'map_style' => $map_style,
-        // lat,lon NULL values will result in HTML5 position retrieval
+        // Lat,Lon NULL values will instigate HTML5 position retrieval. The
+        // user will be prompted by the browser to give permission.
         'latitude'  => isset($location['latitude']) ? (float)$location['latitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
         'longitude' => isset($location['longitude']) ? (float)$location['longitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
         'info_text' => isset($location['formatted_address']) ? $location['formatted_address'] : NULL,
@@ -334,7 +335,6 @@ function ip_geoloc_geocode($form, &$form_state) {
       $location = array(
         'provider' => 'user',
         'ip_address' => ip_address(),
-        'timestamp' => time(),
       );
     }
     elseif (module_exists('geocoder')) {
@@ -349,7 +349,6 @@ function ip_geoloc_geocode($form, &$form_state) {
       $location = array(
         'provider' => 'user+google',
         'ip_address' => ip_address(),
-        'timestamp' => time(),
         'latitude' => $point->coords[1],
         'longitude' => $point->coords[0],
         'formatted_address' => $point->data['geocoder_formatted_address'],

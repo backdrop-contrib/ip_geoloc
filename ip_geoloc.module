@@ -237,7 +237,6 @@ function ip_geoloc_current_location_ajax_recipient() {
   // Flesh out $location with the returned street address components.
   $location = array(
     'provider' => 'google',
-    'timestamp' => time(),
     'ip_address' => ip_address(),
   );
   foreach ($_POST as $key => $value) {

@@ -51,16 +51,15 @@ If you don't see any errors or warnings (usually yellow) you're
 good to proceed. Don't worry about any of the configuration options for now,
 the defaults are fine.
 
-4. At Structure >> Blocks put the block "Map showing locations of 10 most recent
-visitors" in the content region of all or a selected page. View the page. That
-marker represents you (or your service provider). Clicking the marker reveals
-more details.
+4. At Structure >> Blocks put the block "Map of 20 most recent visitors" in the
+content region of all or a selected page. View the page. That marker represents
+you (or your service provider). Clicking the marker reveals more details.
 
 5. Enable the Views and Views PHP (http://drupal.org/project/views_php) modules.
 Then have a look at Structure >> Views for a couple of handy Views, e.g. the
 "Visitor log", which shows for each IP address that visited, its street address,
 as well as a local map. Or "Visitor log (lite)", which combines nicely when put
-on the same page with the "Map showing locations of 10 most recent visitors".
+on the same page with the block "Map of 20 most recent visitors".
 Modify these views as you please.
 
 
