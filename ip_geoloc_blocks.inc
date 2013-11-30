@@ -134,9 +134,10 @@ function ip_geoloc_block_view($delta = '') {
         'div_id' => 'ip-geoloc-block-current-visitor-map',
         'map_options' => $map_options,
         'map_style' => $map_style,
-        // Fallback lat/long, in case the HTML5 location retrieval fails.
-        'latitude'  => empty($location['latitude']) ? NULL : $location['latitude'],
-        'longitude' => empty($location['longitude']) ? NULL : $location['longitude'],
+        // lat,lon NULL values will result in HTML5 position retrieval
+        'latitude'  => isset($location['latitude']) ? (float)$location['latitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
+        'longitude' => isset($location['longitude']) ? (float)$location['longitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
+        'info_text' => isset($location['formatted_address']) ? $location['formatted_address'] : NULL,
       ));
       break;
 
@@ -273,9 +274,14 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     '#disabled' => !$is_address_editable,
   );
   if ($is_address_editable) {
+    $form['fixed_address'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Fix my location at this address'),
+      '#default_value' => !empty($location['fixed_address']),
+    );
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Refine'),
+      '#value' => t('Submit'),
       '#submit' => array('ip_geoloc_geocode'),
     );
   }
@@ -317,35 +323,53 @@ function ip_geoloc_lookup($form, &$form_state) {
  */
 function ip_geoloc_geocode($form, &$form_state) {
 
-  if (module_exists('geocoder')) {
-    // Use Google server-side API to retrieve lat/long from entered address.
-    $point = geocoder('google', $form_state['values']['street_address']);
+  $location = _ip_geoloc_get_session_value('location');
 
-    if (!$point) {
-      drupal_set_message(t('The address you entered could not be geocoded to a location.'), 'warning');
-      return;
+  // Only Geocde when the "Fix my location at this address" was not ticked or
+  // has just been ticked.
+  if (empty($form_state['values']['fixed_address']) || empty($location['fixed_address'])) {
+
+    $entered_address = trim($form_state['values']['street_address']);
+    if (empty($entered_address)) {
+      $location = array(
+        'provider' => 'user',
+        'ip_address' => ip_address(),
+        'timestamp' => time(),
+      );
     }
+    elseif (module_exists('geocoder')) {
+      // Use Google server-side API to retrieve lat/long from entered address.
+      $point = geocoder('google', $entered_address);
 
-    $location = array(
-      'provider' => 'user/google',
-      'ip_address' => ip_address(),
-      'latitude' => $point->coords[1],
-      'longitude' => $point->coords[0],
-      'formatted_address' => $point->data['geocoder_formatted_address'],
-      'accuracy' => $point->data['geocoder_accuracy'],
-    );
-    // Flatten the point object into a straight location array.
-    foreach ($point->data['geocoder_address_components'] as $component) {
-      if (!empty($component->long_name)) {
-        $type = $component->types[0];
-        $location[$type] = $component->long_name;
-        if ($type == 'country' && !empty($component->short_name)) {
-          $location['country_code'] = $component->short_name;
+      if (!$point) {
+        drupal_set_message(t('The address you entered could not be geocoded to a location.'), 'warning');
+        return;
+      }
+
+      $location = array(
+        'provider' => 'user+google',
+        'ip_address' => ip_address(),
+        'timestamp' => time(),
+        'latitude' => $point->coords[1],
+        'longitude' => $point->coords[0],
+        'formatted_address' => $point->data['geocoder_formatted_address'],
+        'accuracy' => $point->data['geocoder_accuracy'],
+      );
+      // Flatten the point object into a straight location array.
+      foreach ($point->data['geocoder_address_components'] as $component) {
+        if (!empty($component->long_name)) {
+          $type = $component->types[0];
+          $location[$type] = $component->long_name;
+          if ($type == 'country' && !empty($component->short_name)) {
+            $location['country_code'] = $component->short_name;
+          }
         }
       }
     }
-    _ip_geoloc_set_session_value('location', $location);
   }
+  $location['fixed_address'] = !empty($form_state['values']['fixed_address']);
+  _ip_geoloc_set_session_value('location', $location);
+
   // Form always uses location from session.
   $form_state['rebuild'] = FALSE;
 }

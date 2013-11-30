@@ -23,6 +23,10 @@ Visit the IPGV&M configuration page to specify an alternative marker set. When
 using Leaflet you can superimpose Font Awesome font characters on top of your
 markers.
 
+The "Views PHP" module is required for some of the Views included with IPGV&M.
+Session Cache API and "High-performance Javascript callback handler" modules are
+optional, but recommended.
+
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you may want
 to configure an alternative lat/long lookup based on IP address. For this follow

@@ -44,7 +44,9 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
     $form['map'] = array(
       '#type' => 'select',
       '#title' => t('Map'),
-      '#description' => t('The OpenLayers map used to place the view locations on. You can configure map and markers <a href="/admin/structure/openlayers/maps">here</a>.'),
+      '#description' => t('The OpenLayers map used to place the view locations on. You can configure map and markers <a href="!url">here</a>.', array(
+        '!url' => url('admin/structure/openlayers/maps'),
+      )),
       '#options' => openlayers_map_options(),
       '#default_value' => isset($this->options['map']) ? $this->options['map'] : variable_get('openlayers_default_map', 'default'),
     );

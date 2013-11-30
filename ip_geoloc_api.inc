@@ -142,12 +142,14 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  * @param string $map_style
  *   CSS style applied to the div, e.g "height:200px; width:300px"
  * @param float $latitude
- *   fallback value, eg. when error or user declines to share location
+ *   if empty and HTML5 location retrieval will be initiated
  * @param float $longitude
- *   fallback value, eg. when error or user declines to share location
+ *   if empty and HTML5 location retrieval will be initiated
+ * @param string $info_text
+ *   optional string to display in the marker balloon, e.g. formatted address
  */
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location',
-    $map_options = NULL, $map_style = NULL, $latitude = NULL, $longitude = NULL) {
+    $map_options = NULL, $map_style = NULL, $latitude = NULL, $longitude = NULL, $info_text = NULL) {
   $js_options = array('group' => JS_LIBRARY);
   drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
@@ -160,6 +162,7 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
     'ip_geoloc_current_location_map_div' => $div_id,
     'ip_geoloc_current_location_map_options' => drupal_json_decode($map_options),
     'ip_geoloc_current_location_map_latlng' => array($latitude, $longitude),
+    'ip_geoloc_current_location_map_info_text' => $info_text,
   );
   drupal_add_js($settings, 'setting');
 

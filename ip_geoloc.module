@@ -192,7 +192,7 @@ function ip_geoloc_init() {
       // will not rake up any calls against its Google-imposed quotum, ie the
       // OVER_QUERY_LIMIT.
       // When done the javascript calls us back on the supplied menu callback,
-      // '/ip-geoloc-current-location', which receives the geolocation data
+      // '/js/ip_geoloc/current_location', which receives the geolocation data
       // from the Google Maps call via the $_POST variable and stores it in
       // the session.
       // Naturally all of this will only work if the browser is connected to
@@ -235,7 +235,11 @@ function ip_geoloc_current_location_ajax_recipient() {
     return $error;
   }
   // Flesh out $location with the returned street address components.
-  $location = array('provider' => 'google', 'ip_address' => ip_address());
+  $location = array(
+    'provider' => 'google',
+    'timestamp' => time(),
+    'ip_address' => ip_address(),
+  );
   foreach ($_POST as $key => $value) {
     $location[check_plain($key)] = check_plain($value);
   }
@@ -310,8 +314,8 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
     $location['ip_address'] = ip_address();
   }
   $geoip_location = (array) geoip_city($location['ip_address']);
-  if (!empty($geoip_location) && reset($geoip_location)) {
-    // Where different convert GeoIP names to our equivalents.
+  if (reset($geoip_location)) {
+    // Where different, convert GeoIP names to our equivalents.
     $geoip_location['country'] = isset($geoip_location['country_name']) ? $geoip_location['country_name'] : '';
     unset($geoip_location['country_name']);
     $location = array_merge($geoip_location, $location);
@@ -338,6 +342,9 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
  */
 function _ip_geoloc_check_location($location = NULL) {
 
+  if (!empty($location['fixed_address'])) {
+    return FALSE;
+  }
   $path_alias = drupal_get_path_alias();
 
   $include_pages = variable_get('ip_geoloc_include_pages', '*');
