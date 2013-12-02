@@ -431,8 +431,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'type' => 'point',
         'lat' => $visitor_location['latitude'],
         'lon' => $visitor_location['longitude'],
-        'popup' => t('Your retrieved location'),
-        'tooltip' => t('Your retrieved location'),
+        'popup' => t('Your approximate location'),
+        'tooltip' => t('Your approximate location'),
         // See leaflet_markercluster.drupal.js.
         'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
       );

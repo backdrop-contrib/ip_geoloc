@@ -336,7 +336,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     'ip_geoloc_multi_location_marker_anchor' => $marker_anchor,
     'ip_geoloc_multi_location_marker_default_color' => $marker_color,
   );
-  drupal_add_js($settings, 'setting');
+  drupal_add_js(array($settings), 'setting');
 
   if (!isset($map_style)) {
     $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;

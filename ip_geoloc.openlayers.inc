@@ -78,7 +78,7 @@ function ip_geoloc_openlayers_layers() {
     $longitude = $location['longitude'];
     $latitude  = $location['latitude'];
     $visitor_layer->data['features'][] = array(
-      'attributes' => array('name' => t('Your retrieved location.')),
+      'attributes' => array('name' => t('Your approximate location.')),
       'wkt' => "POINT($longitude $latitude)",
       'projection' => 'EPSG:4326',
     );
