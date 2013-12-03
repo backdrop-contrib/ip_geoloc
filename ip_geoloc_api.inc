@@ -326,14 +326,14 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     'ip_geoloc_locations' => $locations,
     'ip_geoloc_multi_location_map_div' => $div_id,
     'ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options),
-    'ip_geoloc_multi_location_center_option' => $center_option,
+    'ip_geoloc_multi_location_center_option' => (int)$center_option,
     'ip_geoloc_multi_location_center_latlng' => $center_latlng,
     'ip_geoloc_multi_location_visitor_marker' => $visitor_marker,
     'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps,
     'ip_geoloc_multi_location_marker_directory' => $marker_directory,
-    'ip_geoloc_multi_location_marker_width' => $marker_width,
-    'ip_geoloc_multi_location_marker_height' => $marker_height,
-    'ip_geoloc_multi_location_marker_anchor' => $marker_anchor,
+    'ip_geoloc_multi_location_marker_width' => (int)$marker_width,
+    'ip_geoloc_multi_location_marker_height' => (int)$marker_height,
+    'ip_geoloc_multi_location_marker_anchor' => (int)$marker_anchor,
     'ip_geoloc_multi_location_marker_default_color' => $marker_color,
   );
   drupal_add_js(array($settings), 'setting');
