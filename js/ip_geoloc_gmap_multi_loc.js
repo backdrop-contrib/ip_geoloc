@@ -72,6 +72,7 @@
           }
         }
 
+        var shadowImage = null;
         var defaultPinImage = !markerColor ? null : new google.maps.MarkerImage(
           markerDirname + '/' + markerColor + imageExt,
           new google.maps.Size(markerWidth, markerHeight),
@@ -79,12 +80,15 @@
           new google.maps.Point(0, 0),
           // Anchor.
           new google.maps.Point((markerWidth / 2), markerAnchor));
-        var shadowImage = null;
 
-        var i = 1;
         var center = null;
         for (var key in locations) {
-          var mouseOverText = Drupal.t('Location #@i', { '@i': i++ });
+          var br = locations[key].balloon_text.indexOf('<br/>');
+          var mouseOverText = (br > 0) ? locations[key].balloon_text.substring(0, br) : locations[key].balloon_text.trim();
+          if (mouseOverText.length === 0) {
+            mouseOverText = Drupal.t('Location #@i', { '@i': parseInt(key) + 1});
+          }
+
           var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
           if (!center && centerOption === 1) {
             // If requested center map on the first location, if any.
@@ -154,7 +158,7 @@
           // Note: cannot use https: here...
           var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=" + pinChar + "|" + pinColor + "|" + textColor,
             new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34));
-          specialMarker = new google.maps.Marker({ map: maps[m], icon: pinImage, shadow: null, position: position, title: mouseOverText });
+          specialMarker = new google.maps.Marker({ map: maps[m], icon: pinImage, shadow: shadowImage, position: position, title: mouseOverText });
         }
         addMarkerBalloon(maps[m], specialMarker, mouseOverText);
       }
