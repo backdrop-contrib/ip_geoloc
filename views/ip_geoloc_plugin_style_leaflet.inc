@@ -482,8 +482,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     // This is hacky but can't see another way to conditionally load
     // Leaflet More Map js (for Retina support).
     if (function_exists('leaflet_more_maps_preprocess_leaflet_map')) {
-      $vars = array();
-      leaflet_more_maps_preprocess_leaflet_map($vars);
+      leaflet_more_maps_preprocess_leaflet_map();
     }
 
     if (!empty($cluster_radius)) {

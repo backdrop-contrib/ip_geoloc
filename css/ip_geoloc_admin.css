@@ -8,7 +8,7 @@ select.marker-color option {
 }
 
 select.marker-color option[value="drupal"] {
-  background: url(../markers/Drupal.png) no-repeat 2px 1px;
+  background: url(../markers/drupal.png) no-repeat 2px 1px;
 }
 select.marker-color option[value="blue"] {
   background: url(../markers/blue.png) no-repeat 2px 1px;
