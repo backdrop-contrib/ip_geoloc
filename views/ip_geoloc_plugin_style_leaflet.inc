@@ -468,10 +468,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
-    if (!empty($has_special_markers)) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');
-      drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
-    }
     $settings = array(
       'mapId' => $map_id,
       'map' => $map,
@@ -479,8 +475,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     drupal_add_js(array('leaflet' => array($settings)), 'setting');
     libraries_load('leaflet');
+    
     // This is hacky but can't see another way to conditionally load
-    // Leaflet More Map js (for Retina support).
+    // Leaflet More Map js (for Retina support and for Bing).
     if (function_exists('leaflet_more_maps_preprocess_leaflet_map')) {
       leaflet_more_maps_preprocess_leaflet_map();
     }
@@ -494,6 +491,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
         drupal_set_message(t('Cannot cluster markers in View %display_name - Leaflet MarkerCluster module not enabled.', array('%display_name' => $display_name)), 'warning');
       }
+    }
+    if (!empty($has_special_markers)) {
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');
+      drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
     }
 
     $output = theme('ip_geoloc_leaflet', array(
