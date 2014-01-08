@@ -7,7 +7,7 @@
       var refresh_page = settings.ip_geoloc_refresh_page;
 
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 10000});
+        navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
       }
       else {
         // Use the geo.js unified API. This covers the W3C Geolocation API as well
