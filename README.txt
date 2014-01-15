@@ -113,7 +113,9 @@ sure you have included in your view's field selection a field named "Content:
 your_Geofield/Geolocation_field". Only one copy is required, you do NOT need
 both a latitude version plus a longitude version. The "Formatter", if it pops
 up, is relevant only if you want the location field to appear in the marker
-balloons. Make sure "Use field template" is UNTICKED.
+balloons. Make sure "Use field template" is UNTICKED. Commerce Kickstart tends
+to have the box ticked, so UNTICK it. Untick it for the differentiator too, if
+used.
 Then, after selecting the View Format "Map (Google, via IPGV&M)", "Map (Leaflet,
 via IPGV&M)" or "Map (OpenLayers, via IPGV&M)" select or type field_name in the
 "Name of latitude field in Views query".

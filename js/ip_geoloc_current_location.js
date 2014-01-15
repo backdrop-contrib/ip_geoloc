@@ -92,7 +92,8 @@
           success: function () {
           },
           error: function (http) {
-            if (http.status > 0 && http.status != 200) {
+            if (http.status > 0 && http.status != 200 && http.status != 404) {
+              // 404 happens when Clean URLs isn't enabled.
               alert(Drupal.t('IPGV&M: an HTTP error @status occurred.', { '@status': http.status }));
             }
           },
