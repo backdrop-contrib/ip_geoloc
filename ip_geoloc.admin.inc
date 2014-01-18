@@ -181,7 +181,7 @@ function ip_geoloc_diagnose() {
     drupal_set_message(t("The system access log currently contains entries from %ip_address_count IP addresses.", array('%ip_address_count' => $ip_address_count)), 'status', FALSE);
     if (!variable_get('statistics_enable_access_log', FALSE)) {
       drupal_set_message(t('The <strong>Statistics</strong> module is enabled, but its system <strong>access log</strong> is not. Therefore all visitor Views are frozen and will not grow. The visitor location map blocks are not affected and should still display. You can enable the <strong>access log</strong> at <a href="!url">Configuration >> Statistics</a>.',
-        array('!url' => url('/admin/config/system/statistics'))), 'warning');
+        array('!url' => url('admin/config/system/statistics'))), 'warning');
     }
     else {
       $non_synched_ips = ip_geoloc_ips_to_be_synched();
