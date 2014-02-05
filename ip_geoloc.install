@@ -135,7 +135,8 @@ function ip_geoloc_schema() {
       'ip_address' => array(
         'description' => 'IP address',
         'type'        => 'varchar',
-        'length'      => '32',
+        // Support ipv6 (64) as well as std IP (32) addresses.
+        'length'      => '64',
         'not null'    => TRUE,
       ),
       'latitude' => array(
