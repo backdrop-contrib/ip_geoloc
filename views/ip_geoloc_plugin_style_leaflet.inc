@@ -32,7 +32,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     $options['default_marker_color'] = array('default' => '');
     $options['default_marker_special_char'] = array('default' => '');
-    $options['center_option'] = array('default' => IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION);
+    $options['center_option'] = array('default' => 0);
     $options['empty_map_center'] = array('default' => '');
     $options['visitor_marker_color'] = array('default' => 'none');
     // The leaflet.module default.
@@ -267,7 +267,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $locations = ip_geoloc_plugin_style_extract_locations($this);
 
     $marker_color = $this->options['default_marker_color'];
-    $center_option = !isset($this->options['center_option']) ? IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION : $this->options['center_option'];
+    $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
     $marker_tooltip = $this->options['tooltips']['marker_tooltip'];
