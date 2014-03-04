@@ -10,10 +10,10 @@
         navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
       }
       else {
-        // Use the geo.js unified API. This covers the W3C Geolocation API as well
-        // as some specific devices like Palm and Blackberry.
+        // Use the geo.js unified API. This covers the W3C Geolocation API as
+        // well as some specific devices like Palm and Blackberry.
         var data = new Object;
-        if (typeof(geo_position_js) != 'object') {
+        if (typeof(geo_position_js) !== 'object') {
           data['error'] = Drupal.t('IPGV&M: device does not support W3C API and the unified geo_position_js device API is not loaded.');
           callback_php(callback_url, data, false);
           return;
@@ -36,15 +36,15 @@
           ip_geoloc_address['longitude'] = position.coords.longitude;
           ip_geoloc_address['accuracy']  = position.coords.accuracy;
 
-          if (status == google.maps.GeocoderStatus.OK) {
+          if (status === google.maps.GeocoderStatus.OK) {
             var google_address = response[0];
             ip_geoloc_address['formatted_address'] = google_address.formatted_address;
             for (var i = 0; i < google_address.address_components.length; i++) {
               var component = google_address.address_components[i];
-              if (component.long_name != null) {
+              if (component.long_name !== null) {
                 var type = component.types[0];
                 ip_geoloc_address[type] = component.long_name;
-                if (type == 'country' && component.short_name != null) {
+                if (type === 'country' && component.short_name !== null) {
                   ip_geoloc_address['country_code'] = component.short_name;
                 }
               }
@@ -92,8 +92,9 @@
           success: function () {
           },
           error: function (http) {
-            if (http.status > 0 && http.status != 200 && http.status != 404) {
-              // 404 happens when Clean URLs isn't enabled.
+            if (http.status > 0 && http.status !== 200 && http.status !== 404 && http.status !== 503) {
+              // 404 may happen intermittently and when Clean URLs isn't enabled
+              // 503 may happen intermittently, see [#2158847]
               alert(Drupal.t('IPGV&M: an HTTP error @status occurred.', { '@status': http.status }));
             }
           },
