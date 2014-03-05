@@ -20,10 +20,18 @@
           continue;
         }
         var divId = settings[m].ip_geoloc_multi_location_map_div;
+        var mapDiv = document.getElementById(divId);
+        if (!mapDiv) {
+          continue;
+        }
+        var mapOptions = settings[m].ip_geoloc_multi_location_map_options;
+        if (!mapOptions) {
+          alert(Drupal.t('IPGV&M: syntax error in Google map options.'));
+        }
+        maps[m] = new google.maps.Map(mapDiv, mapOptions);
+
         var locations     = ip_geoloc_locations[divId];
-        //var locations   = settings[m].ip_geoloc_locations;
         var visitorMarker = settings[m].ip_geoloc_multi_location_visitor_marker;
-        var mapOptions    = settings[m].ip_geoloc_multi_location_map_options;
         var centerOption  = settings[m].ip_geoloc_multi_location_center_option;
         var use_gps       = settings[m].ip_geoloc_multi_location_visitor_location_gps;
         var markerDirname = settings[m].ip_geoloc_multi_location_marker_directory;
@@ -31,9 +39,6 @@
         var markerHeight  = settings[m].ip_geoloc_multi_location_marker_height;
         var markerAnchor  = settings[m].ip_geoloc_multi_location_marker_anchor;
         var markerColor   = settings[m].ip_geoloc_multi_location_marker_default_color;
-
-        var mapDiv = document.getElementById(divId);
-        maps[m] = new google.maps.Map(mapDiv, mapOptions);
 
         // A map must have a type, a zoom and a center or nothing will show.
         if (!maps[m].getMapTypeId()) {
