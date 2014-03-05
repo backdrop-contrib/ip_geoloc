@@ -7,12 +7,11 @@
  * Reusable functions that may be called from other modules.
  */
 
+// Google's gears_init.js is now included at the top of geo.js
+//define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js');
+
 // Note: secure http was chosen, as plain http may cause warnings popping up in
 // environments using certificates.
-// Google's gears_init.js is now included at the top of geo.js
-// Size 15k uncompressed.
-define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js');
-define('IP_GEOLOC_JQUERY_BLOCK_UI', 'http://malsup.github.com/jquery.blockUI.js');
 // Size 5k.
 define('IP_GEOLOC_GOOGLE_MAPS', 'https://maps.googleapis.com/maps/api/js?sensor=false');
 // Size 5k.
@@ -150,9 +149,7 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
  */
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location',
     $map_options = NULL, $map_style = NULL, $latitude = NULL, $longitude = NULL, $info_text = NULL) {
-  $js_options = array('group' => JS_LIBRARY);
-  drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
+  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_current_loc.js');
 
   if (!isset($map_options)) {
@@ -264,9 +261,6 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     $center_option = 0, $center_latlng = array(0, 0), $visitor_location_gps = TRUE) {
 
   if ($visitor_location_gps) {
-    // End of life for the unified geo.js library. It slows things down and
-    // has become less relevant as all modern devices support the HTML5/W3C API
-    // drupal_add_js(IP_GEOLOC_GEO_JS, array('group' => JS_LIBRARY));
     drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
   }
   else {
@@ -374,11 +368,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  *       as in maintenance mode menu items are not available.
  */
 function ip_geoloc_get_current_location($menu_callback = 'js/ip_geoloc/current_location') {
-  $js_options = array('group' => JS_LIBRARY);
-  // End of life for the unified geo.js library. It slows things down and
-  // has become less relevant as all modern devices support the HTML5/W3C API
-  // drupal_add_js(IP_GEOLOC_GEO_JS, $js_options);
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, $js_options);
+  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
   $refresh_page = variable_get('ip_geoloc_page_refresh', FALSE) && !path_is_admin($_GET['q']);

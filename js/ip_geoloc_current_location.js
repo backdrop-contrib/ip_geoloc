@@ -10,20 +10,9 @@
         navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
       }
       else {
-        // Use the geo.js unified API. This covers the W3C Geolocation API as
-        // well as some specific devices like Palm and Blackberry.
-        var data = new Object;
-        if (typeof(geo_position_js) !== 'object') {
-          data['error'] = Drupal.t('IPGV&M: device does not support W3C API and the unified geo_position_js device API is not loaded.');
-          callback_php(callback_url, data, false);
-          return;
-        }
-        if (geo_position_js.init()) {
-          data['error'] = Drupal.t('IPGV&M cannot accurately determine visitor location. Browser does not support getCurrentPosition(): @browser', { '@browser': navigator.userAgent });
-          callback_php(callback_url, data, false);
-          return;
-        }
-        geo_position_js.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
+        data['error'] = Drupal.t('IPGV&M: device does not support W3C API.');
+        callback_php(callback_url, data, false);
+        return;
       }
 
       function getLocation(position) {
@@ -60,25 +49,9 @@
       }
 
       function handleLocationError(error) {
-        switch (error.code) {
-          case 1:
-            text = Drupal.t('user declined to share location');
-            break;
-
-          case 2:
-            text = Drupal.t('position unavailable (connection lost?)');
-            break;
-
-          case 3:
-            text = Drupal.t('timeout');
-            break;
-
-          default:
-            text = Drupal.t('unknown error');
-        }
         var data = new Object;
-        data['error'] = Drupal.t('getCurrentPosition() returned error !code: !text. @browser',
-          {'!code': error.code, '!text': text, '@browser': navigator.userAgent});
+        data['error'] = Drupal.t('getCurrentPosition() returned error !code: !text Browser: @browser',
+          {'!code': error.code, '!text': error.message, '@browser': navigator.userAgent});
         // Pass error back to PHP rather than alert();
         callback_php(callback_url, data, false);
       }

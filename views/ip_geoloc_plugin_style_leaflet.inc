@@ -299,6 +299,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     uasort($locations, '_ip_geoloc_plugin_style_leaflet_compare');
 
     $visitor_location = ip_geoloc_get_visitor_location();
+    if (!isset($visitor_location['latitude'])) {
+      $visitor_location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => ip_address()))->fetchAssoc();
+    }
+    
     if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
       $map['center'] = array(
         'lat' => $visitor_location['latitude'],

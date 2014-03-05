@@ -3,7 +3,7 @@
   Drupal.behaviors.addGMapMultiLocation = {
     attach: function (context, settings) {
 
-      if (typeof(google) != 'object') {
+      if (typeof(google) !== 'object') {
         // When not connected to Internet.
         return;
       }
@@ -58,14 +58,8 @@
 
         if (visitorMarker || centerOption === 2) {
           // Retrieve visitor's location, fall back on supplied location, if not found.
-          if (use_gps) {
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
-            }
-            else if (typeof(geo_position_js) === 'object' && geo_position_js.init()) {
-              // Use the unified API.
-              geo_position_js.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
-            }
+          if (use_gps && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
           }
           else {
             // Use supplied visitor lat/lng to center and set marker.
@@ -177,7 +171,7 @@
 
       // Fall back on IP address lookup, for instance when user declined to share location (error 1)
       function handlePositionError(error) {
-        //alert(Drupal.t('IPGV&M multi-location map: getCurrentPosition() returned error !code', {'!code': error.code}));
+        //alert(Drupal.t('IPGV&M multi-location map: getCurrentPosition() returned error: !msg', {'!msg': error.message}));
         var latLng = settings[0].ip_geoloc_multi_location_center_latlng;
         if (latLng) {
           handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
