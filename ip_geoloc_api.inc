@@ -314,16 +314,28 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   ip_geoloc_debug(t('- marker dimensions : w@w x h@h px, anchor: @a px',
     array('@w' => $marker_width, '@h' => $marker_height, '@a' => $marker_anchor)));
   ip_geoloc_debug(t('- @count locations found', array('@count' => count($locations))));
+
+  // Locations transferred to JS via the settings array aren't refreshed in
+  // AJAX contexts. That's why we are doing it this messy way. @todo: refactor.
+  print '<script>if (typeof(ip_geoloc_locations) == "undefined") { ip_geoloc_locations = new Array(); }';
+  print "ip_geoloc_locations['$div_id'] = [";
+
   foreach ($locations as $location) {
     $color = empty($location->marker_color) ? t('default') . " [$marker_color]" : $location->marker_color;
     $coords = isset($location->latitude) ? $location->latitude . ', ' . $location->longitude : '';
     $text = isset($location->balloon_text) ? $location->balloon_text : '';
     $msg = '- ' . t('marker') . " $color ($coords)<br/>$text<br/>";
     ip_geoloc_debug($msg);
+
+    print '{ "type":"point"' .
+      (empty($location->marker_color) ? '' : ', "marker_color":"' . $location->marker_color . '"') .
+      ', "latitude":' . $location->latitude .
+      ', "longitude":' . $location->longitude .
+      ', "balloon_text":\'' . $text . '\'},';
   }
+  print '];</script>';
 
   $settings = array(
-    'ip_geoloc_locations' => $locations,
     'ip_geoloc_multi_location_map_div' => $div_id,
     'ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options),
     'ip_geoloc_multi_location_center_option' => (int)$center_option,
