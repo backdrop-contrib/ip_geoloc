@@ -62,7 +62,7 @@
             if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
             }
-            else if (typeof(geo_position_js) == 'object' && geo_position_js.init()) {
+            else if (typeof(geo_position_js) === 'object' && geo_position_js.init()) {
               // Use the unified API.
               geo_position_js.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
             }
@@ -85,6 +85,7 @@
           new google.maps.Point((markerWidth / 2), markerAnchor));
 
         var center = null;
+        var bounds = new google.maps.LatLngBounds();
         for (var key in locations) {
           var br = locations[key].balloon_text.indexOf('<br/>');
           var mouseOverText = (br > 0) ? locations[key].balloon_text.substring(0, br) : locations[key].balloon_text.trim();
@@ -93,6 +94,7 @@
           }
 
           var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
+          bounds.extend(position);
           if (!center && centerOption === 1) {
             // If requested center map on the first location, if any.
             maps[m].setCenter(position);
@@ -113,6 +115,12 @@
           var balloonText = '<div class="balloon">' + locations[key].balloon_text + '</div>';
 
           addMarkerBalloon(maps[m], marker, balloonText);
+        }
+        if (centerOption === 3 && locations.length > 0) {
+          // Ensure that all markers are visible.
+      		maps[m].fitBounds(bounds);
+          // Now zoom
+          maps[m].panToBounds(bounds);
         }
        }
       });
