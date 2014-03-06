@@ -562,17 +562,16 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $view_id = $view->name;
   $display_id = $views_plugin_style->display->id;
 
+  if ($views_plugin_style->display->handler->is_defaulted('style_options')) {
+    $display_id = 'default';
+  }
+
   $differentiator = FALSE;
   if (!empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
     $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
     $differentiator_color_associations = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
     if (empty($differentiator_color_associations[$display_id])) {
-      if (!empty($differentiator_color_associations['default'])) {
-        $display_id = 'default';
-      }
-      if (empty($differentiator_color_associations[$display_id])) {
-        $differentiator_color_associations[$display_id] = array($differentiator => array());
-      }
+      $differentiator_color_associations[$display_id] = array($differentiator => array());
     }
   }
   $tooltip_field = FALSE;
