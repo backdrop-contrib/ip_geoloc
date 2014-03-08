@@ -335,7 +335,7 @@ function ip_geoloc_plugin_style_differentiator_color_associations_submit($form, 
       else {
         // Plain text field or plain taxonomy select.
         $differentiator_value = trim($association[$differentiator]);
-        if (!empty($differentiator_value)) {
+        if (!empty($differentiator_value) || $differentiator_value == 0) {
           $differentiator_color_associations[$display_id][$differentiator][$i]['differentiator_value'] = array($differentiator_value);
           $differentiator_color_associations[$display_id][$differentiator][$i]['color'] = $association['color'];
           $differentiator_color_associations[$display_id][$differentiator][$i]['special char'] = $association['special char'];
@@ -877,7 +877,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
         $differentiator_value = $view_args[$position];
       }
     }
-    elseif (!empty($row->{$differentiator})) {
+    elseif (isset($row->{$differentiator})) {
       $differentiator_value = $row->{$differentiator};
     }
     elseif (!empty($row->{'field_' . $differentiator})) {
@@ -904,7 +904,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
           '%diff' => $differentiator)), 'warning', FALSE);
       }
     }
-    if (!empty($differentiator_value)) {
+    if (!empty($differentiator_value) || $differentiator_value == 0) {
 
       foreach ($differentiator_color_associations as $association) {
         $match = TRUE;
@@ -996,8 +996,8 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       // set to the row, if required for the $differentiator or lat/lon that
       // have math expressions applied through the Views UI.
       // Examples:
-      //  role used as differentiator becomes 'views_rid'
-      //  Views result counter as differentiator becomes 'views_counter'
+      //  "User: Roles" used as differentiator becomes 'views_rid'
+      //  "Global: View result counter" as differentiator becomes 'views_counter'
       $special_field_id = 'views_' . $field_id;
       if (($special_field_id == $differentiator || $special_field_id == $latitude || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
         $row->{$special_field_id}[] = $field_value;
