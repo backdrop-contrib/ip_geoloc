@@ -563,7 +563,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   $display_id = $views_plugin_style->display->id;
 
   if ($views_plugin_style->display->handler->is_defaulted('style_options')) {
-    $display_id = 'default';
+    //$display_id = 'default';
   }
 
   $differentiator = FALSE;
@@ -981,7 +981,6 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
     return;
   }
   $views_plugin_style->rendered_fields = array();
-  $field_ids = array_keys($views_plugin_style->view->field);
   $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
   $latitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_latitude']);
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
@@ -989,14 +988,16 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   foreach ($views_plugin_style->view->result as $i => &$row) {
     // God knows why we need this...
     $views_plugin_style->view->row_index = $i;
-    foreach ($field_ids as $field_id) {
-      $field = $views_plugin_style->view->field[$field_id];
+    foreach ($views_plugin_style->view->field as $field_id => $field) {
       // theme() also renders the tokens that may be used in the balloon fields.
       $field_value = $field->theme($row);
 
       // Add the special 'views_' fields that normally aren't in the results
       // set to the row, if required for the $differentiator or lat/lon that
       // have math expressions applied through the Views UI.
+      // Examples:
+      //  role used as differentiator becomes 'views_rid'
+      //  Views result counter as differentiator becomes 'views_counter'
       $special_field_id = 'views_' . $field_id;
       if (($special_field_id == $differentiator || $special_field_id == $latitude || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
         $row->{$special_field_id}[] = $field_value;
@@ -1093,9 +1094,15 @@ function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE
   $fields = array('' => '<' . t('none') . '>');
   $field_handlers = $view_display->get_handlers('field');
   foreach ($field_handlers as $field_id => $field_handler) {
-    if ($with_table_prefixes && ($field_id != 'nid') && ($field_id != 'uid') && strpos($field_id, 'field_') === FALSE) {
-      // Example: 'title' becomes 'node_title'.
-      $field_id = $field_handler->table . "_$field_id";
+    if ($with_table_prefixes) {
+      if ($field_id == 'rid') {
+        // See ip_geoloc_plugin_style_render_fields().
+        $field_id = 'views_rid';
+      }
+      elseif (($field_id != 'nid') && ($field_id != 'uid') && strpos($field_id, 'field_') === FALSE) {
+        // Example: 'title' becomes 'node_title'.
+        $field_id = $field_handler->table . "_$field_id";
+      }
     }
     $fields[$field_id] = $field_handler->ui_name();
   }

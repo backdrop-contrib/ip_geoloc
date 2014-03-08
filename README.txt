@@ -23,9 +23,11 @@ Visit the IPGV&M configuration page to specify an alternative marker set. When
 using Leaflet you can superimpose Font Awesome font characters on top of your
 markers.
 
-The "Views PHP" module is required for some of the Views included with IPGV&M.
-Session Cache API and "High-performance Javascript callback handler" modules are
-optional, but recommended.
+The "Views PHP" module is required for the included /visitor-log View. The core
+module Statistics must be enabled also when you wish to collect visitor data.
+It is not required for maps in general. The "Session Cache API" and
+"High-performance Javascript callback handler" modules are optional, but
+recommended.
 
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you may want
@@ -185,9 +187,9 @@ sites/all/libraries/font-awesome/css/font-awesome.css
 
 UTILITY FUNCTIONS
 =================
-First of all, check out file ip_geoloc_api.inc for a number of useful utility
-functions for creating maps and markers, calculating distances between locations
-etc. All functions are documented and should be straightforward to use.
+Check out file ip_geoloc_api.inc for a number of useful utility functions for
+creating maps and markers, calculating distances between locations etc. All
+functions are documented and should be straightforward to use.
 
 HOOKS
 =====
@@ -196,19 +198,18 @@ See ip_geoloc.api.php
 HIGH PERFORMANCE AJAX
 =====================
 IPGV&M will take advantage of the "High-performance Javascript callback
-handler", if installed. Here are its installation instructions for Apache,
-in bullet form. For Nginx, see http://drupal.org/node/1876418
-
-o download and enable https://drupal.org/project/js (7.x-1.0-beta3 or later)
-o copy the file sites/all/modules/js/js.php to the document root, i.e where
-  index.php lives
+handler", if installed.
+Installation instructions for Nginx: http://drupal.org/node/1876418
+Installation instructions for Apache: 
+o download and enable https://drupal.org/project/js
+o find the .htacess in your document root, where your index.php lives
 o visit admin/config/system/js which displays a number of lines tailored for
   your server
-o copy those lines and paste them into the .htaccess file in the document-root,
-  immediately below the line "RewriteEngine on".
+o copy those lines and paste them into .htaccess below the line
+  "RewriteEngine on".
 
 IPGV&M will now perform its AJAX calls more efficiently. To switch this feature
-off, comment out the newly added lines from the .htaccess file (# in front).
+off, comment out the newly added lines from the .htaccess file (put # in front).
 
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================
