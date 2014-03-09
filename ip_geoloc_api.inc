@@ -311,23 +311,23 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
 
   // Locations transferred to JS via the settings array aren't refreshed in
   // AJAX contexts. That's why we are doing it this messy way. @todo: refactor.
-  print '<script>if (typeof(ip_geoloc_locations) == "undefined") { ip_geoloc_locations = new Array(); }';
-  print "ip_geoloc_locations['$div_id'] = [";
+  print "\n<script>\nif (typeof(ip_geoloc_locations) === 'undefined') {\n ip_geoloc_locations = new Array();\n}\n";
+  print "ip_geoloc_locations['$div_id'] = [\n";
 
   foreach ($locations as $location) {
-    $color = empty($location->marker_color) ? t('default') . " [$marker_color]" : $location->marker_color;
-    $coords = isset($location->latitude) ? $location->latitude . ', ' . $location->longitude : '';
-    $text = isset($location->balloon_text) ? $location->balloon_text : '';
-    $msg = '- ' . t('marker') . " $color ($coords)<br/>$text<br/>";
-    ip_geoloc_debug($msg);
-
+    $balloon_text = isset($location->balloon_text) ? str_replace("\n", '', $location->balloon_text) : '';
     print '{ "type":"point"' .
       (empty($location->marker_color) ? '' : ', "marker_color":"' . $location->marker_color . '"') .
       ', "latitude":' . $location->latitude .
       ', "longitude":' . $location->longitude .
-      ', "balloon_text":\'' . $text . '\'},';
+      ', "balloon_text":\'' . $balloon_text . '\'},';
+
+    $color = empty($location->marker_color) ? t('default') . " [$marker_color]" : $location->marker_color;
+    $coords = isset($location->latitude) ? $location->latitude . ', ' . $location->longitude : '';
+    $msg = '- ' . t('marker') . " $color ($coords)<br/>$balloon_text<br/>";
+    ip_geoloc_debug($msg);
   }
-  print '];</script>';
+  print "\n];\n</script>\n";
 
   $settings = array(
     'ip_geoloc_multi_location_map_div' => $div_id,
