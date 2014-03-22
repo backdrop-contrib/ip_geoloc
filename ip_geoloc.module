@@ -59,7 +59,7 @@ function ip_geoloc_library() {
   $libraries['ip_geoloc_font_awesome'] = array(
     'title' => 'IP Geolocation Views & Maps Font Awesome extension',
     'css' => array(
-      "$css_path/font-awesome.css" => array(
+      "$css_path/font-awesome.min.css" => array(
         'type' => 'file',
         'media' => 'screen',
       ),

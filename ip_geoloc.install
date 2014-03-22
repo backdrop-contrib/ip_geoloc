@@ -68,14 +68,16 @@ function ip_geoloc_requirements($phase) {
     $css_file = "$css_path/font-awesome.min.css";
   }
   if (file_exists($css_file)) {
-    $requirements['ip_geoloc_font_awesome']['value'] = $t('Installed');
+    $requirements['ip_geoloc_font_awesome']['value'] = $t('Font library installed at %css_file', array('%css_file' => $css_file));
     $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_OK;
   }
   else {
     $s1 = $t('%dir found, but required .css file not present: %file', array(
       '%dir' => $css_path, '%file' => $css_file)
     );
-    $s2 = $t('The optional <em>Font Awesome</em> directory was not found, so you will not be able to superimpose any Font Awesome symbols on top of your markers');
+    $s2 = $t('The optional <em>font-awesome</em> library directory was not found, so you will not be able to superimpose any Font Awesome symbols on top of your markers. See the <a href="@README">README</a> for instructions on downloading the Font Awesome library.', array(
+      '@README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'))
+    );
     $requirements['ip_geoloc_font_awesome']['value'] = $css_path ? $s1 : $s2;
     $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_WARNING;
   }

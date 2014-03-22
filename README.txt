@@ -21,7 +21,7 @@ You are now ready to map your View of Location, Geofield, Geolocation Field or
 GetLocations data and optionally center that map on the visitor's location.
 Visit the IPGV&M configuration page to specify an alternative marker set. When
 using Leaflet you can superimpose Font Awesome font characters on top of your
-markers.
+markers. See below for instructions on how to download the Font Awesome library.
 
 The "Views PHP" module is required for the included /visitor-log View. The core
 module Statistics must be enabled also when you wish to collect visitor data.
@@ -181,9 +181,10 @@ differentiator settings.
 =================================================================
 To install Font Awesome visit http://fortawesome.github.io/Font-Awesome and
 press the "Download" button. Unzip the downloaded file into the Drupal
-libraries directory, typically sites/all/libraries, so that the path to the
-essential style sheet becomes
-sites/all/libraries/font-awesome/css/font-awesome.css
+libraries directory, typically sites/all/libraries. Remove the version number
+from the directory name, so that the path to the essential style sheet becomes
+sites/all/libraries/font-awesome/css/font-awesome.min.css. Double-check via the
+Status Report page, .../admin/reports/status.
 
 UTILITY FUNCTIONS
 =================
