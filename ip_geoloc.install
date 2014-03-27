@@ -137,7 +137,9 @@ function ip_geoloc_schema() {
       'ip_address' => array(
         'description' => 'IP address',
         'type'        => 'varchar',
-        // Support ipv6 (64) as well as standard IP (32) addresses.
+        // Support IPv6 as well as standard IPv4 addresses, e.g. 
+        // 2001:0db8:0000:0000:0000:ff00:0042:8329
+        // http://en.wikipedia.org/wiki/IPv6
         'length'      => '64',
         'not null'    => TRUE,
       ),
@@ -236,12 +238,12 @@ function ip_geoloc_update_7125() {
   $spec = array(
     'description' => 'IP address',
     'type'        => 'varchar',
-    // Support ipv6 (64) as well as standard IP (32) addresses.
+    // Support IPv6 as well as standard IPv4 addresses.
     'length'      => '64',
     'not null'    => TRUE,
   );
   $index = array('indexes' => array('ip_address' => array('ip_address')));
   db_change_field('ip_geoloc', 'ip_address', 'ip_address', $spec, $index);
   //db_add_index('ip_geoloc', 'ip_address', array('ip_address'));
-  return t('ip_address column updated to hold 64 bits.');
+  return t('ip_address column updated.');
 }
