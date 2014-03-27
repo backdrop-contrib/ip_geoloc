@@ -56,7 +56,7 @@
             mapOptions.centerLng ? mapOptions.centerLng : 0));
         }
 
-        if (visitorMarker || centerOption === 2) {
+        if (visitorMarker || centerOption === 2 /* center on visitor */) {
           // Retrieve visitor's location, fall back on supplied location, if not found.
           if (use_gps && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
@@ -89,7 +89,7 @@
 
           var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
           bounds.extend(position);
-          if (!center && centerOption === 1) {
+          if (!center && centerOption === 1 /* center on 1st location */) {
             // If requested center map on the first location, if any.
             maps[m].setCenter(position);
             center = position;
@@ -110,11 +110,10 @@
 
           addMarkerBalloon(maps[m], marker, balloonText);
         }
-        if (centerOption === 3 && locations.length > 0) {
+        if ((centerOption === 2 || centerOption === 3) && locations.length > 0) {
           // Ensure that all markers are visible.
       		maps[m].fitBounds(bounds);
-          // Now zoom
-          maps[m].panToBounds(bounds);
+          //maps[m].panToBounds(bounds);
         }
        }
       });
