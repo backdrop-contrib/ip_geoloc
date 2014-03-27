@@ -13,9 +13,9 @@ Download and enable IPGV&M like any other module. Visit its
 configuration page, .../admin/config/system/ip_geoloc.
 If you intend to use IPGV&M's built-in interface to Google Maps, untick all
 "Data collection option" boxes.
-If you intend to use IPGV&M with the OpenLayers module and also wish to
-show and center on the visitor's HTML-5 retrieved location, then you do need to
-tick the first "Data collection option" and select applicable roles below it.
+If you intend to use IPGV&M with the OpenLayers or Leaflet modules and also wish
+to show and center on the visitor's HTML-5 retrieved location, then you DO need
+to tick the first "Data collection option" and select applicable roles below it.
 
 You are now ready to map your View of Location, Geofield, Geolocation Field or
 GetLocations data and optionally center that map on the visitor's location.
@@ -78,19 +78,18 @@ for free.
 1a. If you decide to employ Smart IP....
 Install and enable Smart IP. There is no need to enable the Device Geolocation
 submodule as IPGV&M already has that functionality, plus more. At
-Configuration >> Smart IP you'll find two options to upload historic lat/long
-data. The one using the IPinfoDB web service is probably the quickest. The API
-key required on the Smart IP configuration page is free and is sent to you
-immediately by return email after you have filled out the short form at
-http://ipinfodb.com/register.php. On the Smart IP configuration page perform an
-IP lookup to verify that the key is correct.
+Configuration >> Smart IP you'll find a number of source to upload historic
+lat/long data. Pick any of these. A low-cost option is to download
+http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz and
+uncompress it in /sites/default/private/smart_ip.
+You may untick all the check boxes under the heading "Smart IP settings" on
+the Configuration >> Smart IP page.
 
 1b. If you decide to employ GeoIP instead of Smart IP...
-Download and enable the module. Then download and uncompress
-http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz and place
-it in sites/all/libraries/geoip. Go to the GeoIP configuration page and type
-the name of the file you've just downloaded, GeoLiteCity.dat. Save. That should
-be it.
+Download and enable the module. Then download
+http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz and 
+uncompress it in sites/all/libraries/geoip. Go to the GeoIP configuration page
+and type the name of the file you've just downloaded, GeoLiteCity.dat. Save.
 
 2. With either Smart IP or GeoIP configured, visit Configuration >> IPGV&M.
 Tick the check boxes as appropriate.
@@ -102,7 +101,7 @@ of 10 most recent visitors" should now show more markers.
 
 4. Go back the Configuration >> IPGV&M and complete the import process
 with a larger batch size until the IP geolocation database is up to date with
-the access log. It will automatically remain in synch from now on.
+the access log. It will automatically remain in sync from now on.
 
 CONFIGURING YOUR VIEW TO DISPLAY AS A MAP
 =========================================
@@ -131,7 +130,7 @@ Don't forget to download the Leaflet javascript library from
 http://leafletjs.com/download.html dropping it in sites/all/libraries and
 changing the folder name to leaflet. Remember to install and enable the
 Libraries API module too.
-If all's ok, you won't see any errors in the Status Report, i.e.
+When all's ok, you won't see any errors in the Status Report, i.e.
 .../admin/reports/status.
 
 OPENLAYERS TIPS

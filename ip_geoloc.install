@@ -119,7 +119,7 @@ function ip_geoloc_uninstall() {
  * GeoIP City provides:
  *  TBA
  *
- * Googlee provides:
+ * Google provides:
  *  TBA
  *
  * Note: some of the varchar should be varbinary, see drupal.org/node/1793674
@@ -137,7 +137,7 @@ function ip_geoloc_schema() {
       'ip_address' => array(
         'description' => 'IP address',
         'type'        => 'varchar',
-        // Support ipv6 (64) as well as std IP (32) addresses.
+        // Support ipv6 (64) as well as standard IP (32) addresses.
         'length'      => '64',
         'not null'    => TRUE,
       ),
@@ -226,4 +226,22 @@ function ip_geoloc_schema() {
     ),
   );
   return $schema;
+}
+
+/**
+ * Allow for the storage of ipv6 as well as standard IP addresses.
+ */
+function ip_geoloc_update_7125() {
+  db_drop_index('ip_geoloc', 'ip_address');
+  $spec = array(
+    'description' => 'IP address',
+    'type'        => 'varchar',
+    // Support ipv6 (64) as well as standard IP (32) addresses.
+    'length'      => '64',
+    'not null'    => TRUE,
+  );
+  $index = array('indexes' => array('ip_address' => array('ip_address')));
+  db_change_field('ip_geoloc', 'ip_address', 'ip_address', $spec, $index);
+  //db_add_index('ip_geoloc', 'ip_address', array('ip_address'));
+  return t('ip_address column updated to hold 64 bits.');
 }
