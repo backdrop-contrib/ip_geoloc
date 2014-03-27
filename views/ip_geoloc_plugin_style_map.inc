@@ -54,9 +54,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
 
     $form['map_options'] = array(
       '#title' => t('Map options'),
-      '#type' => 'textfield',
-      '#size' => 127,
-      '#maxlength' => 511,
+      '#type' => 'textarea',
+      '#size' => 3,
       '#default_value' => $this->options['map_options'],
       '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2. A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your (double) quotes match.<br/>These options apply a grey hue to all roads:<br/>%example_options", array(
         '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
