@@ -9,7 +9,7 @@
  * Implments hook_enable().
  */
 function ip_geoloc_generator_enable() {
-  drupal_set_message(t('Geolocation Generator is now enabled. Proceed to the <a href="@config_page">configuration page</a> to generate locations.', array(
+  drupal_set_message(t('Geolocation Generator is now enabled. Proceed to the <a href="!config_page">configuration page</a> to generate locations.', array(
     '!config_page' => url('admin/config/system/ip_geolocation_generator'),
   )));
 }

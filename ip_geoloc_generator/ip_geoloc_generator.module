@@ -37,7 +37,7 @@ function ip_geoloc_generator_ip_geoloc_marker_locations_alter(&$marker_locations
   }
 
   $range_lat = variable_get('ip_geoloc_generator_range_lat', 0.02);
-  $range_lon = variable_get('ip_geoloc_generator_range_lon', 0.08);
+  $range_lon = variable_get('ip_geoloc_generator_range_lon', 0.12);
 
   $no_points  = variable_get('ip_geoloc_generator_no_points', 10);
   for ($i = 1; $i <= $no_points; $i++) {
@@ -89,7 +89,7 @@ function ip_geoloc_generator_settings_form($form, &$form_state) {
   $form['generation_pars']['ip_geoloc_generator_range_lon'] = array(
     '#type' => 'textfield',
     '#title' => t('Longitude range'),
-    '#default_value' => variable_get('ip_geoloc_generator_range_lon', 0.04),
+    '#default_value' => variable_get('ip_geoloc_generator_range_lon', 0.12),
     '#field_suffix' => t('degrees'),
     '#description' => t(''),
   );
@@ -105,6 +105,9 @@ function ip_geoloc_generator_settings_form($form, &$form_state) {
       if (isset($display->display_options['style_plugin']) &&
         in_array($display->display_options['style_plugin'], array('ip_geoloc_map', 'ip_geoloc_leaflet', 'ip_geoloc_openlayers'))) {
         $options[$view->name] = $view_name;
+        if (views_view_is_disabled($view)) {
+           $options[$view->name] .= ' [' . t('disabled') . ']';
+        }
         break;
       }
     }
@@ -112,6 +115,7 @@ function ip_geoloc_generator_settings_form($form, &$form_state) {
   $form['generation_views']['ip_geoloc_generator_views'] = array(
     '#type' => 'select',
     '#multiple' => TRUE,
+    '#size' => min(10, count($options)),
     '#title' => t('Views to add locations to'),
     '#options' => $options,
     '#default_value' => variable_get('ip_geoloc_generator_views', array('')),
@@ -135,4 +139,3 @@ function ip_geoloc_generator_menu() {
   );
   return $items;
 }
-
