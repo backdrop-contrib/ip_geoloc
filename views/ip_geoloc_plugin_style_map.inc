@@ -40,6 +40,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['map_options'] = array('default' => '');
     $options['map_div_style'] = array('default' => '');
     $options['empty_map_center'] = array('default' => '');
+    $options['open_balloons'] = array('default' => '');
     return $options;
   }
 
@@ -94,6 +95,15 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#weight' => 95,
     );
 
+    $form['open_balloons'] = array(
+      '#title' => t('Marker balloons to open on initial display'),
+      '#type' => 'textfield',
+      '#default_value' => $this->options['open_balloons'],
+      '#description' => t("Comma-separated list of numbers of markers that have their info balloons opened upon initial display of the map. <br/>The first marker has number 1. You may use <strong>&lt;@last&gt;</strong> to indicate the last marker among the view results.", array(
+        '@last' => t('last')
+      )),
+      '#weight' => 115,
+    );
   }
 
   /**
@@ -114,6 +124,15 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
 
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
+    
+    $open_balloon_nos = array();
+    $t_last = '<' . t('last') .'>';
+    foreach (explode(',', $this->options['open_balloons']) as $no) {
+      $open_balloon_nos[] = (trim($no) == $t_last ? count($locations) - 1 : (int)$no - 1);
+    }
+    foreach ($locations as $key => $location) {
+      $location->open = in_array($key, $open_balloon_nos);
+    }
 
     $map_options = empty($this->options['map_options']) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $this->options['map_options'];
     $map_div_style = empty($this->options['map_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : check_plain($this->options['map_div_style']);

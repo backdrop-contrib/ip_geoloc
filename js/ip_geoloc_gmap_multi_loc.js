@@ -15,7 +15,7 @@
       $(settings, context).each(function() {
 
        for (var m in settings) {
-        
+
         if (isNaN(m)) {
           continue;
         }
@@ -107,12 +107,15 @@
           var marker = new google.maps.Marker({ map: maps[m], icon: pinImage, /*shadow: shadowImage,*/ position: position, title: mouseOverText });
 
           var balloonText = '<div class="balloon">' + locations[key].balloon_text + '</div>';
-
           addMarkerBalloon(maps[m], marker, balloonText);
+
+          if (locations[key].open) {
+            new google.maps.InfoWindow({content: balloonText, maxWidth: 200}).open(maps[m], marker);
+          }
         }
         if ((centerOption === 2 || centerOption === 3) && locations.length > 0) {
-          // Ensure that all markers are visible.
-      		maps[m].fitBounds(bounds);
+          // Ensure that all markers are visible on the initial map.
+          maps[m].fitBounds(bounds);
           //maps[m].panToBounds(bounds);
         }
        }
@@ -139,10 +142,9 @@
         google.maps.event.addListener(marker, 'click', function(event) {
           new google.maps.InfoWindow({
             content: infoText,
-            position: event.latLng,
             // See [#1777664].
             maxWidth: 200
-          }).open(map);
+          }).open(map, marker);
         });
       }
 
