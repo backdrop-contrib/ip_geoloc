@@ -113,8 +113,8 @@
             new google.maps.InfoWindow({content: balloonText, maxWidth: 200}).open(maps[m], marker);
           }
         }
-        if ((centerOption === 2 || centerOption === 3) && locations.length > 0) {
-          // Ensure that all markers are visible on the initial map.
+        if ((/*centerOption === 2 ||*/centerOption === 3) && locations.length > 0) {
+          // Auto-box: ensure that all markers are visible on the initial map.
           maps[m].fitBounds(bounds);
           //maps[m].panToBounds(bounds);
         }
