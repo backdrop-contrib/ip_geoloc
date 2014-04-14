@@ -10,6 +10,7 @@
       // Create map as a global, see [#1954876].
       // As we can have multiple maps on the same page, this is now an array.
       maps = [];
+      mapBounds = [];
       var imageExt = '.png';
 
       $(settings, context).each(function() {
@@ -29,7 +30,17 @@
           alert(Drupal.t('IPGV&M: syntax error in Google map options.'));
         }
         maps[m] = new google.maps.Map(mapDiv, mapOptions);
-
+        // A map must have a type, a zoom and a center or nothing will show.
+        if (!maps[m].getMapTypeId()) {
+          maps[m].setMapTypeId(google.maps.MapTypeId.ROADMAP);
+        }
+        if (!maps[m].getZoom()) {
+          maps[m].setZoom(1);
+        }
+        // Check for the special non-Google fixed-center option we provide.
+        if (mapOptions.centerLat && mapOptions.centerLng) {
+          maps[m].setCenter(new google.maps.LatLng(mapOptions.centerLat, mapOptions.centerLng));
+        }
         var locations     = ip_geoloc_locations[divId];
         var visitorMarker = settings[m].ip_geoloc_multi_location_visitor_marker;
         var centerOption  = settings[m].ip_geoloc_multi_location_center_option;
@@ -39,37 +50,7 @@
         var markerHeight  = settings[m].ip_geoloc_multi_location_marker_height;
         var markerAnchor  = settings[m].ip_geoloc_multi_location_marker_anchor;
         var markerColor   = settings[m].ip_geoloc_multi_location_marker_default_color;
-
-        // A map must have a type, a zoom and a center or nothing will show.
-        if (!maps[m].getMapTypeId()) {
-          maps[m].setMapTypeId(google.maps.MapTypeId.ROADMAP);
-        }
-        if (!maps[m].getZoom()) {
-          maps[m].setZoom(1);
-        }
-        if (centerOption !== 1 || locations.length === 0) {
-          // If no center override option was specified or as a fallback where
-          // the user declines to share their location, we set the center based
-          // on the mapOptions. Without a center there won't be a map!
-          maps[m].setCenter(new google.maps.LatLng(
-            mapOptions.centerLat ? mapOptions.centerLat : 0,
-            mapOptions.centerLng ? mapOptions.centerLng : 0));
-        }
-
-        if (visitorMarker || centerOption === 2 /* center on visitor */) {
-          // Retrieve visitor's location, fall back on supplied location, if not found.
-          if (use_gps && navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
-          }
-          else {
-            // Use supplied visitor lat/lng to center and set marker.
-            var latLng = settings[m].ip_geoloc_multi_location_center_latlng;
-            if (latLng) {
-              handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
-            }
-          }
-        }
-
+        
         var defaultPinImage = !markerColor ? null : new google.maps.MarkerImage(
           markerDirname + '/' + markerColor + imageExt,
           new google.maps.Size(markerWidth, markerHeight),
@@ -79,7 +60,7 @@
           new google.maps.Point((markerWidth / 2), markerAnchor));
 
         var center = null;
-        var bounds = new google.maps.LatLngBounds();
+        mapBounds[m] = new google.maps.LatLngBounds();
         for (var key in locations) {
           var br = locations[key].balloon_text.indexOf('<br/>');
           var mouseOverText = (br > 0) ? locations[key].balloon_text.substring(0, br) : locations[key].balloon_text.trim();
@@ -88,9 +69,8 @@
           }
 
           var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
-          bounds.extend(position);
+          mapBounds[m].extend(position);
           if (!center && centerOption === 1 /* center on 1st location */) {
-            // If requested center map on the first location, if any.
             maps[m].setCenter(position);
             center = position;
           }
@@ -113,10 +93,24 @@
             new google.maps.InfoWindow({content: balloonText, maxWidth: 200}).open(maps[m], marker);
           }
         }
-        if ((/*centerOption === 2 ||*/centerOption === 3) && locations.length > 0) {
+        if (centerOption === 3 && locations.length > 0) {
           // Auto-box: ensure that all markers are visible on the initial map.
-          maps[m].fitBounds(bounds);
-          //maps[m].panToBounds(bounds);
+          maps[m].fitBounds(mapBounds[m]);
+          //maps[m].panToBounds(mapBounds[m]);
+        }
+
+        if (visitorMarker || centerOption === 2 /* center on visitor */ || centerOption === 6 /* auto-box incl. visitor*/) {
+          // Retrieve visitor's location, fall back on supplied location, if not found.
+          if (use_gps && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(handleMapCenterAndVisitorMarker1, handlePositionError, {enableHighAccuracy: true});
+          }
+          else {
+            // No HTML5 retrieval: use supplied visitor lat/lng.
+            var latLng = settings[m].ip_geoloc_multi_location_center_latlng;
+            if (latLng) {
+              handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
+            }
+          }
         }
        }
       });
@@ -129,11 +123,17 @@
       function handleMapCenterAndVisitorMarker2(latitude, longitude) {
         var visitorPosition = new google.maps.LatLng(latitude, longitude);
         for (var m in maps) {
+          if (isNaN(m)) continue;
+          if (settings[m].ip_geoloc_multi_location_visitor_marker) {
+            showSpecialMarker(m, visitorPosition, Drupal.t('Your approximate location (' + latitude + ', ' + longitude + ')'));
+          }
           if (settings[m].ip_geoloc_multi_location_center_option === 2) {
             maps[m].setCenter(visitorPosition);
           }
-          if (settings[m].ip_geoloc_multi_location_visitor_marker) {
-            showSpecialMarker(m, visitorPosition, Drupal.t('Your approximate location (' + latitude + ', ' + longitude + ')'));
+          else if (settings[m].ip_geoloc_multi_location_center_option === 6) {
+            // Autobox including visitor location.
+            mapBounds[m].extend(visitorPosition);
+            maps[m].fitBounds(mapBounds[m]);
           }
         }
       }
@@ -170,12 +170,20 @@
         addMarkerBalloon(maps[m], specialMarker, mouseOverText);
       }
 
-      // Fall back on IP address lookup, for instance when user declined to share location (error 1)
+      // Fall back on IP address lookup, for instance when user declined to share location.
       function handlePositionError(error) {
-        //alert(Drupal.t('IPGV&M multi-location map: getCurrentPosition() returned error: !msg', {'!msg': error.message}));
         var latLng = settings[0].ip_geoloc_multi_location_center_latlng;
         if (latLng) {
           handleMapCenterAndVisitorMarker2(latLng[0], latLng[1]);
+        }
+        else {
+          for (var m in maps) {
+            // If centering involving the visitor location was requested, but we
+            // don't have one, then auto-box the remaining markers.
+            if (settings[m].ip_geoloc_multi_location_center_option === 2 || settings[m].ip_geoloc_multi_location_center_option === 6) {
+              maps[m].fitBounds(mapBounds[m]);
+            }
+          }
         }
       }
     }

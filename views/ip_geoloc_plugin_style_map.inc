@@ -53,6 +53,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $form_state['renderer'] = 'google';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
 
+    unset($form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_OF_LOCATIONS]);
+    $form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_ON_VISITOR_AND_LOCATIONS] =  t('Auto-box and zoom to fit all locations, including the visitor location.');
+    $form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_OF_LOCATIONS] =  t('Auto-box and zoom to fit all locations, except for the visitor location, but display it if requested below.');
+
     $form['map_options'] = array(
       '#title' => t('Map options'),
       '#type' => 'textarea',
@@ -99,7 +103,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#title' => t('Marker balloons to open on initial display'),
       '#type' => 'textfield',
       '#default_value' => $this->options['open_balloons'],
-      '#description' => t("Comma-separated list of numbers of markers that have their info balloons opened upon initial display of the map. <br/>The first marker has number 1. You may use <strong>&lt;@last&gt;</strong> to indicate the last marker among the view results.", array(
+      '#description' => t("Comma-separated list of numbers of markers that have their info balloons opened upon initial display of the map. <br/>The first marker has number 1. You may use <strong>&lt;@last&gt;</strong> to indicate the last marker among the view results. <br>Note that opening a marker balloon may cause the map to pan.", array(
         '@last' => t('last')
       )),
       '#weight' => 115,
@@ -126,7 +130,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $locations = ip_geoloc_plugin_style_extract_locations($this);
     
     $open_balloon_nos = array();
-    $t_last = '<' . t('last') .'>';
+    $t_last = '<' . t('last') . '>';
     foreach (explode(',', $this->options['open_balloons']) as $no) {
       $open_balloon_nos[] = (trim($no) == $t_last ? count($locations) - 1 : (int)$no - 1);
     }

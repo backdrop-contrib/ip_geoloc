@@ -112,7 +112,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
 
     $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
-    unset($form['center_option']['#description']);
 
     $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE);
     $form['tooltips'] = array(
