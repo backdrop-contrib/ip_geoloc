@@ -7,11 +7,8 @@
  * Reusable functions that may be called from other modules.
  */
 
-// Google's gears_init.js is now included at the top of geo.js
-//define('IP_GEOLOC_GEO_JS', 'https://geo-location-javascript.googlecode.com/svn/trunk/js/geo.js');
-
 // Note: secure http was chosen, as plain http may cause warnings popping up in
-// environments using certificates.
+// environments using certificates. Alternatively headless may work?
 // Size 5k.
 define('IP_GEOLOC_GOOGLE_MAPS', 'https://maps.googleapis.com/maps/api/js?sensor=false');
 // Size 5k.
@@ -444,15 +441,16 @@ function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = F
  *
  * @param string|double $latitude
  *   e.g. "-37.87" or -37.87
- *
  * @param string|double $longitude
  *   e.g. "144.98" or 144.98
+ * @param string $lang
+ *   optional language specification as a two-letter code, e.g. 'ja' (Japanese).
  *
  * @return string
  *   Formatted address component as received from Google or empty string.
  */
-function ip_geoloc_get_address($latitude, $longitude) {
-  return $google_address = ip_geoloc_reverse_geocode($latitidue, $longitude) ? $google_address['formatted_address'] : '';
+function ip_geoloc_get_address($latitude, $longitude, $lang = NULL) {
+  return $google_address = ip_geoloc_reverse_geocode($latitude, $longitude, $lang) ? $google_address['formatted_address'] : '';
 }
 
 /**
@@ -469,20 +467,24 @@ function ip_geoloc_get_address($latitude, $longitude) {
  *
  * @param string|double $latitude
  *   e.g. "-37.87" or -37.87
- *
  * @param string|double $longitude
  *   e.g. "144.98" or 144.98
+ * @param string $lang
+ *   optional language specification as a two-letter code, e.g. 'ja' (Japanese).
  *
  * @return array|bool
  *   Array of address components as received from Google or FALSE.
  */
-function ip_geoloc_reverse_geocode($latitude, $longitude) {
+function ip_geoloc_reverse_geocode($latitude, $longitude, $lang = NULL) {
   if (empty($latitude) || empty($latitude)) {
     drupal_set_message(t('IPGV&M: cannot reverse-geocode to address as no lat/long was specified.'), 'warning');
     return FALSE;
   }
   $query_start = microtime(TRUE);
   $url = IP_GEOLOC_GOOGLE_MAPS_SERVER . "&latlng=$latitude,$longitude";
+  if (!empty($lang)) {
+    $url .= "&language=$lang";
+  }
   $response = drupal_http_request($url);
   if (!empty($response->error)) {
     $msg_args = array(
