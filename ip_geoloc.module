@@ -153,6 +153,13 @@ function ip_geoloc_init() {
 
   $reverse_geocode_client_timeout = ip_geoloc_reverse_geocode_timeout();
 
+  if (!empty($location['fixed_address'])) {
+    if ($reverse_geocode_client_timeout) {
+      ip_geoloc_debug('IPGV&M: not instigating service to locate current position, as user has typed an address.');
+    }
+    return;
+  }
+
   // Sample location when due or when a reverse-geocode timeout is detected.
   if (_ip_geoloc_check_location($location) || $reverse_geocode_client_timeout) {
 
@@ -284,8 +291,10 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
         $location['ip_address'] = ip_address();
       }
       // See also: ip_geoloc_smart_ip_get_location_alter().
+      $fixed_address = !empty($location['fixed_address']);
       $location = smart_ip_get_location($location['ip_address']);
       $location['provider'] = 'smart_ip';
+      $location['fixed_address'] = $fixed_address;
       return TRUE;
     }
     ip_geoloc_debug(t('IPGV&M: Smart IP configured as a backup, but is not enabled.'));
@@ -656,7 +665,7 @@ function ip_geoloc_debug($message, $type = 'status') {
     $user_name = drupal_strtolower(trim($user_name));
     $match = isset($user->name) ? $user_name == drupal_strtolower(trim($user->name)) : ($user_name == 'anon' || $user_name == 'anonymous');
     if ($match) {
-      drupal_set_message($message, $type);
+      drupal_set_message($message, $type, FALSE);
       return;
     }
   }

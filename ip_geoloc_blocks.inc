@@ -163,7 +163,7 @@ function ip_geoloc_block_view($delta = '') {
       break;
 
     case 'geocode_address':
-      $block['subject'] = t('Refine your location');
+      $block['subject'] = t('Set my location');
       $block['content'] = drupal_get_form('ip_geoloc_geocode_address');
       break;
 
@@ -261,28 +261,47 @@ function ip_geoloc_address_lookup($form, &$form_state) {
 /**
  * Generates a simple form for collecting the address to be geocoded.
  *
+ * The value of the 'fixed_address' radio-button is stored on the location, as
+ * stored on the session.
+ *
  * @ingroup forms
  */
 function ip_geoloc_geocode_address($form, &$form_state) {
 
   $location = ip_geoloc_get_visitor_location();
+
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
 
-  $form['street_address'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Current approximate address'),
-    '#default_value' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
-    '#disabled' => !$is_address_editable,
-  );
+  $options = array(0 => t('to where I am now'));
+  if ($is_address_editable) {
+    $options[1] = t('to what I type below');
+  }
+  $is_address_fixed = $is_address_editable ? !empty($location['fixed_address']) : FALSE;
+
   if ($is_address_editable) {
     $form['fixed_address'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Fix my location at this address'),
-      '#default_value' => !empty($location['fixed_address']),
+      '#type' => 'radios',
+      //'#title' => t('Set my location'),
+      '#options' => $options,
+      '#default_value' => (int) $is_address_fixed,
     );
+  }
+  $form['street_address'] = array(
+    '#type' => 'textarea',
+    '#rows' => 2,
+    //'#title' => t('Approximate address'),
+    '#default_value' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
+    '#disabled' => !$is_address_editable || !$is_address_fixed,
+    '#states' => array(
+      'enabled' => array(
+        'input[name="fixed_address"]' => array('value' => 1),
+      ),
+    ),
+  );
+  if ($is_address_editable) {
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Submit'),
+      '#value' => t('Set location'),
       '#submit' => array('ip_geoloc_geocode'),
     );
   }
@@ -311,9 +330,10 @@ function ip_geoloc_lookup($form, &$form_state) {
 }
 
 /**
- * Geocode, using the Geocoder API, the submitted street address.
+ * Geocode the submitted street address, using the Geocoder API.
  *
- * Stores the geocoded lat/long on the session.
+ * Stores the geocoded lat/long and address info on the session.
+ *
  * Modules may implement their own variations by implementing hook_form_alter()
  * and appending their own handler to $form['#submit'].
  *
@@ -326,11 +346,14 @@ function ip_geoloc_geocode($form, &$form_state) {
 
   $location = _ip_geoloc_get_session_value('location');
 
-  // Only Geocde when the "Fix my location at this address" was not ticked or
-  // has just been ticked.
-  if (empty($form_state['values']['fixed_address']) || empty($location['fixed_address'])) {
+  // Only Geocode when "to what I type" radio button was ticked on submission.
+  // If not ticked, we wait for the next HTML5 location update to come in.
+  if (!empty($form_state['values']['fixed_address'])) {
 
     $entered_address = trim($form_state['values']['street_address']);
+    if (empty($entered_address)) {
+      $entered_address = trim($form_state['input']['street_address']);
+    }
     if (empty($entered_address)) {
       $location = array(
         'provider' => 'user',
@@ -369,6 +392,6 @@ function ip_geoloc_geocode($form, &$form_state) {
   $location['fixed_address'] = !empty($form_state['values']['fixed_address']);
   _ip_geoloc_set_session_value('location', $location);
 
-  // Form always uses location from session.
+  // Form always fills out location from session, so no need to remember it.
   $form_state['rebuild'] = FALSE;
 }
