@@ -22,7 +22,7 @@ function ip_geoloc_block_info() {
     'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['geocode_address'] = array(
-    'info' => t('Set visitor location (by address, geo-taxonomy or GPS/WiFi'),
+    'info' => t('Set visitor location (by address, geo-taxonomy or GPS/WiFi)'),
     'cache' => DRUPAL_NO_CACHE,
   );
   return $blocks;
@@ -43,6 +43,15 @@ function ip_geoloc_block_configure($delta = '') {
       '#default_value' => variable_get('ip_geoloc_visitor_address_editable', TRUE),
       '#description' => t('If ticked the visitor may tweak and re-submit their reverse-geocoded address. It will be geocoded to lat/long to become their new location.<br/>If not ticked, this field simply displays the current reverse-geocoded address, without a submit button.'),
     );
+
+    $form['ip_geoloc_visitor_address_default'] = array(
+      '#type' => 'textarea',
+      '#rows' => 3,
+      '#title' => t('Default partial address'),
+      '#default_value' => variable_get('ip_geoloc_visitor_address_default', ''),
+      '#description' => t("You may use this to pre-populate the visitor address box with, say, a country, so that both user and geocoding service have a context to the partial address entered. You may use comma's, newlines and blank lines if you wish."),
+    );
+
     $description = t('The region selector allows the visitor to zoom-in on a geographical area, such as a province or country, picked from a drop-down. The drop-down is populated with the terms of a taxonomy vocabulary that has a <a target="geofield" href="@url">Geofield</a>.', array(
       '@url' => url('http://drupal.org/project/geofield'),
     ));
@@ -127,6 +136,7 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
   }
   if ($delta == 'geocode_address') {
     variable_set('ip_geoloc_visitor_address_editable', $edit['ip_geoloc_visitor_address_editable']);
+    variable_set('ip_geoloc_visitor_address_default', $edit['ip_geoloc_visitor_address_default']);
     variable_set('ip_geoloc_geo_vocabulary_id', $edit['ip_geoloc_geo_vocabulary_id']);
     return;
   }
@@ -295,10 +305,9 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $location = ip_geoloc_get_visitor_location();
 
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
-  $geo_vocabulary_id = (int) variable_get('ip_geoloc_geo_vocabulary_id', 0);
+  $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
   
-  $options = array();
-  $options[0] = t('to where I am now');
+  $options = array(0 => t('to where I am now'));
   if ($is_address_editable) {
     $options[1] = t('to what I type below');
   }
@@ -325,25 +334,20 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       '#options' => $regions,
       '#default_value' => isset($location['region']) ? $location['region'] : 0,
       '#states' => array(
-        'visible' => array(
-          'input[name="fixed_address"]' => array('value' => 2),
-        ),
+        'visible' => array('input[name="fixed_address"]' => array('value' => 2)),
       ),
     );
   }
+  $default_address = filter_xss(variable_get('ip_geoloc_visitor_address_default', ''));
   $form['street_address'] = array(
     '#type' => 'textarea',
     '#rows' => 2,
     //'#title' => t('Approximate address'),
-    '#default_value' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
+    '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
     '#disabled' => !$is_address_editable || empty($location['fixed_address']) ,
     '#states' => array(
-      'enabled' => array(
-        'input[name="fixed_address"]' => array('value' => 1),
-      ),
-      'invisible' => array(
-        'input[name="fixed_address"]' => array('value' => 2),
-      ),
+      'enabled' => array('input[name="fixed_address"]' => array('value' => 1)),
+      'invisible' => array('input[name="fixed_address"]' => array('value' => 2)),
     ),
   );
   if ($is_address_editable || $geo_vocabulary_id) {
@@ -401,9 +405,9 @@ function ip_geoloc_geocode($form, &$form_state) {
       $location = ip_geoloc_get_location_from_term($form_state['values']['region']);
     }
     else {
-      $entered_address = trim($form_state['values']['street_address']);
+      $entered_address = $form_state['values']['street_address'];
       if (empty($entered_address)) {
-        $entered_address = trim($form_state['input']['street_address']);
+        $entered_address = $form_state['input']['street_address'];
       }
       if (empty($entered_address)) {
         $location = array(
