@@ -22,7 +22,7 @@ function ip_geoloc_block_info() {
     'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['geocode_address'] = array(
-    'info' => t('Refine location via street address'),
+    'info' => t('Set visitor location (by address, geo-taxonomy or GPS/WiFi'),
     'cache' => DRUPAL_NO_CACHE,
   );
   return $blocks;
@@ -41,7 +41,30 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'checkbox',
       '#title' => t('Address editable'),
       '#default_value' => variable_get('ip_geoloc_visitor_address_editable', TRUE),
-      '#description' => t('If ticked the visitor may tweak and re-submit their address. It will be geocoded to lat/long to become their new location.<br/>If not ticked, this field simply displays the current reverse-geocoded address, without a submit button.'),
+      '#description' => t('If ticked the visitor may tweak and re-submit their reverse-geocoded address. It will be geocoded to lat/long to become their new location.<br/>If not ticked, this field simply displays the current reverse-geocoded address, without a submit button.'),
+    );
+    $description = t('The region selector allows the visitor to zoom-in on a geographical area, such as a province or country, picked from a drop-down. The drop-down is populated with the terms of a taxonomy vocabulary that has a <a target="geofield" href="@url">Geofield</a>.', array(
+      '@url' => url('http://drupal.org/project/geofield'),
+    ));
+    $vocabularies = array();
+    foreach (taxonomy_get_vocabularies() as $vid => $vocabulary) {
+      foreach (field_info_instances('taxonomy_term', $vocabulary->machine_name) as $field_name => $field) {
+        $field_info = field_info_field($field_name);
+        if ($field_info['type'] == 'geofield') {
+          $vocabularies[$vid] = $vocabulary->name;
+          break;
+        }
+      }
+    }
+    if (empty($vocabularies)) {
+      $description .= '<br/>' . t('You do not appear to have any vocabularies on which a Geofield is defined. You cannot enable this feature until you do.');
+    }
+    $form['ip_geoloc_geo_vocabulary_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Add a region selector'),
+      '#options' => array(0 => '--' . t('None') . '--') + $vocabularies,
+      '#default_value' => variable_get('ip_geoloc_geo_vocabulary_id', 0),
+      '#description' => $description,
     );
     return $form;
   }
@@ -104,6 +127,7 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
   }
   if ($delta == 'geocode_address') {
     variable_set('ip_geoloc_visitor_address_editable', $edit['ip_geoloc_visitor_address_editable']);
+    variable_set('ip_geoloc_geo_vocabulary_id', $edit['ip_geoloc_geo_vocabulary_id']);
     return;
   }
   // Save options common to all maps.
@@ -136,8 +160,8 @@ function ip_geoloc_block_view($delta = '') {
         'map_style' => $map_style,
         // Lat,Lon NULL values will instigate HTML5 position retrieval. The
         // user will be prompted by the browser to give permission.
-        'latitude'  => isset($location['latitude']) ? (float)$location['latitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
-        'longitude' => isset($location['longitude']) ? (float)$location['longitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
+        'latitude'  => isset($location['latitude']) ? (float) $location['latitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
+        'longitude' => isset($location['longitude']) ? (float) $location['longitude'] : (empty($location['fixed_address']) ? NULL : 0.0),
         'info_text' => isset($location['formatted_address']) ? $location['formatted_address'] : NULL,
       ));
       break;
@@ -271,19 +295,40 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $location = ip_geoloc_get_visitor_location();
 
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
-
-  $options = array(0 => t('to where I am now'));
+  $geo_vocabulary_id = (int) variable_get('ip_geoloc_geo_vocabulary_id', 0);
+  
+  $options = array();
+  $options[0] = t('to where I am now');
   if ($is_address_editable) {
     $options[1] = t('to what I type below');
   }
-  $is_address_fixed = $is_address_editable ? !empty($location['fixed_address']) : FALSE;
+  if ($geo_vocabulary_id) {
+    $options[2] = t('to the selected region');
+  }
 
-  if ($is_address_editable) {
+  if ($is_address_editable || $geo_vocabulary_id) {
     $form['fixed_address'] = array(
       '#type' => 'radios',
       //'#title' => t('Set my location'),
       '#options' => $options,
-      '#default_value' => (int) $is_address_fixed,
+      '#default_value' => isset($location['fixed_address']) ? (int) $location['fixed_address'] : 0,
+    );
+  }
+  if ($geo_vocabulary_id) {
+    $regions = array(0 => '--' . t('none') . '--');
+    foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
+      $regions[$term->tid] = $term->name;
+    }
+    $form['region'] = array(
+      '#type' => 'select',
+      //'#title' => t('to this region'),
+      '#options' => $regions,
+      '#default_value' => isset($location['region']) ? $location['region'] : 0,
+      '#states' => array(
+        'visible' => array(
+          'input[name="fixed_address"]' => array('value' => 2),
+        ),
+      ),
     );
   }
   $form['street_address'] = array(
@@ -291,14 +336,17 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     '#rows' => 2,
     //'#title' => t('Approximate address'),
     '#default_value' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
-    '#disabled' => !$is_address_editable || !$is_address_fixed,
+    '#disabled' => !$is_address_editable || empty($location['fixed_address']) ,
     '#states' => array(
       'enabled' => array(
         'input[name="fixed_address"]' => array('value' => 1),
       ),
+      'invisible' => array(
+        'input[name="fixed_address"]' => array('value' => 2),
+      ),
     ),
   );
-  if ($is_address_editable) {
+  if ($is_address_editable || $geo_vocabulary_id) {
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Set location'),
@@ -346,56 +394,85 @@ function ip_geoloc_geocode($form, &$form_state) {
 
   $location = _ip_geoloc_get_session_value('location');
 
-  if (empty($form_state['values']['fixed_address'])) {
-    // As "to where I am now" was pressesd, we set a flag indicating to
-    // ip_geoloc_init() that we want to find our current position using our
-    // HTML5-based browser immediately, not waiting for the next cycle.
-  }
-  else {
-    // "to what I typed" was pressed, so geocode the address typed.
-    $entered_address = trim($form_state['values']['street_address']);
-    if (empty($entered_address)) {
-      $entered_address = trim($form_state['input']['street_address']);
+  if (!empty($form_state['values']['fixed_address'])) {
+     // "to what I typed" or "to the region" were pressed
+    if ($form_state['values']['fixed_address'] == 2) {
+      // "to the region" pressed
+      $location = ip_geoloc_get_location_from_term($form_state['values']['region']);
     }
-    if (empty($entered_address)) {
-      $location = array(
-        'provider' => 'user',
-        'ip_address' => ip_address(),
-      );
-    }
-    elseif (module_exists('geocoder')) {
-      // Use Google server-side API to retrieve lat/long from entered address.
-      $point = geocoder('google', $entered_address);
-
-      if (!$point) {
-        drupal_set_message(t('The address you entered could not be geocoded to a location.'), 'warning');
-        return;
+    else {
+      $entered_address = trim($form_state['values']['street_address']);
+      if (empty($entered_address)) {
+        $entered_address = trim($form_state['input']['street_address']);
       }
+      if (empty($entered_address)) {
+        $location = array(
+          'provider' => 'user',
+          'ip_address' => ip_address(),
+        );
+      }
+      elseif (module_exists('geocoder')) {
+        // Use Google server-side API to retrieve lat/long from entered address.
+        $point = geocoder('google', $entered_address);
 
-      $location = array(
-        'provider' => 'user+google',
-        'ip_address' => ip_address(),
-        'latitude' => $point->coords[1],
-        'longitude' => $point->coords[0],
-        'formatted_address' => $point->data['geocoder_formatted_address'],
-        'accuracy' => $point->data['geocoder_accuracy'],
-      );
-      // Flatten the point object into a straight location array.
-      foreach ($point->data['geocoder_address_components'] as $component) {
-        if (!empty($component->long_name)) {
-          $type = $component->types[0];
-          $location[$type] = $component->long_name;
-          if ($type == 'country' && !empty($component->short_name)) {
-            $location['country_code'] = $component->short_name;
+        if (!$point) {
+          drupal_set_message(t('The address you entered could not be geocoded to a location.'), 'warning');
+          return;
+        }
+
+        $location = array(
+          'provider' => 'user+google',
+          'ip_address' => ip_address(),
+          'latitude' => $point->coords[1],
+          'longitude' => $point->coords[0],
+          'formatted_address' => $point->data['geocoder_formatted_address'],
+          'accuracy' => $point->data['geocoder_accuracy'],
+        );
+        // Flatten the point object into a straight location array.
+        foreach ($point->data['geocoder_address_components'] as $component) {
+          if (!empty($component->long_name)) {
+            $type = $component->types[0];
+            $location[$type] = $component->long_name;
+            if ($type == 'country' && !empty($component->short_name)) {
+              $location['country_code'] = $component->short_name;
+            }
           }
         }
       }
     }
   }
+  // If "to where I am now" was pressesd, we set a flag indicating to
+  // ip_geoloc_init() that we want to find the visitor's current position using
+  // their HTML5-based browser immediately, not waiting for the next cycle.
   $location['reverse_geocode_now'] = empty($form_state['values']['fixed_address']) ? 1 : 0;
-  $location['fixed_address'] = !empty($form_state['values']['fixed_address']);
+
+  $location['fixed_address'] = $form_state['values']['fixed_address'];
+  $location['region'] = $form_state['values']['region'];
   _ip_geoloc_set_session_value('location', $location);
 
-  // Form always fills out location from session, so no need to remember it.
+  // No need to remember the form state. It's all kept on the session.
   $form_state['rebuild'] = FALSE;
+}
+
+function ip_geoloc_get_location_from_term($tid) {
+  if ($term = taxonomy_term_load($tid)) {
+    // Get lat,lng from the Geofield on this term
+    $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
+    $vocabulary = taxonomy_vocabulary_load($geo_vocabulary_id);
+    foreach (field_info_instances('taxonomy_term', $vocabulary->machine_name) as $field_name => $field) {
+      $field_info = field_info_field($field_name);
+      if ($field_info['type'] == 'geofield'){
+        $value = reset($term->{$field_name});
+        $value = reset($value);
+        return array(
+          'provider' => 'taxonomy',
+          'ip_address' => ip_address(),
+          'latitude' => $value['lat'],
+          'longitude' => $value['lon'],
+        //'formatted_address' => $term->name,
+        );
+      }
+    }
+  }
+  return array('provider' => 'taxonomy', 'ip_address' => ip_address());
 }

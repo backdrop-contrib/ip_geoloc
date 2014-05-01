@@ -154,7 +154,7 @@ function ip_geoloc_init() {
   // Typically only 1 forced reverse geocode in succession.
   $force_reverse_geocode = empty($location['reverse_geocode_now']) ? FALSE : $location['reverse_geocode_now']--;
 
-  $address_fixed = !empty($location['fixed_address']) && !$force_reverse_geocode;
+  $location_fixed = !empty($location['fixed_address']) && !$force_reverse_geocode;
   $reverse_geocode_client_timeout = $force_reverse_geocode ? FALSE : ip_geoloc_reverse_geocode_timeout();
 
   // If an address was typed in the "Set your location" block, do nothing. Exit.
@@ -162,7 +162,7 @@ function ip_geoloc_init() {
   if (!$force_reverse_geocode && !_ip_geoloc_check_location($location) && !$reverse_geocode_client_timeout) {
     return;
   }
-  elseif ($address_fixed && $reverse_geocode_client_timeout) {
+  elseif ($location_fixed && $reverse_geocode_client_timeout) {
     ip_geoloc_debug('IPGV&M: not instigating service to locate current position, as user has typed an address.');
     return;
   }
@@ -181,8 +181,11 @@ function ip_geoloc_init() {
   // as well as client timeout fallback.
   $last_position_check = _ip_geoloc_get_session_value('last_position_check');
   if (empty($last_position_check) || $reverse_geocode_client_timeout || !$use_google_to_reverse_geocode) {
+    $location = array(
+      'fixed_address' => $location['fixed_address'],
+      'region' => $location['region'],
+    );
     // Calls below are synchronous, $location is filled upon return.
-    $location = array();
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
       if ($reverse_geocode_client_timeout) {
         watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
@@ -297,10 +300,11 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
         $location['ip_address'] = ip_address();
       }
       // See also: ip_geoloc_smart_ip_get_location_alter().
-      $fixed_address = !empty($location['fixed_address']);
-      $location = smart_ip_get_location($location['ip_address']);
-      $location['provider'] = 'smart_ip';
-      $location['fixed_address'] = $fixed_address;
+      $location = array(
+        'provider' => 'smart_ip',
+        'fixed_address' => $location['fixed_address'],
+        'region' => $location['region']) +
+        smart_ip_get_location($location['ip_address']);
       return TRUE;
     }
     ip_geoloc_debug(t('IPGV&M: Smart IP configured as a backup, but is not enabled.'));
