@@ -150,67 +150,73 @@ function ip_geoloc_init() {
     ip_geoloc_debug('IPGV&M, ' . ip_address() . ': ' . $error, 'warning');
     _ip_geoloc_set_session_value('error', NULL);
   }
+  // Decrement 'force now' counter, if set, e.g. on "Set my location" block.
+  // Typically only 1 forced reverse geocode in succession.
+  $force_reverse_geocode = empty($location['reverse_geocode_now']) ? FALSE : $location['reverse_geocode_now']--;
 
-  $reverse_geocode_client_timeout = ip_geoloc_reverse_geocode_timeout();
+  $address_fixed = !empty($location['fixed_address']) && !$force_reverse_geocode;
+  $reverse_geocode_client_timeout = $force_reverse_geocode ? FALSE : ip_geoloc_reverse_geocode_timeout();
 
-  if (!empty($location['fixed_address'])) {
-    if ($reverse_geocode_client_timeout) {
-      ip_geoloc_debug('IPGV&M: not instigating service to locate current position, as user has typed an address.');
-    }
+  // If an address was typed in the "Set your location" block, do nothing. Exit.
+  // If not due for another location sample or to deal with timeout, exit.
+  if (!$force_reverse_geocode && !_ip_geoloc_check_location($location) && !$reverse_geocode_client_timeout) {
+    return;
+  }
+  elseif ($address_fixed && $reverse_geocode_client_timeout) {
+    ip_geoloc_debug('IPGV&M: not instigating service to locate current position, as user has typed an address.');
     return;
   }
 
-  // Sample location when due or when a reverse-geocode timeout is detected.
-  if (_ip_geoloc_check_location($location) || $reverse_geocode_client_timeout) {
+  if ($force_reverse_geocode) {
+    $use_google_to_reverse_geocode = TRUE;
+  }
+  elseif ($use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+    global $user;
+    $roles_to_reverse_geocode = variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
+    $roles_applicable = array_intersect($roles_to_reverse_geocode, array_keys($user->roles));
+    $use_google_to_reverse_geocode = !empty($roles_applicable);
+  }
 
-    if ($use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
-      global $user;
-      $roles_to_reverse_geocode = variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
-      $roles_applicable = array_intersect($roles_to_reverse_geocode, array_keys($user->roles));
-      $use_google_to_reverse_geocode = !empty($roles_applicable);
-    }
-
-    // Handle first click of the session, ie $last_position_check not set,
-    // as well as client timeout fallback.
-    $last_position_check = _ip_geoloc_get_session_value('last_position_check');
-    if (!$use_google_to_reverse_geocode || $reverse_geocode_client_timeout || empty($last_position_check)) {
-      // Calls below are synchronous, $location is filled upon return.
-      $location = array();
-      if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-        if ($reverse_geocode_client_timeout) {
-          watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
-            '%sec' => number_format($reverse_geocode_client_timeout, 1),
-            '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''),
-            WATCHDOG_NOTICE);
-        }
+  // Handle first click of the session, ie $last_position_check not set,
+  // as well as client timeout fallback.
+  $last_position_check = _ip_geoloc_get_session_value('last_position_check');
+  if (empty($last_position_check) || $reverse_geocode_client_timeout || !$use_google_to_reverse_geocode) {
+    // Calls below are synchronous, $location is filled upon return.
+    $location = array();
+    if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
+      if ($reverse_geocode_client_timeout) {
+        watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
+          '%sec' => number_format($reverse_geocode_client_timeout, 1),
+          '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''),
+          WATCHDOG_NOTICE);
       }
-      else {
-        ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
-      }
-      // Clear the 'position_pending_since' timer.
-      _ip_geoloc_set_session_value('position_pending_since', NULL);
     }
-    // 2nd condition is to avoid HTTP 503 error.
-    if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0)) {
-      // Insert some javascript to first retrieve the user's lat/long coords,
-      // HTML5 style (requiring the user to accept a browser prompt) and then
-      // use Google Maps API to reverse-geocode these coords into an address.
-      // This is all done via client-side calls, so the Drupal server
-      // will not rake up any calls against its Google-imposed quotum, ie the
-      // OVER_QUERY_LIMIT.
-      // When done the javascript calls us back on the supplied menu callback,
-      // '/js/ip_geoloc/current_location', which receives the geolocation data
-      // from the Google Maps call via the $_POST variable and stores it in
-      // the session.
-      // Naturally all of this will only work if the browser is connected to
-      // the internet and has javascript enabled.
-      ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
-      ip_geoloc_get_current_location();
+    else {
+      ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
+    }
+    // Clear the 'position_pending_since' timer.
+    _ip_geoloc_set_session_value('position_pending_since', NULL);
+  }
+  // 2nd condition is to avoid HTTP 503 error.
+  if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0)) {
+    // Insert some javascript to first retrieve the user's lat/long coords,
+    // HTML5 style (requiring the user to accept a browser prompt) and then
+    // use Google Maps API to reverse-geocode these coords into an address.
+    // This is all done via client-side calls, so the Drupal server
+    // will not rake up any calls against its Google-imposed quotum, ie the
+    // OVER_QUERY_LIMIT.
+    // When done the javascript calls us back on the supplied menu callback,
+    // '/js/ip_geoloc/current_location', which receives the geolocation data
+    // from the Google Maps call via the $_POST variable and stores it in
+    // the session.
+    // Naturally all of this will only work if the browser is connected to
+    // the internet and has javascript enabled.
+    ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
+    ip_geoloc_get_current_location();
 
-      _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
-    }
-    _ip_geoloc_set_session_value('last_position_check', time());
-  };
+    _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
+  }
+  _ip_geoloc_set_session_value('last_position_check', time());
 
   // If supplied IP address is empty, ip_geoloc_store_location() does nothing.
   if (ip_geoloc_store_location($location) !== FALSE) {

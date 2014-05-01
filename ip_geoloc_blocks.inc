@@ -346,10 +346,13 @@ function ip_geoloc_geocode($form, &$form_state) {
 
   $location = _ip_geoloc_get_session_value('location');
 
-  // Only Geocode when "to what I type" radio button was ticked on submission.
-  // If not ticked, we wait for the next HTML5 location update to come in.
-  if (!empty($form_state['values']['fixed_address'])) {
-
+  if (empty($form_state['values']['fixed_address'])) {
+    // As "to where I am now" was pressesd, we set a flag indicating to
+    // ip_geoloc_init() that we want to find our current position using our
+    // HTML5-based browser immediately, not waiting for the next cycle.
+  }
+  else {
+    // "to what I typed" was pressed, so geocode the address typed.
     $entered_address = trim($form_state['values']['street_address']);
     if (empty($entered_address)) {
       $entered_address = trim($form_state['input']['street_address']);
@@ -389,6 +392,7 @@ function ip_geoloc_geocode($form, &$form_state) {
       }
     }
   }
+  $location['reverse_geocode_now'] = empty($form_state['values']['fixed_address']) ? 1 : 0;
   $location['fixed_address'] = !empty($form_state['values']['fixed_address']);
   _ip_geoloc_set_session_value('location', $location);
 
