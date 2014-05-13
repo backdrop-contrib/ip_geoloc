@@ -366,6 +366,9 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  *       as in maintenance mode menu items are not available.
  */
 function ip_geoloc_get_current_location($menu_callback = 'js/ip_geoloc/current_location') {
+  ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
+  _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
+
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 

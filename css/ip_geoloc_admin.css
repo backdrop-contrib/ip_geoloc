@@ -53,3 +53,10 @@ select.marker-color option[value="white"] {
 select.marker-color option[value="yellow"] {
   background: url(../markers/yellow.png) no-repeat 2px 1px;
 }
+
+.ip-geoloc-cluster-levels .form-item.form-type-select,
+.ip-geoloc-cluster-levels .form-item.form-type-textfield {
+  display: inline-table;
+  margin-right: 1em;
+  max-width: 200px;
+}

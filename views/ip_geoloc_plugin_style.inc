@@ -634,7 +634,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
           _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
         }
          _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
-        $locations[] = $location;
+        $locations[$i] = $location;
       }
       elseif ($error_count++ == 0) {
         $first_error = $i;
@@ -657,7 +657,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
             _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
           }
           _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
-          $locations[] = $location;
+          $locations[$i] = $location;
         }
         elseif ($error_count++ == 0) {
           $first_error = $i;
@@ -1015,6 +1015,54 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   }
   unset($views_plugin_style->view->row_index);
   return $views_plugin_style->rendered_fields;
+}
+
+/**
+ * Returns as an array the raw value(s) of a field in the results set.
+ *
+ * @param object $views_plugin_style
+ *   The Views plugin.
+ * @param string $field_name
+ *   The name of the field in the View.
+ * @param int index
+ *   The row index into the Views result set.
+ *
+ * @return array
+ *   The raw value(s) of the field in the specified row of the results set.
+ */
+function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
+  $field_name = $field['field_name'];
+  if (!isset($views_plugin_style->view->result[$index])) {
+    drupal_set_message(t("Field %name: no value found amongst view results.", array('%name' => $field_name)), 'warning', FALSE);
+    return NULL;
+  }
+  $row = $views_plugin_style->view->result[$index];
+  if (isset($row->{"field_$field_name"})) {
+    $values = $row->{"field_$field_name"};
+  }
+  elseif (isset($row->{"views_$field_name"})) {
+    $values = $row->{"views_$field_name"};
+  }
+  else {
+    $values = $views_plugin_style->get_field_value($index, $field_name);
+  }
+  if (!is_array($values)) {
+    return array($values);
+  }
+  $single_values = array();
+  foreach ($values as $value) {
+    if (isset($value['raw'])) {
+      $value = $value['raw'];
+    }
+    if ($field['type'] == 'addressfield') {
+      return $value;
+    }
+    if (is_array($value)) {
+      $value = reset($value);
+    }
+    $single_values[] = $value;
+  }
+  return $single_values;
 }
 
 /**

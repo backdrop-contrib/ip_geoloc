@@ -1,10 +1,15 @@
 .ip-geoloc-address .form-type-textfield {
   display: inline-block;
 }
-.form-item-field-geofield-distance-distance > input {
+
+.form-item-field-geofield-distance-distance > input#edit-field-geofield-distance-distance {
   max-width: 8ex;
 }
 span.geofield-proximity-origin-from,
-input.geofield-proximity-origin {
+input#edit-field-geofield-distance-origin {
   display: none;
+}
+
+.geofield-proximity-field-wrapper .form-type-select {
+  padding-top: 0;
 }

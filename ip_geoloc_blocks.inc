@@ -10,19 +10,19 @@
  */
 function ip_geoloc_block_info() {
   $blocks['current_visitor_map'] = array(
-    'info' => t("Map (Google) centered on visitor's location"),
+    'info' => t("IPGV&M: Map (Google) centered on visitor's location"),
     'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['recent_visitors_map'] = array(
-    'info' => t('Map (Google) of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 20))),
+    'info' => t('IPGV&M: Map (Google) of @n most recent visitors', array('@n' => variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', 20))),
     'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['address_lookup'] = array(
-    'info' => t('Address lookup based on IP'),
+    'info' => t('IPGV&M: Address lookup based on IP'),
     'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['geocode_address'] = array(
-    'info' => t('Set visitor location (by address, geo-taxonomy or GPS/WiFi)'),
+    'info' => t('IPGV&M: Set my location'),
     'cache' => DRUPAL_NO_CACHE,
   );
   return $blocks;
@@ -30,6 +30,8 @@ function ip_geoloc_block_info() {
 
 /**
  * Implements hook_block_configure().
+ *
+ * @todo refactor, it's too long.
  */
 function ip_geoloc_block_configure($delta = '') {
   $form = array();
@@ -326,7 +328,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   if ($geo_vocabulary_id) {
     $regions = array(0 => '--' . t('none') . '--');
     foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
-      $regions[$term->tid] = $term->name;
+      $regions[$term->tid] = str_repeat('-', $term->depth) . $term->name;
     }
     $form['region'] = array(
       '#type' => 'select',
@@ -463,9 +465,9 @@ function ip_geoloc_get_location_from_term($tid) {
     // Get lat,lng from the Geofield on this term
     $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
     $vocabulary = taxonomy_vocabulary_load($geo_vocabulary_id);
-    foreach (field_info_instances('taxonomy_term', $vocabulary->machine_name) as $field_name => $field) {
-      $field_info = field_info_field($field_name);
-      if ($field_info['type'] == 'geofield'){
+    foreach (field_info_instances('taxonomy_term', $vocabulary->machine_name) as $field_name => $field_instance) {
+      $field = field_info_field($field_name);
+      if ($field['type'] == 'geofield'){
         $value = reset($term->{$field_name});
         $value = reset($value);
         return array(

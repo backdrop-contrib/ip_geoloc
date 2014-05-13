@@ -16,12 +16,12 @@
       if (marker.icon === false) {
         // No marker. Need to create an icon "stub" or we'll have no map at all!
         var stub = new L.Icon({iconUrl: '//'});
-        return new L.Marker(latLng, {icon: stub, title: marker.tooltip});
+        return new L.Marker(latLng, {icon: stub, title: marker.tooltip, regions: marker.regions});
       }
       if (!marker.icon) {
         // Marker with default img, without tag.
         // Note: marker.specialChar cannot be handled in this case and is ignored.
-        return new L.Marker(latLng, {title: marker.tooltip});
+        return new L.Marker(latLng, {title: marker.tooltip, regions: marker.regions});
       }
     }
     if (marker.icon === false) {
@@ -29,13 +29,13 @@
       var divIcon = new L.DivIcon({html: marker.tag, className: marker.cssClass});
       // Prevent div style tag being set, so that upper left corner becomes anchor.
       divIcon.options.iconSize = null;
-      return new L.Marker(latLng, {icon: divIcon, title: marker.tooltip});
+      return new L.Marker(latLng, {icon: divIcon, title: marker.tooltip, regions: marker.regions});
     }
 
     if (marker.tag && !marker.icon) {
       // Use default img, custom tag the marker.
       var tagged_icon = new L.Icon.Tagged(marker.tag, marker.specialChar, {className: marker.cssClass, specialCharClass: marker.special_char_class});
-      return new L.Marker(latLng, {icon: tagged_icon, title: marker.tooltip});
+      return new L.Marker(latLng, {icon: tagged_icon, title: marker.tooltip, regions: marker.regions});
     }
     // Custom img and custom tag or specialChar.
     var icon = marker.tag || marker.specialChar || marker.specialCharClass
@@ -61,7 +61,7 @@
     if (marker.icon.shadowAnchor) {
       icon.options.shadowAnchor = new L.Point(parseInt(marker.icon.shadowAnchor.x), parseInt(marker.icon.shadowAnchor.y));
     }
-    return new L.Marker(latLng, {icon: icon, title: marker.tooltip});
+    return new L.Marker(latLng, {icon: icon, title: marker.tooltip, regions: marker.regions});
   };
 
 })(jQuery);

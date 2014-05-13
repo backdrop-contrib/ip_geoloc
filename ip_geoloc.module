@@ -141,70 +141,30 @@ function ip_geoloc_js() {
  * current position marker appears on the recent visitor map.
  */
 function ip_geoloc_init() {
+  
+  ip_geoloc_log_errors();
 
   $location = ip_geoloc_get_visitor_location();
-  
-  if ($error = _ip_geoloc_get_session_value('error')) {
-    // @todo How do we treat repeated 'user declined to share location' errors?
-    watchdog('IPGV&M', $error, NULL, WATCHDOG_NOTICE);
-    ip_geoloc_debug('IPGV&M, ' . ip_address() . ': ' . $error, 'warning');
-    _ip_geoloc_set_session_value('error', NULL);
-  }
+
   // Decrement 'force now' counter, if set, e.g. on "Set my location" block.
   // Typically only 1 forced reverse geocode in succession.
-  $force_reverse_geocode = empty($location['reverse_geocode_now']) ? FALSE : $location['reverse_geocode_now']--;
+  $force_reverse_geocode = !empty($location['reverse_geocode_now']) && $location['reverse_geocode_now']--;
 
-  $location_fixed = !empty($location['fixed_address']) && !$force_reverse_geocode;
   $reverse_geocode_client_timeout = $force_reverse_geocode ? FALSE : ip_geoloc_reverse_geocode_timeout();
 
-  // If an address was typed in the "Set your location" block, do nothing. Exit.
-  // If not due for another location sample or to deal with timeout, exit.
-  if (!$force_reverse_geocode && !_ip_geoloc_check_location($location) && !$reverse_geocode_client_timeout) {
-    return;
-  }
-  elseif ($location_fixed && $reverse_geocode_client_timeout) {
-    ip_geoloc_debug('IPGV&M: not instigating service to locate current position, as user has typed an address.');
-    return;
-  }
+  $use_google_to_reverse_geocode = $force_reverse_geocode || _ip_geoloc_check_location($location);
 
-  if ($force_reverse_geocode) {
-    $use_google_to_reverse_geocode = TRUE;
-  }
-  elseif ($use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
-    global $user;
-    $roles_to_reverse_geocode = variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
-    $roles_applicable = array_intersect($roles_to_reverse_geocode, array_keys($user->roles));
-    $use_google_to_reverse_geocode = !empty($roles_applicable);
-  }
-
-  // Handle first click of the session, ie $last_position_check not set,
-  // as well as client timeout fallback.
-  $last_position_check = _ip_geoloc_get_session_value('last_position_check');
-  if (empty($last_position_check) || $reverse_geocode_client_timeout || !$use_google_to_reverse_geocode) {
-    $location = array(
-      'fixed_address' => $location['fixed_address'],
-      'region' => $location['region'],
-    );
-    // Calls below are synchronous, $location is filled upon return.
-    if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
-      if ($reverse_geocode_client_timeout) {
-        watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
-          '%sec' => number_format($reverse_geocode_client_timeout, 1),
-          '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''),
-          WATCHDOG_NOTICE);
-      }
-    }
-    else {
-      ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
-    }
-    // Clear the 'position_pending_since' timer.
-    _ip_geoloc_set_session_value('position_pending_since', NULL);
+  if (ip_geoloc_is_first_click() || $reverse_geocode_client_timeout /*|| some_expiry_related_event and/or empty location? */) {
+    _ip_geoloc_reinit_location($location, $reverse_geocode_client_timeout);
+    ip_geoloc_store_location($location);
+    _ip_geoloc_set_session_value('location', $location);
   }
   // 2nd condition is to avoid HTTP 503 error.
   if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0)) {
     // Insert some javascript to first retrieve the user's lat/long coords,
     // HTML5 style (requiring the user to accept a browser prompt) and then
-    // use Google Maps API to reverse-geocode these coords into an address.
+    // use Google Maps API to reverse-geocode these coords into a street
+    // address.
     // This is all done via client-side calls, so the Drupal server
     // will not rake up any calls against its Google-imposed quotum, ie the
     // OVER_QUERY_LIMIT.
@@ -214,19 +174,44 @@ function ip_geoloc_init() {
     // the session.
     // Naturally all of this will only work if the browser is connected to
     // the internet and has javascript enabled.
-    ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
     ip_geoloc_get_current_location();
-
-    _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
   }
   _ip_geoloc_set_session_value('last_position_check', time());
+}
 
-  // If supplied IP address is empty, ip_geoloc_store_location() does nothing.
-  if (ip_geoloc_store_location($location) !== FALSE) {
-    // If successfully stored, don't store again.
-    $location['ip_address'] = NULL;
+function ip_geoloc_log_errors() {
+  if ($error = _ip_geoloc_get_session_value('error')) {
+    // @todo How do we treat repeated 'user declined to share location' errors?
+    watchdog('IPGV&M', $error, NULL, WATCHDOG_NOTICE);
+    ip_geoloc_debug('IPGV&M, ' . ip_address() . ': ' . $error, 'warning');
+    _ip_geoloc_set_session_value('error', NULL);
   }
-  _ip_geoloc_set_session_value('location', $location);
+}
+
+function ip_geoloc_is_first_click() {
+  $last_position_check = _ip_geoloc_get_session_value('last_position_check');
+  return empty($last_position_check);
+}
+
+function _ip_geoloc_reinit_location(&$location, $reverse_geocode_client_timeout) {
+  $fixed_address = isset($location['fixed_address']) ? $location['fixed_address'] : 0;
+  $region = isset($location['regions']) ? $location['regions'] : NULL;
+  $location = array(
+    'fixed_address' => $fixed_address,
+    'regions' => $region,
+  );
+  // Calls below are synchronous, $location is filled upon return.
+  if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
+    if ($reverse_geocode_client_timeout) {
+      watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
+        '%sec' => number_format($reverse_geocode_client_timeout, 1),
+        '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''),
+        WATCHDOG_NOTICE);
+    }
+  }
+  else {
+    ip_geoloc_debug(t('Smart IP and GeoIP API fallbacks NOT enabled.'));
+  }
 }
 
 /**
@@ -299,11 +284,13 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
       if (empty($location['ip_address'])) {
         $location['ip_address'] = ip_address();
       }
+      $fixed_address = isset($location['fixed_address']) ? $location['fixed_address'] : 0;
+      $region = isset($location['region']) ? $location['region'] : 0;
       // See also: ip_geoloc_smart_ip_get_location_alter().
       $location = array(
         'provider' => 'smart_ip',
-        'fixed_address' => $location['fixed_address'],
-        'region' => $location['region']) +
+        'fixed_address' => $fixed_address,
+        'region' => $region) +
         smart_ip_get_location($location['ip_address']);
       return TRUE;
     }
@@ -360,7 +347,7 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
  */
 function _ip_geoloc_check_location($location = NULL) {
 
-  if (!empty($location['fixed_address'])) {
+  if (!variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
     return FALSE;
   }
   $path_alias = drupal_get_path_alias();
@@ -373,10 +360,24 @@ function _ip_geoloc_check_location($location = NULL) {
   if (drupal_match_path($path_alias, $exclude_pages)) {
     return FALSE;
   }
+
+  global $user;
+  $roles_to_reverse_geocode = variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
+  $roles_applicable = array_intersect($roles_to_reverse_geocode, array_keys($user->roles));
+  if (empty($roles_applicable)) {
+    return FALSE;
+  }
+  
   $interval = (int) variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
   if ($interval == 0) {
     return !isset($location['country']);
   }
+  if (!empty($location['fixed_address'])) {
+    // If an address was typed in the "Set your location" block, do nothing. Exit.
+    ip_geoloc_debug('IPGV&M: not instigating service to locate current position, as user has typed an address.');
+    return FALSE;
+  }
+
   $last_position_check = _ip_geoloc_get_session_value('last_position_check');
   if (isset($last_position_check)) {
     $time_elapsed = time() - $last_position_check;

@@ -20,11 +20,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options = parent::option_definition();
 
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
-    // For field-based modules.
     $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude);
     $options['ip_geoloc_views_plugin_latitude'] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
-
     $options['differentiator'] = array(
       'contains' => array(
         'differentiator_field' => array('default' => ''),
@@ -39,6 +37,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['map'] = array('default' => 'OSM Mapnik');
     $options['map_height'] = array('default' => 300);
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
+    $options['cluster_differentiator'] = array(
+      'contains' => array(
+        'cluster_differentiator_field' => array('default' => ''),
+        'zoom_ranges' => array('default' => array())
+      ),
+    );
     $options['tooltips'] = array(
       'contains' => array(
         'marker_tooltip' => array('default' => ''),
@@ -224,6 +228,98 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       )),
       '#weight' => 100,
     );
+
+    // Add wrapper for cluster differentiator drop-down and region level
+    // specifiers.
+    // The id in the prefix must match the AJAX submit handlers below.
+    $form['cluster_differentiator'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Marker cluster differentiator'),
+      '#description' => t('While the location differentiator determines the colour of individual markers, the cluster differentiator decides which <em>region</em> a marker belongs at available zoom-levels. Typical examples of regions are continent, country, state, suburb. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from being included in the same cluster. <br/>Make sure the cluster differentiator you wish to use is included in this view as a field. It may have the "Excluded" box ticked. Markers that do not belong to any cluster group are deemed to be members of the <em>global</em> group. The exception is the visitor marker, which is excluded from clustering.'),
+      '#prefix' => '<div id="cluster-differentiator-wrapper">',
+      '#suffix' => '</div>',
+      '#weight' => 103,
+    );
+    $cluster_differentiator = $this->options['cluster_differentiator']['cluster_differentiator_field'];
+    if (isset($form_state['triggering_element'])) {
+      // Get here when any form element with #ajax was changed/clicked causing
+      // an auto-rebuild of the form.
+      if (strpos($form_state['triggering_element']['#id'], 'cluster-differentiator-field') > 0) {
+        // Get here when it was the cluster-differentiator drop-down that was changed.
+        $cluster_differentiator = $form_state['triggering_element']['#value'];
+      }
+    }
+    $depth = 0;
+    $field = field_info_field($cluster_differentiator);
+
+    if (!empty($field['settings']['allowed_values'])) {
+      // Possibly a taxonomy or list
+      foreach ($field['settings']['allowed_values'] as $tree) {
+        if ($vocabulary = taxonomy_vocabulary_machine_name_load($tree['vocabulary'])) {
+          if ($terms = taxonomy_get_tree($vocabulary->vid, $tree['parent'])) {
+            foreach ($terms as $term) {
+              $depth = max($term->depth, $depth);
+            }
+            break;
+          }
+        }
+      }
+    }
+    $description = empty($depth)
+      ? t('Below enter the zoom level range to be associated with this differentiator.')
+      : t('Below enter the zoom level ranges to which each of the region hierarchy levels apply.');
+    $form['cluster_differentiator']['cluster_differentiator_field'] = array(
+      '#title' => t('Marker cluster differentiator'),
+      '#type' => 'select',
+      '#options' => $fields,
+      '#default_value' => $cluster_differentiator,
+      '#ajax' => array(
+        'callback' => '_ip_geoloc_plugin_style_leaflet_refresh_cluster_fieldset_js',
+        'wrapper' => 'cluster-differentiator-wrapper',
+        'effect' => 'fade',
+        'speed' => 'fast',
+      ),
+      '#description' => $description . '<br/>' . t('Zoom ranges must not overlap.')
+    );
+    $depth = ($field['type'] === 'addressfield') ? 4 : $depth + 1;
+    $zoom_range_defaults = array(
+      1 => '6--7',
+      2 => '8--11',
+      3 => '12--14',
+      4 => '15--18'
+    );
+    if ($field['type'] === 'addressfield') {
+      $title = array(
+        1 => t('Zoom range for country'),
+        2 => t('Zoom range for administrative area (state, district, county)'),
+        3 => t('Zoom range for locality (city, town, village)'),
+        4 => t('Zoom range for post code (ZIP)'),
+      );
+    }
+    else {
+      for ($level = 1; $level <= $depth; $level++) {
+        $title[$level] = t('Zoom range for %field level @level', array(
+          '%field' => $fields[$cluster_differentiator],
+          '@level' => $level
+        ));
+      }
+    }
+    for ($level = 1; $level <= $depth; $level++) {
+      $zoom_range = $this->options['cluster_differentiator']['zoom_range'][$level];
+      $form['cluster_differentiator']['zoom_range'][$level] = array(
+        '#type' => 'textfield',
+        '#title' => $title[$level],
+        '#size' => 28,
+        '#default_value' => $zoom_range,
+        '#element_validate' => array('ip_geoloc_range_widget_validate'),
+      );
+      if (isset($zoom_range_defaults[$level])) {
+        $form['cluster_differentiator']['zoom_range'][$level]['#description'] =
+          t('Typical range: @range', array('@range' => $zoom_range_defaults[$level]));
+      }
+    }
+    $form['cluster_differentiator']['zoom_range'][$depth]['#description'] .=
+      '<br/>' . t('The maximum zoom level for this map can be found below under <strong>More map options</strong>.');
   }
 
   /**
@@ -265,17 +361,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
 
+    $this->fill_out_location_regions($locations);
+
     $marker_color = $this->options['default_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
-    $marker_tooltip = $this->options['tooltips']['marker_tooltip'];
-    $marker_tag = $this->options['tags']['marker_tag'];
+    $cluster_differentiator_zoom_ranges = $this->options['cluster_differentiator']['zoom_range'];
     $tag_css_classes = $this->options['tags']['tag_css_class'];
 
     $module_path = drupal_get_path('module', 'ip_geoloc');
-    $marker_path = variable_get('ip_geoloc_marker_directory', $module_path . '/markers');
-    $marker_path = file_create_url($marker_path);
+    $marker_path = file_create_url(variable_get('ip_geoloc_marker_directory', $module_path . '/markers'));
 
     $max_zoom = (int) $this->options['map_options']['maxzoom'];
     $zoom = (int) $this->options['map_options']['zoom'];
@@ -339,7 +435,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
 
     $features = array();
-    foreach ($locations as $key => $location) {
+    foreach ($locations as $location) {
       $feature = array();
       if (isset($location->latitude) || isset($location->lat)) {
         $feature['type'] = 'point';
@@ -397,6 +493,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if (!empty($location->marker_tooltip)) {
         $has_special_markers = TRUE;
         $feature['tooltip'] = $location->marker_tooltip;
+      }
+      if (!empty($location->regions)) {
+        // Make sure we start with 0 or regions will come across as Object
+        // rather than array.
+        $feature['regions'] = array(0 => '') + $location->regions;
+        $has_special_markers = TRUE;
+        $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . '<br/>';
+        $second_last = count($feature['regions']) - 2;
+        if ($second_last > 0) {
+          $feature['tooltip'] = $feature['regions'][$second_last] . ' ';
+        }
+        $feature['tooltip'] .= end($feature['regions']);
       }
       if (!empty($location->marker_tag)) {
         $has_special_markers = TRUE;
@@ -464,8 +572,23 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     if (!empty($cluster_radius)) {
       $map['settings']['maxClusterRadius'] = $cluster_radius;
+      $map['settings']['addRegionToolTips'] = TRUE;
+      $map['settings']['animateAddingMarkers'] = TRUE;
     }
-    $map['settings']['animateAddingMarkers'] = TRUE;
+   
+    // Make sure we start array with 0 and no missing elements. Ohterwise this
+    // array will arrive as an Object on the JS side.
+    $map['settings']['regionLevels'] = array_fill(0, $max_zoom + 1, 0);
+    foreach ($cluster_differentiator_zoom_ranges as $level => $zoom_range) {
+      for ($zoom = 1; $zoom <= $max_zoom; $zoom++) {
+        if (ip_geoloc_is_in_range($zoom, $zoom_range)) {
+          $map['settings']['regionLevels'][$zoom] = $level;
+        }
+      }
+    }
+    for ($z = $max_zoom; $z >= 0 && $map['settings']['regionLevels'][$z] <= 0; $z--) {
+      unset($map['settings']['regionLevels'][$z]);
+    }
 
     // See [#1802732].
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
@@ -506,6 +629,63 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ));
     return $output;
   }
+
+  private function fill_out_location_region($field_type, &$location, $region) {
+
+    switch ($field_type) {
+
+      case 'taxonomy_term_reference':
+        $region_hierarchy = array_reverse(taxonomy_get_parents_all($region));
+        // Leaf term (i.e. highest cluster level) is first in hierarchy.
+        $level = 1;
+        foreach ($region_hierarchy as $region_term) {
+          $location->regions[$level++] = $region_term->name;
+        }
+        break;
+ 
+      case 'addressfield':
+        $format = array();
+        $context = array('mode' => NULL);
+        addressfield_format_address_generate($format, $region, $context);
+        $location->regions = array(
+          1 => empty($format['country']['#options'][$region['country']]) ? '' : $format['country']['#options'][$region['country']],
+          2 => empty($format['locality_block']['administrative_area']['#options'][$region['administrative_area']]) ? '': $format['locality_block']['administrative_area']['#options'][$region['administrative_area']],
+          3 => empty($region['locality']) ? '' : $region['locality'],
+          4 => empty($region['postal_code']) ? '' : $region['postal_code'],
+        );
+        break;
+
+      default:
+        $location->regions[1] = $region;
+    }
+  }
+
+  public function fill_out_location_regions($locations) {
+    $cluster_differentiator = $this->options['cluster_differentiator']['cluster_differentiator_field'];
+    if ($field = field_info_field($cluster_differentiator)) {
+      foreach ($this->view->result as $key => $row) {
+        if (isset($locations[$key])) {
+          $values = ip_geoloc_get_view_result($this, $field, $key);
+          if (!empty($values)) {
+            $region = ($field['type'] == 'addressfield') ? $values : end($values);
+            $this->fill_out_location_region($field['type'], $locations[$key], $region);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Ajax callback in response to new rows or the diff. drop-down being changed.
+ *
+ * At this point the $form has already been rebuilt. All we have to do here is
+ * tell AJAX what part of the browser form needs to be updated.
+ */
+function _ip_geoloc_plugin_style_leaflet_refresh_cluster_fieldset_js($form, &$form_state) {
+  // Return the updated fieldset, so that ajax.inc can issue commands to the
+  // browser to update only the targeted sections of the page.
+  return $form['options']['style_options']['cluster_differentiator'];
 }
 
 /**

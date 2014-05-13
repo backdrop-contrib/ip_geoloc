@@ -16,13 +16,15 @@ function ip_geoloc_admin_configure() {
     '#collapsed' => TRUE,
     '#title' => t('Alternative markers'),
   );
-  // @todo: cater for case where the module directory has been renamed?
-  $marker_path = drupal_get_path('module', 'ip_geoloc');
+  $markers_path = drupal_get_path('module', 'ip_geoloc');
   $form['markers']['ip_geoloc_marker_directory'] = array(
     '#type' => 'textfield',
-    '#title' => t('<strong>Google Maps, Leaflet</strong>: path to set of marker images'),
-    '#default_value' => variable_get('ip_geoloc_marker_directory', "$marker_path/markers"),
-    '#description' => t('Should normally NOT start with a slash. All marker images in this directory must be .png files.'),
+    '#title' => t('<strong>Google Maps, Leaflet</strong>: path to marker images'),
+    '#default_value' => variable_get('ip_geoloc_marker_directory', "$markers_path/markers"),
+    '#description' => t('Marker sets included with the module reside in %set1 and %set2. All marker images must be .png files.', array(
+      '%set1' => "$markers_path/markers",
+      '%set2' => "$markers_path/amarkers",
+    )),
   );
   $form['markers']['ip_geoloc_marker_dimensions'] = array(
     '#type' => 'textfield',
