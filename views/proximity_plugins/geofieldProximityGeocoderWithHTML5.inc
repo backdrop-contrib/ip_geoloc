@@ -41,7 +41,7 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
 
     $form['geofield_proximity_with_HTML5_share_exposed'] = array(
       '#type' => 'select',
-      '#title' => t('Take filter values from the exposed filter belonging to the field below'),
+      '#title' => t('Inherit filter values from the exposed filter belonging to the field below'),
       '#options' => $options,
       '#default_value' => $views_plugin->options['geofield_proximity_with_HTML5_share_exposed'],
       '#states' => array(
