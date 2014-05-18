@@ -435,7 +435,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
 
     $features = array();
-    foreach ($locations as $location) {
+    foreach ($locations as $i => $location) {
       $feature = array();
       if (isset($location->latitude) || isset($location->lat)) {
         $feature['type'] = 'point';
@@ -586,10 +586,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         }
       }
     }
-    for ($z = $max_zoom; $z >= 0 && $map['settings']['regionLevels'][$z] <= 0; $z--) {
-      unset($map['settings']['regionLevels'][$z]);
+    // Remove any gaps and zeroes.
+    for ($z = 1; $z <= $max_zoom; $z++) {
+      if ($map['settings']['regionLevels'][$z] == 0) {
+        $map['settings']['regionLevels'][$z] = $map['settings']['regionLevels'][$z - 1];
+      }
     }
-
     // See [#1802732].
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
@@ -600,22 +602,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'features' => $features,
     );
     drupal_add_js(array('leaflet' => array($settings)), 'setting');
-    libraries_load('leaflet');
-    
-    // This is hacky but can't see another way to conditionally load
-    // Leaflet More Map js (for Retina support and for Bing).
-    if (function_exists('leaflet_more_maps_leaflet_map_prebuild_alter')) {
-      leaflet_more_maps_leaflet_map_prebuild_alter();
-    }
 
-    if (!empty($cluster_radius)) {
-      if (module_exists('leaflet_markercluster')) {
-        leaflet_markercluster_leaflet_map_prebuild_alter();
-      }
-      else {
-        $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
-        drupal_set_message(t('Cannot cluster markers in View %display_name - Leaflet MarkerCluster module not enabled.', array('%display_name' => $display_name)), 'warning');
-      }
+    // Little hacky this,  but can't see another way to conditionally load
+    // Leaflet More Maps, Leaflet MarkerCluster, Leaflet Hash...
+    libraries_load('leaflet');
+    drupal_alter('leaflet_map_prebuild', $settings);
+
+    if (!empty($cluster_radius) && !module_exists('leaflet_markercluster')) {
+      $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
+      drupal_set_message(t('Cannot cluster markers in View %display_name - Leaflet MarkerCluster module not enabled.', array('%display_name' => $display_name)), 'warning');
     }
     if (!empty($has_special_markers)) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');

@@ -2,14 +2,22 @@
   display: inline-block;
 }
 
-.form-item-field-geofield-distance-distance > input#edit-field-geofield-distance-distance {
+/* Geofield proximity exposed filter. Make the distance input shorter.
+   Included only when the "Set my location"" block is shown. */
+.form-type-geofield-proximity input#edit-field-geofield-distance-distance,
+.form-type-geofield-proximity input#edit-field-geofield-distance-1-distance,
+.form-type-geofield-proximity input#edit-field-geofield-distance-2-distance {
   max-width: 8ex;
 }
+/* Geofield proximity exposed filter. Suppress unnecessary labels and inputs.
+   Included only when the "Set my location" block is shown. */
 span.geofield-proximity-origin-from,
-input#edit-field-geofield-distance-origin {
+.form-type-geofield-proximity .description,
+.form-item-field-geofield-distance-origin,
+.form-item-field-geofield-distance-1-origin,
+.form-item-field-geofield-distance-2-origin {
   display: none;
 }
-
 .geofield-proximity-field-wrapper .form-type-select {
   padding-top: 0;
 }
