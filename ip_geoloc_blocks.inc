@@ -54,9 +54,6 @@ function ip_geoloc_block_configure($delta = '') {
       '#description' => t("You may use this to pre-populate the visitor address box with, say, a country, so that both user and geocoding service have a context to the partial address entered. You may use comma's, newlines and blank lines if you wish."),
     );
 
-    $description = t('The region selector allows the visitor to zoom-in on a geographical area, such as a province or country, picked from a drop-down. The drop-down is populated with the terms of a taxonomy vocabulary that has a <a target="geofield" href="@url">Geofield</a>.', array(
-      '@url' => url('http://drupal.org/project/geofield'),
-    ));
     $vocabularies = array();
     foreach (taxonomy_get_vocabularies() as $vid => $vocabulary) {
       foreach (field_info_instances('taxonomy_term', $vocabulary->machine_name) as $field_name => $field) {
@@ -67,15 +64,30 @@ function ip_geoloc_block_configure($delta = '') {
         }
       }
     }
-    if (empty($vocabularies)) {
-      $description .= '<br/>' . t('You do not appear to have any vocabularies on which a Geofield is defined. You cannot enable this feature until you do.');
-    }
-    $form['ip_geoloc_geo_vocabulary_id'] = array(
+    $description = t('The region selector allows the visitor to zoom-in on a geographical area, such as a province or country, picked from a taxonomy vocabulary. The vocabulary has a <a target="geofield" href="@url">Geofield</a> attached, providing  the latitude and longitude of the centre of the region.', array(
+      '@url' => url('http://drupal.org/project/geofield'),
+    ));
+    $form['region'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Geographical region selector'),
+      '#description' => $description,
+    );
+    $form['region']['ip_geoloc_geo_vocabulary_id'] = array(
       '#type' => 'select',
-      '#title' => t('Add a region selector'),
       '#options' => array(0 => '--' . t('None') . '--') + $vocabularies,
       '#default_value' => variable_get('ip_geoloc_geo_vocabulary_id', 0),
-      '#description' => $description,
+    );
+    if (empty($vocabularies)) {
+      $form['region']['ip_geoloc_geo_vocabulary_id']['#description'] = t('You do not appear to have any vocabularies on which a Geofield is defined. You cannot enable this feature until you do.');
+    }
+    $form['region']['ip_geoloc_region_autocomplete'] = array(
+      '#type' => 'radios',
+      '#title' => t('UI element offered to select geographical region'),
+      '#options' => array(
+        0 => t('Select (drop-down)'),
+        1 => t('Autocomplete textfield'),
+      ),
+      '#default_value' => variable_get('ip_geoloc_region_autocomplete', 0),
     );
     return $form;
   }
@@ -140,6 +152,7 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
     variable_set('ip_geoloc_visitor_address_editable', $edit['ip_geoloc_visitor_address_editable']);
     variable_set('ip_geoloc_visitor_address_default', $edit['ip_geoloc_visitor_address_default']);
     variable_set('ip_geoloc_geo_vocabulary_id', $edit['ip_geoloc_geo_vocabulary_id']);
+    variable_set('ip_geoloc_region_autocomplete', $edit['ip_geoloc_region_autocomplete']);
     return;
   }
   // Save options common to all maps.
@@ -202,7 +215,6 @@ function ip_geoloc_block_view($delta = '') {
       $block['subject'] = t('Set my location');
       $block['content'] = drupal_get_form('ip_geoloc_geocode_address');
       break;
-
   }
   return $block;
 }
@@ -309,18 +321,17 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
   
-  $options = array(0 => t('to where I am now'));
+  $options = array(0 => t('to where I am'));
   if ($is_address_editable) {
-    $options[1] = t('to what I type below');
+    $options[1] = t('to what I type');
   }
   if ($geo_vocabulary_id) {
-    $options[2] = t('to the selected region');
+    $options[2] = t('to a region');
   }
 
   if ($is_address_editable || $geo_vocabulary_id) {
     $form['fixed_address'] = array(
       '#type' => 'radios',
-      //'#title' => t('Set my location'),
       '#options' => $options,
       '#default_value' => isset($location['fixed_address']) ? (int) $location['fixed_address'] : 0,
     );
@@ -329,15 +340,32 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     $regions = array(0 => '--' . t('none') . '--');
     foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
       $regions[$term->tid] = str_repeat('-', $term->depth) . $term->name;
+      if (isset($location['region']) && $location['region'] == $term->tid) {
+        $current_region_name = $term->name;
+      }
     }
-    $form['region'] = array(
-      '#type' => 'select',
-      //'#title' => t('to this region'),
-      '#options' => $regions,
-      '#default_value' => isset($location['region']) ? $location['region'] : 0,
-      '#states' => array(
-        'visible' => array('input[name="fixed_address"]' => array('value' => 2)),
-      ),
+    if (variable_get('ip_geoloc_region_autocomplete')) {
+      $not_set = ''; // <' . t('not set') . '>';
+      // Use an autocomplete textfield, instead of a drop-down selector.
+      $form['region'] = array(
+        '#type' => 'textfield',
+        '#size' => 27,
+        '#default_value' => isset($current_region_name) ? $current_region_name : $not_set,
+        '#description' => t('Enter the first few letters of a region'),
+        // Refer to hook_menu().
+        '#autocomplete_path' => 'ip_geoloc/region_autocomplete',
+        '#executes_submit_callback' => TRUE,
+      );
+    }
+    else {
+      $form['region'] = array(
+        '#type' => 'select',
+        '#options' => $regions,
+        '#default_value' => isset($location['region']) ? $location['region'] : 0,
+      );
+    }
+    $form['region']['#states'] = array(
+      'visible' => array('input[name="fixed_address"]' => array('value' => 2)),
     );
   }
   $default_address = filter_xss(variable_get('ip_geoloc_visitor_address_default', ''));
@@ -355,7 +383,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   if ($is_address_editable || $geo_vocabulary_id) {
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Set location'),
+      '#value' => t('Go'),
       '#submit' => array('ip_geoloc_geocode'),
     );
   }
@@ -404,7 +432,17 @@ function ip_geoloc_geocode($form, &$form_state) {
      // "to what I typed" or "to the region" were pressed
     if ($form_state['values']['fixed_address'] == 2) {
       // "to the region" pressed
-      $location = ip_geoloc_get_location_from_term($form_state['values']['region']);
+      $region = $form_state['values']['region'];
+      if (!is_numeric($region)) {
+        $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
+        foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
+          if (strcasecmp($term->name, $region) === 0) {
+            $region = $term->tid;
+            break;
+          }
+        }
+      }
+      $location = ip_geoloc_get_location_from_term($region);
     }
     else {
       $entered_address = $form_state['values']['street_address'];
@@ -453,7 +491,9 @@ function ip_geoloc_geocode($form, &$form_state) {
   $location['reverse_geocode_now'] = empty($form_state['values']['fixed_address']) ? 1 : 0;
 
   $location['fixed_address'] = $form_state['values']['fixed_address'];
-  $location['region'] = $form_state['values']['region'];
+  if (isset($region)) {
+    $location['region'] = $region;
+  }
   _ip_geoloc_set_session_value('location', $location);
 
   // No need to remember the form state. It's all kept on the session.
@@ -473,6 +513,7 @@ function ip_geoloc_get_location_from_term($tid) {
         return array(
           'provider' => 'taxonomy',
           'ip_address' => ip_address(),
+          'region' => $tid,
           'latitude' => $value['lat'],
           'longitude' => $value['lon'],
         //'formatted_address' => $term->name,

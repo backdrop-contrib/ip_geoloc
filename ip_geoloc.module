@@ -104,7 +104,29 @@ function ip_geoloc_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  $items['ip_geoloc/region_autocomplete'] = array (
+    'title' => t('"Set my location" block region autocomplete'),
+    'page callback' => 'ip_geoloc_region_autocomplete',
+		'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
   return $items;
+}
+
+function ip_geoloc_region_autocomplete($partial_region = '') {
+  $matches = array();
+  if (strlen($partial_region) >= 2) {
+    $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
+    foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
+      $term_name = check_plain($term->name);
+      // We define a "match" as any 2 consecutive chars, case-insensitive.
+      $is_match = stripos($term_name, $partial_region) !== FALSE;
+      if ($is_match) {
+        $matches[$term_name] = $term_name;
+      }
+    }
+  }
+	drupal_json_output($matches);
 }
 
 /**

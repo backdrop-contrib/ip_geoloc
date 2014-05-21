@@ -21,3 +21,33 @@ span.geofield-proximity-origin-from,
 .geofield-proximity-field-wrapper .form-type-select {
   padding-top: 0;
 }
+
+/* "Set my location" block 
+#block-ip-geoloc-geocode-address > h2,
+#block-ip-geoloc-geocode-address > .block-content,
+#block-ip-geoloc-geocode-address > .block-content .form-item,
+#block-ip-geoloc-geocode-address #edit-fixed-address {
+  display: inline-table;
+}
+#edit-fixed-address > .form-item-fixed-address {
+  padding-left: 2px;
+  padding-right: 15px;
+}
+textarea#edit-street-address {
+  resize: none;
+  width: 400px;
+  max-width: 100%;
+  height: 1.7em;
+}
+form.ip-geoloc-address {
+  margin-bottom: 0;
+}
+#block-ip-geoloc-geocode-address > h2 {
+  margin: 1ex 1ex;
+  color: #eee;
+}
+#block-ip-geoloc-geocode-address label,
+#block-ip-geoloc-geocode-address button {
+  color: #eee;
+}
+*/

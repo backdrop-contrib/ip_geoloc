@@ -34,7 +34,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler, TRUE);
 
   $field_options = $fields;
-  $field_options['---'] = '[' . t('Type a field name') . ']';
+  $field_options['---'] = '[' . t('Type a field name below') . ']';
   $selected_options = $views_plugin_style->options['ip_geoloc_views_plugin_latitude'];
   if (!is_array($selected_options)) {
     $selected_options = array($selected_options);
@@ -51,9 +51,11 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#type' => 'textfield',
     '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
     '#states' => array(
-      'visible' => array(
-        ':input[name="style_options[ip_geoloc_views_plugin_latitude][]"]' => array('value' => '---'),
-      ),
+      // Doesn't work on multi-selects, unless with patch from http://drupal.org/node/1149078
+      //'visible' => array(
+      // ':input[name="style_options[ip_geoloc_views_plugin_latitude][]"]' => array(
+      //   'value' => array('---')),
+      //),
     ),
     '#weight' => 11,
   );
@@ -66,7 +68,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
   if (!isset($field_options[$selected_option])) {
-    $selected_option = '---';
+    $selected_option = '';
   }
   $form['ip_geoloc_views_plugin_longitude'] = array(
     '#title' => t('Name of longitude field in Views query'),
@@ -703,7 +705,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     }
     drupal_set_message($msg);
     drupal_set_message($row_contents);
-    drupal_set_message(t('The above messages are shown only to user 1.'), 'warning');
+    drupal_set_message(t('The above messages are shown only to user 1.'));
   }
   // Allow other modules to implement
   // hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
