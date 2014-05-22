@@ -730,6 +730,14 @@ function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_
   // _ip_geoloc_set_session_value('location', $lat_lon_dist);
 }
 
+/* A sneaky way to place leaflet features in the footer
+function ip_geoloc_js_alter(&$javascript) {
+  if (isset($javascript[0]['data']['leaflet'])) {
+    $javascript[0]['type'] = 'setting';
+  }
+}
+ */
+
 /**
  * Implements hook_views_api().
  */
