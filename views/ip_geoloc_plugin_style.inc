@@ -61,7 +61,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $form['ip_geoloc_views_plugin_latitude_desc'] = array(
     '#type' => 'item',
-    '#markup' => t('Select the field holding the latitude from the dropdown above. Make sure you have added it to the Fields list of this View or it won\'t show up above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. If necessary, check the <a target="_field_names" href="!url">list of all field names</a>. <br/>For IP Geolocation Views & Maps <em>visitor</em> data, enter <strong>ip_geoloc_latitude</strong>.', array(
+    '#markup' => t('Select the field holding the latitude from the dropdown above. Make sure you have added it to the Fields list of this View or it won\'t show up above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. If necessary, check the <a target="_field_names" href="!url">list of all field names</a>.', array(
        '!url' => url('admin/reports/fields'),
     )),
     '#weight' => 12,
@@ -1006,6 +1006,9 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   $views_plugin_style->rendered_fields = array();
   $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
   $latitudes = $views_plugin_style->options['ip_geoloc_views_plugin_latitude'];
+  if (!is_array($latitudes)) {
+    $latitudes = array($latitudes);
+  }
   $longitude = trim($views_plugin_style->options['ip_geoloc_views_plugin_longitude']);
 
   foreach ($views_plugin_style->view->result as $i => &$row) {

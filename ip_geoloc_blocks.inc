@@ -39,14 +39,31 @@ function ip_geoloc_block_configure($delta = '') {
     return $form;
   }
   if ($delta == 'geocode_address') {
-    $form['ip_geoloc_visitor_address_editable'] = array(
+    $form['address'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Visitor location'),
+    '#description' => t('This panel and the next offer a number of ways for the visitor to set the focus of maps created through this module.'),
+    );
+    $form['address']['ip_geoloc_visitor_address_editable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Address editable'),
       '#default_value' => variable_get('ip_geoloc_visitor_address_editable', TRUE),
-      '#description' => t('If ticked the visitor may tweak and re-submit their reverse-geocoded address. It will be geocoded to lat/long to become their new location.<br/>If not ticked, this field simply displays the current reverse-geocoded address, without a submit button.'),
+      '#description' => t('If ticked, the visitor may tweak and re-submit their reverse-geocoded address. It will be geocoded to latitude & longitude to become their new location.<br/>If not ticked and the geographical region selector below is also disabled, then this field simply displays the current reverse-geocoded address, without a submit button.'),
+    );
+    $form['address']['ip_geoloc_address_element'] = array(
+      '#type' => 'radios',
+      '#title' => t('UI element displayed to enter and show address'),
+      '#options' => array(
+        0 => t('text field'),
+        1 => t('text area, 1 line'),
+        2 => t('text area, 2 lines'),
+        3 => t('text area, 3 lines'),
+      ),
+      '#default_value' => variable_get('ip_geoloc_address_element', 2),
+      '#description' => t('Text areas may be resized by the visitor, text fields cannot.')
     );
 
-    $form['ip_geoloc_visitor_address_default'] = array(
+    $form['address']['ip_geoloc_visitor_address_default'] = array(
       '#type' => 'textarea',
       '#rows' => 3,
       '#title' => t('Default partial address'),
@@ -64,7 +81,7 @@ function ip_geoloc_block_configure($delta = '') {
         }
       }
     }
-    $description = t('The region selector allows the visitor to zoom-in on a geographical area, such as a province or country, picked from a taxonomy vocabulary. The vocabulary has a <a target="geofield" href="@url">Geofield</a> attached, providing  the latitude and longitude of the centre of the region.', array(
+    $description = t('The region selector allows the visitor to zoom in on a geographical area, such as a province or wine region, picked from a taxonomy vocabulary. The vocabulary must have a <a target="geofield" href="@url">Geofield</a> attached, providing the latitude & longitude of the centre of the region.', array(
       '@url' => url('http://drupal.org/project/geofield'),
     ));
     $form['region'] = array(
@@ -82,7 +99,7 @@ function ip_geoloc_block_configure($delta = '') {
     }
     $form['region']['ip_geoloc_region_autocomplete'] = array(
       '#type' => 'radios',
-      '#title' => t('UI element offered to select geographical region'),
+      '#title' => t('UI element displayed to select geographical region'),
       '#options' => array(
         0 => t('Select (drop-down)'),
         1 => t('Autocomplete textfield'),
@@ -151,6 +168,7 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
   if ($delta == 'geocode_address') {
     variable_set('ip_geoloc_visitor_address_editable', $edit['ip_geoloc_visitor_address_editable']);
     variable_set('ip_geoloc_visitor_address_default', $edit['ip_geoloc_visitor_address_default']);
+    variable_set('ip_geoloc_address_element', $edit['ip_geoloc_address_element']);
     variable_set('ip_geoloc_geo_vocabulary_id', $edit['ip_geoloc_geo_vocabulary_id']);
     variable_set('ip_geoloc_region_autocomplete', $edit['ip_geoloc_region_autocomplete']);
     return;
@@ -321,12 +339,12 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
   
-  $options = array(0 => t('to where I am'));
+  $options = array(0 => t('Here'));
   if ($is_address_editable) {
-    $options[1] = t('to what I type');
+    $options[1] = t('There');
   }
   if ($geo_vocabulary_id) {
-    $options[2] = t('to a region');
+    $options[2] = t('Region');
   }
 
   if ($is_address_editable || $geo_vocabulary_id) {
@@ -349,9 +367,9 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       // Use an autocomplete textfield, instead of a drop-down selector.
       $form['region'] = array(
         '#type' => 'textfield',
-        '#size' => 27,
+        '#size' => 29,
         '#default_value' => isset($current_region_name) ? $current_region_name : $not_set,
-        '#description' => t('Enter the first few letters of a region'),
+        '#description' => t('Type the first letters of a region.'),
         // Refer to hook_menu().
         '#autocomplete_path' => 'ip_geoloc/region_autocomplete',
         '#executes_submit_callback' => TRUE,
@@ -368,11 +386,11 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       'visible' => array('input[name="fixed_address"]' => array('value' => 2)),
     );
   }
+  $textarea = variable_get('ip_geoloc_address_element', 2);
   $default_address = filter_xss(variable_get('ip_geoloc_visitor_address_default', ''));
   $form['street_address'] = array(
-    '#type' => 'textarea',
-    '#rows' => 2,
-    //'#title' => t('Approximate address'),
+    '#type' => $textarea ? 'textarea' : 'textfield',
+    '#rows' => $textarea,
     '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
     '#disabled' => !$is_address_editable || empty($location['fixed_address']) ,
     '#states' => array(

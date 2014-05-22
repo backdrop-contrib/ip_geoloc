@@ -232,10 +232,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     // Add wrapper for cluster differentiator drop-down and region level
     // specifiers.
     // The id in the prefix must match the AJAX submit handlers below.
+    $warning = '<p><strong>' . t('This feature is under development. Not ready, yet.') . '</strong></p>';
+
     $form['cluster_differentiator'] = array(
       '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
       '#title' => t('Marker cluster differentiator'),
-      '#description' => t('While the location differentiator determines the colour of individual markers, the cluster differentiator decides which <em>region</em> a marker belongs at available zoom-levels. Typical examples of regions are continent, country, state, suburb. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from being included in the same cluster. <br/>Make sure the cluster differentiator you wish to use is included in this view as a field. It may have the "Excluded" box ticked. Markers that do not belong to any cluster group are deemed to be members of the <em>global</em> group. The exception is the visitor marker, which is excluded from clustering.'),
+      '#description' => $warning . t('While the location differentiator determines the colour of individual markers, the cluster differentiator decides which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, suburb or areas like wine regions, breeding grounds etc. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from being included in the same cluster. <br/>Make sure the cluster differentiator you wish to use is included in this view as a field. You may tick its "Excluded" box. Markers that do not belong to any cluster group are deemed to be members of the <em>global</em> group. The exception is the visitor marker, which is excluded from clustering.'),
       '#prefix' => '<div id="cluster-differentiator-wrapper">',
       '#suffix' => '</div>',
       '#weight' => 103,
@@ -349,6 +353,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   /**
    * Transform the View result in a list of marker locations and render on map.
+   *
+   * @todo refactor
    */
   public function render() {
     if (empty($this->options['map']) || !($map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']))) {
@@ -367,7 +373,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
-    $cluster_differentiator_zoom_ranges = $this->options['cluster_differentiator']['zoom_range'];
     $tag_css_classes = $this->options['tags']['tag_css_class'];
 
     $module_path = drupal_get_path('module', 'ip_geoloc');
@@ -579,10 +584,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     // Make sure we start array with 0 and no missing elements. Ohterwise this
     // array will arrive as an Object on the JS side.
     $map['settings']['regionLevels'] = array_fill(0, $max_zoom + 1, 0);
-    foreach ($cluster_differentiator_zoom_ranges as $level => $zoom_range) {
-      for ($zoom = 1; $zoom <= $max_zoom; $zoom++) {
-        if (ip_geoloc_is_in_range($zoom, $zoom_range)) {
-          $map['settings']['regionLevels'][$zoom] = $level;
+    if (!empty($this->options['cluster_differentiator']['zoom_range'])) {
+      foreach ($this->options['cluster_differentiator']['zoom_range'] as $level => $zoom_range) {
+        for ($zoom = 1; $zoom <= $max_zoom; $zoom++) {
+          if (ip_geoloc_is_in_range($zoom, $zoom_range)) {
+            $map['settings']['regionLevels'][$zoom] = $level;
+          }
         }
       }
     }
@@ -603,7 +610,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     drupal_add_js(array('leaflet' => array($settings)), 'setting');
 
-    // Little hacky this,  but can't see another way to conditionally load
+    // Little hacky this, but can't see another way to load libraries for
     // Leaflet More Maps, Leaflet MarkerCluster, Leaflet Hash...
     libraries_load('leaflet');
     drupal_alter('leaflet_map_prebuild', $settings);
@@ -625,7 +632,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     return $output;
   }
 
-  private function fill_out_location_region($field_type, &$location, $region) {
+  private function _fill_out_location_region($field_type, &$location, $region) {
 
     switch ($field_type) {
 
@@ -663,7 +670,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           $values = ip_geoloc_get_view_result($this, $field, $key);
           if (!empty($values)) {
             $region = ($field['type'] == 'addressfield') ? $values : end($values);
-            $this->fill_out_location_region($field['type'], $locations[$key], $region);
+            $this->_fill_out_location_region($field['type'], $locations[$key], $region);
           }
         }
       }
