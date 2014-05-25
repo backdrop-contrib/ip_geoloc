@@ -14,26 +14,36 @@ configuration page, .../admin/config/system/ip_geoloc.
 If you intend to use IPGV&M's built-in interface to Google Maps, untick all
 "Data collection option" boxes.
 If you intend to use IPGV&M with the OpenLayers or Leaflet modules and also wish
-to show and center on the visitor's HTML-5 retrieved location, then you DO need
-to tick the first "Data collection option" and select applicable roles below it.
+to show and center on the visitor's HTML5 retrieved location, then you have two
+options:
+a) tick the first "Data collection option" and select applicable roles below it
+b) use the "Set my location" block, so visitors can center the map using their
+HTML5 location as retrieved through GPS/WiFi, or using the same block type
+a city or partial address, like "New York".
 
 You are now ready to map your View of Location, Geofield, Geolocation Field or
-GetLocations data and optionally center that map on the visitor's location.
+GetLocations. You can even put on the same map multiple content types that use
+different coordinate storage fields.
+
 Visit the IPGV&M configuration page to specify an alternative marker set. When
 using Leaflet you can superimpose Font Awesome font characters on top of your
 markers. See below for instructions on how to download the Font Awesome library.
 
-The "Views PHP" module is required for the included /visitor-log View. The core
-module Statistics must be enabled also when you wish to collect visitor data.
-It is not required for maps in general. The "Session Cache API" and
-"High-performance Javascript callback handler" modules are optional, but
-recommended.
+The "Views PHP" module is required for the included /visitor-log View.
+
+The core module Statistics must be enabled also when you wish to collect visitor
+data. It is not required for maps in general.
+
+The "Session Cache API" and "High-performance Javascript callback handler"
+modules are optional, but recommended.
 
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you may want
 to configure an alternative lat/long lookup based on IP address. For this follow
 installation instruction B1a or B1b below, depending on whether you'd like to
-employ Smart IP or GeoIP for this.
+employ Smart IP or GeoIP for this. Or you can use the "Set my location" block,
+which will only prompt the user to confirm when they explicitly request to
+reverse-geocode their location.
 
 If you DO want to auto-record visitor address details then complete the steps
 under A and B below.
@@ -120,6 +130,10 @@ used.
 Then, after selecting the View Format "Map (Google, via IPGV&M)", "Map (Leaflet,
 via IPGV&M)" or "Map (OpenLayers, via IPGV&M)" select or type field_name in the
 "Name of latitude field in Views query".
+Note that IPGV&M can handle multiple fields containing latitudes. This comes in
+handy when your View brings together content types with different latitude field
+machine names. When using multiple fields for the latitude, you must select
+<none> for "Name of LONGITUDE field in Views query".
 Fill out the remaining options to your liking. Save. Done.
 
 LEAFLET TIPS
@@ -168,7 +182,7 @@ ALTERNATIVE MARKER ICONS (LEAFLET, GOOGLE MAPS)
 ===============================================
 Find on the web a marker icon set you like, eg http://mapicons.nicolasmollet.com
 Download and extract the icon image files, which must have extension .png,
-into a directory anywhere in your Drupal instal,
+into a directory anywhere in your Drupal install,
 e.g. sites/default/files/map_markers.
 Now visit the the IP Geolocation Views & Maps configuration page at
 admin/config/system/ip_geoloc. Expand the "Alternative markers" fieldset.

@@ -312,7 +312,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   print "ip_geoloc_locations['$div_id'] = [\n";
 
   foreach ($locations as $location) {
-    $balloon_text = isset($location->balloon_text) ? str_replace("\n", '', $location->balloon_text) : '';
+    $balloon_text = isset($location->balloon_text) ? addslashes(str_replace("\n", '', $location->balloon_text)) : '';
     print '{ "type":"point"' .
       (empty($location->marker_color) ? '' : ',"marker_color":"' . $location->marker_color . '"') .
       (empty($location->open) ? '' : ',"open":1') .
