@@ -28,8 +28,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'differentiator_field' => array('default' => ''),
       ),
     );
-    $options['default_marker_color'] = array('default' => '');
-    $options['default_marker_special_char'] = array('default' => '');
+    //$options['default_marker_color'] = array('default' => '');
+    //$options['default_marker_special_char'] = array('default' => '');
+    //$options['default_marker_special_char_class'] = array('default' => '');
     $options['center_option'] = array('default' => 0);
     $options['empty_map_center'] = array('default' => '');
     $options['visitor_marker_color'] = array('default' => 'none');
@@ -41,6 +42,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'contains' => array(
         'cluster_differentiator_field' => array('default' => ''),
         'zoom_ranges' => array('default' => array())
+      ),
+    );
+    $options['default_marker'] = array(
+      'contains' => array(
+        'default_marker_color' => array('default' => ''),
+        'default_marker_special_char' => array('default' => ''),
+        'default_marker_special_char_class' => array('default' => ''),
       ),
     );
     $options['tooltips'] = array(
@@ -71,6 +79,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
+    $path = drupal_get_path('module', 'ip_geoloc');
+    $form['#attached'] = array('css' => array("$path/css/ip_geoloc_admin.css"));
+
     $maps = array();
     foreach (ip_geoloc_plugin_style_leaflet_map_get_info() as $key => $map) {
       $maps[$key] = $map['label'];
@@ -95,24 +106,49 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
+    unset($form['default_marker_color']);
 
-    $desc = t('<strong>Leaflet</strong> only: optionally enter a special character representing an icon to be superimposed on the marker image. You may copy and paste from <a target="_font_awesome" href="!url1">Font Awesome</a> (requires installation, see README) or any other source, such as <a target="_fsymbols" href="!url2">fsymbols</a> (no installation required). Copy and paste either the font icon or the unicode, like <strong>&amp;#xf015;</strong>', array(
-      '!url1' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
-      '!url2' => url('http://fsymbols.com'),
+    $desc1 = t('In addition to selecting a color, you may superimpose a special icon on top of each marker. <br/><a target="fsymbols" href="!url_fsymbols">fsymbols</a> characters can be copied and pasted straight into the <strong>Font icon character</strong> field. <br/>Other libraries like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> and <a target="flaticon" href="!url_flaticon">flaticon</a> use names that you type in the <strong>Font icon class</strong> field.', array(
+      '!url_fsymbols' => url('http://fsymbols.com'),
+      '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
+      '!url_flaticon' => url('http://flaticon.com'),
     ));
-    $path = drupal_get_path('module', 'ip_geoloc');
-    if (!ip_geoloc_get_ccs_library_path('font-awesome')) {
-      $desc .= ' ' . t('Please follow instructions in the <a href="@README">README</a> to install the <em>Font Awesome</em> library.', array(
-        '@README' => url("$path/README.txt"),
-      ));
-    }
-    $form['default_marker_special_char'] = array(
-      '#title' => t('Default location marker special character'),
+    $desc2 = t('<em>fsymbols</em> require no further installation. For other libraries see the <a target="readme" href="!url_readme">README</a>.', array(
+      '!url_readme' => url("$path/README.txt"),
+    ));
+
+    $desc3 = t('All this works best with the markers from the <em>/amarkers</em> directory, configurable <a target="config" href="!url_config">here</a>.', array(
+      '!url_config' => url('admin/config/system/ip_geoloc'),
+    ));
+
+    $form['default_marker'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Default marker style'),
+      '#description' => $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
+      '#weight' => 27,
+    );
+    $form['default_marker']['default_marker_color'] = array(
+      '#title' => t('Style/color'),
+      '#type' => 'select',
+      '#default_value' => $this->options['default_marker']['default_marker_color'],
+      '#options' => ip_geoloc_marker_colors(),
+      '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>Location differentiator</strong> below.'),
+      '#attributes' => array('class' => array('marker-color')),
+    );
+    $form['default_marker']['default_marker_special_char'] = array(
+      '#title' => t('Font icon character'),
       '#type' => 'textfield',
       '#size' => 8,
-      '#default_value' => $this->options['default_marker_special_char'],
-      '#description' => $desc,
-      '#weight' => 22,
+      '#default_value' => $this->options['default_marker']['default_marker_special_char'],
+      '#description' => t('Paste directly from <a href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
+    );
+    $desc4 =  t('Use the class name from the font icon library you are using. Font Awesome example: <strong>fa fa-beer</strong>');
+    $form['default_marker']['default_marker_special_char_class'] = array(
+      '#title' => t('Font icon class'),
+      '#type' => 'textfield',
+      '#size' => 25,
+      '#default_value' => $this->options['default_marker']['default_marker_special_char_class'],
+      '#description' => $desc4,
     );
 
     $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
@@ -239,7 +275,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#title' => t('Marker cluster differentiator'),
-      '#description' => $warning . t('While the location differentiator determines the colour of individual markers, the cluster differentiator decides which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, suburb or areas like wine regions, breeding grounds etc. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from being included in the same cluster. <br/>Make sure the cluster differentiator you wish to use is included in this view as a field. Fields that are particularly suitable for clustering are AddressFields and taxonomies with depth. You may tick the "Excluded" box on the field, if you do not wish it to appear in the marker balloons. Markers that do not belong to any cluster group are deemed to be members of the <em>global</em> group. The exception is the visitor marker, which is excluded from clustering.'),
+      '#description' => $warning . t('While the location differentiator determines the color of individual markers, the cluster differentiator decides which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, suburb or areas like wine regions, breeding grounds etc. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from being included in the same cluster. <br/>Make sure the cluster differentiator you wish to use is included in this view as a field. Fields that are particularly suitable for clustering are AddressFields and taxonomies with depth. You may tick the "Excluded" box on the field, if you do not wish it to appear in the marker balloons. Markers that do not belong to any cluster group are deemed to be members of the <em>global</em> group. The exception is the visitor marker, which is excluded from clustering.'),
       '#prefix' => '<div id="cluster-differentiator-wrapper">',
       '#suffix' => '</div>',
       '#weight' => 103,
@@ -369,7 +405,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $this->fill_out_location_regions($locations);
 
-    $marker_color = $this->options['default_marker_color'];
+    $marker_color = $this->options['default_marker']['default_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
     $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
@@ -481,19 +517,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         }
         if (!empty($location->marker_special_char_class)) {
           $feature['specialCharClass'] = $location->marker_special_char_class;
-          if (strpos($feature['specialCharClass'], 'fa fa-') !== FALSE || strpos($feature['specialCharClass'], 'icon-') !== FALSE /* Font-Awesome v3 */) {
-            // Load the 18k of CSS that comes with Font Awesome, which in return
-            // tells the browser to fetch either the WOFF (44k), TTF (80k) or
-            // SVG (202k) files that define the font faces.
-            drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
-          }
+          // Load the CSS that comes with the font iocn library which in return
+          // tells the browser to fetch either the WOFF, TTF or SVG files that
+          // define the font faces.
+          drupal_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
         }
       }
-      elseif (!empty($this->options['default_marker_special_char'])) {
-        $feature['specialChar'] = $this->options['default_marker_special_char'];
-        // Assume Font Awesome, add .fa class to make the special char work.
-        $feature['specialCharClass'] = 'fa';
-        drupal_add_library('ip_geoloc', 'ip_geoloc_font_awesome');
+      elseif (!empty($this->options['default_marker']['default_marker_special_char'])
+        || !empty($this->options['default_marker']['default_marker_special_char_class'])) {
+        $feature['specialChar'] = $this->options['default_marker']['default_marker_special_char'];
+        $feature['specialCharClass'] = $this->options['default_marker']['default_marker_special_char_class'];
+        drupal_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
       }
       if (!empty($location->marker_tooltip)) {
         $has_special_markers = TRUE;
@@ -716,7 +750,7 @@ function _ip_geoloc_get_center($location) {
  *
  * @return bool
  *   TRUE if marker color is "0", zero, or FALSE
- *   FALSE if marker colour equals '' or NULL
+ *   FALSE if marker color equals '' or NULL
  */
 function _ip_geoloc_is_no_marker($marker_color) {
   return isset($marker_color) && ($marker_color === '0' || $marker_color === 0 || $marker_color === FALSE);

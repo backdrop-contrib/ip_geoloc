@@ -481,7 +481,6 @@ function ip_geoloc_geocode($form, &$form_state) {
           drupal_set_message(t('The address you entered could not be geocoded to a location.'), 'warning');
           return;
         }
-
         $location = array(
           'provider' => 'user+google',
           'ip_address' => ip_address(),
@@ -506,7 +505,7 @@ function ip_geoloc_geocode($form, &$form_state) {
   // If "to where I am now" was pressesd, we set a flag indicating to
   // ip_geoloc_init() that we want to find the visitor's current position using
   // their HTML5-based browser immediately, not waiting for the next cycle.
-  $location['reverse_geocode_now'] = empty($form_state['values']['fixed_address']) ? 1 : 0;
+  _ip_geoloc_set_session_value('reverse_geocode_now', empty($form_state['values']['fixed_address']) ? 1 : 0);
 
   $location['fixed_address'] = $form_state['values']['fixed_address'];
   if (isset($region)) {

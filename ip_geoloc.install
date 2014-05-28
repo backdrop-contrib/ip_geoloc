@@ -62,24 +62,40 @@ function ip_geoloc_requirements($phase) {
       $requirements['ip_geoloc_lbs']['description'] .= ' ' . $warning;
     }
   }
-  $css_file = FALSE;
-  $requirements['ip_geoloc_font_awesome']['title'] = $t('IP Geolocation Views & Maps <em>Font Awesome</em> extension');
-  if ($css_path = ip_geoloc_get_ccs_library_path('font-awesome')) {
-    $css_file = "$css_path/font-awesome.min.css";
+
+  $requirements['ip_geoloc_font_libs']['title'] = $t('IP Geolocation Views & Maps font icon libraries');
+  $requirements['ip_geoloc_font_libs']['severity'] = REQUIREMENT_OK;
+  $requirements['ip_geoloc_font_libs']['description'] = t('When using Leafet you may superimpose font icons on your markers. <a target="fsybmols" href="!url_fsymbols">fsymbols</a> do not require any files to be downloaded, but other font icons like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> icons do. See the <a target="readme" href="!url_readme">README</a> for more details on font icon libraries.', array(
+    '!url_fsymbols' => url('http://fsymbols.com'),
+    '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome'),
+     '!url_readme' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'),
+  ));
+  $requirements['ip_geoloc_font_libs']['value'] = '';
+  $num_font_libs = 0;
+  foreach (ip_geoloc_get_font_icon_libs() as $i => $css_file) {
+    $css_file = trim($css_file);
+    if (!empty($css_file)) {
+      if (file_exists($css_file)) {
+        $msg = $t('Font icon library #@i found at %css_file', array(
+          '@i' => $i,
+          '%css_file' => $css_file
+        ));
+        $num_font_libs++;
+      }
+      else {
+        $msg = $t('File %file was entered on the <a target="config" href="!url_config">configuration page</a> but not found.', array(
+          '%file' => $css_file,
+          '!url_config' => url('admin/config/system/ip_geoloc'),
+        ));
+        $requirements['ip_geoloc_font_libs']['severity'] = REQUIREMENT_WARNING;
+      }
+      $requirements['ip_geoloc_font_libs']['value'] .= $msg . '<br/>';
+    }
   }
-  if (file_exists($css_file)) {
-    $requirements['ip_geoloc_font_awesome']['value'] = $t('Font library installed at %css_file', array('%css_file' => $css_file));
-    $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_OK;
-  }
-  else {
-    $s1 = $t('%dir found, but required .css file not present: %file', array(
-      '%dir' => $css_path, '%file' => $css_file)
-    );
-    $s2 = $t('The optional <em>font-awesome</em> library directory was not found, so you will not be able to superimpose any Font Awesome symbols on top of your markers. See the <a href="@README">README</a> for instructions on downloading the Font Awesome library.', array(
-      '@README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'))
-    );
-    $requirements['ip_geoloc_font_awesome']['value'] = $css_path ? $s1 : $s2;
-    $requirements['ip_geoloc_font_awesome']['severity'] = REQUIREMENT_WARNING;
+  if ($num_font_libs == 0) {
+    $requirements['ip_geoloc_font_libs']['value'] .= $t('No font icon libraries found. However you can still copy and paste font icons from <a target="fsybmols" href="!url_fsymbols">fsymbols</a>.', array(
+      '!url_fsymbols' => url('http://fsymbols.com'),
+    ));
   }
   return $requirements;
 }

@@ -128,11 +128,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     $form['default_marker_color']['#attached']['css'] = array("$path/css/$css_file");
   }
 
-  $descr = t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.<br/><strong>Leaflet</strong> only: you may input a special character, for example from <a target="_font_awesome" href="!url2">Font Awesome</a> (requires installation, see README) or <a target="_fsymbols" href="!url1">fsymbols</a> (no installation required), to be superimposed as a font-icon on the marker image. For <em>fsymbols</em> copy and paste the desired font-icon into the Special Char field. For <em>Font Awesome</em> icons leave the Special Char field empty. Instead type the <em>Font Awesome</em> icon name in the Special Char CSS Class field. Example: <strong>fa fa-beer</strong>. <br/>All this works best with the markers from the <em>/amarkers</em> directory, configurable <a target="_ip_geoloc_config" href="!url3">here</a>.', array(
-    '!url1' => url('http://fsymbols.com'),
-    '!url2' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
-    '!url3' => url('admin/config/system/ip_geoloc'),
-  ));
+  $descr = t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.');
   // Add wrapper for differentiator drop-down, association table and buttons.
   // The id in the prefix must match the AJAX submit handlers below.
   $form['differentiator'] = array(
@@ -528,9 +524,9 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
 
   $headers = array(
     t('%differentiator value', array('%differentiator' => $differentiator_label)),
-    t('Associated marker image'),
-    t('Special char'),
-    t('Special char CSS class'),
+    t('Associated style/color'),
+    t('Font icon character'),
+    t('Font icon class'),
   );
   $rows = array();
   foreach ($form_children as $key) {

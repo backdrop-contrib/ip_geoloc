@@ -14,6 +14,8 @@
  * For programmers there's an API.
  */
 
+define('IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS', 4);
+
 define('IP_GEOLOC_CALLBACK_TIMEOUT', 30);
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
 define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*");
@@ -52,34 +54,20 @@ function ip_geoloc_help($path, $arg) {
  * Implements hook_library().
  */
 function ip_geoloc_library() {
-
-  if (!($css_path = ip_geoloc_get_ccs_library_path('font-awesome'))) {
-    return NULL;
-  }
-  $libraries['ip_geoloc_font_awesome'] = array(
-    'title' => 'IP Geolocation Views & Maps Font Awesome extension',
-    'css' => array(
-      "$css_path/font-awesome.min.css" => array(
+  $libraries = array();
+  foreach (ip_geoloc_get_font_icon_libs() as $css_file) {
+    $css_file = trim($css_file);
+    if (!empty($css_file)) {
+      $libraries['ip_geoloc_font_icon_libs']['css'][$css_file] = array(
         'type' => 'file',
-        'media' => 'screen',
-      ),
-    ),
-  );
+        'media' => 'all',
+      );
+    }
+  }
+  if (!empty($libraries['ip_geoloc_font_icon_libs']['css'])) {
+    $libraries['ip_geoloc_font_icon_libs']['title'] = t('IPGV&M font icon libraries');
+  }
   return $libraries;
-}
-
-/**
- * Get CSS library path.
- *
- * @param string $lib_path
- *   Defaults to 'font-awesome'.
- *
- * @return string
- *   Path location or FALSE if not found.
- */
-function ip_geoloc_get_ccs_library_path($lib_path = 'font-awesome') {
-  $path = libraries_get_path($lib_path);
-  return $path ? "$path/css" : FALSE;
 }
 
 /**
@@ -166,11 +154,18 @@ function ip_geoloc_init() {
   
   ip_geoloc_log_errors();
 
+  if (!variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+    // If geocoding is not desired, reset 'position_pending_since' timer.
+    _ip_geoloc_set_session_value('position_pending_since', NULL);
+  }
+
   $location = ip_geoloc_get_visitor_location();
 
-  // Decrement 'force now' counter, if set, e.g. on "Set my location" block.
+  // Decrement 'geocode now' counter, if set, e.g. via "Set my location" block.
   // Typically only 1 forced reverse geocode in succession.
-  $force_reverse_geocode = !empty($location['reverse_geocode_now']) && $location['reverse_geocode_now']--;
+  if ($force_reverse_geocode = $reverse_geocode_count = _ip_geoloc_get_session_value('reverse_geocode_now')) {
+    _ip_geoloc_set_session_value('reverse_geocode_now', --$reverse_geocode_count);
+  }
 
   $reverse_geocode_client_timeout = $force_reverse_geocode ? FALSE : ip_geoloc_reverse_geocode_timeout();
 
@@ -686,6 +681,24 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
       form_error($element, t('Invalid range.'));
     }
   }
+}
+
+/**
+ * Returns an array of libraries as entered on the config page.
+ */
+function ip_geoloc_get_font_icon_libs() {
+  $libs = array();
+  for ($i = 1; $i <= IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS; $i++) {
+    $file = variable_get("ip_geoloc_font_icon_lib$i");
+    if (!empty($file)) {
+      $libs[$i] = $file;
+    }
+  }
+  $known_install = 'sites/all/libraries/font-awesome/css/font-awesome.min.css';
+  if (empty($libs) && file_exists($known_install)) {
+    $libs[1] = $known_install;
+  }
+  return $libs;
 }
 
 /**

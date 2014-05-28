@@ -10,6 +10,8 @@
  */
 function ip_geoloc_admin_configure() {
 
+  global $base_url;
+
   $form['markers'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -20,6 +22,7 @@ function ip_geoloc_admin_configure() {
   $form['markers']['ip_geoloc_marker_directory'] = array(
     '#type' => 'textfield',
     '#title' => t('<strong>Google Maps, Leaflet</strong>: path to marker images'),
+    '#field_prefix' => "$base_url/",
     '#default_value' => variable_get('ip_geoloc_marker_directory', "$markers_path/markers"),
     '#description' => t('Marker sets included with the module reside in %set1 and %set2. All marker images must be .png files.', array(
       '%set1' => "$markers_path/markers",
@@ -51,6 +54,30 @@ function ip_geoloc_admin_configure() {
     '#description' => t('Only relevant when you have selected "differentiator" fields in your view.'),
   );
 
+  $form['font_icons'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Font icons (Leaflet only)'),
+    '#description' => t('Some of the benefits of font icons are explained <a target="flink" href="!url_flink">here</a>. <br/>If you decide to use them, a good spot to put the font icon libraries you choose to download is in subdirectories of %url_libs.<br/>Each font icon library normally contains a CSS file through which other files in the library are referred. Type the filespec of those CSS files below, one per library.<br/><strong>Example 1</strong>, <a target="fontawesome" href="!url_fontawesome">Font Awesome</a>: %css_file1 <br/><strong>Example 2</strong>, <a target="flaticon" href="!url_flaticon">flaticon</a>: %css_file2', array(
+      '!url_flink' => url('http://flink.com.au/ramblings/spruce-your-map-markers-font-icons'),
+      '%url_libs' => '/sites/all/libraries',
+      '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome'),
+      '%css_file1' => 'sites/all/libraries/font-awesome/css/font-awesome.min.css',
+      '!url_flaticon' => url('http://flaticon.com'),
+      '%css_file2' => 'sites/all/libraries/flaticon/food-icons/flaticon.css',
+    ))
+  );
+  $libs = ip_geoloc_get_font_icon_libs();
+  for ($i = 1; $i <= count($libs) + 1; $i++) {
+    $form['font_icons']["ip_geoloc_font_icon_lib$i"] = array(
+      '#type' => 'textfield',
+      '#field_prefix' => "$base_url/",
+      '#title' => t('Main CSS file belonging font icon library #@i', array('@i' => $i)),
+      '#default_value' => empty($libs[$i]) ? '' : $libs[$i],
+    );
+  }
+  
   if (ip_geoloc_diagnose() > 0) {
     // Form for sync-ing the geolocation table with the system accesslog.
     $form['ip_geoloc_db_options'] = array(

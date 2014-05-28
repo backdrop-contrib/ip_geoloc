@@ -26,8 +26,7 @@ GetLocations. You can even put on the same map multiple content types that use
 different coordinate storage fields.
 
 Visit the IPGV&M configuration page to specify an alternative marker set. When
-using Leaflet you can superimpose Font Awesome font characters on top of your
-markers. See below for instructions on how to download the Font Awesome library.
+using Leaflet you can superimpose scalable font icon on top of yourmarkers, e.g., from fsymbols, Font Awesome or flaticon. See below for details.
 
 The "Views PHP" module is required for the included /visitor-log View.
 
@@ -182,22 +181,49 @@ ALTERNATIVE MARKER ICONS (LEAFLET, GOOGLE MAPS)
 ===============================================
 Find on the web a marker icon set you like, eg http://mapicons.nicolasmollet.com
 Download and extract the icon image files, which must have extension .png,
-into a directory anywhere in your Drupal install,
-e.g. sites/default/files/map_markers.
-Now visit the the IP Geolocation Views & Maps configuration page at
-admin/config/system/ip_geoloc. Expand the "Alternative markers" fieldset.
-Enter the path to your map_markers directory and the dimensions of your markers.
+into a directory anywhere in your Drupal install, maybe
+sites/all/libraries/map_markers1.
+Now visit the the IPGV&M configuration page at admin/config/system/ip_geoloc.
+Expand the "Alternative markers" fieldset.
+Enter the path to your markers directory and the dimensions of your markers.
 The marker set will now be available in your map settings, in particular in the
 differentiator settings.
 
-"FONT AWESOME" ICONS SUPERIMPOSED ON YOUR MARKER IMAGES (LEAFLET)
-=================================================================
+FONT ICONS SUPERIMPOSED ON YOUR MARKER IMAGES (LEAFLET)
+=======================================================
+Some of the benefits of font icons are described in this article:
+http://flink.com.au/ramblings/spruce-your-map-markers-font-icons
+
+Most font icon libraries can be used and more than one can be used at the same
+time. However some libraries may require some CSS tweaking in your theme file to
+size and position the icons in the center of the markers you are using.
+The style sheets that come with IPGV&M have been tested to work well in most
+themes with the icons from fsymbols, Font Awesome and flaticon.
+
+fsymbols can be copied and pasted from http://fsymbols.com as needed on the
+IPGV&M Views map configuration panel. No need to refer to any library.
+
 To install Font Awesome visit http://fortawesome.github.io/Font-Awesome and
 press the "Download" button. Unzip the downloaded file into the Drupal
-libraries directory, typically sites/all/libraries. Remove the version number
-from the directory name, so that the path to the essential style sheet becomes
-sites/all/libraries/font-awesome/css/font-awesome.min.css. Double-check via the
-Status Report page, .../admin/reports/status.
+libraries directory, typically sites/all/libraries. Optionally remove the
+version number from the directory name, so that the path to the essential style
+sheet becomes sites/all/libraries/font-awesome/css/font-awesome.min.css.
+Then enter that path at admin/config/system/ip_geoloc.
+
+flaticon icon packs can be selected from http://www.flaticon.com/pack.
+First create the directory sites/all/libraries/flaticon, then download and unzip
+the pack into that directory, so that the path to the essential style sheet is
+sites/all/libraries/flaticon/PACK/flaticon.css, where PACK may be something like
+"food-icons".
+Then enter that path at admin/config/system/ip_geoloc.
+
+What to do when my font icons are off-centre, too big or too small?
+-------------------------------------------------------------------
+Because font icons are infinitely scalable this is easily fixed. In your theme
+CCS file (style.css?) override the applicable styles from
+ip_geoloc/css/ip_geoloc_leaflet_markers.css, in particular the attributes
+"top", "left" and "font-size".
+
 
 UTILITY FUNCTIONS
 =================
@@ -223,7 +249,8 @@ o copy those lines and paste them into .htaccess below the line
   "RewriteEngine on".
 
 IPGV&M will now perform its AJAX calls more efficiently. To switch this feature
-off, comment out the newly added lines from the .htaccess file (put # in front).
+off, comment out the newly added lines from the .htaccess file (put a # in front
+of each line).
 
 RESTRICTIONS IMPOSED BY GOOGLE
 ==============================
