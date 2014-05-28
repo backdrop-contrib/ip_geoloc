@@ -59,25 +59,31 @@ function ip_geoloc_admin_configure() {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Font icons (Leaflet only)'),
-    '#description' => t('Some of the benefits of font icons are explained <a target="flink" href="!url_flink">here</a>. <br/>If you decide to use them, a good spot to put the font icon libraries you choose to download is in subdirectories of %url_libs.<br/>Each font icon library normally contains a CSS file through which other files in the library are referred. Type the filespec of those CSS files below, one per library.<br/><strong>Example 1</strong>, <a target="fontawesome" href="!url_fontawesome">Font Awesome</a>: %css_file1 <br/><strong>Example 2</strong>, <a target="flaticon" href="!url_flaticon">flaticon</a>: %css_file2', array(
+    '#description' => t('Some of the benefits of font icons are explained <a target="flink" href="!url_flink">here</a>. <br/>If you decide to use them, a good spot to put the font icon libraries you choose to download is in subdirectories of %url_libs.<br/>Each font icon library normally contains a CSS file through which other files in the library are referred. Type the filespec of those CSS files below, one per library. After you have saved the configuration, check the <a target="status" href="!url_status">status report</a> page for errors.<br/><strong>Example 1</strong>, <a target="fontawesome" href="!url_fontawesome">Font Awesome</a>: %css_file1 <br/><strong>Example 2</strong>, <a target="flaticon" href="!url_flaticon">flaticon</a>: %css_file2', array(
       '!url_flink' => url('http://flink.com.au/ramblings/spruce-your-map-markers-font-icons'),
       '%url_libs' => '/sites/all/libraries',
       '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome'),
       '%css_file1' => 'sites/all/libraries/font-awesome/css/font-awesome.min.css',
-      '!url_flaticon' => url('http://flaticon.com'),
+      '!url_flaticon' => url('http://flaticon.com/packs'),
       '%css_file2' => 'sites/all/libraries/flaticon/food-icons/flaticon.css',
+      '!url_status' => url('admin/reports/status'),
     ))
   );
   $libs = ip_geoloc_get_font_icon_libs();
-  for ($i = 1; $i <= count($libs) + 1; $i++) {
+  $count = max(2, min(count($libs) + 1, IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS));
+  for ($i = 1; $i <= $count; $i++) {
     $form['font_icons']["ip_geoloc_font_icon_lib$i"] = array(
       '#type' => 'textfield',
       '#field_prefix' => "$base_url/",
-      '#title' => t('Main CSS file belonging font icon library #@i', array('@i' => $i)),
+      '#title' => t('Main CSS file belonging to font icon library #@i', array('@i' => $i)),
       '#default_value' => empty($libs[$i]) ? '' : $libs[$i],
     );
   }
-  
+  $form['font_icons']["ip_geoloc_font_icon_lib$count"]['#description'] =
+    t('<strong>Note:</strong> due to this <a target="bug" href="!url_bug">bug</a>, you cannot have identical leaf names amongst the CSS file specs you enter. Rename files if there are clashes.', array(
+      '!url_bug' => url('http://drupal.org/node/1885838'),
+    ));
+
   if (ip_geoloc_diagnose() > 0) {
     // Form for sync-ing the geolocation table with the system accesslog.
     $form['ip_geoloc_db_options'] = array(

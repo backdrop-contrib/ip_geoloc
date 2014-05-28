@@ -14,7 +14,7 @@
  * For programmers there's an API.
  */
 
-define('IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS', 4);
+define('IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS', 10);
 
 define('IP_GEOLOC_CALLBACK_TIMEOUT', 30);
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
@@ -61,6 +61,7 @@ function ip_geoloc_library() {
       $libraries['ip_geoloc_font_icon_libs']['css'][$css_file] = array(
         'type' => 'file',
         'media' => 'all',
+        'group' => -101,
       );
     }
   }

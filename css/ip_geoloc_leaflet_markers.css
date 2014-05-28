@@ -9,7 +9,7 @@
 .leaflet-tagged-marker i {
   position: relative;
   top: -35px;
-  left: -41px;
+  left: -40px;
   min-width: 80px; /* -2 times left */
   text-align: center;
   height: 0;  /* to avoid marker position shifting */
@@ -28,9 +28,10 @@
 .leaflet-tagged-marker i[class^="flaticon-"]:before,
 .leaflet-tagged-marker i[class*=" flaticon-"]:before {
   position: relative;
-  top: -3px;
-  left: -9px;
-  font-size: 20px;
+  top: -4px;
+  left: -11px;
+  font-size: 16px;
+  /*
   min-width: 80px;
   text-align: center;
   height: 0;  /* to avoid marker position shifting */

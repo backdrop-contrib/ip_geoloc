@@ -140,7 +140,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 8,
       '#default_value' => $this->options['default_marker']['default_marker_special_char'],
-      '#description' => t('Paste directly from <a href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
+      '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
     );
     $desc4 =  t('Use the class name from the font icon library you are using. Font Awesome example: <strong>fa fa-beer</strong>');
     $form['default_marker']['default_marker_special_char_class'] = array(
