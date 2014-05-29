@@ -19,31 +19,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   public function option_definition() {
     $options = parent::option_definition();
 
+    // The leaflet.module default.
+    $options['map'] = array('default' => 'OSM Mapnik');
+    $options['map_height'] = array('default' => 300);
+
     $latitude  = module_exists('location') ? 'location_latitude' : 'ip_geoloc_latitude';
     $longitude = module_exists('location') ? 'location_longitude' : ($latitude == 'ip_geoloc_latitude' ? 'ip_geoloc_longitude' : $latitude);
     $options['ip_geoloc_views_plugin_latitude'] = array('default' => $latitude);
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
-    $options['differentiator'] = array(
-      'contains' => array(
-        'differentiator_field' => array('default' => ''),
-      ),
-    );
-    //$options['default_marker_color'] = array('default' => '');
-    //$options['default_marker_special_char'] = array('default' => '');
-    //$options['default_marker_special_char_class'] = array('default' => '');
-    $options['center_option'] = array('default' => 0);
-    $options['empty_map_center'] = array('default' => '');
-    $options['visitor_marker_color'] = array('default' => 'none');
-    // The leaflet.module default.
-    $options['map'] = array('default' => 'OSM Mapnik');
-    $options['map_height'] = array('default' => 300);
-    $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
-    $options['cluster_differentiator'] = array(
-      'contains' => array(
-        'cluster_differentiator_field' => array('default' => ''),
-        'zoom_ranges' => array('default' => array())
-      ),
-    );
+
     $options['default_marker'] = array(
       'contains' => array(
         'default_marker_color' => array('default' => ''),
@@ -51,6 +35,22 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'default_marker_special_char_class' => array('default' => ''),
       ),
     );
+    $options['visitor_marker'] = array(
+      'contains' => array(
+        'visitor_marker_color' => array('default' => ''),
+        'visitor_marker_special_char' => array('default' => ''),
+        'visitor_marker_special_char_class' => array('default' => ''),
+      ),
+    );
+
+    $options['differentiator'] = array(
+      'contains' => array(
+        'differentiator_field' => array('default' => ''),
+      ),
+    );
+
+    $options['center_option'] = array('default' => 0);
+
     $options['tooltips'] = array(
       'contains' => array(
         'marker_tooltip' => array('default' => ''),
@@ -62,6 +62,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'tag_css_class' => array('default' => 'tag-inside-marker'),
       ),
     );
+
+    $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
+    $options['cluster_differentiator'] = array(
+      'contains' => array(
+        'cluster_differentiator_field' => array('default' => ''),
+        'zoom_ranges' => array('default' => array())
+      ),
+    );
+
+    $options['empty_map_center'] = array('default' => '');
+
     $options['map_options'] = array(
       'contains' => array(
         'maxzoom' => array('default' => 18),
@@ -80,8 +91,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     parent::options_form($form, $form_state);
 
     $path = drupal_get_path('module', 'ip_geoloc');
-    $form['#attached'] = array('css' => array("$path/css/ip_geoloc_admin.css"));
 
+    $form['#attached'] = array('css' => array("$path/css/ip_geoloc_admin.css"));
+    if (strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers')) {
+      $form['#attached']['css'][] = "$path/css/ip_geoloc_admin_a.css";
+    }
     $maps = array();
     foreach (ip_geoloc_plugin_style_leaflet_map_get_info() as $key => $map) {
       $maps[$key] = $map['label'];
@@ -120,12 +134,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $desc3 = t('All this works best with the markers from the <em>/amarkers</em> directory, configurable <a target="config" href="!url_config">here</a>.', array(
       '!url_config' => url('admin/config/system/ip_geoloc'),
     ));
-
     $form['default_marker'] = array(
       '#type' => 'fieldset',
       '#title' => t('Default marker style'),
       '#description' => $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
-      '#weight' => 27,
+      '#weight' => 25,
     );
     $form['default_marker']['default_marker_color'] = array(
       '#title' => t('Style/color'),
@@ -149,6 +162,39 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 25,
       '#default_value' => $this->options['default_marker']['default_marker_special_char_class'],
       '#description' => $desc4,
+    );
+
+    $visitor_marker_colors = array(
+      'none' => '<' . t('none') . '>') +
+      ip_geoloc_marker_colors();
+    unset($visitor_marker_colors['0']);
+
+    $form['visitor_marker'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Visitor marker style'),
+      '#weight' => 27,
+    );
+    $form['visitor_marker']['visitor_marker_color'] = array(
+      '#title' => t('Style/color'),
+      '#type' => 'select',
+      '#multiple' => FALSE,
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_color'],
+      '#options' => $visitor_marker_colors,
+      '#attributes' => array('class' => array('marker-color')),
+    );
+    $form['visitor_marker']['visitor_marker_special_char'] = array(
+      '#title' => t('Font icon character'),
+      '#type' => 'textfield',
+      '#size' => 8,
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char'],
+      '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
+    );
+    $form['visitor_marker']['visitor_marker_special_char_class'] = array(
+      '#title' => t('Font icon class'),
+      '#type' => 'textfield',
+      '#size' => 25,
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
+      '#description' => t('As above.'),
     );
 
     $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
@@ -233,24 +279,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'select',
       '#default_value' => $this->options['map_options']['dragging'],
       '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
-    );
-
-    $visitor_marker_colors = array(
-      'none' => '<' . t('none') . '>') +
-      ip_geoloc_marker_colors();
-    unset($visitor_marker_colors['0']);
-
-    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_a.css' : 'ip_geoloc_admin.css';
-
-    $form['visitor_marker_color'] = array(
-      '#title' => t('Visitor marker'),
-      '#type' => 'select',
-      '#multiple' => FALSE,
-      '#default_value' => $this->options['visitor_marker_color'],
-      '#options' => $visitor_marker_colors,
-      '#attributes' => array('class' => array('marker-color')),
-      '#attached' => array('css' => array("$path/css/$css_file")),
-      '#weight' => 90,
     );
 
     $form['cluster_radius'] = array(
@@ -406,8 +434,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $this->fill_out_location_regions($locations);
 
     $marker_color = $this->options['default_marker']['default_marker_color'];
+    $visitor_marker_color = $this->options['visitor_marker']['visitor_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
-    $visitor_marker_color = $this->options['visitor_marker_color'];
     $cluster_radius = $this->options['cluster_radius'];
     $tag_css_classes = $this->options['tags']['tag_css_class'];
 
@@ -517,17 +545,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         }
         if (!empty($location->marker_special_char_class)) {
           $feature['specialCharClass'] = $location->marker_special_char_class;
-          // Load the CSS that comes with the font iocn library which in return
-          // tells the browser to fetch either the WOFF, TTF or SVG files that
-          // define the font faces.
-          drupal_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
         }
       }
       elseif (!empty($this->options['default_marker']['default_marker_special_char'])
         || !empty($this->options['default_marker']['default_marker_special_char_class'])) {
+        $has_special_markers = TRUE;
         $feature['specialChar'] = $this->options['default_marker']['default_marker_special_char'];
         $feature['specialCharClass'] = $this->options['default_marker']['default_marker_special_char_class'];
-        drupal_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
       }
       if (!empty($location->marker_tooltip)) {
         $has_special_markers = TRUE;
@@ -552,7 +576,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if (!empty($tag_css_classes)) {
         $feature['cssClass'] = $tag_css_classes;
       }
-      if ((isset($location->marker_color) &&_ip_geoloc_is_no_marker($location->marker_color)) ||
+      if ((isset($location->marker_color) && _ip_geoloc_is_no_marker($location->marker_color)) ||
           (!isset($location->marker_color) && _ip_geoloc_is_no_marker($marker_color))) {
         // "No marker" as opposed to "default" marker.
         $has_special_markers = TRUE;
@@ -563,7 +587,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
         $feature['icon'] = array(
           'iconUrl' => $marker_path . "/$color.png",
-          // Width and height.
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
           'iconAnchor' => array('x' => (int) (($marker_width + 1) / 2), 'y' => $marker_anchor),
           // Just above topline, center.
@@ -581,12 +604,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'type' => 'point',
         'lat' => $visitor_location['latitude'],
         'lon' => $visitor_location['longitude'],
+        'specialChar' => $this->options['visitor_marker']['visitor_marker_special_char'],
+        'specialCharClass' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
         'popup' => t('Your approximate location'),
         'tooltip' => t('Your approximate location'),
         // See leaflet_markercluster.drupal.js.
         'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
       );
       if ($visitor_marker_color != '') {
+        $has_special_markers = !empty($visitor_feature['specialChar']) || !empty($visitor_feature['specialCharClass']);
         $visitor_feature['icon'] = array(
           'iconUrl' => $marker_path . "/$visitor_marker_color.png",
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
@@ -658,8 +684,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       drupal_set_message(t('Cannot cluster markers in View %display_name - Leaflet MarkerCluster module not enabled.', array('%display_name' => $display_name)), 'warning');
     }
     if (!empty($has_special_markers)) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');
+      // Load the CSS that comes with the font icon library which in return
+      // tells the browser to fetch either the WOFF, TTF or SVG files that
+      // define the font faces.
+      drupal_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');
     }
 
     $output = theme('ip_geoloc_leaflet', array(

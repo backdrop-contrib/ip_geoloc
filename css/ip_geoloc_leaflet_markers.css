@@ -8,8 +8,8 @@
 .leaflet-tagged-marker div,
 .leaflet-tagged-marker i {
   position: relative;
-  top: -35px;
-  left: -40px;
+  top: -37px;
+  left: -41px;
   min-width: 80px; /* -2 times left */
   text-align: center;
   height: 0;  /* to avoid marker position shifting */
@@ -34,15 +34,14 @@
   font-size: 14px;
   position: relative;
   top: -4px;
-  left: -11px;
+  left: -10px;
 }
 
 /* For http://fontello.com */
 .leaflet-tagged-marker i[class^="icon-"]:before,
 .leaflet-tagged-marker i[class*=" icon-"]:before {
   position: relative;
-  top: -4px;
-  left: -1px;
+  top: -2px;
 }
 
 /* Adjust for the Google-style markers that live in the /markers directory */
