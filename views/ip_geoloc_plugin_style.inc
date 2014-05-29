@@ -623,27 +623,38 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       // This is required for some Views functions.
       $view->row_index = $i = key($set['rows']);
 
+      $loc_field_name = reset($loc_field_names);
+      $loc_field_alias = reset($loc_field_aliases);
       $row = reset($set['rows']);
-      $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
 
-      if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
-        // Remaining row values go into the balloon.
-        if (!empty($views_plugin_style->rendered_fields[$i])) {
-          $location->balloon_text = $views_plugin_style->rendered_fields[$i][$group_field];
-          foreach ($set['rows'] as $i => $row) {
-            $rendered_fields = $views_plugin_style->rendered_fields[$i];
-            unset($rendered_fields[$group_field]);
-            $location->balloon_text .= '<br />' . implode('<br/>', $rendered_fields);
+      foreach ($latitudes as $latitude) {
+
+        $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
+
+        if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
+          // Remaining row values go into the balloon.
+          if (!empty($views_plugin_style->rendered_fields[$i])) {
+            $location->balloon_text = $views_plugin_style->rendered_fields[$i][$group_field];
+            foreach ($set['rows'] as $i => $row) {
+              $rendered_fields = $views_plugin_style->rendered_fields[$i];
+              unset($rendered_fields[$group_field]);
+              $location->balloon_text .= '<br />' . implode('<br/>', $rendered_fields);
+            }
+          }
+          if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
+            _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
+          }
+           _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
+          $locations[$i] = $location;
+          break;
+        }
+        $loc_field_name = next($loc_field_names);
+        $loc_field_alias = next($loc_field_aliases);
+        if (empty($location)) {
+          if ($error_count++ == 0) {
+            $first_error = $i;
           }
         }
-        if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
-          _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
-        }
-         _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
-        $locations[$i] = $location;
-      }
-      elseif ($error_count++ == 0) {
-        $first_error = $i;
       }
     }
     // Render as a record set.
@@ -651,6 +662,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       foreach ($view->result as $i => $row) {
         // This is required for some Views functions.
         $view->row_index = $i;
+
         $loc_field_name = reset($loc_field_names);
         $loc_field_alias = reset($loc_field_aliases);
         foreach ($latitudes as $latitude) {

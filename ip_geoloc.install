@@ -65,10 +65,10 @@ function ip_geoloc_requirements($phase) {
 
   $requirements['ip_geoloc_font_libs']['title'] = $t('IP Geolocation Views & Maps font icon libraries');
   $requirements['ip_geoloc_font_libs']['severity'] = REQUIREMENT_OK;
-  $requirements['ip_geoloc_font_libs']['description'] = t('When using Leafet you may superimpose font icons on your markers. <a target="fsymbols" href="!url_fsymbols">fsymbols</a> do not require any files to be downloaded, but other font icons like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> icons do. See the <a target="readme" href="!url_readme">README</a> for more details on font icon libraries.', array(
+  $requirements['ip_geoloc_font_libs']['description'] = $t('When using Leafet you may superimpose font icons on your markers. <a target="fsymbols" href="!url_fsymbols">fsymbols</a> do not require any files to be downloaded, but other font icons like those from <a target="fontello" href="!url_fontello">Fontello</a> do. See the <a target="readme" href="!url_readme">README</a> for more details on font icon repositories.', array(
     '!url_fsymbols' => url('http://fsymbols.com'),
-    '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome'),
-     '!url_readme' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'),
+    '!url_fontello' => url('http://fontello.com'),
+    '!url_readme' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'),
   ));
   $requirements['ip_geoloc_font_libs']['value'] = '';
   $num_font_libs = 0;
@@ -78,7 +78,7 @@ function ip_geoloc_requirements($phase) {
       if (file_exists($css_file)) {
         $msg = $t('Font icon library #@i found at %css_file', array(
           '@i' => $i,
-          '%css_file' => $css_file
+          '%css_file' => $css_file,
         ));
         $num_font_libs++;
       }
@@ -153,7 +153,7 @@ function ip_geoloc_schema() {
       'ip_address' => array(
         'description' => 'IP address',
         'type'        => 'varchar',
-        // Support IPv6 as well as standard IPv4 addresses, e.g. 
+        // Support IPv6 as well as standard IPv4 addresses, e.g.
         // 2001:0db8:0000:0000:0000:ff00:0042:8329
         // http://en.wikipedia.org/wiki/IPv6
         'length'      => '64',
@@ -260,6 +260,6 @@ function ip_geoloc_update_7125() {
   );
   $index = array('indexes' => array('ip_address' => array('ip_address')));
   db_change_field('ip_geoloc', 'ip_address', 'ip_address', $spec, $index);
-  //db_add_index('ip_geoloc', 'ip_address', array('ip_address'));
+  // db_add_index('ip_geoloc', 'ip_address', array('ip_address'));
   return t('ip_address column updated.');
 }

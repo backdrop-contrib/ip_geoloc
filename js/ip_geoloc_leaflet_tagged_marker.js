@@ -96,10 +96,9 @@ L.Icon.Tagged = L.Icon.extend({
     if (this._specialChar || this.options.specialCharClass) {
       // Convention seems to be to use the i element.
       // Other elements like div and span work also, just make sure that
-      // display:block is set implicitly or explictly.
+      // display:block is set implicitly or explicitly.
       var specialChar = document.createElement('i');
       specialChar.innerHTML = this._specialChar ? this._specialChar.trim() : '';
-      // Note: for Font Awesome we must have a class starting with "fa fa-".
       if (this.options.specialCharClass) {
         specialChar.setAttribute('class', this.options.specialCharClass);
       }

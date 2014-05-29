@@ -142,7 +142,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['default_marker']['default_marker_special_char'],
       '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
     );
-    $desc4 =  t('Use the class name from the font icon library you are using. Font Awesome example: <strong>fa fa-beer</strong>');
+    $desc4 =  t('Use the class name from the font icon library you are using. Append <strong>light</strong> to change the color to a lighter shade. Font Awesome example: <strong>fa fa-beer</strong>. flaticon example: <strong>flaticon-bicycle12 light</strong>');
     $form['default_marker']['default_marker_special_char_class'] = array(
       '#title' => t('Font icon class'),
       '#type' => 'textfield',
@@ -476,7 +476,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
 
     $features = array();
-    foreach ($locations as $i => $location) {
+    foreach ($locations as $location) {
       $feature = array();
       if (isset($location->latitude) || isset($location->lat)) {
         $feature['type'] = 'point';
@@ -646,7 +646,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'type' => 'setting',
       'scope' => 'footer', // 'footer' only works for type 'inline'
     );
-    $js = drupal_add_js(array('leaflet' => array($settings)), $options);
+    drupal_add_js(array('leaflet' => array($settings)), $options);
 
     // Little hacky this, but can't see another way to load libraries for
     // Leaflet More Maps, Leaflet MarkerCluster, Leaflet Hash...

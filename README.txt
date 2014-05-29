@@ -27,7 +27,7 @@ DISPLAY AS A MAP.
 
 Visit the IPGV&M configuration page to specify an alternative marker set. When
 using Leaflet you can superimpose scalable font icon on top of your markers, as
-found at http://fsymbols.com, flaticon.com or Font Awesome. See below for
+found at http://fsymbols.com, flaticon.com or fontello.com. See below for
 details.
 
 The "Views PHP" module is required for the included /visitor-log View.
@@ -213,13 +213,18 @@ libraries directory, typically sites/all/libraries. If you wish, remove the
 version number from the directory name, so that the path to the essential style
 sheet becomes sites/all/libraries/font-awesome/css/font-awesome.min.css.
 Then enter that path at admin/config/system/ip_geoloc.
+You can assemble your own icon set from Font Awesome and other repositories at
+fontello.com and download it to sites/all/libraries. Then again enter the path
+to the main .css file at admin/config/system/ip_geoloc.
 
-flaticon icon packs can be selected from http://www.flaticon.com/pack.
+Similarly flaticon icon packs can be selected from http://www.flaticon.com/pack.
 First create the directory sites/all/libraries/flaticon, then download and unzip
 the pack into that directory, so that the path to the essential style sheet is
 sites/all/libraries/flaticon/PACK/flaticon.css, where PACK may be something like
 "food-icons".
 Then enter that path at admin/config/system/ip_geoloc.
+
+
 
 What to do when my font icons are off-centre, too big or too small?
 -------------------------------------------------------------------
@@ -253,7 +258,8 @@ To top it all off, add the "IPGV&M: Set my location" block, which supplies 3
 ways for the user to specify the center of the map: by typed adddress, by region
 taxonomy and by an explicit request to perform an HTML5 lookup. The latter
 means that you can switch off the periodic prompting to share location, which
-can become annoying.
+can become annoying, i.e. you can UNtick the box "Employ the Google Maps API to
+reverse-geocode HTML5 visitor locations to street addresses".
 
 UTILITY FUNCTIONS
 =================

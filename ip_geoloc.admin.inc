@@ -67,7 +67,7 @@ function ip_geoloc_admin_configure() {
       '!url_flaticon' => url('http://flaticon.com/packs'),
       '%css_file2' => 'sites/all/libraries/flaticon/food-icons/flaticon.css',
       '!url_status' => url('admin/reports/status'),
-    ))
+    )),
   );
   $libs = ip_geoloc_get_font_icon_libs();
   $count = max(2, min(count($libs) + 1, IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS));
@@ -79,8 +79,8 @@ function ip_geoloc_admin_configure() {
       '#default_value' => empty($libs[$i]) ? '' : $libs[$i],
     );
   }
-  $form['font_icons']["ip_geoloc_font_icon_lib$count"]['#description'] =
-    t('<strong>Note:</strong> due to this <a target="bug" href="!url_bug">bug</a>, you cannot have identical leaf names amongst the CSS file specs you enter. Rename files if there are clashes.', array(
+  $form['font_icons']["ip_geoloc_font_icon_lib$count"]['#description']
+    = t('<strong>Note:</strong> due to this <a target="bug" href="!url_bug">bug</a>, you cannot have identical leaf names amongst the CSS filespecs. Rename .css files if there are clashes.', array(
       '!url_bug' => url('http://drupal.org/node/1885838'),
     ));
 
@@ -318,7 +318,7 @@ function ip_geoloc_erase_session() {
 function ip_geoloc_erase_db() {
   // Wipe previous messages to avoid confusion.
   drupal_get_messages();
-  $result = db_delete('ip_geoloc')->execute();
+  db_delete('ip_geoloc')->execute();
 }
 
 /**

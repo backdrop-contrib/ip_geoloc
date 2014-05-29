@@ -93,15 +93,20 @@ function ip_geoloc_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
-  $items['ip_geoloc/region_autocomplete'] = array (
-    'title' => t('"Set my location" block region autocomplete'),
+  $items['ip_geoloc/region_autocomplete'] = array(
+    'title' => '"Set my location" block region autocomplete',
     'page callback' => 'ip_geoloc_region_autocomplete',
-		'access arguments' => array('access content'),
+    'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
   return $items;
 }
 
+/**
+ * Autocompletes the partial region received.
+ *
+ * @param string $partial_region
+ */
 function ip_geoloc_region_autocomplete($partial_region = '') {
   $matches = array();
   if (strlen($partial_region) >= 2) {
@@ -132,10 +137,10 @@ function ip_geoloc_js() {
       'bootstrap' => module_exists('better_statistics') ? DRUPAL_BOOTSTRAP_FULL : DRUPAL_BOOTSTRAP_SESSION,
       'skip_hook_init' => TRUE,
       'dependencies' => module_exists('session_cache') ? array('session_cache') : NULL,
-      //'includes' => array(),
-      //'access callback' => 'user_access',
-      //'access arguments' => array('access content'),
-      //'page arguments' => array(),
+      // 'includes' => array(),
+      // 'access callback' => 'user_access',
+      // 'access arguments' => array('access content'),
+      // 'page arguments' => array(),
     ),
   );
 }
@@ -152,7 +157,7 @@ function ip_geoloc_js() {
  * current position marker appears on the recent visitor map.
  */
 function ip_geoloc_init() {
-  
+
   ip_geoloc_log_errors();
 
   if (!variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
@@ -197,6 +202,9 @@ function ip_geoloc_init() {
   _ip_geoloc_set_session_value('last_position_check', time());
 }
 
+/**
+ * Log errors via the watchdog.
+ */
 function ip_geoloc_log_errors() {
   if ($error = _ip_geoloc_get_session_value('error')) {
     // @todo How do we treat repeated 'user declined to share location' errors?
@@ -206,11 +214,23 @@ function ip_geoloc_log_errors() {
   }
 }
 
+/**
+ * Returns whether this was the first click of the session.
+ *
+ * @return bool
+ *   TRUE if it was, i.e. if there has been no position check before.
+ */
 function ip_geoloc_is_first_click() {
   $last_position_check = _ip_geoloc_get_session_value('last_position_check');
   return empty($last_position_check);
 }
 
+/**
+ * Reinitialises the supplied location array.
+ *
+ * @param array $location
+ * @param int $reverse_geocode_client_timeout
+ */
 function _ip_geoloc_reinit_location(&$location, $reverse_geocode_client_timeout) {
   $fixed_address = isset($location['fixed_address']) ? $location['fixed_address'] : 0;
   $region = isset($location['regions']) ? $location['regions'] : NULL;
@@ -385,13 +405,13 @@ function _ip_geoloc_check_location($location = NULL) {
   if (empty($roles_applicable)) {
     return FALSE;
   }
-  
+
   $interval = (int) variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
   if ($interval == 0) {
     return !isset($location['country']);
   }
   if (!empty($location['fixed_address'])) {
-    // If an address was typed in the "Set your location" block, do nothing. Exit.
+    // If an address was typed in the "Set my location" block, do nothing. Exit.
     ip_geoloc_debug('IPGV&M: not instigating service to locate current position, as user has typed an address.');
     return FALSE;
   }
@@ -632,6 +652,18 @@ function ip_geoloc_is_in_range($value, $range, $view_args = NULL) {
   return $value <= $to;
 }
 
+/**
+ * Extracts a Views argument value from the supplied string.
+ *
+ * @param string $string
+ *  The string to parse.
+ *
+ * @param array $view_args
+ *  The View arguments.
+ *
+ * @return string
+ *  The extracted value.
+ */
 function _ip_geoloc_extract_value($string, $view_args) {
   if (preg_match('/^!([0-9])/', $string, $matches)) {
     $arg = $matches[1];

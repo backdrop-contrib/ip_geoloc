@@ -58,7 +58,7 @@ select.marker-color option[value="yellow"] {
 #edit-style-options-default-marker .form-item.form-type-textfield {
   display: inline-table;
   margin-right: 1em;
-  max-width: 33%;
+  max-width: 30%;
 }
 
 .ip-geoloc-cluster-levels .form-item.form-type-select,
