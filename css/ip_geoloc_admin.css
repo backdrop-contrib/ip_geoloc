@@ -60,7 +60,7 @@ select.marker-color option[value="yellow"] {
 #edit-style-options-visitor-marker .form-item.form-type-textfield {
   display: inline-table;
   margin-right: 1em;
-  width: 31%;
+  width: 30%;
 }
 
 .ip-geoloc-cluster-levels .form-item.form-type-select,
