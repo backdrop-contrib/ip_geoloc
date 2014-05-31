@@ -155,7 +155,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['default_marker']['default_marker_special_char'],
       '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
     );
-    $desc4 =  t('Use the class name from the font icon library you are using. Append <strong>light</strong> to change the color to a lighter shade. Font Awesome example: <strong>fa fa-beer</strong>. flaticon example: <strong>flaticon-bicycle12 light</strong>');
+    $desc4 =  t('Use the class name from the font icon library you are using. Append <strong>light</strong>, <strong>dark</strong> or <strong>red</strong> to change the color. Examples:<br/>Font Awesome: <strong>fa fa-beer light</strong><br/>flaticon: <strong>flaticon-bicycle12 red</strong>');
     $form['default_marker']['default_marker_special_char_class'] = array(
       '#title' => t('Font icon class'),
       '#type' => 'textfield',
@@ -612,7 +612,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
       );
       if ($visitor_marker_color != '') {
-        $has_special_markers = !empty($visitor_feature['specialChar']) || !empty($visitor_feature['specialCharClass']);
+        if (!empty($visitor_feature['specialChar']) || !empty($visitor_feature['specialCharClass'])) {
+          $has_special_markers = TRUE;
+        }
         $visitor_feature['icon'] = array(
           'iconUrl' => $marker_path . "/$visitor_marker_color.png",
           'iconSize' => array('x' => $marker_width, 'y' => $marker_height),

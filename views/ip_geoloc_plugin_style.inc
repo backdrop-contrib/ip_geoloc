@@ -128,7 +128,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     $form['default_marker_color']['#attached']['css'] = array("$path/css/$css_file");
   }
 
-  $descr = t('You may designate one field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.');
+  $descr = t('You may designate <em>any</em> field from your view as a <strong>location differentiator</strong>. Locations that match the same corresponding differentiator value will have the same marker image on the map. Examples of location differentiators are content type and taxonomy term. You can enter numeric and alphabetic <em>ranges</em> too, e.g. price ranges, like 100--125.');
   // Add wrapper for differentiator drop-down, association table and buttons.
   // The id in the prefix must match the AJAX submit handlers below.
   $form['differentiator'] = array(

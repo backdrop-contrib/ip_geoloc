@@ -9,7 +9,7 @@
 .leaflet-tagged-marker i {
   position: relative;
   top: -37px;
-  left: -41px;
+  left: -40px;
   min-width: 80px; /* -2 times left */
   text-align: center;
   height: 0;  /* to avoid marker position shifting */
@@ -26,6 +26,15 @@
 
 .leaflet-tagged-marker i.light {
   color: seashell;
+}
+.leaflet-tagged-marker i.dark {
+  color: darkslategrey;
+}
+.leaflet-tagged-marker i.green {
+  color: green;
+}
+.leaflet-tagged-marker i.red {
+  color: red;
 }
 
 /* For http://www.flaticon.com, tested for /amarkers (32 x 42px) */
