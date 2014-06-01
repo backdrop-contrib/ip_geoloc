@@ -91,11 +91,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     parent::options_form($form, $form_state);
 
     $path = drupal_get_path('module', 'ip_geoloc');
+    $select_css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
 
-    $form['#attached'] = array('css' => array("$path/css/ip_geoloc_admin.css"));
-    if (strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers')) {
-      $form['#attached']['css'][] = "$path/css/ip_geoloc_admin_a.css";
-    }
+    $form['#attached'] = array('css' => array(
+      "$path/css/ip_geoloc_admin.css",
+      "$path/css/$select_css_file",
+    ));
     $maps = array();
     foreach (ip_geoloc_plugin_style_leaflet_map_get_info() as $key => $map) {
       $maps[$key] = $map['label'];

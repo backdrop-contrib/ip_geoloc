@@ -124,7 +124,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   if (!$is_openlayers) {
     $path = drupal_get_path('module', 'ip_geoloc');
-    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_a.css' : 'ip_geoloc_admin.css';
+    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
     $form['default_marker_color']['#attached']['css'] = array("$path/css/$css_file");
   }
 
