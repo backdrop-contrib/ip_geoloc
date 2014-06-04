@@ -282,7 +282,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['map_options']['dragging'],
       '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
     );
-    $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a region differentiator (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Leave this field empty to disable clustering altogether.');
+    $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
     $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module and corresponding javascript library.', array(
       '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
     ));
@@ -308,14 +308,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form['cluster_differentiator'] = array(
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-      '#title' => t('Region/Cluster differentiator'),
+      '#collapsed' => TRUE,
+      '#title' => t('Region/Cluster differentiator (coming soon!)'),
       '#description' => '<em>' . $intro . '</em><p>' . $desc . '</p>',
       // The id in the prefix must match the AJAX submit handlers below.
       '#prefix' => '<div id="cluster-differentiator-wrapper">',
       '#suffix' => '</div>',
       '#weight' => 103,
     );
+    return;
+
     global $user;
     if ($user->uid == 1) {
       $form['cluster_differentiator']['#description'] .= $note;
