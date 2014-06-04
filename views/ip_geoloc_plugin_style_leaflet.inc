@@ -298,8 +298,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
-    $intro = t('An optional feature to improve clustering behaviour as demonstrated <a target="article" href="!url_article">here</a>.', array('!url_article' => 'http://flink.com.au/ramblings'));
-    $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, suburb or areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, making for a more natural clustering behaviour.');
+    $intro = t('An optional feature to improve clustering behaviour as demonstrated <a target="article" href="!url_article">here</a>.', array('!url_article' => 'http://flink.com.au/tips-tricks'));
+    $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, suburb or areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, thus delivering a more natural clustering experience.');
     $note = t('To enable this feature, use this <a target="github" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(
       '!url_js_new' => url('https://github.com/RikdeBoer/Leaflet.markercluster/blob/master/dist/leaflet.markercluster.js'),
       '%url_js_old' => 'sites/all/libraries/leaflet_markercluster/dist/leaflet.markercluster.js',
@@ -713,7 +713,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       return 1;
     }
     // Possibly a taxonomy or list.
-    $depth = 1;
+    $depth = 0;
     foreach ($region_field['settings']['allowed_values'] as $tree) {
       if ($vocabulary = taxonomy_vocabulary_machine_name_load($tree['vocabulary'])) {
         if ($terms = taxonomy_get_tree($vocabulary->vid, $tree['parent'])) {
@@ -724,7 +724,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         }
       }
     }
-    return $depth;
+    return $depth + 1;
   }
 
   private function _get_zoom_titles($field_type, $label, $region_depth) {
@@ -779,15 +779,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         break;
  
       case 'addressfield':
-        $format = array();
-        $context = array('mode' => NULL);
-        addressfield_format_address_generate($format, reset($regions), $context);
-        $location->regions = array(
-          1 => empty($format['country']['#options'][$regions['country']]) ? '' : $format['country']['#options'][$regions['country']],
-          2 => empty($format['locality_block']['administrative_area']['#options'][$regions['administrative_area']]) ? '': $format['locality_block']['administrative_area']['#options'][$regions['administrative_area']],
-          3 => empty($regions['locality']) ? '' : $regions['locality'],
-          4 => empty($regions['postal_code']) ? '' : $regions['postal_code'],
-        );
+        $region = reset($regions);
+        if (!empty($region)) {
+          $format = array();
+          $context = array('mode' => NULL);
+          addressfield_format_address_generate($format, $region, $context);
+          $location->regions = array(
+            1 => empty($format['country']['#options'][$region['country']]) ? '' : $format['country']['#options'][$region['country']],
+            2 => empty($format['locality_block']['administrative_area']['#options'][$region['administrative_area']]) ? '': $format['locality_block']['administrative_area']['#options'][$region['administrative_area']],
+            3 => empty($region['locality']) ? '' : $region['locality'],
+            4 => empty($region['postal_code']) ? '' : $region['postal_code'],
+          );
+        }
         break;
 
       default:
@@ -802,9 +805,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   protected function fill_out_location_regions($locations) {
     // When an AddressField or hierarchical vocabulary is used, this normally
     // returns a single field name.
-    $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
+    if (empty($this->options['cluster_differentiator']['cluster_differentiator_fields'])) {
+      return;
+    }
     $region_fields = array();
-    foreach ($region_field_names as $region_field_name) {
+    foreach ($this->options['cluster_differentiator']['cluster_differentiator_fields'] as $region_field_name) {
       $region_field = field_info_field($region_field_name);
       if (!empty($region_field)) {
         $region_fields[] = $region_field;
