@@ -8,9 +8,8 @@
   width: 30%;
 }
 
-.ip-geoloc-cluster-levels .form-item.form-type-select,
-.ip-geoloc-cluster-levels .form-item.form-type-textfield {
+#cluster-differentiator-wrapper .form-item.form-type-textfield {
   display: inline-table;
   margin-right: 1em;
-  max-width: 200px;
+  width: 47%;
 }
