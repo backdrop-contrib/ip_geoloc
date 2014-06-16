@@ -298,10 +298,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
-    $intro = t('An optional feature to improve clustering behaviour as demonstrated <a target="article" href="!url_article">here</a>.', array('!url_article' => 'http://flink.com.au/ramblings'));
-    $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, suburb or areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, making for a more natural clustering behaviour.');
-    $note = t('To enable this feature, use this <a target="github" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(
-      '!url_js_new' => url('https://github.com/RikdeBoer/Leaflet.markercluster/blob/master/dist/leaflet.markercluster.js'),
+    $intro = t('A feature to make clustering more meaningful, demonstrated <a target="article" href="!url_article">here</a>.', array('!url_article' => 'http://flink.com.au/ramblings'));
+    $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, city, suburb or non-administrative areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, making for a more natural clustering behaviour that honours region boundaries.');
+    $note = t('To enable this feature, use the <a target="flink" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(
+      '!url_js_new' => url('http://flink.com.au'),
       '%url_js_old' => 'sites/all/libraries/leaflet_markercluster/dist/leaflet.markercluster.js',
     ));
 
@@ -309,13 +309,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-      '#title' => t('Region/Cluster differentiator'),
+      '#title' => t('Region/Cluster differentiator (coming soon)'),
       '#description' => '<em>' . $intro . '</em><p>' . $desc . '</p>',
       // The id in the prefix must match the AJAX submit handlers below.
       '#prefix' => '<div id="cluster-differentiator-wrapper">',
       '#suffix' => '</div>',
       '#weight' => 103,
     );
+    //@todo
+    return;
     global $user;
     if ($user->uid == 1) {
       $form['cluster_differentiator']['#description'] .= $note;
@@ -801,10 +803,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   protected function fill_out_location_regions($locations) {
     // When an AddressField or hierarchical vocabulary is used, this normally
-    // returns a single field name.
-    $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
+    // returns a single field name (as an array).
+    if (empty($this->options['cluster_differentiator']['cluster_differentiator_fields'])) {
+      return;
+    }
     $region_fields = array();
-    foreach ($region_field_names as $region_field_name) {
+    foreach ($this->options['cluster_differentiator']['cluster_differentiator_fields'] as $region_field_name) {
       $region_field = field_info_field($region_field_name);
       if (!empty($region_field)) {
         $region_fields[] = $region_field;
@@ -813,7 +817,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (empty($region_fields)) {
       return;
     }
-
     foreach ($this->view->result as $key => $row) {
       if (isset($locations[$key])) {
         $region_values = array();
