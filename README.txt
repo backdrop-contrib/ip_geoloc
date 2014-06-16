@@ -17,9 +17,9 @@ If you intend to use IPGV&M with the OpenLayers or Leaflet modules and also wish
 to show and center on the visitor's HTML5 retrieved location, then you have two
 options:
 a) tick the first "Data collection option" and select applicable roles below it
-b) use the "Set my location" block, so visitors can center the map using their
-HTML5 location as retrieved through GPS/WiFi, or using the same block type
-a city or partial address, like "New York".
+b) enable the "Set my location" block, so visitors can center the map using
+their HTML5 location, or, using the same block type, a city or partial address,
+like "New York".
 
 You are now ready to map your View of Location, Geofield, Geolocation Field or
 GetLocations. Skip the following sections and read CONFIGURING YOUR VIEW TO
@@ -44,8 +44,8 @@ the box "Employ the Google Maps API to reverse-geocode HTML5 visitor locations
 to street addresses" and configure an alternative lat/long lookup based on IP
 address. For this follow installation instruction B1a or B1b below, depending on
 whether you'd like to employ Smart IP or GeoIP for this.
-Or you can use the "Set my location" block, which will only prompt the user to
-confirm when they explicitly request to share and reverse-geocode their
+Or you can enable the "Set my location" block, which will only prompt the user
+to confirm when they explicitly request to share and reverse-geocode their
 location.
 
 If you DO want to auto-record visitor address details then complete the steps
@@ -224,14 +224,51 @@ sites/all/libraries/flaticon/PACK/flaticon.css, where PACK may be something like
 "food-icons".
 Then enter that path at admin/config/system/ip_geoloc.
 
-
-
 What to do when my font icons are off-centre, too big or too small?
 -------------------------------------------------------------------
 Because font icons are infinitely scalable this is easily fixed. In your theme
 CCS file (style.css?) override the applicable styles from
 ip_geoloc/css/ip_geoloc_leaflet_markers.css, in particular the attributes
 "top", "left" and "font-size".
+
+REGION/CLUSTER DIFFERENTIATOR
+=============================
+The benefits of region-bound marker clustering with its more natural flow and
+informational cluster counts are demonstrated here
+http://flink.com.au/tips-tricks.
+If you already use the Leaflet MarkerCluster module, then you can activate
+region-bound clustering on your site.
+Don't forget to drop a copy of the region-bound version of
+leaflet.markercluster.js over the top of the existing file in
+libraries/leaflet_markercluster/dist/leaflet.markercluster.js.
+Now you can configure the region-bound clustering algorithm  by filling out the
+cluster differentiator panel on the IPGV&M Views UI.
+Your View (and therefore the content type that has a lat/lon associated with it)
+must feature one of the following.
+1a An AddressField (as in the http://drupal.org/project/addressfield module)
+   in this case IPGV&M will automatically use for differenetiation the
+   region-hierarchy of the address field components country, administrative
+   area, locality and postcode
+1b Selected AddressField components: single out the ones you want to use
+2  A selection of plain text fields designated by you to form the equivalent
+   of an address, e.g., country, state, city.
+3  Taxonomy term reference that refers to a hierarchical region vocabulary.
+   Here's an example of a simple 2-level region vocabulary:
+   - Melbourne
+     -- CBD
+     -- North
+     -- East
+     -- South
+     -- West
+   - Sydney
+     -- CBD
+     -- North
+     -- East
+     -- South
+     -- West
+   You can have as many levels in the region hierarchy as you like. Go for
+   something that adequately reflects the scope and detail of your locations.
+
 
 ADVANCED OPTIONS
 ================

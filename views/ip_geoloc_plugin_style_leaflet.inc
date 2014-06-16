@@ -124,7 +124,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
     unset($form['default_marker_color']);
 
-    $desc1 = t('In addition to selecting a color, you may superimpose a special icon on top of each marker. <br/><a target="fsymbols" href="!url_fsymbols">fsymbols</a> characters can be copied and pasted straight into the <strong>Font icon character</strong> field. <br/>Other libraries like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> and <a target="flaticon" href="!url_flaticon">flaticon</a> use names that you type in the <strong>Font icon class</strong> field.', array(
+    $desc1 = t('In addition to selecting a color, you may superimpose a special icon on top of each marker. <br><a target="fsymbols" href="!url_fsymbols">fsymbols</a> characters can be copied and pasted straight into the <strong>Font icon character</strong> field. Other libraries like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> and <a target="flaticon" href="!url_flaticon">flaticon</a> use names that you type in the <strong>Font icon class</strong> field.', array(
       '!url_fsymbols' => url('http://fsymbols.com'),
       '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
       '!url_flaticon' => url('http://flaticon.com'),
@@ -282,7 +282,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['map_options']['dragging'],
       '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
     );
-    $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a region differentiator (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Leave this field empty to disable clustering altogether.');
+    $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
     $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module and corresponding javascript library.', array(
       '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
     ));
@@ -298,17 +298,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
-    $intro = t('A feature to make clustering more meaningful, demonstrated <a target="article" href="!url_article">here</a>.', array('!url_article' => 'http://flink.com.au/ramblings'));
+    $intro = t('A feature to make clustering more meaningful, as demonstrated <a target="article" href="!url_article">here</a>.', array('!url_article' => 'http://flink.com.au/ramblings'));
     $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, city, suburb or non-administrative areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, making for a more natural clustering behaviour that honours region boundaries.');
-    $note = t('To enable this feature, use the <a target="flink" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(
-      '!url_js_new' => url('http://flink.com.au'),
-      '%url_js_old' => 'sites/all/libraries/leaflet_markercluster/dist/leaflet.markercluster.js',
-    ));
 
     $form['cluster_differentiator'] = array(
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
+      '#collapsed' => TRUE,
       '#title' => t('Region/Cluster differentiator (coming soon)'),
       '#description' => '<em>' . $intro . '</em><p>' . $desc . '</p>',
       // The id in the prefix must match the AJAX submit handlers below.
@@ -320,6 +316,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     return;
     global $user;
     if ($user->uid == 1) {
+      $note = t('To enable this feature, use this <a target="flink" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(
+        '!url_js_new' => url('http://flink.com.au'),
+        '%url_js_old' => 'sites/all/libraries/leaflet_markercluster/dist/leaflet.markercluster.js',
+      ));
       $form['cluster_differentiator']['#description'] .= $note;
     }
     if (isset($form_state['triggering_element'])) {
@@ -715,7 +715,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       return 1;
     }
     // Possibly a taxonomy or list.
-    $depth = 1;
+    $depth = 0;
     foreach ($region_field['settings']['allowed_values'] as $tree) {
       if ($vocabulary = taxonomy_vocabulary_machine_name_load($tree['vocabulary'])) {
         if ($terms = taxonomy_get_tree($vocabulary->vid, $tree['parent'])) {
@@ -726,7 +726,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         }
       }
     }
-    return $depth;
+    return $depth + 1;
   }
 
   private function _get_zoom_titles($field_type, $label, $region_depth) {
@@ -781,15 +781,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         break;
  
       case 'addressfield':
-        $format = array();
-        $context = array('mode' => NULL);
-        addressfield_format_address_generate($format, reset($regions), $context);
-        $location->regions = array(
-          1 => empty($format['country']['#options'][$regions['country']]) ? '' : $format['country']['#options'][$regions['country']],
-          2 => empty($format['locality_block']['administrative_area']['#options'][$regions['administrative_area']]) ? '': $format['locality_block']['administrative_area']['#options'][$regions['administrative_area']],
-          3 => empty($regions['locality']) ? '' : $regions['locality'],
-          4 => empty($regions['postal_code']) ? '' : $regions['postal_code'],
-        );
+        $region = reset($regions);
+        if (!empty($region)) {
+          $format = array();
+          $context = array('mode' => NULL);
+          addressfield_format_address_generate($format, $region, $context);
+          $location->regions = array(
+            1 => empty($format['country']['#options'][$region['country']]) ? '' : $format['country']['#options'][$region['country']],
+            2 => empty($format['locality_block']['administrative_area']['#options'][$region['administrative_area']]) ? '': $format['locality_block']['administrative_area']['#options'][$region['administrative_area']],
+            3 => empty($region['locality']) ? '' : $region['locality'],
+            4 => empty($region['postal_code']) ? '' : $region['postal_code'],
+          );
+        }
         break;
 
       default:
