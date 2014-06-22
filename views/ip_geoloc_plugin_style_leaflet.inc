@@ -430,6 +430,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($this->view->live_preview)) {
       return t('The preview function is incompatible with Leaflet maps so cannot be used. Please visit the page path or the block to view your map.');
     }
+    $render_start = microtime(TRUE);
 
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
@@ -540,8 +541,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Points must have coords.
         continue;
       }
-      $feature['popup'] = $location->balloon_text;
-
+      if (isset($location->balloon_text)) {
+        $feature['popup'] = $location->balloon_text;
+      }
       if (!empty($location->marker_special_char) || !empty($location->marker_special_char_class)) {
         $has_special_markers = TRUE;
         if (!empty($location->marker_special_char)) {
@@ -701,6 +703,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'height' => $this->options['map_height'],
       'view' => $this->view,
     ));
+
+    ip_geoloc_debug(t('-- Leaflet map preparation time: %sec s', array('%sec' => number_format(microtime(TRUE) - $render_start, 2))));
     return $output;
   }
 

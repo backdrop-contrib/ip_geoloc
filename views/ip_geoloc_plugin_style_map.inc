@@ -125,6 +125,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     if (!empty($this->view->live_preview)) {
       return t('The preview function is incompatible with Google Maps so cannot be used. Please visit the page path or block to view your map.');
     }
+    $render_start = microtime(TRUE);
 
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
@@ -213,6 +214,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       'center_latlng' => $center_latlng,
       'visitor_location_gps' => !empty($gps_roles_applicable),
     ));
+    ip_geoloc_debug(t('-- Google map preparation time: %sec s', array('%sec' => number_format(microtime(TRUE) - $render_start, 2))));
+
     return $output;
   }
 

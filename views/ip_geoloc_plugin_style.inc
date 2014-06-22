@@ -1023,6 +1023,10 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
     // God knows why we need this...
     $views_plugin_style->view->row_index = $i;
     foreach ($views_plugin_style->view->field as $field_id => $field) {
+      // If Excluded is ticked, don't theme or add to the rendered_fields.
+      if ($field->options['exclude']) {
+        continue;
+      }
       // theme() also renders the tokens that may be used in the balloon fields.
       $field_value = $field->theme($row);
 
@@ -1036,12 +1040,8 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       if (($special_field_id == $differentiator || in_array($special_field_id, $latitudes) || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
         $row->{$special_field_id}[] = $field_value;
       }
-      // If Excluded is ticked, we don't style and add the field to the
-      // rendered_fields.
-      if (!$field->options['exclude']) {
-        $styled_field_value = _ip_geoloc_plugin_style_add_label_and_styling($field, $field_value);
-        $views_plugin_style->rendered_fields[$i][$field_id] = $styled_field_value;
-      }
+      $styled_field_value = _ip_geoloc_plugin_style_add_label_and_styling($field, $field_value);
+      $views_plugin_style->rendered_fields[$i][$field_id] = $styled_field_value;
     }
   }
   unset($views_plugin_style->view->row_index);
