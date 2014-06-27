@@ -313,7 +313,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#weight' => 103,
     );
     //@todo
-    return;
+    //return;
     global $user;
     if ($user->uid == 1) {
       $note = t('To enable this feature, use this <a target="flink" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(
@@ -787,20 +787,33 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       case 'addressfield':
         $region = reset($regions);
         if (!empty($region)) {
-          $format = array();
-          $context = array('mode' => NULL);
-          addressfield_format_address_generate($format, $region, $context);
+          $format_callback = 'addressfield_format_address_generate';
+          if (function_exists($format_callback)) {
+            $format = array();
+            $context = array('mode' => NULL);
+            // Replace state and country codes by their full names.
+            addressfield_format_address_generate($format, $region, $context);
+            if (isset($format['country']['#options'][$region['country']])) {
+              $region['country'] = $format['country']['#options'][$region['country']];
+            }
+            if (isset($format['locality_block']['administrative_area']['#options'][$region['administrative_area']])) {
+              $region['administrative_area'] = $format['locality_block']['administrative_area']['#options'][$region['administrative_area']];
+            }
+          }
+          else {
+            //drupal_set_message(t('IPGV&M: cannot flesh out countries and states on locations. Format callback %name is not available.', array('%name' => $format_callback)), 'warning', FALSE);
+          }
           $location->regions = array(
-            1 => empty($format['country']['#options'][$region['country']]) ? '' : $format['country']['#options'][$region['country']],
-            2 => empty($format['locality_block']['administrative_area']['#options'][$region['administrative_area']]) ? '': $format['locality_block']['administrative_area']['#options'][$region['administrative_area']],
-            3 => empty($region['locality']) ? '' : $region['locality'],
-            4 => empty($region['postal_code']) ? '' : $region['postal_code'],
+            1 => isset($region['country']) ? $region['country'] : '',
+            2 => isset($region['administrative_area']) ? $region['administrative_area'] : '',
+            3 => isset($region['locality']) ? $region['locality'] : '',
+            4 => isset($region['postal_code']) ? $region['postal_code'] : '',
           );
         }
         break;
 
       default:
-        // $location->regions is meant to be ordered big to small
+        // $location->regions is meant to be ordered big to small, so reverse.
         $level = 1;
         foreach (array_reverse($regions) as $region) {
           $location->regions[$level++] = $region;
