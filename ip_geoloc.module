@@ -167,8 +167,8 @@ function ip_geoloc_init() {
 
   $location = ip_geoloc_get_visitor_location();
 
-  // Decrement 'geocode now' counter, if set, e.g. via "Set my location" block.
-  // Typically only 1 forced reverse geocode in succession.
+  // Decrement 'reverse_geocode now' counter, if set, e.g. via "Set my location"
+  // block. Typically only 1 forced reverse geocode in succession.
   if ($force_reverse_geocode = $reverse_geocode_count = _ip_geoloc_get_session_value('reverse_geocode_now')) {
     _ip_geoloc_set_session_value('reverse_geocode_now', --$reverse_geocode_count);
   }

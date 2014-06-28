@@ -463,10 +463,9 @@ function ip_geoloc_geocode($form, &$form_state) {
       $location = ip_geoloc_get_location_from_term($region);
     }
     else {
-      $entered_address = $form_state['values']['street_address'];
-      if (empty($entered_address)) {
-        $entered_address = $form_state['input']['street_address'];
-      }
+      // Note the use of 'input' rather than 'values'. We don't want to read
+      // what WAS, but what IS typed now.
+      $entered_address = $form_state['input']['street_address'];
       if (empty($entered_address)) {
         $location = array(
           'provider' => 'user',
@@ -478,7 +477,7 @@ function ip_geoloc_geocode($form, &$form_state) {
         $point = geocoder('google', $entered_address);
 
         if (!$point) {
-          drupal_set_message(t('The address you entered could not be geocoded to a location.'), 'warning');
+          drupal_set_message(t('The address %address could not be geocoded to a location.', array('%address' => $entered_address)), 'warning');
           return;
         }
         $location = array(
