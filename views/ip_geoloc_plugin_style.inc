@@ -763,7 +763,8 @@ function _ip_geoloc_plugin_style_get_base2($row, $field_name, $delta) {
     // Last resort, retrieve from rendered, as opposed to raw, result.
     if (!empty($row->{$field_name}[$delta]['rendered'])) {
       $base = $row->{$field_name}[$delta]['rendered'];
-      return empty($base['#markup']) ? $base : $base['#markup'];
+      // See [#2287187]
+      return is_string($base) ? $base : $base['#markup'];
     }
   }
   return NULL;
