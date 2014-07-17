@@ -41,7 +41,8 @@
             }
           }
           else {
-            ip_geoloc_address['error'] = Drupal.t('getLocation(): Google address lookup failed with status code !code.', { '!code': status });
+            //alert(Drupal.t('IPGV&M: Google Geocoder returned error !code.', { '!code': status }));
+            ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Geocoder address lookup failed with status code !code.', { '!code': status });
             refresh_page = false;
           }
           // Pass lat/long, accuracy and address back to Drupal
@@ -81,5 +82,5 @@
       }
 
     }
-  }
+  };
 })(jQuery);

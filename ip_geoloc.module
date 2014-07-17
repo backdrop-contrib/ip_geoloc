@@ -408,7 +408,7 @@ function _ip_geoloc_check_location($location = NULL) {
 
   $interval = (int) variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
   if ($interval == 0) {
-    return !isset($location['country']);
+    return !isset($location['latitude']);
   }
   if (!empty($location['fixed_address'])) {
     // If an address was typed in the "Set my location" block, do nothing. Exit.

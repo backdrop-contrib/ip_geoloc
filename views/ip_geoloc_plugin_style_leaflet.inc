@@ -313,7 +313,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#weight' => 103,
     );
     //@todo
-    //return;
+    return;
     global $user;
     if ($user->uid == 1) {
       $note = t('To enable this feature, use this <a target="flink" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(

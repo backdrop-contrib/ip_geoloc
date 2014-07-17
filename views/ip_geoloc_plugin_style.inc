@@ -724,7 +724,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
 function _ip_geoloc_plugin_style_get_base1($row, $location_field_name, $location_field_alias) {
   $base = NULL;
-  if (!empty($location_field_alias)) {
+  if (isset($row->_field_data[$location_field_alias])) {
     // The lines below are stripped back fast versions of this call:
     // $loc_field_value = $loc_field->get_value($row);
     $entity = $row->_field_data[$location_field_alias]['entity'];
