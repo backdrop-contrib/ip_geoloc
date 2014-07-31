@@ -339,7 +339,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
   
-  $options = array(0 => t('Here'));
+  $options = array(0 => t('Find Me'));
   if ($is_address_editable) {
     $options[1] = t('There');
   }
@@ -447,9 +447,9 @@ function ip_geoloc_geocode($form, &$form_state) {
   $location = _ip_geoloc_get_session_value('location');
 
   if (!empty($form_state['values']['fixed_address'])) {
-     // "to what I typed" or "to the region" were pressed
+     // "Here" or "There" were pressed.
     if ($form_state['values']['fixed_address'] == 2) {
-      // "to the region" pressed
+      // "Region" pressed
       $region = $form_state['values']['region'];
       if (!is_numeric($region)) {
         $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
@@ -465,7 +465,7 @@ function ip_geoloc_geocode($form, &$form_state) {
     else {
       // Note the use of 'input' rather than 'values'. We don't want to read
       // what WAS, but what IS typed now.
-      $entered_address = $form_state['input']['street_address'];
+      $entered_address = check_plain($form_state['input']['street_address']);
       if (empty($entered_address)) {
         $location = array(
           'provider' => 'user',
@@ -501,41 +501,54 @@ function ip_geoloc_geocode($form, &$form_state) {
       }
     }
   }
-  // If "to where I am now" was pressesd, we set a flag indicating to
-  // ip_geoloc_init() that we want to find the visitor's current position using
-  // their HTML5-based browser immediately, not waiting for the next cycle.
+  // If "Here" was pressed, we set a flag indicating to ip_geoloc_init() that
+  // we want to find the visitor's current position using their HTML5-based
+  // browser immediately, not waiting for the next cycle.
   _ip_geoloc_set_session_value('reverse_geocode_now', empty($form_state['values']['fixed_address']) ? 1 : 0);
 
   $location['fixed_address'] = $form_state['values']['fixed_address'];
-  if (isset($region)) {
-    $location['region'] = $region;
-  }
+
   _ip_geoloc_set_session_value('location', $location);
 
   // No need to remember the form state. It's all kept on the session.
   $form_state['rebuild'] = FALSE;
 }
 
-function ip_geoloc_get_location_from_term($tid) {
-  if ($term = taxonomy_term_load($tid)) {
-    // Get lat,lng from the Geofield on this term
-    $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
-    $vocabulary = taxonomy_vocabulary_load($geo_vocabulary_id);
-    foreach (field_info_instances('taxonomy_term', $vocabulary->machine_name) as $field_name => $field_instance) {
-      $field = field_info_field($field_name);
-      if ($field['type'] == 'geofield'){
-        $value = reset($term->{$field_name});
-        $value = reset($value);
-        return array(
-          'provider' => 'taxonomy',
-          'ip_address' => ip_address(),
-          'region' => $tid,
-          'latitude' => $value['lat'],
-          'longitude' => $value['lon'],
-        //'formatted_address' => $term->name,
-        );
-      }
+/**
+ * Returns the location object belonging to supplie region taxonomy term id.
+ * 
+ * @param int $tid
+ *   Taxonomy term identifier
+ * @param int $return_parent
+ *   To return location of the parent (1) or grand-parent (2) rather than the
+ *   supplied region term.
+ *
+ * @return array, location info
+ */
+function ip_geoloc_get_location_from_term($tid, $parent = 0) {
+
+  $parents = taxonomy_get_parents_all($tid);
+  if (empty($parents)) {
+    return array('provider' => 'taxonomy', 'ip_address' => ip_address());
+  }
+  $term = $parents[min($parent, count($parents) - 1)];
+
+  // Get lat,lng from the Geofield on this term
+  $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
+  $vocabulary = taxonomy_vocabulary_load($geo_vocabulary_id);
+  foreach (field_info_instances('taxonomy_term', $vocabulary->machine_name) as $field_name => $field_instance) {
+    $field = field_info_field($field_name);
+    if ($field['type'] == 'geofield'){
+      $value = reset($term->{$field_name});
+      $value = reset($value);
+      return array(
+        'provider' => 'taxonomy',
+        'ip_address' => ip_address(),
+        'region' => $term->tid,
+        'latitude' => $value['lat'],
+        'longitude' => $value['lon'],
+      //'formatted_address' => $term->name,
+      );
     }
   }
-  return array('provider' => 'taxonomy', 'ip_address' => ip_address());
 }

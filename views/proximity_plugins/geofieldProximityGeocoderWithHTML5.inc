@@ -14,7 +14,7 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
 
   public function value_form(&$form, &$form_state, $views_plugin) {
     parent::value_form($form, $form_state, $views_plugin);
-    $note = t('You may enter %me to indicate your current location.', array(
+    $note = t("You may enter %me to indicate the visitor's current location.", array(
       '%me' => t('me'),
     ));
     $form['value']['#description'] = $note;
