@@ -63,6 +63,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ),
     );
 
+    $options['full_screen'] = array('default' => 0);
+
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
     $options['cluster_differentiator'] = array(
       'contains' => array(
@@ -282,6 +284,28 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['map_options']['dragging'],
       '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
     );
+
+    global $user;
+
+    $form['full_screen'] = array(
+      '#title' => t('Add a full-screen toggle to the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['full_screen'],
+      '#weight' => 98,
+    );
+    $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
+    if ($lib_fullscreen) {
+      $file_fullscreen = $lib_fullscreen . '/dist/Leaflet.fullscreen.min.js';
+      if (!file_exists($file_fullscreen)) {
+        $form['full_screen']['#description'] = t('<em>leaflet-fullscreen</em> library found, but %js_file is missing.', array('%js_file' => $file_fullscreen));
+      }
+    }
+    else {
+      $form['full_screen']['#description'] = t('Requires this <a href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
+        '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
+    }
+    $lib_markercluster = libraries_get_path('leaflet_markercluster');
+
     $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
     $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module and corresponding javascript library.', array(
       '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
@@ -292,19 +316,19 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#field_suffix' => t('px'),
       '#size' => 4,
       '#default_value' => $this->options['cluster_radius'],
-      '#description' => module_exists('leaflet_markercluster') ? $desc_a : $desc_b,
+      '#description' => module_exists('leaflet_markercluster') && $lib_markercluster ? $desc_a : $desc_b,
       '#weight' => 100,
     );
 
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
-    $intro = t('A feature to make clustering more meaningful, as demonstrated <a target="article" href="!url_article">here</a>.', array('!url_article' => 'http://flink.com.au/ramblings'));
-    $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, city, suburb or non-administrative areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, making for a more natural clustering behaviour that honours region boundaries.');
+    $intro = t('Makes cluster boundaries and counts more meaningful', array('@url_article' => 'http://fris.com.au'));
+    $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, city, suburb or non-administrative areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, making for a more informative clustering behaviour that honours region boundaries.');
 
     $form['cluster_differentiator'] = array(
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
+      '#collapsed' => FALSE,
       '#title' => t('Region/Cluster differentiator (coming soon)'),
       '#description' => '<em>' . $intro . '</em><p>' . $desc . '</p>',
       // The id in the prefix must match the AJAX submit handlers below.
@@ -312,16 +336,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#suffix' => '</div>',
       '#weight' => 103,
     );
-    //@todo
-    return;
-    global $user;
-    if ($user->uid == 1) {
-      $note = t('To enable this feature, use this <a target="flink" href="!url_js_new">drop-in replacement</a> for the existing file %url_js_old', array(
-        '!url_js_new' => url('http://flink.com.au'),
-        '%url_js_old' => 'sites/all/libraries/leaflet_markercluster/dist/leaflet.markercluster.js',
-      ));
-      $form['cluster_differentiator']['#description'] .= $note;
-    }
     if (isset($form_state['triggering_element'])) {
       // Get here when any form element with #ajax was changed/clicked causing
       // an auto-rebuild of the form.
@@ -332,6 +346,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     else {
       $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
+    }
+    //@todo
+    return;
+    // Rather than overwriting, let the 2 co-exist and show on Status Report?
+    if (!module_exists('leaflet_markercluster')) {
+      $form['cluster_differentiator']['#description'] .= $desc_b;
+    }
+    elseif ($lib_markercluster && empty($region_field_names)) {
+      $file_markercluster = "$lib_markercluster/dist/leaflet.markercluster.js";
+      $note_region = t('To activate this feature, use the leaflet.markercluster.js <a target="mojo" href="!url_js_new">drop-in replacement</a>, copying it over the top of %url_js_old', array(
+        '!url_js_new' => url('https://www.mojomarketplace.com/item/leaflet-map-region-bound-clustering'),
+        '%url_js_old' => $file_markercluster,
+      ));
+      $form['cluster_differentiator']['#description'] .= $note_region;
     }
 
     $form['cluster_differentiator']['cluster_differentiator_fields'] = array(
@@ -440,6 +468,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_color = $this->options['default_marker']['default_marker_color'];
     $visitor_marker_color = $this->options['visitor_marker']['visitor_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
+    $has_full_screen = !empty($this->options['full_screen']);
     $cluster_radius = $this->options['cluster_radius'];
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
     $tag_css_classes = $this->options['tags']['tag_css_class'];
@@ -638,7 +667,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $map['settings']['maxZoom'] = $max_zoom;
     $map['settings']['scrollWheelZoom'] = $scroll_wheel_zoom;
-    $map['settings']['dragging'] = $dragging;
+    $map['settings']['dragging'] = $dragging;    
 
     $map['settings']['maxClusterRadius'] = 0;
     if (!empty($cluster_radius)) {
@@ -669,6 +698,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
+    
+    if ($has_full_screen) {
+      // Load the Leaflet/Leaflet.fullscreen library, containing JS and CSS.
+      if (drupal_add_library('ip_geoloc', 'leaflet-fullscreen')) {
+        $map['settings']['fullscreenControl'] = TRUE;
+        //drupal_add_css($module_path. '/css/ip_geoloc_leaflet_fullscreen.css');
+      }
+    }
     $settings = array(
       'mapId' => $map_id,
       'map' => $map,
@@ -680,9 +717,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     drupal_add_js(array('leaflet' => array($settings)), $options);
 
+    libraries_load('leaflet');
+
     // Little hacky this, but can't see another way to load libraries for
     // Leaflet More Maps, Leaflet MarkerCluster, Leaflet Hash...
-    libraries_load('leaflet');
     drupal_alter('leaflet_map_prebuild', $settings);
 
     if (!empty($cluster_radius) && !module_exists('leaflet_markercluster')) {

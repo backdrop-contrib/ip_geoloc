@@ -55,6 +55,30 @@ function ip_geoloc_help($path, $arg) {
  */
 function ip_geoloc_library() {
   $libraries = array();
+
+  $path_fullscreen = libraries_get_path('leaflet-fullscreen') . '/dist';
+  $libraries['leaflet-fullscreen'] = array(
+    'title' => 'Leaflet Fullscreen',
+    'version' => '0.0.3',
+    'js' => array(
+      array(
+        'type' => 'file',
+        'data' => "$path_fullscreen/Leaflet.fullscreen.min.js",
+        'group' => JS_LIBRARY,
+        'weight' => 2,
+        'preprocess' => FALSE,
+      ),
+    ),
+    'css' => array(
+      "$path_fullscreen/leaflet.fullscreen.css" => array(
+        'type' => 'file',
+        'media' => 'screen',
+        'group' => CSS_DEFAULT,
+        'weight' => 2,
+      ),
+    ),
+  );
+
   foreach (ip_geoloc_get_font_icon_libs() as $css_file) {
     $css_file = trim($css_file);
     if (!empty($css_file)) {

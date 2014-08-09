@@ -106,6 +106,18 @@ function ip_geoloc_block_configure($delta = '') {
       ),
       '#default_value' => variable_get('ip_geoloc_region_autocomplete', 0),
     );
+    $form['region']['ip_geoloc_region_parent'] = array(
+      '#type' => 'select',
+      '#title' => t('Center to use'),
+      '#options' => array(
+        0 => t('Selected region'),
+        1 => t('Parent of selected region'),
+        2 => t('Grandparent of selected region'),
+        3 => t('Great-grandparent of selected region'),
+      ),
+      '#default_value' => variable_get('ip_geoloc_region_parent', 0),
+      '#description' => t('If the selected parent does not exist the next parent down will be used instead.'),
+    );
     return $form;
   }
 
@@ -171,6 +183,7 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
     variable_set('ip_geoloc_address_element', $edit['ip_geoloc_address_element']);
     variable_set('ip_geoloc_geo_vocabulary_id', $edit['ip_geoloc_geo_vocabulary_id']);
     variable_set('ip_geoloc_region_autocomplete', $edit['ip_geoloc_region_autocomplete']);
+    variable_set('ip_geoloc_region_parent', $edit['ip_geoloc_region_parent']);
     return;
   }
   // Save options common to all maps.
@@ -460,7 +473,8 @@ function ip_geoloc_geocode($form, &$form_state) {
           }
         }
       }
-      $location = ip_geoloc_get_location_from_term($region);
+      $parent = variable_get('ip_geoloc_region_parent', 0);
+      $location = ip_geoloc_get_location_from_term($region, $parent);
     }
     else {
       // Note the use of 'input' rather than 'values'. We don't want to read
