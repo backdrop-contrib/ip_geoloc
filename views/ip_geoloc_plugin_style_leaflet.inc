@@ -667,7 +667,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $map['settings']['maxZoom'] = $max_zoom;
     $map['settings']['scrollWheelZoom'] = $scroll_wheel_zoom;
-    $map['settings']['dragging'] = $dragging;    
+    $map['settings']['dragging'] = $dragging;
 
     $map['settings']['maxClusterRadius'] = 0;
     if (!empty($cluster_radius)) {
@@ -698,7 +698,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
-    
+
     if ($has_full_screen) {
       // Load the Leaflet/Leaflet.fullscreen library, containing JS and CSS.
       if (drupal_add_library('ip_geoloc', 'leaflet-fullscreen')) {
