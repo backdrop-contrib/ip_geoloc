@@ -925,21 +925,31 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
         }
       }
     }
-    elseif (isset($row->_entity_properties[$differentiator])) {
+    elseif (isset($row->_entity_properties)) {
       // Search API
-      $differentiator_value = $row->_entity_properties[$differentiator];
+      if (isset($row->_entity_properties[$differentiator])) {
+        $differentiator_value = $row->_entity_properties[$differentiator];
+      }
+      else {
+        // This is an empirical hack.
+        $last_ = strrpos($differentiator_value, '_');
+        $differentiator = drupal_substr($differentiator_value, $last_ + 1);
+        if (isset($row->_entity_properties[$differentiator])) {
+          $differentiator_value = $row->_entity_properties[$differentiator];
+        }
+      }
+      if (!isset($differentiator_value)) {
+        drupal_set_message(t('IPGV&M: differentiator %diff does not appear among these Search API keys: %keys', array(
+          '%diff' => $differentiator,
+          '%keys' => implode(',', array_keys($row->_entity_properties))
+        )), 'warning', FALSE);
+      }
     }
     else {
       $differentiator_value = '';
       if (!isset($row->{'field_' . $differentiator})) {
         drupal_set_message(t('IPGV&M: no differentiator values found for %diff. Cannot set marker images.', array(
           '%diff' => $differentiator)), 'warning', FALSE);
-        if (isset($row->_entity_properties)) {
-          drupal_set_message(t('IPGV&M: %diff does not appear among these Search API keys: %keys', array(
-            '%diff' => $differentiator,
-            '%keys' => implode(',', array_keys($row->_entity_properties))
-          )), 'warning', FALSE);
-        }
       }
     }
     if (!empty($differentiator_value) || $differentiator_value == 0) {
