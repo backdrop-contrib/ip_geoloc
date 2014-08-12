@@ -932,8 +932,8 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
       }
       else {
         // This is an empirical hack.
-        $last_ = strrpos($differentiator_value, '_');
-        $differentiator = drupal_substr($differentiator_value, $last_ + 1);
+        $last_ = strrpos($differentiator, '_');
+        $differentiator = drupal_substr($differentiator, $last_ + 1);
         if (isset($row->_entity_properties[$differentiator])) {
           $differentiator_value = $row->_entity_properties[$differentiator];
         }
