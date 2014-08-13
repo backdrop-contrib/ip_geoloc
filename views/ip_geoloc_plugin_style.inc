@@ -925,23 +925,22 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
         }
       }
     }
-    elseif (isset($row->_entity_properties)) {
+    elseif (!empty($row->_entity_properties)) {
       // Search API
-      if (isset($row->_entity_properties[$differentiator])) {
+      $differentiator_value = '';
+      if (!empty($row->_entity_properties[$differentiator])) {
         $differentiator_value = $row->_entity_properties[$differentiator];
       }
-      else {
-        // This is an empirical hack.
-        $last_ = strrpos($differentiator, '_');
+      else if ($last_ = strrpos($differentiator, '_')) {
         $differentiator = drupal_substr($differentiator, $last_ + 1);
-        if (isset($row->_entity_properties[$differentiator])) {
+        if (!empty($row->_entity_properties[$differentiator])) {
           $differentiator_value = $row->_entity_properties[$differentiator];
         }
       }
-      if (!isset($differentiator_value)) {
+      if (empty($differentiator_value)) {
         drupal_set_message(t('IPGV&M: differentiator %diff does not appear among these Search API keys: %keys', array(
           '%diff' => $differentiator,
-          '%keys' => implode(',', array_keys($row->_entity_properties))
+          '%keys' => implode(', ', array_keys($row->_entity_properties)),
         )), 'warning', FALSE);
       }
     }
@@ -952,7 +951,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
           '%diff' => $differentiator)), 'warning', FALSE);
       }
     }
-    if (!empty($differentiator_value) || $differentiator_value == 0) {
+    if (!empty($differentiator_value) || $differentiator_value === 0) {
 
       foreach ($differentiator_color_associations as $association) {
         $match = TRUE;
