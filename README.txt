@@ -2,15 +2,17 @@
 IP GEOLOCATION VIEWS AND MAPS
 =============================
 This documentation concentrates on the installation and configuration of the
-IP Geolocation Views & Maps (IPGV&M) module. A full description of the module
-and its features can be found at http://drupal.org/project/ip_geoloc.
+IP Geolocation Views & Maps (IPGV&M) module. For an overall introduction see
+http://drupal.org/project/ip_geoloc.
 
-INSTALLATION & CONFIGURATION
-============================
-First, if you are using IPGV&M primarily for its Views mapping interface to
-other modules and the features it adds, then here's a configuration shortcut.
-Download and enable IPGV&M like any other module. Visit its
-configuration page, .../admin/config/system/ip_geoloc.
+CONFIGURATION OF VIEW-BASED MAPS
+================================
+Read this if you are using IPGV&M primarily for its Views mapping interface. If
+you focus is on the recording of visitor locations, past and present, read the
+next section.
+
+Download and enable IPGV&M like any other module. Then visit its configuration
+page, .../admin/config/system/ip_geoloc.
 If you intend to use IPGV&M's built-in interface to Google Maps, untick all
 "Data collection option" boxes.
 If you intend to use IPGV&M with the OpenLayers or Leaflet modules and also wish
@@ -22,8 +24,28 @@ their HTML5 location, or, using the same block type, a city or partial address,
 like "New York".
 
 You are now ready to map your View of Location, Geofield, Geolocation Field or
-GetLocations. Skip the following sections and read CONFIGURING YOUR VIEW TO
-DISPLAY AS A MAP.
+GetLocations.
+
+If you have one of the Location, Geofield, Geolocation Field or Get Locations
+modules enabled, then first create a normal tabular content View of nodes that
+hold location coordinates via one of these modules. The coordinate fields will
+show up in the Field list of your View.
+Unless you use the Location module (with User Locations or Node Locations), make
+sure you have included in your view's field selection a field named "Content:
+your_Geofield/Geolocation_field". Only one copy is required, you do NOT need
+both a latitude version plus a longitude version. The "Formatter", if it pops
+up, is relevant only if you want the location field to appear in the marker
+balloons. Make sure "Use field template" is UNTICKED. Commerce Kickstart tends
+to have the box ticked, so UNTICK it. Untick it for the differentiator too, if
+used.
+Then, after selecting the View Format "Map (Google, via IPGV&M)", "Map (Leaflet,
+via IPGV&M)" or "Map (OpenLayers, via IPGV&M)" select or type field_name in the
+"Name of latitude field in Views query".
+Note that IPGV&M can handle multiple fields containing latitudes. This comes in
+handy when your View brings together content types with different latitude field
+machine names. When using multiple fields for the latitude, you must select
+<none> for "Name of LONGITUDE field in Views query".
+Fill out the remaining options to your liking. Save.
 
 Visit the IPGV&M configuration page to specify an alternative marker set. When
 using Leaflet you can superimpose scalable font icon on top of your markers, as
@@ -48,11 +70,51 @@ Or you can enable the "Set my location" block, which will only prompt the user
 to confirm when they explicitly request to share and reverse-geocode their
 location.
 
-If you DO want to auto-record visitor address details then complete the steps
+CONFIGURATION FOR COLLECTION OF VISITOR RESULTS
+===============================================
+Location providers supported by this module include the specific hardware
+(desktop, tablet, phone...) your visitors use, which may employ GPS, WiFi and
+mobile cell towers. Nowadays the fine detail can be almost frightening, i.e.
+lat/long coordinates with an accuracy of 30 meters and postal addresses down to
+the street and street number. If you don't want to collect or expose this degree
+of detail, you can switch it off on the configuration page and have IPGV&M fall
+back on a less fine-grained service or API, as provided by Smart IP, GeoIP API
+or one you write yourself.
+The process used is called reverse-geocoding. IPGV&M therefore adds to
+geocoding modules like Location, Geofield/Geocoder, Geolocation field or
+Get Locations, which are about giving users the facility to enter postal
+addresses or lat/long coordinates themselves and then mapping those.
+IPGV&M is also different from most in that, if desired, it can collect locations
+of guests that visited your site from before you installed this module, going
+back all the way to the day you launched your site.
+For present and future visitor geolocation information IPGV&M's built-in data
+collection techniques are hard to beat and may involve WiFi, GPS and mobile cell
+towers. For historic visitor data, IPGV&M supports existing tried-and-tested
+contributed modules to pull in IP-to-lat/long and IP-to-city/suburb/village
+data. The following modules are supported as lat/long data sources:
+
+o Smart IP (its submodule Device Geolocation is not required)
+o GeoIP API (note: the port of this module to D7 appears to be still in
+  progress, but this dev version appears to work fine).
+o any module that implements hook_get_ip_geolocation_alter($location) -- see the
+For programmers section further down this page
+IPGV&M does not require you to load any libraries. You do not need to register
+for any API keys, except when you use Smart IP in combination with the IPinfoDB
+web service. The API key required on the Smart IP configuration page is free and
+is sent to you by return email after you've applied at
+http://ipinfodb.com/register.php. Alternatively you could use the file-based
+option of Smart IP or employ GeoIP API, which is also based on a file,
+downloadable from here: GeoLiteCity.dat.gz. The file is free and no key is
+required.
+For reasons of reporting efficiency and flexibility via Views IPGV&M maintains
+its own small database of location information of past visitors to your site.
+It does not copy the entire Smart IP or GeoIP databases.
+
+If you want to auto-record visitor address details then complete the steps
 under A and B below.
 
-A. Present and future: reporting and mapping of location information about
-guests visiting after you enabled IPGV&M
+A. Present and future: maps of guests visiting after you enabled IPGV&M
+-----------------------------------------------------------------------
 
 1. Install and enable like any other module, use Drush if you wish. Remain
 connected to the internet.
@@ -77,8 +139,8 @@ as well as a local map. Or "Visitor log (lite)", which combines nicely when put
 on the same page with the block "Map of 20 most recent visitors".
 Modify these views as you please.
 
-
 B. Historic data: location info about visits to your site from way back when
+----------------------------------------------------------------------------
 
 Note, that this step relies on you having had the Statistics module enabled
 before you installed IPGV&M, as the access log is used as the source of IP
@@ -115,29 +177,6 @@ of 10 most recent visitors" should now show more markers.
 4. Go back the Configuration >> IPGV&M and complete the import process
 with a larger batch size until the IP geolocation database is up to date with
 the access log. It will automatically remain in sync from now on.
-
-CONFIGURING YOUR VIEW TO DISPLAY AS A MAP
-=========================================
-If you have one of the Location, Geofield, Geolocation Field or Get Locations
-modules enabled, then first create a normal tabular content View of nodes that
-hold location coordinates via one of these modules. The coordinates will show up
-in the Field list of your View.
-Unless you use the Location module (with User Locations or Node Locations), make
-sure you have included in your view's field selection a field named "Content:
-your_Geofield/Geolocation_field". Only one copy is required, you do NOT need
-both a latitude version plus a longitude version. The "Formatter", if it pops
-up, is relevant only if you want the location field to appear in the marker
-balloons. Make sure "Use field template" is UNTICKED. Commerce Kickstart tends
-to have the box ticked, so UNTICK it. Untick it for the differentiator too, if
-used.
-Then, after selecting the View Format "Map (Google, via IPGV&M)", "Map (Leaflet,
-via IPGV&M)" or "Map (OpenLayers, via IPGV&M)" select or type field_name in the
-"Name of latitude field in Views query".
-Note that IPGV&M can handle multiple fields containing latitudes. This comes in
-handy when your View brings together content types with different latitude field
-machine names. When using multiple fields for the latitude, you must select
-<none> for "Name of LONGITUDE field in Views query".
-Fill out the remaining options to your liking. Save.
 
 LEAFLET TIPS
 ============
@@ -217,7 +256,7 @@ You can assemble your own icon set from Font Awesome and other repositories at
 fontello.com and download it to sites/all/libraries. Then again enter the path
 to the main .css file at admin/config/system/ip_geoloc.
 
-Similarly flaticon icon packs can be selected from http://www.flaticon.com/pack.
+Similarly flaticon icon packs can be selected from http://www.flaticon.com.
 First create the directory sites/all/libraries/flaticon, then download and unzip
 the pack into that directory, so that the path to the essential style sheet is
 sites/all/libraries/flaticon/PACK/flaticon.css, where PACK may be something like
@@ -298,16 +337,6 @@ means that you can switch off the periodic prompting to share location, which
 can become annoying, i.e. you can UNtick the box "Employ the Google Maps API to
 reverse-geocode HTML5 visitor locations to street addresses".
 
-UTILITY FUNCTIONS
-=================
-Check out file ip_geoloc_api.inc for a number of useful utility functions for
-creating maps and markers, calculating distances between locations etc. All
-functions are documented and should be straightforward to use.
-
-HOOKS
-=====
-See ip_geoloc.api.php
-
 HIGH PERFORMANCE AJAX
 =====================
 IPGV&M will take advantage of the "High-performance Javascript callback
@@ -325,23 +354,59 @@ IPGV&M will now perform its AJAX calls more efficiently. To switch this feature
 off, comment out the newly added lines from the .htaccess file (put a # in front
 of each line).
 
-RESTRICTIONS IMPOSED BY GOOGLE
-==============================
-Taken from http://code.google.com/apis/maps/documentation/geocoding :
 
-"Use of the Google Geocoding API is subject to a query limit of 2500 geolocation
-requests per day. (Users of Google Maps API Premier may perform up to 100,000
-requests per day.) This limit is enforced to prevent abuse and/or repurposing of
-the Geocoding API, and this limit may be changed in the future without notice.
-Additionally, we enforce a request rate limit to prevent abuse of the service.
-If you exceed the 24-hour limit or otherwise abuse the service, the Geocoding
-API may stop working for you temporarily. If you continue to exceed this limit,
-your access to the Geocoding API may be blocked.
-Note: the Geocoding API may only be used in conjunction with a Google map;
-geocoding results without displaying them on a map is prohibited. For complete
-details on allowed usage, consult the Maps API Terms of Service License
-Restrictions."
+FOR SITE BUILDERS AND PROGRAMMERS
+=================================
+IPGV&M stores location data for the current visitor in their session and makes
+it available via ip_geoloc_get_visitor_location(). So you can display content
+conditionally on the country or city that your users are visiting from. For
+instance you can restrict visibility of a block containing an ad or a news flash
+relevant only to a particular city by entering this little snippet in the
+"Visibility settings" of the block, under "Pages on which this PHP code returns
+TRUE":
+<?php
+  $location = ip_geoloc_get_visitor_location();
+  return isset($location['locality']) && $location['locality'] == 'Melbourne';
+?>
+
+For debugging purposes you can display in a block the current user's session
+location data. First make sure that you have the core module "PHP filter"
+enabled. Then go Structure >> Blocks >> Add block. Set the Text forma to
+"PHP code". For something half readable enter in the block body something like
+this:
+<?php
+  foreach (ip_geoloc_get_visitor_location() as $key => $value) {
+    echo "$key: $value <br>";
+  }
+?>
+Note that, in order to see any meaningful session data when running on a local
+server (127.0.0.1), you must be connected to the internet and have ticked at
+Configuration >> IP Geolocation Views and Maps the data collection option
+"Employ the Google Maps API to reverse-geocode lat/long coordinates to street
+addresses". When debugging it is also recommended to activate on the same page
+the advanced option "Detail execution progress with status messages".
+
+See ip_geoloc.api.php for functions to retrieve and respond to lat/long and
+address information and to generate maps. Below are some of the functions
+available. See ip_geoloc/ip_geoloc_api.inc for details.
+
+function ip_geoloc_output_map_current_location($div_id, $map_opts...)
+function ip_geoloc_output_map_multi_locations($locations, $div_id, $map_opts....)
+function ip_geoloc_distance($location, $ref_location='current visitor');
+
+Add, remove or alter locations as returned by the View before they're being
+mapped, by implementing:
+function hook_ip_geoloc_marker_locations_alter(&$locations, $view);
+
+Some suspected web crawlers
+You may find that the following are great fans of your web site, visiting it
+repeatedly ;-)
+"Mountain View, CA 94043, USA" (Google, IPs 66.249.68.*, 66.249.69.* etc)
+"Sunnyvale, CA 94089, USA" (Yahoo!, IPs 67.195.*.*)
+"Dongcheng, Beijing, China" (IPs 123.125.71.*, 180.76.5.*)
+
+See also http://whois.domaintools.com
 
 AUTHOR
 ======
-Rik de Boer of flink dot com dot au, Melbourne, Australia.
+rik @ flink dot com dot au, Melbourne, Australia.
