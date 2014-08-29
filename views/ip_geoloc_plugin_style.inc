@@ -157,7 +157,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     elseif ($field['module'] == 'number') {
       $description .= t('You may enter a numeric range of by separating "from" and "to" by a <strong>double hyphen</strong>.<br/>Example: <strong>2.5--7.95</strong><br/>You may omit "from" or "to" to create open-ended ranges.');
     }
-    $description .= '<br/>' . t('You can refer to View URL arguments via !1, !2 etc.');
+    $description .= '<br/>' . t('You can refer to View URL arguments via !1, !2 etc.')
+      . '<br/>' . t('To use components of complex field types like Date or AddressField use replacement tokens in the <em>Global: Custom text</em> field.');
   }
   $form['differentiator']['differentiator_field'] = array(
     '#title' => t('Location differentiator'),
@@ -616,7 +617,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     // @todo - Add support for multiple grouping fields?
     $group_field = $views_plugin_style->options['grouping'][0]['field'];
   }
-
+  $separator = filter_xss_admin($views_plugin_style->options['map_options']['separator']);
   foreach ($sets as $set) {
     // Render as a grouping set.
     if (!empty($set['group'])) {
@@ -638,7 +639,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
             foreach ($set['rows'] as $i => $row) {
               $rendered_fields = $views_plugin_style->rendered_fields[$i];
               unset($rendered_fields[$group_field]);
-              $location->balloon_text .= '<br />' . implode('<br/>', $rendered_fields);
+              $location->balloon_text .= $separator . implode($separator, $rendered_fields);
             }
           }
           if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
@@ -672,7 +673,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
           if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
             // Remaining row values go into the balloon.
             if (!empty($views_plugin_style->rendered_fields[$i])) {
-              $location->balloon_text = implode('<br/>', $views_plugin_style->rendered_fields[$i]);
+              $location->balloon_text = implode($separator, $views_plugin_style->rendered_fields[$i]);
             }
             if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
               _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
@@ -931,7 +932,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
       if (!empty($row->_entity_properties[$differentiator])) {
         $differentiator_value = $row->_entity_properties[$differentiator];
       }
-      else if ($last_ = strrpos($differentiator, '_')) {
+      elseif ($last_ = strrpos($differentiator, '_')) {
         $differentiator = drupal_substr($differentiator, $last_ + 1);
         if (!empty($row->_entity_properties[$differentiator])) {
           $differentiator_value = $row->_entity_properties[$differentiator];

@@ -64,7 +64,7 @@ function ip_geoloc_admin_configure() {
       '%url_libs' => '/sites/all/libraries',
       '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome'),
       '%css_file1' => 'sites/all/libraries/font-awesome/css/font-awesome.min.css',
-      '!url_flaticon' => url('http://flaticon.com/packs'),
+      '!url_flaticon' => url('http://flaticon.com'),
       '%css_file2' => 'sites/all/libraries/flaticon/food-icons/flaticon.css',
       '!url_status' => url('admin/reports/status'),
     )),
@@ -147,7 +147,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'checkbox',
     '#title' => t('Employ Smart IP as a backup to the Google Maps JS API as well as declined or failed HTML5 location retrievals in Views'),
     '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),
-    '#description' => t('This refers to situations where the lat/long coords could not be established (e.g. because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
+    '#description' => t('This refers to situations where the lat/long coords could not be established, for example because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
       '@geoip' => url('http://drupal.org/project/geoip'),
     )),
   );
@@ -176,7 +176,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'textfield',
     '#title' => t('Detail execution progress with status messages'),
     '#default_value' => variable_get('ip_geoloc_debug'),
-    '#description' => t('Enter a comma-separated list of names of users that should see status messages coming from this module, e.g. for debugging purposes. Use <strong>anon</strong> for the anonymous user.'),
+    '#description' => t('Enter a comma-separated list of names of users that should see status messages coming from this module, e.g., for debugging purposes. Use <strong>anon</strong> for the anonymous user.'),
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_session'] = array(
     '#type' => 'submit',

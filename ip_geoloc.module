@@ -29,8 +29,9 @@ define('IP_GEOLOC_DOC_GOOGLE_MAP_OPTIONS', 'http://code.google.com/apis/maps/doc
 
 // Same as used for dates.
 define('IP_GEOLOC_RANGE_SEPARATOR1', '--');
-// Alternative delimiter.
-define('IP_GEOLOC_RANGE_SEPARATOR2', ':');
+// Alternative delimiter. Must not be something common, e.g., the colon used in
+// times 23:12:59
+define('IP_GEOLOC_RANGE_SEPARATOR2', '...');
 
 require_once 'ip_geoloc.session.inc';
 require_once 'ip_geoloc_api.inc';
@@ -144,7 +145,7 @@ function ip_geoloc_region_autocomplete($partial_region = '') {
       }
     }
   }
-	drupal_json_output($matches);
+  drupal_json_output($matches);
 }
 
 /**
@@ -186,7 +187,7 @@ function ip_geoloc_init() {
 
   $location = ip_geoloc_get_visitor_location();
 
-  // Decrement 'reverse_geocode now' counter, if set, e.g. via "Set my location"
+  // Decrement 'reverse_geocode_now' counter, if set, like "Set my location"
   // block. Typically only 1 forced reverse geocode in succession.
   if ($force_reverse_geocode = $reverse_geocode_count = _ip_geoloc_get_session_value('reverse_geocode_now')) {
     _ip_geoloc_set_session_value('reverse_geocode_now', --$reverse_geocode_count);
@@ -213,7 +214,7 @@ function ip_geoloc_init() {
     // use Google Maps API to reverse-geocode these coords into a street
     // address.
     // This is all done via client-side calls, so the Drupal server
-    // will not rake up any calls against its Google-imposed quotum, ie the
+    // will not rake up any calls against its Google-imposed quotum, i.e. the
     // OVER_QUERY_LIMIT.
     // When done the javascript calls us back on the supplied menu callback,
     // '/js/ip_geoloc/current_location', which receives the geolocation data

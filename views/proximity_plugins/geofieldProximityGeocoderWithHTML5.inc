@@ -65,7 +65,7 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
 
       $share_from = $views_plugin->options['geofield_proximity_with_HTML5_share_exposed'];
       if (isset($views_plugin->view->exposed_raw_input[$share_from])) {
-        $exposed_filter = $views_plugin->view->exposed_raw_input[$share_from];  
+        $exposed_filter = $views_plugin->view->exposed_raw_input[$share_from];
         $views_plugin->value['origin'] = $exposed_filter['origin'];
         $views_plugin->value['unit'] = $exposed_filter['unit'];
         $views_plugin->value['distance'] = $exposed_filter['distance'];
@@ -78,7 +78,7 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
       $exposed_filter = isset($views_plugin->options['value']) ? $views_plugin->options['value'] : $views_plugin->options['geofield_proximity_geocoder'];
     }
 
-    $origin = isset($exposed_filter['origin']) ? trim($exposed_filter['origin']) : '';
+    $origin = isset($exposed_filter['origin']) && is_string($exposed_filter['origin']) ? trim($exposed_filter['origin']) : '';
 
     if (drupal_strlen($origin) <= 1 || $origin === 'me' || $origin === t('me')) {
       $location = ip_geoloc_get_visitor_location();

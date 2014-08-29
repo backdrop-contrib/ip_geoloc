@@ -82,6 +82,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'zoom' => array('default' => 2),
         'scrollwheelzoom' => array('default' => TRUE),
         'dragging' => array('default' => TRUE),
+        'separator' => array('default' => '<br/>'),
       ),
     );
     return $options;
@@ -215,6 +216,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form['tooltips']['marker_tooltip'] = array(
       '#title' => t('Views field to populate tooltips'),
       '#type' => 'select',
+      //'#multiple' => TRUE,
+      //'#size' => 6,
       '#default_value' => $this->options['tooltips']['marker_tooltip'],
       '#options' => $fields,
       '#description' => t('Example: "Content: Title"'),
@@ -250,7 +253,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('More map options'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
-      // Could be empty($this->options['map_options']['zoom']), ?
+      // Or: empty($this->options['map_options']['zoom']) ?
       '#collapsed' => TRUE,
       '#weight' => 200,
     );
@@ -284,8 +287,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['map_options']['dragging'],
       '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
     );
-
-    global $user;
+    $form['map_options']['separator'] = array(
+      '#title' => t('Separator used in marker balloons'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#default_value' => $this->options['map_options']['separator'],
+      '#description' => t('You may use most HTML tags.'),
+    );
 
     $form['full_screen'] = array(
       '#title' => t('Add a full-screen toggle to the map'),
@@ -349,7 +357,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     //@todo
     return;
-    // Rather than overwriting, let the 2 co-exist and show on Status Report?
+    // Rather than overwriting JS, let the libs co-exist and show on Status Report?
     if (!module_exists('leaflet_markercluster')) {
       $form['cluster_differentiator']['#description'] .= $desc_b;
     }
@@ -394,7 +402,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             $level++;
             $form['cluster_differentiator']['zoom_ranges'][$level] = array(
               '#type' => 'textfield',
-              '#title' => $title,
+              '#title' => check_plain($title),
               '#size' => 28,
               '#default_value' => $this->options['cluster_differentiator']['zoom_ranges'][$level],
               '#element_validate' => array('ip_geoloc_range_widget_validate'),
@@ -500,7 +508,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!isset($visitor_location['latitude'])) {
       $visitor_location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => ip_address()))->fetchAssoc();
     }
-    
+
     if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
       $map['center'] = array(
         'lat' => $visitor_location['latitude'],
@@ -576,10 +584,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if (!empty($location->marker_special_char) || !empty($location->marker_special_char_class)) {
         $has_special_markers = TRUE;
         if (!empty($location->marker_special_char)) {
-          $feature['specialChar'] = $location->marker_special_char;
+          $feature['specialChar'] = filter_xss_admin($location->marker_special_char);
         }
         if (!empty($location->marker_special_char_class)) {
-          $feature['specialCharClass'] = $location->marker_special_char_class;
+          $feature['specialCharClass'] = filter_xss_admin($location->marker_special_char_class);
         }
       }
       elseif (!empty($this->options['default_marker']['default_marker_special_char'])
@@ -636,8 +644,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'type' => 'point',
         'lat' => $visitor_location['latitude'],
         'lon' => $visitor_location['longitude'],
-        'specialChar' => $this->options['visitor_marker']['visitor_marker_special_char'],
-        'specialCharClass' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
+        'specialChar' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char']),
+        'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
         'popup' => t('Your approximate location'),
         'tooltip' => t('Your approximate location'),
         // See leaflet_markercluster.drupal.js.
@@ -675,7 +683,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $map['settings']['addRegionToolTips'] = $cluster_tooltips;
       $map['settings']['animateAddingMarkers'] = TRUE;
     }
-   
+  
     // Make sure we start array with 0 and no missing elements. Ohterwise this
     // array will arrive as an Object on the JS side.
     $map['settings']['regionLevels'] = array_fill(0, $max_zoom + 1, 0);
@@ -821,7 +829,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           $location->regions[$level++] = $region_term->name;
         }
         break;
- 
+
       case 'addressfield':
         $region = reset($regions);
         if (!empty($region)) {
