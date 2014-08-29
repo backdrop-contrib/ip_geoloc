@@ -402,7 +402,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             $level++;
             $form['cluster_differentiator']['zoom_ranges'][$level] = array(
               '#type' => 'textfield',
-              '#title' => check_plain($title),
+              '#title' => filter_xss_admin($title),
               '#size' => 28,
               '#default_value' => $this->options['cluster_differentiator']['zoom_ranges'][$level],
               '#element_validate' => array('ip_geoloc_range_widget_validate'),
