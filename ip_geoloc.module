@@ -558,6 +558,16 @@ function ip_geoloc_pretty_print($location) {
 }
 
 /**
+ * Returns the path to the configured marker directory.
+ *
+ * @return string
+ */
+function ip_geoloc_marker_directory() {
+  $path = drupal_get_path('module', 'ip_geoloc');
+  return variable_get('ip_geoloc_marker_directory', "$path/" . (module_exists('leaflet') ? 'amarkers' : 'markers'));
+}
+
+/**
  * Return available marker colors for use in a select drop-down.
  *
  * List is compiled based on available .png files in ip_geoloc/markers dir.
@@ -572,8 +582,7 @@ function ip_geoloc_marker_colors() {
       '' => '<' . t('default') . '>',
       0 => '<' . t('no marker') . '>',
     );
-    $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
-    if ($directory_handle = opendir($marker_directory)) {
+    if ($directory_handle = opendir(ip_geoloc_marker_directory())) {
       while (($filename = readdir($directory_handle)) !== FALSE) {
         if ($ext_pos = strrpos($filename, '.png')) {
           $color = drupal_substr($filename, 0, $ext_pos);

@@ -124,7 +124,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   if (!$is_openlayers) {
     $path = drupal_get_path('module', 'ip_geoloc');
-    $css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
+    $css_file = strpos(ip_geoloc_marker_directory(), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
     $form['default_marker_color']['#attached']['css'] = array("$path/css/$css_file");
   }
 
@@ -617,7 +617,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     // @todo - Add support for multiple grouping fields?
     $group_field = $views_plugin_style->options['grouping'][0]['field'];
   }
-  $separator = filter_xss_admin($views_plugin_style->options['map_options']['separator']);
+  $separator = isset($views_plugin_style->options['map_options']['separator'])
+    ? filter_xss_admin($views_plugin_style->options['map_options']['separator'])
+    : '<br/>';
   foreach ($sets as $set) {
     // Render as a grouping set.
     if (!empty($set['group'])) {

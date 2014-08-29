@@ -23,7 +23,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'textfield',
     '#title' => t('<strong>Google Maps, Leaflet</strong>: path to marker images'),
     '#field_prefix' => "$base_url/",
-    '#default_value' => variable_get('ip_geoloc_marker_directory', "$markers_path/markers"),
+    '#default_value' => ip_geoloc_marker_directory(),
     '#description' => t('Marker sets included with the module reside in %set1 and %set2. All marker images must be .png files.', array(
       '%set1' => "$markers_path/markers",
       '%set2' => "$markers_path/amarkers",

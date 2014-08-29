@@ -95,7 +95,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     parent::options_form($form, $form_state);
 
     $path = drupal_get_path('module', 'ip_geoloc');
-    $select_css_file = strpos(variable_get('ip_geoloc_marker_directory'), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
+    $select_css_file = strpos(ip_geoloc_marker_directory(), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
 
     $form['#attached'] = array('css' => array(
       "$path/css/ip_geoloc_admin.css",
@@ -482,7 +482,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $tag_css_classes = $this->options['tags']['tag_css_class'];
 
     $module_path = drupal_get_path('module', 'ip_geoloc');
-    $marker_path = file_create_url(variable_get('ip_geoloc_marker_directory', $module_path . '/markers'));
+    $marker_path = file_create_url(ip_geoloc_marker_directory());
 
     $max_zoom = (int) $this->options['map_options']['maxzoom'];
     $zoom = (int) $this->options['map_options']['zoom'];

@@ -272,9 +272,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
   }
-
-  $marker_directory = variable_get('ip_geoloc_marker_directory', drupal_get_path('module', 'ip_geoloc') . '/markers');
-  $marker_directory = file_create_url($marker_directory);
+  $marker_directory = file_create_url(ip_geoloc_marker_directory());
 
   $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
   $marker_width  = (int) $marker_dimensions[0];
