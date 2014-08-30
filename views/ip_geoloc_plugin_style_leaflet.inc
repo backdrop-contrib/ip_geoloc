@@ -158,7 +158,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 8,
       '#default_value' => $this->options['default_marker']['default_marker_special_char'],
-      '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
+      '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>. If the character shows up as @wrong, then it may not save or display correctly.', array(
+        '!url_fsymbols' => url('http://text-symbols.com'),
+        '@wrong' => "\xF0\x9F\x98\x83",
+      )),
     );
     $desc4 =  t('Use the class name from the font icon library you are using. Append <strong>light</strong>, <strong>dark</strong> or <strong>red</strong> to change the color. Examples:<br/>Font Awesome: <strong>fa fa-beer light</strong><br/>flaticon: <strong>flaticon-bicycle12 red</strong>');
     $form['default_marker']['default_marker_special_char_class'] = array(
@@ -192,7 +195,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 8,
       '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char'],
-      '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>.', array('!url_fsymbols' => url('http://fsymbols.com'))),
+      '#description' => t('As above'),
     );
     $form['visitor_marker']['visitor_marker_special_char_class'] = array(
       '#title' => t('Font icon class'),

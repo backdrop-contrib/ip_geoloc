@@ -49,7 +49,7 @@ Fill out the remaining options to your liking. Save.
 
 Visit the IPGV&M configuration page to specify an alternative marker set. When
 using Leaflet you can superimpose scalable font icon on top of your markers, as
-found at http://fsymbols.com, flaticon.com or fontello.com. See below for
+found at http://text-symbols.com, flaticon.com or fontello.com. See below for
 details.
 
 The "Views PHP" module is required for the included /visitor-log View.
@@ -243,8 +243,10 @@ size and position the icons in the center of the markers you are using.
 The style sheets that come with IPGV&M have been tested to work well in most
 themes with the icons from fsymbols, Font Awesome and flaticon.
 
-fsymbols can be copied and pasted from http://fsymbols.com as needed on the
-IPGV&M Views map configuration panel. No need to refer to any library.
+fsymbols can be copied and pasted from http://text-symbols.com/ as needed on the
+IPGV&M Views map configuration panel. No need to refer to any library. Not all
+of the fsymbols will agree with your database. The ones that don't work usually
+show up as little squares when pasted.
 
 To install Font Awesome visit http://fortawesome.github.io/Font-Awesome and
 press the "Download" button. Unzip the downloaded file into the Drupal
