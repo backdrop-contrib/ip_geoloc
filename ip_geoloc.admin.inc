@@ -32,7 +32,7 @@ function ip_geoloc_admin_configure() {
   $form['markers']['ip_geoloc_marker_dimensions'] = array(
     '#type' => 'textfield',
     '#title' => t('<strong>Google Maps, Leaflet</strong>: marker image width and height'),
-    '#default_value' => variable_get('ip_geoloc_marker_dimensions', '21 x 34'),
+    '#default_value' => ip_geoloc_marker_dimensions(),
     '#field_suffix' => t('px'),
     '#description' => t('These dimensions apply to all markers in the set. The default marker size is 21 x 34 for the <em>/markers</em> directory and 32 x 42 for the <em>/amarkers</em> directory.'),
   );

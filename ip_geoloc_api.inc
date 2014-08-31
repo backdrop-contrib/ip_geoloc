@@ -274,7 +274,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   }
   $marker_directory = file_create_url(ip_geoloc_marker_directory());
 
-  $marker_dimensions = explode('x', variable_get('ip_geoloc_marker_dimensions', '21 x 34'));
+  $marker_dimensions = explode('x', ip_geoloc_marker_dimensions());
   $marker_width  = (int) $marker_dimensions[0];
   $marker_height = (int) $marker_dimensions[1];
   switch (variable_get('ip_geoloc_marker_anchor_pos', 'bottom')) {

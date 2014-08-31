@@ -33,6 +33,8 @@ define('IP_GEOLOC_RANGE_SEPARATOR1', '--');
 // times 23:12:59
 define('IP_GEOLOC_RANGE_SEPARATOR2', '...');
 
+define('IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS', 'leaflet.markercluster-regionbound.min.js');
+
 require_once 'ip_geoloc.session.inc';
 require_once 'ip_geoloc_api.inc';
 require_once 'ip_geoloc_blocks.inc';
@@ -94,6 +96,21 @@ function ip_geoloc_library() {
     $libraries['ip_geoloc_font_icon_libs']['title'] = t('IPGV&M font icon libraries');
   }
   return $libraries;
+}
+
+/*
+ * Implements hook_library_alter().
+ *
+ * Swaps in the region-bound extension of the Leaflet MarkerCluster library,
+ * if it exists.
+ */
+function ip_geoloc_library_alter(&$libraries, $module) {
+  if (isset($libraries['leaflet_markercluster']['js'][0]['data'])) {
+    $js = str_replace('leaflet.markercluster.js', IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS, $libraries['leaflet_markercluster']['js'][0]['data']);
+    if (file_exists($js)) {
+      $libraries['leaflet_markercluster']['js'][0]['data'] = $js;
+    }
+  }
 }
 
 /**
@@ -565,6 +582,20 @@ function ip_geoloc_pretty_print($location) {
 function ip_geoloc_marker_directory() {
   $path = drupal_get_path('module', 'ip_geoloc');
   return variable_get('ip_geoloc_marker_directory', "$path/" . (module_exists('leaflet') ? 'amarkers' : 'markers'));
+}
+
+/**
+ * Return the height and width of the markers in the selected set.
+ * 
+ * @return string, for example '32 x 42' or '21 x 34'
+ */
+function ip_geoloc_marker_dimensions() {
+  $dimensions = variable_get('ip_geoloc_marker_dimensions');
+  if (empty($dimensions)) {
+    $directory = ip_geoloc_marker_directory();
+    $dimensions = strpos($directory, '/amarkers') ? '32 x 42' : '21 x 34';
+  }
+  return $dimensions;
 }
 
 /**
