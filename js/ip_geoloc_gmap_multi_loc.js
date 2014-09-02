@@ -54,10 +54,12 @@
         var defaultPinImage = !markerColor ? null : new google.maps.MarkerImage(
           markerDirname + '/' + markerColor + imageExt,
           new google.maps.Size(markerWidth, markerHeight),
-          // Origin.
+          // Origin
           new google.maps.Point(0, 0),
-          // Anchor.
-          new google.maps.Point((markerWidth / 2), markerAnchor));
+          // Anchor
+          new google.maps.Point((markerWidth / 2), markerAnchor),
+          // scaledSize
+          new google.maps.Size(markerWidth, markerHeight));
 
         var center = null;
         mapBounds[m] = new google.maps.LatLngBounds();
@@ -81,10 +83,12 @@
             pinImage = new google.maps.MarkerImage(
               markerDirname + '/' + locations[key].marker_color + imageExt,
               new google.maps.Size(markerWidth, markerHeight),
-              // Origin.
+              // Origin
               new google.maps.Point(0, 0),
-              // Anchor.
-              new google.maps.Point((markerWidth / 2), markerAnchor));
+              // Anchor
+              new google.maps.Point((markerWidth / 2), markerAnchor),
+              // scaledSize
+              new google.maps.Size(markerWidth, markerHeight));
           }
           var marker = new google.maps.Marker({ map: maps[m], icon: pinImage, /*shadow: shadowImage,*/ position: position, title: mouseOverText });
 
