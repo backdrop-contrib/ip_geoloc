@@ -112,16 +112,18 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $is_openlayers = $form_state['renderer'] == 'openlayers';
   $is_google = $form_state['renderer'] == 'google';
 
-  $form['default_marker_color'] = array(
-    '#title' => t('Default location marker'),
-    '#type' => 'select',
-    '#default_value' => $views_plugin_style->options['default_marker_color'],
-    '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
-    '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>location differentiator</strong> below.'),
-    '#attributes' => array(
-      'class' => $is_openlayers ? array('marker-color-ol') : array('marker-color')),
-    '#weight' => 20,
-  );
+  if ($is_openlayers || $is_google) {
+    $form['default_marker_color'] = array(
+      '#title' => t('Default location marker'),
+      '#type' => 'select',
+      '#default_value' => $views_plugin_style->options['default_marker_color'],
+      '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
+      '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>location differentiator</strong> below.'),
+      '#attributes' => array(
+        'class' => $is_openlayers ? array('marker-color-ol') : array('marker-color')),
+      '#weight' => 20,
+    );
+  }
   if (!$is_openlayers) {
     $path = drupal_get_path('module', 'ip_geoloc');
     $css_file = strpos(ip_geoloc_marker_directory(), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
@@ -159,6 +161,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     }
     $description .= '<br/>' . t('You can refer to View URL arguments via !1, !2 etc.')
       . '<br/>' . t('To use components of complex field types like Date or AddressField use replacement tokens in the <em>Global: Custom text</em> field.');
+    $description .='<br/>' . t('Font icon character and class columns apply to Leaflet only.');
   }
   $form['differentiator']['differentiator_field'] = array(
     '#title' => t('Location differentiator'),

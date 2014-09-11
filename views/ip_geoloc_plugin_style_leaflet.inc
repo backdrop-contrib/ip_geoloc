@@ -125,7 +125,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
-    unset($form['default_marker_color']);
+    //unset($form['default_marker_color']);
 
     $desc1 = t('In addition to selecting a color, you may superimpose a special icon on top of each marker. <br><a target="fsymbols" href="!url_fsymbols">fsymbols</a> characters can be copied and pasted straight into the <strong>Font icon character</strong> field. Other libraries like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> and <a target="flaticon" href="!url_flaticon">flaticon</a> use names that you type in the <strong>Font icon class</strong> field.', array(
       '!url_fsymbols' => url('http://fsymbols.com'),
@@ -358,7 +358,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
     }
     //@todo
-    return;
+    // return;
     // Rather than overwriting JS, let the libs co-exist and show on Status Report?
     if (!module_exists('leaflet_markercluster')) {
       $form['cluster_differentiator']['#description'] .= $desc_b;
@@ -836,7 +836,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $region = reset($regions);
         if (!empty($region)) {
           $format_callback = 'addressfield_format_address_generate';
-          if (function_exists($format_callback)) {
+          if (function_exists($format_callback) && isset($region['country'])) {
             $format = array();
             $context = array('mode' => NULL);
             // Replace state and country codes by their full names.
@@ -844,7 +844,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             if (isset($format['country']['#options'][$region['country']])) {
               $region['country'] = $format['country']['#options'][$region['country']];
             }
-            if (isset($format['locality_block']['administrative_area']['#options'][$region['administrative_area']])) {
+            if (isset($region['administrative_area']) && isset($format['locality_block']['administrative_area']['#options'][$region['administrative_area']])) {
               $region['administrative_area'] = $format['locality_block']['administrative_area']['#options'][$region['administrative_area']];
             }
           }

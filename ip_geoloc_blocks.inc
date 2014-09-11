@@ -154,6 +154,22 @@ function ip_geoloc_block_configure($delta = '') {
       '#default_value' => variable_get('ip_geoloc_region_parent', 0),
       '#description' => t('If the selected parent does not exist the next parent down will be used instead.'),
     );
+
+    $form['redirection'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Redirection'),
+      '#description' => t('')
+    );
+    global $base_url;
+    $form['redirection']['ip_geoloc_address_redirect'] = array(
+      '#type' => 'textfield',
+      '#field_prefix' => "$base_url/",
+      '#title' => t('Redirect upon submit'),
+      '#default_value' => variable_get('ip_geoloc_address_redirect', ''),
+      '#description' => t('The page to redirect to after the user has pressed "Go". Use <em>&lt;front&gt;</em> for the front page.'),
+    );
     return $form;
   }
 
@@ -214,15 +230,11 @@ function ip_geoloc_block_save($delta = '', $edit = array()) {
     return;
   }
   if ($delta == 'geocode_address') {
-    variable_set('ip_geoloc_visitor_find', $edit['ip_geoloc_visitor_find']);
-    variable_set('ip_geoloc_visitor_find_label', $edit['ip_geoloc_visitor_find_label']);
-    variable_set('ip_geoloc_visitor_address_editable', $edit['ip_geoloc_visitor_address_editable']);
-    variable_set('ip_geoloc_visitor_address_label', $edit['ip_geoloc_visitor_address_label']);
-    variable_set('ip_geoloc_visitor_address_default', $edit['ip_geoloc_visitor_address_default']);
-    variable_set('ip_geoloc_address_element', $edit['ip_geoloc_address_element']);
-    variable_set('ip_geoloc_geo_vocabulary_id', $edit['ip_geoloc_geo_vocabulary_id']);
-    variable_set('ip_geoloc_region_autocomplete', $edit['ip_geoloc_region_autocomplete']);
-    variable_set('ip_geoloc_region_parent', $edit['ip_geoloc_region_parent']);
+    foreach ($edit as $variable => $value) {
+      if (strpos($variable, 'ip_geoloc') === 0) {
+        variable_set($variable, $value);
+      }
+    }
     return;
   }
   // Save options common to all maps.
@@ -568,6 +580,11 @@ function ip_geoloc_geocode($form, &$form_state) {
     : $geocode_address;
 
   _ip_geoloc_set_session_value('location', $location);
+
+  $redirect = variable_get('ip_geoloc_address_redirect');
+  if (!empty($redirect)) {
+    $form_state['redirect'] = $redirect;
+  }
 
   // No need to remember the form state. It's all kept on the session.
   $form_state['rebuild'] = FALSE;
