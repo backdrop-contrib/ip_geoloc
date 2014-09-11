@@ -358,7 +358,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
     }
     //@todo
-    // return;
+    return;
     // Rather than overwriting JS, let the libs co-exist and show on Status Report?
     if (!module_exists('leaflet_markercluster')) {
       $form['cluster_differentiator']['#description'] .= $desc_b;
