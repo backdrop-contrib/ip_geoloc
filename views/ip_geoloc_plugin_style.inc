@@ -1114,7 +1114,7 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
       return $value;
     }
     if (is_array($value)) {
-      $value = reset($value);
+      $value = ($field['type'] == 'taxonomy_term_reference') ? $value['tid'] : reset($value);
     }
     $single_values[] = $value;
   }

@@ -71,12 +71,11 @@ function ip_geoloc_requirements($phase) {
       $requirements['ip_geoloc_markercluster']['severity'] = REQUIREMENT_OK;
     }
     else {
-      //@todo
       $requirements['ip_geoloc_markercluster']['value'] = t('Using basic version');
       $requirements['ip_geoloc_markercluster']['severity'] = REQUIREMENT_INFO;
-      //$requirements['ip_geoloc_markercluster']['description'] = t('Leaflet MarkerCluster installed without region-bound extension. You are not making the most of your marker clustering. We suggest you obtain <em>leaflet.markercluster-regionbound.min.js</em> and drop it in %directory', array(
-      //  '%directory' => leaflet_markercluster_get_library_path(),
-      //));
+      $requirements['ip_geoloc_markercluster']['description'] = t('Leaflet MarkerCluster installed without region-aware extension. You are not making the most of your clustering. We suggest you obtain the <a href="http://regionbound.com">RegionBound</a> marker cluster .js file and drop it in %directory for superior clustering.', array(
+        '%directory' => leaflet_markercluster_get_library_path(),
+      ));
     }
   }
 

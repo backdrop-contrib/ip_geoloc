@@ -71,6 +71,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'cluster_differentiator_fields' => array('default' => ''),
         'zoom_ranges' => array('default' => array()),
         'cluster_tooltips' => array('default' => TRUE),
+        'cluster_outline' => array('default' => 0),
       ),
     );
 
@@ -314,10 +315,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $form['full_screen']['#description'] = t('Requires this <a href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
         '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
     }
-    $lib_markercluster = libraries_get_path('leaflet_markercluster');
+    $lib_markercluster = module_exists('leaflet_markercluster') ? leaflet_markercluster_get_library_path() : FALSE;
 
-    $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
-    $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module and corresponding javascript library.', array(
+    $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>cluster region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
+    $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module', array(
       '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
     ));
     $form['cluster_radius'] = array(
@@ -326,21 +327,19 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#field_suffix' => t('px'),
       '#size' => 4,
       '#default_value' => $this->options['cluster_radius'],
-      '#description' => module_exists('leaflet_markercluster') && $lib_markercluster ? $desc_a : $desc_b,
+      '#description' => $lib_markercluster ? $desc_a : "$desc_b.",
       '#weight' => 100,
     );
 
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
-    $intro = t('Makes cluster boundaries and counts more meaningful', array('@url_article' => 'http://fris.com.au'));
-    $desc = t('While the location differentiator determines the color of individual markers, the region or cluster differentiator decides to which <em>geographical region</em> a marker belongs at available zoom-levels. Examples of regions are the hierarchy of country, state, city, suburb or non-administrative areas like wine regions. At any zoom level markers belonging to different regions will not merge together, no matter how close they are on the map. This prevents markers on opposite sides of a region border from joining the same cluster, making for a more informative clustering behaviour that honours region boundaries.');
-
+    $intro = t('superior marker clustering with <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
     $form['cluster_differentiator'] = array(
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-      '#title' => t('Region/Cluster differentiator (coming soon)'),
-      '#description' => '<em>' . $intro . '</em><p>' . $desc . '</p>',
+      '#title' => t('Cluster region differentiator'),
+      '#description' => '<em>' . $intro . '</em><br/>',
       // The id in the prefix must match the AJAX submit handlers below.
       '#prefix' => '<div id="cluster-differentiator-wrapper">',
       '#suffix' => '</div>',
@@ -357,23 +356,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     else {
       $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
     }
-    //@todo
-    return;
-    // Rather than overwriting JS, let the libs co-exist and show on Status Report?
     if (!module_exists('leaflet_markercluster')) {
-      $form['cluster_differentiator']['#description'] .= $desc_b;
+      $form['cluster_differentiator']['#description'] .= $desc_b . ' ' .  t('and <a href="http://regionbound.com">RegionBound</a> JS plugin.');
     }
-    elseif ($lib_markercluster && empty($region_field_names)) {
-      $file_markercluster = "$lib_markercluster/dist/leaflet.markercluster.js";
-      $note_region = t('To activate this feature, use the leaflet.markercluster.js <a target="mojo" href="!url_js_new">drop-in replacement</a>, copying it over the top of %url_js_old', array(
-        '!url_js_new' => url('https://www.mojomarketplace.com/item/leaflet-map-region-bound-clustering'),
-        '%url_js_old' => $file_markercluster,
+    elseif ($lib_markercluster && (empty($region_field_names) || !reset($region_field_names))) {
+      $note_region = t('Download the .js file from <a target="regionbound" href="http://regionbound.com">regionbound.com</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
+        '%directory' => $lib_markercluster,
       ));
-      $form['cluster_differentiator']['#description'] .= $note_region;
+      $form['cluster_differentiator']['#description'] .= "<p>$note_region</p>";
     }
 
     $form['cluster_differentiator']['cluster_differentiator_fields'] = array(
-      '#title' => t('Region differentiator(s)'),
+      '#title' => t('Region differentiator'),
       '#type' => 'select',
       '#multiple' => TRUE,
       '#size' => 6,
@@ -385,7 +379,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'effect' => 'fade',
         'speed' => 'fast',
       ),
-      '#description' => t('Select one or more fields that reflect a region hierarchy amongst location markers. Examples are an <a href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for suburb, city, state, country (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above.', array(
+      '#description' => t('Select a field (or sequence of fields) that reflect the region hierarchy amongst location markers. Examples are an <a target="drupal" href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for suburb, city, state, country (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above. Note that region differentiators do <em>not</em> need to be associated with latitudes or longitudes. They are just name fields.', array(
         '!url_addressfield' => url('http://drupal.org/project/addressfield'),
       )),
     );
@@ -415,18 +409,31 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       if ($level > 0) {
         $desc1 = ($level === 1)
           ? t('Below enter the zoom level range to be associated with the selected differentiator.')
-          : t('Below enter the zoom level ranges to which each of the region hierarchy levels apply.') . '<br/>' . t('Zoom ranges must not overlap.');
+          : t('Below enter the zoom level ranges to which each of the region hierarchy levels apply.') . '<br/>' . t('Zoom ranges may start and end at any level, but must not overlap.');
+        $desc2 = t('Minimum and maximum zoom levels for this map can be found below under <strong>More map options</strong>.');
+        $desc3 = t('Or leave all fields blank to use the defaults and refine later.');
         $zoom1 = t('Typical zoom ranges for Europe: country: 3--6, province: 7--9, city: 10--14, postcode: 15--18');
         $zoom2 = t('Typical zoom ranges for US & Canada: country: 1--3, state: 4--8, city: 9--13, zip: 14--18');
         $zoom3 = t('Typical zoom ranges for Australia: country: 1--2, state: 3--9, city: 10--13, suburb/postcode: 14--18');
-        $desc2 = t('Minimum and maximum zoom levels for this map can be found below under <strong>More map options</strong>.');
-        $form['cluster_differentiator']['cluster_differentiator_fields']['#description'] = implode('<br/>', array($desc1, $zoom1, $zoom2, $zoom3, $desc2));
+
+        $form['cluster_differentiator']['cluster_differentiator_fields']['#description'] =
+          implode('<br/>', array("$desc1 $desc2 $desc3<br/>", $zoom1, $zoom2, $zoom3));
       }
       $form['cluster_differentiator']['cluster_tooltips'] = array(
         '#title' => t('Add cluster tooltips'),
         '#type' => 'checkbox',
         '#default_value' => $this->options['cluster_differentiator']['cluster_tooltips'],
-        '#description' => t("When hovered cluster tooltips show the cluster region name and its populated subregions. These tooltips are generated on the client side using data already sent to the browser. So this feature imposes no additional server load."),
+        '#description' => t("When hovering a cluster, tooltips reveal the cluster region name and the names of its populated subregions."),
+      );
+      $form['cluster_differentiator']['cluster_outline'] = array(
+        '#title' => t('Cluster population outline'),
+        '#type' => 'select',
+        '#options' => array(
+          0 => t('Traditional (convex hull)'),
+          1 => t('Avant-garde (heuristic hull)'),
+        ),
+        '#default_value' => $this->options['cluster_differentiator']['cluster_outline'],
+        '#description' => t('When hovering a cluster, a <a target="regionbound" href="http://regionbound.com/enhanced-cluster-envelope-using-heuristic-hull">coverage outline</a> visualises the envelope or footprint of the underlying marker population. Select your preferred style of doing this.'),
       );
     }
   }
@@ -481,16 +488,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $has_full_screen = !empty($this->options['full_screen']);
     $cluster_radius = $this->options['cluster_radius'];
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
+    $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
     $tag_css_classes = $this->options['tags']['tag_css_class'];
-
     $module_path = drupal_get_path('module', 'ip_geoloc');
     $marker_path = file_create_url(ip_geoloc_marker_directory());
-
     $max_zoom = (int) $this->options['map_options']['maxzoom'];
     $zoom = (int) $this->options['map_options']['zoom'];
     $scroll_wheel_zoom = (bool) $this->options['map_options']['scrollwheelzoom'];
     $dragging = (bool) $this->options['map_options']['dragging'];
-
+    $separator = isset($this->options['map_options']['separator'])
+      ? filter_xss_admin($this->options['map_options']['separator']) : '<br/>';
     if (!empty($locations) &&
         ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
         ($visitor_marker_color == 'none' && count($locations) == 1))) {
@@ -603,14 +610,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['tooltip'] = $location->marker_tooltip;
       }
       if (!empty($location->regions)) {
+        $has_special_markers = TRUE;
         // Make sure we start with 0 or regions will come across as Object
         // rather than array.
         $feature['regions'] = array(0 => '') + $location->regions;
-        $has_special_markers = TRUE;
-        $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . '<br/>';
+        $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . $separator;
         $second_last = count($feature['regions']) - 2;
         if ($second_last > 0) {
-          $feature['tooltip'] = $feature['regions'][$second_last] . ' ';
+          $feature['tooltip'] .= $feature['regions'][$second_last] . ' ';
         }
         $feature['tooltip'] .= end($feature['regions']);
       }
@@ -683,26 +690,28 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($cluster_radius)) {
       $map['settings']['maxClusterRadius'] = $cluster_radius;
       $map['settings']['addRegionToolTips'] = $cluster_tooltips;
+      $map['settings']['hullHugFactor'] = $hull_hug_factor;
       $map['settings']['animateAddingMarkers'] = TRUE;
     }
-  
-    // Make sure we start array with 0 and no missing elements. Ohterwise this
-    // array will arrive as an Object on the JS side.
-    $map['settings']['regionLevels'] = array_fill(0, $max_zoom + 1, 0);
-    if (!empty($this->options['cluster_differentiator']['zoom_ranges'])) {
-      foreach ($this->options['cluster_differentiator']['zoom_ranges'] as $level => $zoom_range) {
+    $zoom_ranges = array_filter($this->options['cluster_differentiator']['zoom_ranges']);
+    if (!empty($zoom_ranges)) {
+      // Make sure we start array with 0 and no missing elements. Otherwise this
+      // array will arrive as an Object on the JS side.
+      $region_levels = array_fill(0, $max_zoom + 1, 0);
+      foreach ($zoom_ranges as $level => $zoom_range) {
         for ($zoom = 1; $zoom <= $max_zoom; $zoom++) {
           if (ip_geoloc_is_in_range($zoom, $zoom_range)) {
-            $map['settings']['regionLevels'][$zoom] = $level;
+            $region_levels[$zoom] = $level;
           }
         }
       }
-    }
-    // Remove any gaps and zeroes.
-    for ($z = 1; $z <= $max_zoom; $z++) {
-      if ($map['settings']['regionLevels'][$z] == 0) {
-        $map['settings']['regionLevels'][$z] = $map['settings']['regionLevels'][$z - 1];
+      // Remove any gaps and zeroes.
+      for ($z = 1; $z <= $max_zoom; $z++) {
+        if (empty($region_levels[$z])) {
+          $region_levels[$z] = $region_levels[$z - 1];
+        }
       }
+      $map['settings']['regionLevels'] = $region_levels;
     }
     // See [#1802732].
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
@@ -743,7 +752,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       // define the font faces.
       drupal_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js');
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js', array('weight' => 1));
     }
 
     $output = theme('ip_geoloc_leaflet', array(
@@ -788,21 +797,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $titles[] = t('Zoom range for administrative area (state, district, county)');
       $titles[] = t('Zoom range for locality (city, town, village)');
       $titles[] = t('Zoom range for post code (ZIP)');
+      return $titles;
+    }
+    $pos_colon = strrpos($label, ':');
+    $label = drupal_substr($label, $pos_colon > 0 ? $pos_colon + 1 : 0);
+    if ($field_type === 'taxonomy_term_reference') {
+      for ($level = 1; $level <= $region_depth; $level++) {
+        $titles[] = t('Zoom range for %field level @level', array(
+          '%field' => $label,
+          '@level' => $level
+        ));
+      }
     }
     else {
-      $pos_colon = strrpos($label, ':');
-      $label = drupal_substr($label, $pos_colon > 0 ? $pos_colon + 1 : 0);
-      if ($field_type === 'taxonomy_term_reference') {
-        for ($level = 1; $level <= $region_depth; $level++) {
-          $titles[] = t('Zoom range for %field level @level', array(
-            '%field' => $label,
-            '@level' => $level
-          ));
-        }
-      }
-      else {
-        $titles[] = t('Zoom range for %field', array('%field' => $label));
-      }
+      $titles[] = t('Zoom range for %field', array('%field' => $label));
     }
     return $titles;
   }

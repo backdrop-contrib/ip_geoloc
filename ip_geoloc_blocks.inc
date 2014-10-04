@@ -52,7 +52,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'checkbox',
       '#title' => t('Find visitor using HTML5 position detection'),
       '#default_value' => variable_get('ip_geoloc_visitor_find', TRUE),
-      '#description' => t('Displays a button for the visitor to locate themselves on the map using WiFi and GPS technologies.'),
+      '#description' => t('Displays a button for the visitor to locate themselves on the map. Takes advantage of WiFi and GPS technologies.'),
     );
     $form['address']['ip_geoloc_visitor_find_label'] = array(
       '#type' => 'textfield',
