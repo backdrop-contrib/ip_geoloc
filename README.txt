@@ -272,19 +272,17 @@ CCS file (style.css?) override the applicable styles from
 ip_geoloc/css/ip_geoloc_leaflet_markers.css, in particular the attributes
 "top", "left" and "font-size".
 
-REGION/CLUSTER DIFFERENTIATOR
+CLUSTER REGION DIFFERENTIATOR
 =============================
-The benefits of region-bound marker clustering with its more natural flow and
-informational cluster counts are demonstrated here
-http://flink.com.au/tips-tricks.
-If you already use the Leaflet MarkerCluster module, then you can activate
-region-bound clustering on your site.
-Don't forget to drop a copy of the region-bound version of
-leaflet.markercluster.js over the top of the existing file in
-libraries/leaflet_markercluster/dist/leaflet.markercluster.js.
-Now you can configure the region-bound clustering algorithm  by filling out the
+The benefits of region-aware clustering are demonstrated here: regionbound.com
+If you already use the Leaflet MarkerCluster module, then you can enhance it
+with superior region-aware clustering by dropping into
+sites/all/libraries/leaflet_markercluster/dist the .js file from the
+regionbound.com download.
+Check the Status Report page to see if IPGV&M automatically detected the new JS.
+Now you can configure the region-aware clustering algorithm by filling out the
 cluster differentiator panel on the IPGV&M Views UI.
-Your View (and therefore the content type that has a lat/lon associated with it)
+Your View, and therefore the content type that has a lat/lon associated with it,
 must feature one of the following.
 1a An AddressField (as in the http://drupal.org/project/addressfield module)
    in this case IPGV&M will automatically use for differenetiation the
