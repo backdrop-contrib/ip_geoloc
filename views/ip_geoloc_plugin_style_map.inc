@@ -69,14 +69,16 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#weight' => 35,
     );
 
+    $desc1 = t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.', array(
+      '%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE));
+    $desc2 = t('You may also enter <em>&lt;none&gt;</em>. In this case you <em>must</em> set the height through CSS or the map will not show. You can use this selector to target the map: <em>#ip-geoloc-map-of-view-VIEWNAME-DISPLAYNAME</em>');
     $form['map_div_style'] = array(
       '#title' => t('Map style (CSS attributes)'),
       '#type' => 'textfield',
       '#size' => 127,
       '#maxlength' => 511,
       '#default_value' => $this->options['map_div_style'],
-      '#description' => t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.',
-        array('%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE)),
+      '#description' => "$desc1<br/>$desc2",
       '#weight' => 37,
     );
 
@@ -140,7 +142,10 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     }
 
     $map_options = empty($this->options['map_options']) ? IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS : $this->options['map_options'];
-    $map_div_style = empty($this->options['map_div_style']) ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE : check_plain($this->options['map_div_style']);
+    $map_div_style = trim($this->options['map_div_style']);
+    $map_div_style = empty($map_div_style)
+      ? IP_GEOLOC_MAP_DIV_DEFAULT_STYLE
+      : ($map_div_style == '<none>' ? ' ' : check_plain($this->options['map_div_style']));
     $marker_color = empty($this->options['default_marker_color']) ? '' : $this->options['default_marker_color'];
 
     if (empty($this->options['visitor_marker'])) {
