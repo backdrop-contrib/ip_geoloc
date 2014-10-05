@@ -39,6 +39,9 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   if (!is_array($selected_options)) {
     $selected_options = array($selected_options);
   }
+  if (!empty($views_plugin_style->options['ip_geoloc_views_plugin_latitude_text'])) {
+    $selected_options['---'] = '---';
+  }
   $form['ip_geoloc_views_plugin_latitude'] = array(
     '#title' => t('Name of latitude field in Views query'),
     '#type' => 'select',
@@ -49,7 +52,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $form['ip_geoloc_views_plugin_latitude_text'] = array(
     '#type' => 'textfield',
-    '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude'],
+    '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude_text'],
     '#states' => array(
       // Doesn't work on multi-selects, unless with patch from http://drupal.org/node/1149078
       //'visible' => array(
@@ -67,8 +70,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#weight' => 12,
   );
   $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
-  if (!isset($field_options[$selected_option])) {
-    $selected_option = '';
+  if (!empty($views_plugin_style->options['ip_geoloc_views_plugin_longitude_text'])) {
+    $selected_option = '---';
   }
   $form['ip_geoloc_views_plugin_longitude'] = array(
     '#title' => t('Name of longitude field in Views query'),
@@ -79,7 +82,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $form['ip_geoloc_views_plugin_longitude_text'] = array(
     '#type' => 'textfield',
-    '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude'],
+    '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude_text'],
     '#states' => array(
       'visible' => array(
         ':input[name="style_options[ip_geoloc_views_plugin_longitude]"]' => array('value' => '---'),
@@ -256,11 +259,19 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
  * Validation for ip_geoloc_plugin_style_bulk_of_form().
  */
 function ip_geoloc_plugin_style_bulk_of_form_validate(&$form, &$form_state) {
-  if ($form_state['values']['style_options']['ip_geoloc_views_plugin_latitude'] == array('---')) {
-    $form_state['values']['style_options']['ip_geoloc_views_plugin_latitude'] = $form_state['values']['style_options']['ip_geoloc_views_plugin_latitude_text'];
+  $options = &$form_state['values']['style_options'];
+  if (in_array('---', $options['ip_geoloc_views_plugin_latitude'])) {
+    $options['ip_geoloc_views_plugin_latitude'][$options['ip_geoloc_views_plugin_latitude_text']] = $options['ip_geoloc_views_plugin_latitude_text'];
+    unset($options['ip_geoloc_views_plugin_latitude']['---']);
   }
-  if ($form_state['values']['style_options']['ip_geoloc_views_plugin_longitude'] == '---') {
-    $form_state['values']['style_options']['ip_geoloc_views_plugin_longitude'] = $form_state['values']['style_options']['ip_geoloc_views_plugin_longitude_text'];
+  else {
+    $options['ip_geoloc_views_plugin_latitude_text'] = '';
+  }
+  if ($options['ip_geoloc_views_plugin_longitude'] == '---') {
+    $options['ip_geoloc_views_plugin_longitude'] = $options['ip_geoloc_views_plugin_longitude_text'];
+  }
+  else {
+    $options['ip_geoloc_views_plugin_longitude_text'] = '';
   }
 }
 
