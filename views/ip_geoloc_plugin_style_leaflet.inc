@@ -379,7 +379,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'effect' => 'fade',
         'speed' => 'fast',
       ),
-      '#description' => t('Select a field (or sequence of fields) that reflect the region hierarchy amongst location markers. Examples are an <a target="drupal" href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for suburb, city, state, country (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above. Note that region differentiators do <em>not</em> need to be associated with latitudes or longitudes. They are just name fields.', array(
+      '#description' => t('Select a field (or sequence of fields) that reflect for each location marker the region hierarchy it belongs to. Examples are an <a target="drupal" href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for suburb, city, state, country (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above. Note that region differentiators do <em>not</em> need to be associated with latitudes or longitudes. They are just name fields.', array(
         '!url_addressfield' => url('http://drupal.org/project/addressfield'),
       )),
     );
@@ -410,14 +410,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $desc1 = ($level === 1)
           ? t('Below enter the zoom level range to be associated with the selected differentiator.')
           : t('Below enter the zoom level ranges to which each of the region hierarchy levels apply.') . '<br/>' . t('Zoom ranges may start and end at any level, but must not overlap.');
-        $desc2 = t('Minimum and maximum zoom levels for this map can be found below under <strong>More map options</strong>.');
+        $desc2 = ''; // t('Minimum and maximum zoom levels for this map can be found below under <strong>More map options</strong>.');
         $desc3 = t('Or leave all fields blank to use the defaults and refine later.');
         $zoom1 = t('Typical zoom ranges for Europe: country: 3--6, province: 7--9, city: 10--14, postcode: 15--18');
         $zoom2 = t('Typical zoom ranges for US & Canada: country: 1--3, state: 4--8, city: 9--13, zip: 14--18');
         $zoom3 = t('Typical zoom ranges for Australia: country: 1--2, state: 3--9, city: 10--13, suburb/postcode: 14--18');
 
         $form['cluster_differentiator']['cluster_differentiator_fields']['#description'] =
-          implode('<br/>', array("$desc1 $desc2 $desc3<br/>", $zoom1, $zoom2, $zoom3));
+          implode('<br/>', array("$desc1 $desc2<br/>$desc3<br/>", $zoom1, $zoom2, $zoom3));
       }
       $form['cluster_differentiator']['cluster_tooltips'] = array(
         '#title' => t('Add cluster tooltips'),

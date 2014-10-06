@@ -34,7 +34,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $fields = ip_geoloc_get_display_fields($views_plugin_style->display->handler, TRUE);
 
   $field_options = $fields;
-  $field_options['---'] = '[' . t('Type a field name below') . ']';
+  $type_field_name = t('Type a field name below');
+  $field_options['---'] = '[' . $type_field_name . ']';
   $selected_options = $views_plugin_style->options['ip_geoloc_views_plugin_latitude'];
   if (!is_array($selected_options)) {
     $selected_options = array($selected_options);
@@ -60,13 +61,17 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       //   'value' => array('---')),
       //),
     ),
+    '#description' => t("If you have multiple fields to enter, separate these by comma's."),
     '#weight' => 11,
   );
+  $explanation1 = t("Select the field(s) holding latitude from the select-box above. Make sure you have added it to the Fields list of this View or it won't show up above. Fields from the <strong>Geofield, Get Locations</strong> and <strong>Geolocation</strong> modules can all be selected this way.");
+  $explanation2 = t('Your latitude may reside in a field with a special name. This is the case when using the <strong>Location</strong> module or when you have used relationships to pull in lat & lon. To input special names, select <em>[Type a field name below]</em> and enter the field\'s machine name. This <a target="_field_names" href="!url">list of all field names</a> may help in figuring out the correct name.', array(
+    '!url' => url('admin/reports/fields')));
+  $explanation3 = t('If you use a view based on the <strong>Location</strong> module, the special name is <strong>location_latitude</strong>.');
+
   $form['ip_geoloc_views_plugin_latitude_desc'] = array(
     '#type' => 'item',
-    '#markup' => t('Select the field holding the latitude from the dropdown above. Make sure you have added it to the Fields list of this View or it won\'t show up above.<br/><strong>Special cases</strong> If the View has relationships and lat/lon are accessed via the relationships, select <em>[Type field name]</em> and enter the field name in the additional text box presented. If you use a view based on the <strong>Location</strong> module, enter <strong>location_latitude</strong>. If the latitude is stored in a <strong>field</strong>, then enter the field\'s machine name. For instance, when using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules enter <strong>field_<em>yourfieldname</em></strong>. If necessary, check the <a target="_field_names" href="!url">list of all field names</a>.', array(
-       '!url' => url('admin/reports/fields'),
-    )),
+    '#markup' => $explanation1 . '<br/><strong>' . t('Special names') . ': </strong>' .  "$explanation2<br/>$explanation3",
     '#weight' => 12,
   );
   $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
@@ -92,7 +97,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $form['ip_geoloc_views_plugin_longitude_desc'] = array(
     '#type' => 'item',
-    '#markup' => t('See comments above. When using the <strong>Geofield</strong>, <strong>Geolocation field</strong> or <strong>Get Locations</strong> modules select <em>&lt;none&gt;</em>.'),
+    '#markup' => t('Select <em>&lt;none&gt;</em>, except when latitude and longitude are separate fields, as in the <strong>Location</strong> module. In these cases, select <em>[Type a field name below]</em> and enter the field name. For the Location module, enter <strong>location_longitude</strong>.'),
     '#weight' => 17,
   );
 
@@ -261,14 +266,18 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
 function ip_geoloc_plugin_style_bulk_of_form_validate(&$form, &$form_state) {
   $options = &$form_state['values']['style_options'];
   if (in_array('---', $options['ip_geoloc_views_plugin_latitude'])) {
-    $options['ip_geoloc_views_plugin_latitude'][$options['ip_geoloc_views_plugin_latitude_text']] = $options['ip_geoloc_views_plugin_latitude_text'];
+    $names = explode(',', $options['ip_geoloc_views_plugin_latitude_text']);
+    foreach ($names as $name) {
+      $name = trim($name);
+      $options['ip_geoloc_views_plugin_latitude'][$name] = $name;
+    }
     unset($options['ip_geoloc_views_plugin_latitude']['---']);
   }
   else {
     $options['ip_geoloc_views_plugin_latitude_text'] = '';
   }
   if ($options['ip_geoloc_views_plugin_longitude'] == '---') {
-    $options['ip_geoloc_views_plugin_longitude'] = $options['ip_geoloc_views_plugin_longitude_text'];
+    $options['ip_geoloc_views_plugin_longitude'] = trim($options['ip_geoloc_views_plugin_longitude_text']);
   }
   else {
     $options['ip_geoloc_views_plugin_longitude_text'] = '';
