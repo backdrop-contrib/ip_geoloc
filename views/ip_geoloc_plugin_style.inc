@@ -65,7 +65,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#weight' => 11,
   );
   $explanation1 = t("Select the field(s) holding latitude from the select-box above. Make sure you have added it to the Fields list of this View or it won't show up above. Fields from the <strong>Geofield, Get Locations</strong> and <strong>Geolocation</strong> modules can all be selected this way.");
-  $explanation2 = t('Your latitude may reside in a field with a special name. This is the case when using the <strong>Location</strong> module or when you have used relationships to pull in lat & lon. To input special names, select <em>[Type a field name below]</em> and enter the field\'s machine name. This <a target="_field_names" href="!url">list of all field names</a> may help in figuring out the correct name.', array(
+  $explanation2 = t('Your latitude may reside in a field with a special name. This is the case when using the <strong>Location</strong> module or when you have used <strong>relationships</strong> to pull in lat & lon. To input special names, select <em>[Type a field name below]</em> and enter the field\'s machine name. This <a target="_field_names" href="!url">list of all field names</a> may help in figuring out the correct name.', array(
     '!url' => url('admin/reports/fields')));
   $explanation3 = t('If you use a view based on the <strong>Location</strong> module, the special name is <strong>location_latitude</strong>.');
 
@@ -750,7 +750,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
 function _ip_geoloc_plugin_style_get_base1($row, $location_field_name, $location_field_alias) {
   $base = NULL;
-  if (isset($row->_field_data[$location_field_alias])) {
+  if (isset($row->_field_data[$location_field_alias]['entity'])) {
     // The lines below are stripped back fast versions of this call:
     // $loc_field_value = $loc_field->get_value($row);
     $entity = $row->_field_data[$location_field_alias]['entity'];
