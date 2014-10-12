@@ -604,6 +604,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $differentiator_color_associations[$display_id] = array($differentiator => array());
     }
   }
+  if (!empty($views_plugin_style->options['cluster_aggregation']['aggregation_field'])) {
+    $aggregation_field = $views_plugin_style->options['cluster_aggregation']['aggregation_field'];
+  }
   $tooltip_field = FALSE;
   if (isset($views_plugin_style->options['tooltips']['marker_tooltip'])) {
     $marker_tooltip = $views_plugin_style->options['tooltips']['marker_tooltip'];
@@ -670,7 +673,11 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
           if (!empty($differentiator_color_associations[$display_id][$differentiator])) {
             _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
           }
-           _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
+          _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
+
+          if ($aggregation_field) {
+            $location->aggregation_value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i)[0];
+          }
           $locations[$i] = $location;
           break;
         }
@@ -704,6 +711,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
               _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
             }
             _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
+            if ($aggregation_field) {
+              $location->aggregation_value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i)[0];
+            }
             $locations[$i] = $location;
             break;
           }
@@ -1055,6 +1065,7 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   }
   $views_plugin_style->rendered_fields = array();
   $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
+  $aggregation_field = $views_plugin_style->options['cluster_aggregation']['aggregation_field'];
   $latitudes = $views_plugin_style->options['ip_geoloc_views_plugin_latitude'];
   if (!is_array($latitudes)) {
     $latitudes = array($latitudes);
@@ -1078,7 +1089,8 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       //  "User: Roles" used as differentiator becomes 'views_rid'
       //  "Global: View result counter" as differentiator becomes 'views_counter'
       $special_field_id = 'views_' . $field_id;
-      if (($special_field_id == $differentiator || in_array($special_field_id, $latitudes) || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
+      if (($special_field_id == $differentiator || $special_field_id == $aggregation_field ||
+        in_array($special_field_id, $latitudes) || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
         $row->{$special_field_id}[] = $field_value;
       }
       // If Excluded is ticked, we don't style and don't add the field to the
@@ -1098,8 +1110,8 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
  *
  * @param object $views_plugin_style
  *   The Views plugin.
- * @param string $field_name
- *   The name of the field in the View.
+ * @param mixed, field array or field name (string)
+ *   The field or name of the field in the View.
  * @param int index
  *   The row index into the Views result set.
  *
@@ -1107,7 +1119,7 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
  *   The raw value(s) of the field in the specified row of the results set.
  */
 function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
-  $field_name = $field['field_name'];
+  $field_name = is_array($field) ? $field['field_name'] : $field;
   if (!isset($views_plugin_style->view->result[$index])) {
     drupal_set_message(t("Field %name: no value found amongst view results.", array('%name' => $field_name)), 'warning', FALSE);
     return NULL;
@@ -1118,6 +1130,9 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
   }
   elseif (isset($row->{"views_$field_name"})) {
     $values = $row->{"views_$field_name"};
+  }
+  elseif (isset($row->{$field_name})) {
+    $values = $row->{$field_name};
   }
   else {
     $values = $views_plugin_style->get_field_value($index, $field_name);
@@ -1130,11 +1145,13 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
     if (isset($value['raw'])) {
       $value = $value['raw'];
     }
-    if ($field['type'] == 'addressfield') {
-      return $value;
-    }
-    if (is_array($value)) {
-      $value = ($field['type'] == 'taxonomy_term_reference') ? $value['tid'] : reset($value);
+    if (isset($field['type'])) {
+      if ($field['type'] == 'addressfield') {
+        return $value;
+      }
+      if (is_array($value)) {
+        $value = ($field['type'] == 'taxonomy_term_reference') ? $value['tid'] : reset($value);
+      }
     }
     $single_values[] = $value;
   }
@@ -1217,7 +1234,7 @@ function _ip_geoloc_plugin_style_add_label_and_styling($field, $field_content) {
 /**
  * Implements hook_get_display_fields().
  */
-function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE) {
+function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE, $include_view_args = TRUE) {
   $fields = array('' => '<' . t('none') . '>');
   $field_handlers = $view_display->get_handlers('field');
   foreach ($field_handlers as $field_id => $field_handler) {
@@ -1233,9 +1250,11 @@ function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE
     }
     $fields[$field_id] = $field_handler->ui_name();
   }
-  // Add special differentiators: up to 4 View arguments appended to the URL
-  for ($i = 1; $i <= 4; $i++) {
-    $fields["!$i"] = t('View URL argument #@num', array('@num' => $i));
+  if ($include_view_args) {
+    // Add special differentiators: up to 4 View arguments appended to the URL
+    for ($i = 1; $i <= 4; $i++) {
+      $fields["!$i"] = t('View URL argument #@num', array('@num' => $i));
+    }
   }
   return $fields;
 }

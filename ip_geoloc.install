@@ -67,7 +67,7 @@ function ip_geoloc_requirements($phase) {
   if (isset($library['js'][0]['data'])) {
     $requirements['ip_geoloc_markercluster']['title'] = t('IP Geolocation Views & Maps; Leaflet MarkerCluster library');
     if (strpos($library['js'][0]['data'], IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS)) {
-      $requirements['ip_geoloc_markercluster']['value'] = t('Installed with region-bound extension');
+      $requirements['ip_geoloc_markercluster']['value'] = t('Installed with RegionBound extension');
       $requirements['ip_geoloc_markercluster']['severity'] = REQUIREMENT_OK;
     }
     else {

@@ -699,14 +699,14 @@ function ip_geoloc_is_in_range($value, $range, $view_args = NULL) {
   if (count($from_to) < 2) {
     $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR2, $range);
   }
-  if (($from = _ip_geoloc_extract_value($from_to[0], $view_args)) == NULL) {
+  if (($from = _ip_geoloc_extract_value($from_to[0], $view_args)) === NULL) {
     return FALSE;
   }
   if (count($from_to) == 1) {
     // Single value.
     return trim($value) == trim($from);
   }
-  if (($to = _ip_geoloc_extract_value($from_to[1], $view_args)) == NULL) {
+  if (($to = _ip_geoloc_extract_value($from_to[1], $view_args)) === NULL) {
     return FALSE;
   }
   if ($from == '' && $to == '') {

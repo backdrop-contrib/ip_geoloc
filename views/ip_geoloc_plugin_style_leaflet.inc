@@ -75,6 +75,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ),
     );
 
+    $options['cluster_aggregation'] = array(
+      'contains' => array(
+        'aggregation_field' => array('default' => ''),
+        'aggregation_function' => array('default' => ''),
+        'ranges' => array('contains' => array()),
+        'precision' => array('default' => '')
+      ),
+    );
+    $range = 10;
+    foreach (array('small', 'medium', 'large') as $size) {
+      $options['cluster_aggregation']['contains']['ranges']['contains'][$size] = array('default' => $range);
+      $range *= 10;
+    }
+
     $options['empty_map_center'] = array('default' => '');
 
     $options['map_options'] = array(
@@ -91,6 +105,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   /**
    * Implements options_form().
+   *
+   * @todo refactor, break up into more mangeable pieces
    */
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
@@ -365,7 +381,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ));
       $form['cluster_differentiator']['#description'] .= "<p>$note_region</p>";
     }
-
+    $fields = ip_geoloc_get_display_fields($this->display->handler, TRUE, FALSE);
     $form['cluster_differentiator']['cluster_differentiator_fields'] = array(
       '#title' => t('Region differentiator'),
       '#type' => 'select',
@@ -436,6 +452,56 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#description' => t('When hovering a cluster, a <a target="regionbound" href="http://regionbound.com/enhanced-cluster-envelope-using-heuristic-hull">coverage outline</a> visualises the envelope or footprint of the underlying marker population. Select your preferred style of doing this.'),
       );
     }
+    $intro = t('use clusters to report on region aggregates; requires <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
+    $desc = t('This feature aggregates values of a selected field across every region and displays the resulting <em>sum/average/min/max</em> on each cluster icon at every zoom level. It also colours each cluster icon based on its aggregated value, rather than its marker count.');
+    $form['cluster_aggregation'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Cluster aggregation'),
+      '#description' => "<em>$intro</em><p>$desc</p>",
+      '#weight' => 105,
+    );
+    $form['cluster_aggregation']['aggregation_field'] = array(
+      '#title' => t('Field to perform aggregation on'),
+      '#type' => 'select',
+      '#default_value' => $this->options['cluster_aggregation']['aggregation_field'],
+      '#options' => $fields,
+      '#description' => t('Must be a numeric field in order for aggregation to make sense.'),
+    );
+    $form['cluster_aggregation']['aggregation_function'] = array(
+      '#title' => t('Aggregation function'),
+      '#type' => 'select',
+      '#default_value' => $this->options['cluster_aggregation']['aggregation_function'],
+      '#options' => array(
+        'average' => t('Average'),
+        'maximum' => t('Maximum'),
+        'minimum' => t('Minimum'),
+        'sum' => t('Sum'),
+      ),
+    );
+    $form['cluster_aggregation']['ranges'] = array(
+      '#type' => 'item',
+      '#description' => t('Edit the above to change the color-coding of cluster icons based on their aggregate values.'),
+      '#prefix' => '<div id="cluster-aggregation-aggregate">',
+      '#suffix' => '</div>',
+    );
+    foreach (array('small', 'medium', 'large') as $size) {
+      $form['cluster_aggregation']['ranges'][$size] = array(
+        '#title' => "$size " . t('goes to'),
+        '#type' => 'textfield',
+        '#size' => 8,
+        '#default_value' => $this->options['cluster_aggregation']['ranges'][$size],
+      );
+    }
+
+    $form['cluster_aggregation']['precision'] = array(
+      '#title' => t('Precision'),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['cluster_aggregation']['precision'],
+      '#description' => t('Number of significant digits used to display the aggregate value on the cluster icon. Leave blank for native formatting.'),
+    );
   }
 
   /**
@@ -489,6 +555,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $cluster_radius = $this->options['cluster_radius'];
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
+    $cluster_aggregation_field = $this->options['cluster_aggregation']['aggregation_field'];
+    $cluster_aggregation_function = $this->options['cluster_aggregation']['aggregation_function'];
+    $cluster_aggregate_ranges = $this->options['cluster_aggregation']['ranges'];
+    $cluster_aggregate_precision = $this->options['cluster_aggregation']['precision'];
     $tag_css_classes = $this->options['tags']['tag_css_class'];
     $module_path = drupal_get_path('module', 'ip_geoloc');
     $marker_path = file_create_url(ip_geoloc_marker_directory());
@@ -614,6 +684,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Make sure we start with 0 or regions will come across as Object
         // rather than array.
         $feature['regions'] = array(0 => '') + $location->regions;
+        
+        if (isset($location->aggregation_value)) {
+          $feature['aggregationValue'] = (float)$location->aggregation_value;
+        }
         $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . $separator;
         $second_last = count($feature['regions']) - 2;
         if ($second_last > 0) {
@@ -692,6 +766,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $map['settings']['addRegionToolTips'] = $cluster_tooltips;
       $map['settings']['hullHugFactor'] = $hull_hug_factor;
       $map['settings']['animateAddingMarkers'] = TRUE;
+      if (!empty($cluster_aggregation_field)) {
+        $map['settings']['clusterAggregationFunction'] = $cluster_aggregation_function;
+        $map['settings']['clusterAggregateRanges'] = $cluster_aggregate_ranges;
+        $map['settings']['clusterAggregatePrecision'] = $cluster_aggregate_precision;
+        drupal_add_css(leaflet_markercluster_get_library_path() . '/MarkerCluster.Aggregations.css');
+      }
     }
     $zoom_ranges = array_filter($this->options['cluster_differentiator']['zoom_ranges']);
     if (!empty($zoom_ranges)) {
