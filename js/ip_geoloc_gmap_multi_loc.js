@@ -67,7 +67,11 @@
           var br = locations[key].balloon_text.indexOf('<br/>');
           var mouseOverText = (br > 0) ? locations[key].balloon_text.substring(0, br) : locations[key].balloon_text.trim();
           // Strip out HTML tags.
-          mouseOverText = jQuery(mouseOverText).text();
+          try {
+            // Add <span> to make sure there are tags.
+            mouseOverText = jQuery('<span>' + mouseOverText + '</span>').text();
+          }
+          catch(err) { }
           if (mouseOverText.length === 0) {
             mouseOverText = Drupal.t('Location #@i', { '@i': parseInt(key) + 1});
           }
