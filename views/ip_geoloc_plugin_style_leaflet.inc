@@ -95,6 +95,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'contains' => array(
         'maxzoom' => array('default' => 18),
         'zoom' => array('default' => 2),
+        'centre_lat' => array('default' => ''),
+        'centre_lon' => array('default' => ''),
         'scrollwheelzoom' => array('default' => TRUE),
         'dragging' => array('default' => TRUE),
         'separator' => array('default' => '<br/>'),
@@ -293,6 +295,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 2,
       '#default_value' => $this->options['map_options']['zoom'],
       '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
+    );
+    $form['map_options']['center_lat'] = array(
+      '#title' => t('Latitude of initial centre of map'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['map_options']['center_lat'],
+      '#description' => t('If both latitude and longitude are filled out, these override any centering option.'),
+    );
+    $form['map_options']['center_lon'] = array(
+      '#title' => t('Longitude of initial centre of map'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['map_options']['center_lon'],
+      '#description' => t('If both latitude and longitude are filled out, these override any centering option.'),
     );
     $form['map_options']['scrollwheelzoom'] = array(
       '#title' => t('Enable scroll wheel zoom'),
@@ -571,12 +587,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $module_path = drupal_get_path('module', 'ip_geoloc');
     $marker_path = file_create_url(ip_geoloc_marker_directory());
     $max_zoom = (int) $this->options['map_options']['maxzoom'];
-    $zoom = (int) $this->options['map_options']['zoom'];
+    $zoom = max(1, (int)$this->options['map_options']['zoom']);
     $scroll_wheel_zoom = (bool) $this->options['map_options']['scrollwheelzoom'];
     $dragging = (bool) $this->options['map_options']['dragging'];
     $separator = isset($this->options['map_options']['separator'])
       ? filter_xss_admin($this->options['map_options']['separator']) : '<br/>';
-    if (!empty($locations) &&
+
+    if (!empty($this->options['map_options']['center_lat']) && !empty($this->options['map_options']['center_lon'])) {
+      $map['center'] = array(
+        'lat' => $this->options['map_options']['center_lat'],
+        'lon' => $this->options['map_options']['center_lon'],
+        'force' => 1,
+      );
+    }
+    elseif (!empty($locations) &&
         ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
         ($visitor_marker_color == 'none' && count($locations) == 1))) {
       $map['center'] = _ip_geoloc_get_center(reset($locations));
@@ -696,7 +720,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         if (isset($location->aggregation_value)) {
           $feature['aggregationValue'] = (float)$location->aggregation_value;
         }
-        $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . $separator;
+        // Note: cannot use <br/>  or HTML in tooltip as separator. Use \n.
+        $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . "\n";
         $second_last = count($feature['regions']) - 2;
         if ($second_last > 0) {
           $feature['tooltip'] .= $feature['regions'][$second_last] . ' ';
@@ -758,7 +783,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     // If auto-box is chosen ($center_option==0), zoom only when there are
     // 0 or 1 markers [#1863374]
-    if (empty($center_option) && count($features) > 1) {
+    if (empty($map['center']['force']) && empty($center_option) && count($features) > 1) {
       unset($map['settings']['zoom']);
     }
     else {
