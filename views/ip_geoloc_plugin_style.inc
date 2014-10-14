@@ -676,7 +676,8 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
           _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
 
           if ($aggregation_field) {
-            $location->aggregation_value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i)[0];
+            $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
+            $location->aggregation_value = reset($value);
           }
           $locations[$i] = $location;
           break;
@@ -712,7 +713,8 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
             }
             _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
             if ($aggregation_field) {
-              $location->aggregation_value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i)[0];
+              $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
+              $location->aggregation_value = reset($value);
             }
             $locations[$i] = $location;
             break;

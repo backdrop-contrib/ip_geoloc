@@ -527,6 +527,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if ($zoom != '' && (!is_numeric($zoom) || $zoom < 0 || $zoom > $max_zoom)) {
       form_error($form['map_options']['zoom'], t('Initial zoom level must be a non-negative number less than or equal to Maximum zoom level.'));
     }
+    $cluster_aggregation = $form_state['values']['style_options']['cluster_aggregation'];
+    if (isset($cluster_aggregation) && !empty($cluster_aggregation['aggregation_field'])) {
+      $aggregation_field_info = field_info_field($cluster_aggregation['aggregation_field']);
+      $valid_types = array('number_integer', 'number_decimal', 'number_float');
+      if (!$aggregation_field_info || !in_array($aggregation_field_info['type'], $valid_types)) {
+        drupal_set_message(t('A cluster aggregation field that is not a single number may cause severe errors.'), 'warning');
+      }
+    }
   }
 
   /**
