@@ -675,7 +675,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
           }
           _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
 
-          if ($aggregation_field) {
+          if (isset($aggregation_field)) {
             $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
             $location->aggregation_value = reset($value);
           }
@@ -712,7 +712,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
               _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $view->args, $differentiator_color_associations[$display_id][$differentiator]);
             }
             _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
-            if ($aggregation_field) {
+            if (isset($aggregation_field)) {
               $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
               $location->aggregation_value = reset($value);
             }
@@ -1067,7 +1067,9 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
   }
   $views_plugin_style->rendered_fields = array();
   $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
-  $aggregation_field = $views_plugin_style->options['cluster_aggregation']['aggregation_field'];
+  $aggregation_field = isset($views_plugin_style->options['cluster_aggregation']['aggregation_field'])
+    ? $views_plugin_style->options['cluster_aggregation']['aggregation_field']
+    : NULL;
   $latitudes = $views_plugin_style->options['ip_geoloc_views_plugin_latitude'];
   if (!is_array($latitudes)) {
     $latitudes = array($latitudes);
