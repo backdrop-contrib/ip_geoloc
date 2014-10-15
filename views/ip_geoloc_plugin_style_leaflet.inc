@@ -417,10 +417,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     $level = 0;
     if (!empty($region_field_names)) {
-      // This loop potentially caters for fields to be mixed. In reality we only
-      // handle an AddressField, a (hierarchical) vocabulary or a sequence of up
-      // to 4 region textfields.
-      foreach (array_reverse($region_field_names) as $region_field_name) {
+      foreach ($region_field_names as $region_field_name) {
         $region_field = field_info_field($region_field_name);
         if (!empty($region_field)) {
           $region_depth = $this->get_region_field_depth($region_field);
