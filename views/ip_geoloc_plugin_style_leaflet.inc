@@ -411,7 +411,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'effect' => 'fade',
         'speed' => 'fast',
       ),
-      '#description' => t('Select a field (or sequence of fields) that reflect for each location marker the region hierarchy it belongs to. Examples are an <a target="drupal" href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for suburb, city, state, country (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above. Note that region differentiators do <em>not</em> need to be associated with latitudes or longitudes. They are just name fields.', array(
+      '#description' => t('Select a field (or sequence of fields) that reflect for each location marker the region hierarchy it belongs to. Examples are an <a target="drupal" href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for country, state, city, suburb (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above. Note that region differentiators do <em>not</em> need to be associated with latitudes or longitudes. They are just name fields.', array(
         '!url_addressfield' => url('http://drupal.org/project/addressfield'),
       )),
     );
@@ -935,26 +935,27 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    *   'taxonomy_term_reference', 'addressfield' or other
    * @param object $location
    *   The location object whose regions attribute will be fleshed ut
-   * @param array $regions
-   *   The region hierarchy taken from the View result in the form of a
+   * @param string $region
+   *   Next region in the hierarchy taken from the View result in the form of a
    *   taxonomy term (leaf), AddressField or array of plain fields, ordered
    *   small (suburb) to big (country)
+   * @param int $level
+   *   Level of the region in the hierarchy
    */
-  private function _fill_out_location_region($field_type, &$location, $regions) {
+  private function _fill_out_location_region($field_type, &$location, $region, &$level = 1) {
 
     switch ($field_type) {
 
       case 'taxonomy_term_reference':
-        $region_hierarchy = array_reverse(taxonomy_get_parents_all(reset($regions)));
+        $region_hierarchy = array_reverse(taxonomy_get_parents_all($region));
         // Leaf term (i.e. highest cluster level) is first in hierarchy.
-        $level = 1;
         foreach ($region_hierarchy as $region_term) {
           $location->regions[$level++] = $region_term->name;
         }
         break;
 
       case 'addressfield':
-        $region = reset($regions);
+        //$region = reset($region);
         if (!empty($region)) {
           $format_callback = 'addressfield_format_address_generate';
           if (function_exists($format_callback) && isset($region['country'])) {
@@ -978,15 +979,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             3 => isset($region['locality']) ? $region['locality'] : '',
             4 => isset($region['postal_code']) ? $region['postal_code'] : '',
           );
+          $level = 5;
         }
         break;
 
       default:
         // $location->regions is meant to be ordered big to small, so reverse.
-        $level = 1;
-        foreach (array_reverse($regions) as $region) {
-          $location->regions[$level++] = $region;
-        }
+        $location->regions[$level++] = $region;
     }
   }
 
@@ -997,8 +996,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       return;
     }
     $region_fields = array();
-    foreach ($this->options['cluster_differentiator']['cluster_differentiator_fields'] as $region_field_name) {
-      $region_field = field_info_field($region_field_name);
+    foreach ($this->options['cluster_differentiator']['cluster_differentiator_fields'] as $region_fieldname) {
+      $region_field = field_info_field($region_fieldname);
       if (!empty($region_field)) {
         $region_fields[] = $region_field;
       }
@@ -1009,12 +1008,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     foreach ($this->view->result as $key => $row) {
       if (isset($locations[$key])) {
         $region_values = array();
+        $level = 1;
         foreach ($region_fields as $region_field) {
-          $region_value = ip_geoloc_get_view_result($this, $region_field, $key);
-          $region_values[] = ($region_field['type'] == 'addressfield') ? $region_value : end($region_value);
-        }
-        if (!empty($region_values)) {
-          $this->_fill_out_location_region($region_field['type'], $locations[$key], $region_values);
+          $region_values = ip_geoloc_get_view_result($this, $region_field, $key);
+          $region = ($region_field['type'] == 'addressfield') ? $region_values : end($region_values);
+          $this->_fill_out_location_region($region_field['type'], $locations[$key], $region, $level);
         }
       }
     }
