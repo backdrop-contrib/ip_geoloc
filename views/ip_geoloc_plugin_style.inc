@@ -1138,8 +1138,11 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
   elseif (isset($row->{$field_name})) {
     $values = $row->{$field_name};
   }
-  else {
+  elseif (isset($views_plugin_style->view->field[$field_name])) {
     $values = $views_plugin_style->get_field_value($index, $field_name);
+  }
+  else {
+    return array();
   }
   if (!is_array($values)) {
     return array($values);
