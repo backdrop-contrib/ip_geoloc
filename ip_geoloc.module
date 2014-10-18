@@ -106,9 +106,12 @@ function ip_geoloc_library() {
  */
 function ip_geoloc_library_alter(&$libraries, $module) {
   if (isset($libraries['leaflet_markercluster']['js'][0]['data'])) {
-    $js = str_replace('leaflet.markercluster.js', IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS, $libraries['leaflet_markercluster']['js'][0]['data']);
-    if (file_exists($js)) {
-      $libraries['leaflet_markercluster']['js'][0]['data'] = $js;
+    $js = $libraries['leaflet_markercluster']['js'][0]['data'];
+    $last_slash = strrpos($js, '/');
+    $js_new = drupal_substr($js, 0, $last_slash + 1) . IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS;
+    //drupal_set_message(t('Current Leaflet MarkerCluster plugin: %js.<br/>Looking for %js_new', array('%js' => $js, '%js_new' => $js_new)));
+    if (file_exists($js_new)) {
+      $libraries['leaflet_markercluster']['js'][0]['data'] = $js_new;
     }
   }
 }
@@ -804,25 +807,33 @@ function ip_geoloc_get_font_icon_libs() {
   return $libs;
 }
 
-/**
- * Special debug function: messages selected user names only.
- *
- * @param string $message
- *   The message string to bue output as a debug message.
- *
- * @param string $type
- *   Defaults to 'status'.
- */
-function ip_geoloc_debug($message, $type = 'status') {
+function ip_geoloc_debug_flag() {
   global $user;
   $user_names = explode(',', check_plain(variable_get('ip_geoloc_debug')));
   foreach ($user_names as $user_name) {
     $user_name = drupal_strtolower(trim($user_name));
     $match = isset($user->name) ? $user_name == drupal_strtolower(trim($user->name)) : ($user_name == 'anon' || $user_name == 'anonymous');
     if ($match) {
-      drupal_set_message($message, $type, FALSE);
-      return;
+      return TRUE;
     }
+  }
+  return FALSE;
+}
+
+/**
+ * Special debug function: messages selected user names only.
+ *
+ * @param string $message
+ *   The message string to bue output as a debug message.
+ * @param string $type
+ *   Defaults to 'status'.
+ * @return array|null
+ *   A multidimensional array with keys corresponding to the set message types.
+ *   If there are no messages set, the function returns NULL.
+ */
+function ip_geoloc_debug($message, $type = 'status') {
+  if (ip_geoloc_debug_flag()) {
+    return drupal_set_message($message, $type, FALSE);
   }
 }
 

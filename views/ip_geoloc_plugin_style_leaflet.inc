@@ -95,8 +95,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'contains' => array(
         'maxzoom' => array('default' => 18),
         'zoom' => array('default' => 2),
-        'centre_lat' => array('default' => ''),
-        'centre_lon' => array('default' => ''),
+        'center_lat' => array('default' => ''),
+        'center_lon' => array('default' => ''),
         'scrollwheelzoom' => array('default' => TRUE),
         'dragging' => array('default' => TRUE),
         'separator' => array('default' => '<br/>'),
@@ -112,7 +112,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    */
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-
     $path = drupal_get_path('module', 'ip_geoloc');
     $select_css_file = strpos(ip_geoloc_marker_directory(), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
 
@@ -144,7 +143,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
-    //unset($form['default_marker_color']);
+    $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
 
     $desc1 = t('In addition to selecting a color, you may superimpose a special icon on top of each marker. <br><a target="fsymbols" href="!url_fsymbols">fsymbols</a> characters can be copied and pasted straight into the <strong>Font icon character</strong> field. Other libraries like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> and <a target="flaticon" href="!url_flaticon">flaticon</a> use names that you type in the <strong>Font icon class</strong> field.', array(
       '!url_fsymbols' => url('http://fsymbols.com'),
@@ -297,14 +296,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
     );
     $form['map_options']['center_lat'] = array(
-      '#title' => t('Latitude of initial centre of map'),
+      '#title' => t('Latitude of initial center of map'),
       '#type' => 'textfield',
       '#size' => 6,
       '#default_value' => $this->options['map_options']['center_lat'],
       '#description' => t('If both latitude and longitude are filled out, these override any centering option.'),
     );
     $form['map_options']['center_lon'] = array(
-      '#title' => t('Longitude of initial centre of map'),
+      '#title' => t('Longitude of initial center of map'),
       '#type' => 'textfield',
       '#size' => 6,
       '#default_value' => $this->options['map_options']['center_lon'],
@@ -362,7 +361,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#description' => $lib_markercluster ? $desc_a : "$desc_b.",
       '#weight' => 100,
     );
-
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
     $intro = t('superior marker clustering with <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
@@ -419,7 +417,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($region_field_names)) {
       foreach ($region_field_names as $region_field_name) {
         $region_field = field_info_field($region_field_name);
-        if (!empty($region_field)) {
+        if (!empty($region_field['type'])) {
           $region_depth = $this->get_region_field_depth($region_field);
           $zoom_titles = $this->_get_zoom_titles($region_field['type'], $fields[$region_field_name], $region_depth);
 
@@ -522,30 +520,33 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    */
   public function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
-    $map_height = $form_state['values']['style_options']['map_height'];
+    $style_options = $form_state['values']['style_options'];
+    $map_height = $style_options['map_height'];
     if (!is_numeric($map_height) || $map_height <= 0) {
       form_error($form['map_height'], t('Map height cannot be blank and must be a positive number.'));
     }
-    $selected_map = ip_geoloc_plugin_style_leaflet_map_get_info($form_state['values']['style_options']['map']);
+    $selected_map = ip_geoloc_plugin_style_leaflet_map_get_info($style_options['map']);
     $zoom_top = 18;
     if (isset($selected_map['settings']['maxZoom'])) {
       $zoom_top = $selected_map['settings']['maxZoom'];
     }
-    $max_zoom = $form_state['values']['style_options']['map_options']['maxzoom'];
+    $max_zoom = $style_options['map_options']['maxzoom'];
     if ($max_zoom != '' && (!is_numeric($max_zoom) || $max_zoom < 0 || $max_zoom > $zoom_top)) {
       form_error($form['map_options']['maxzoom'], t('Maximum zoom level for %map must be in range 0..@zoomtop', array(
         '%map' => $selected_map['label'], '@zoomtop' => $zoom_top)));
     }
-    $zoom = $form_state['values']['style_options']['map_options']['zoom'];
+    $zoom = $style_options['map_options']['zoom'];
     if ($zoom != '' && (!is_numeric($zoom) || $zoom < 0 || $zoom > $max_zoom)) {
       form_error($form['map_options']['zoom'], t('Initial zoom level must be a non-negative number less than or equal to Maximum zoom level.'));
     }
-    $cluster_aggregation = $form_state['values']['style_options']['cluster_aggregation'];
-    if (isset($cluster_aggregation) && !empty($cluster_aggregation['aggregation_field'])) {
-      $aggregation_field_info = field_info_field($cluster_aggregation['aggregation_field']);
-      $valid_types = array('number_integer', 'number_decimal', 'number_float');
-      if (!$aggregation_field_info || !in_array($aggregation_field_info['type'], $valid_types)) {
-        drupal_set_message(t('A cluster aggregation field that is not a single number may cause severe errors.'), 'warning');
+    if (isset($style_options['cluster_aggregation'])) {
+      $cluster_aggregation = $style_options['cluster_aggregation'];
+      if (!empty($cluster_aggregation['aggregation_field'])) {
+        $aggregation_field_info = field_info_field($cluster_aggregation['aggregation_field']);
+        $valid_types = array('number_integer', 'number_decimal', 'number_float');
+        if (!$aggregation_field_info || !in_array($aggregation_field_info['type'], $valid_types)) {
+          drupal_set_message(t('A cluster aggregation field that is not a single number may cause severe errors.'));
+        }
       }
     }
   }
@@ -939,7 +940,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    * @param int $level
    *   Level of the region in the hierarchy
    */
-  private function _fill_out_location_region($field_type, &$location, $region, &$level = 1) {
+  private function _fill_out_location_region($field_type, &$location, $region, &$level) {
 
     switch ($field_type) {
 
@@ -1004,11 +1005,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     foreach ($this->view->result as $key => $row) {
       if (isset($locations[$key])) {
-        $region_values = array();
         $level = 1;
         foreach ($region_fields as $region_field) {
           $region_values = ip_geoloc_get_view_result($this, $region_field, $key);
           $region = ($region_field['type'] == 'addressfield') ? $region_values : end($region_values);
+          if (empty($region)) {
+            $region = '';
+          }
           $this->_fill_out_location_region($region_field['type'], $locations[$key], $region, $level);
         }
       }

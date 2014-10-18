@@ -741,16 +741,20 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       '@first' => $first_error + 1,
       '%latitudes' => implode(' ' . t('or') . ' ', $latitudes),
     );
-    $msg = ($error_count >= $row_count) ? t('None of the @total result rows in view %view_title had their %latitudes set. Therefore those rows could not be displayed as locations on the map. Are you using the correct field names?', $t_args) : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitudes set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to add an "is not empty" filter for %latitudes.', $t_args);
-
-    $row_contents = t('First error row:') . '<br/>';
-    foreach ((array) $view->result[$first_error] as $field_name => $value) {
-      if ($field_name != '_field_data') {
-        $row_contents .= "<strong>$field_name</strong> = " . print_r($value, TRUE) . '<br/>';
-      }
-    }
+    $msg = ($error_count >= $row_count) 
+      ? t('None of the @total result rows in view %view_title had their %latitudes set. Therefore those rows could not be displayed as locations on the map. Are you using the correct field names?', $t_args)
+      : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitudes set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to add an "is not empty" filter for %latitudes.', $t_args);
     drupal_set_message($msg);
-    drupal_set_message($row_contents);
+
+    if (ip_geoloc_debug_flag()) {
+      $row_contents = t('First error row:') . '<br/>';
+      foreach ((array) $view->result[$first_error] as $field_name => $value) {
+        if ($field_name != '_field_data') {
+          $row_contents .= "<strong>$field_name</strong> = " . print_r($value, TRUE) . '<br/>';
+        }
+      }
+      drupal_set_message($row_contents);
+    }
     drupal_set_message(t('The above messages are shown only to user 1.'));
   }
   // Allow other modules to implement
@@ -1142,7 +1146,7 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
     $values = $views_plugin_style->get_field_value($index, $field_name);
   }
   else {
-    return array();
+    return array('');
   }
   if (!is_array($values)) {
     return array($values);
