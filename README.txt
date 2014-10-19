@@ -70,6 +70,11 @@ Or you can enable the "Set my location" block, which will only prompt the user
 to confirm when they explicitly request to share and reverse-geocode their
 location.
 
+TROUBLE-SHOOTING
+================
+You can switch on useful debug and status messages per USER (rather than role)
+at admin/config/system/ip_geoloc, section "Advanced options".
+
 CONFIGURATION FOR COLLECTION OF VISITOR RESULTS
 ===============================================
 Location providers supported by this module include the specific hardware
