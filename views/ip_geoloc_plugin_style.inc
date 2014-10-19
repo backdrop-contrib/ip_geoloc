@@ -730,8 +730,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       }
     }
   }
-  global $user;
-  if ($error_count > 0 && $user->uid == 1) {
+  if (($error_count > 0) && ip_geoloc_debug_flag()) {
     $row_count = count($view->result);
     $title = empty($views_plugin_style->display->display_options['title']) ? $view->get_human_name() . ' (' . $views_plugin_style->display->display_title . ')' : $views_plugin_style->display->display_options['title'];
     $t_args = array(
@@ -746,16 +745,15 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitudes set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to add an "is not empty" filter for %latitudes.', $t_args);
     drupal_set_message($msg);
 
-    if (ip_geoloc_debug_flag()) {
-      $row_contents = t('First error row:') . '<br/>';
-      foreach ((array) $view->result[$first_error] as $field_name => $value) {
-        if ($field_name != '_field_data') {
-          $row_contents .= "<strong>$field_name</strong> = " . print_r($value, TRUE) . '<br/>';
-        }
+    $row_contents = t('First error row:') . '<br/>';
+    foreach ((array) $view->result[$first_error] as $field_name => $value) {
+      if ($field_name != '_field_data') {
+        $output = print_r($value, TRUE);
+        $output = drupal_substr($output, 0, 255) . (strlen($output) > 255 ? '...' : '');
+        $row_contents .= "<strong>$field_name</strong> = $output<br/>";
       }
-      drupal_set_message($row_contents);
     }
-    drupal_set_message(t('The above messages are shown only to user 1.'));
+    drupal_set_message($row_contents);
   }
   // Allow other modules to implement
   // hook_ip_geoloc_marker_locations_alter(&$locations, &$view)

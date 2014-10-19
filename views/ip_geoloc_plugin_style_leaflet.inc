@@ -722,7 +722,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . "\n";
         $second_last = count($feature['regions']) - 2;
         if ($second_last > 0) {
-          $feature['tooltip'] .= $feature['regions'][$second_last] . ' ';
+          $feature['tooltip'] .= $feature['regions'][$second_last] . ' - ';
         }
         $feature['tooltip'] .= end($feature['regions']);
       }
@@ -934,20 +934,21 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    * @param object $location
    *   The location object whose regions attribute will be fleshed ut
    * @param string $region
-   *   Next region in the hierarchy taken from the View result in the form of a
-   *   taxonomy term (leaf), AddressField or array of plain fields, ordered
-   *   small (suburb) to big (country)
+   *   Region or region hierarchy taken from the View result in the form of a
+   *   taxonomy term (leaf) or AddressField. Or call the function repeatedly on
+   *   the same location object passing in regions as plain fields, one by one,
+   *   going from the big region (country) down to the small (suburb)
    * @param int $level
-   *   Level of the region in the hierarchy
+   *   Level of the region in the hierarchy, updated on return
    */
   private function _fill_out_location_region($field_type, &$location, $region, &$level) {
 
     switch ($field_type) {
 
       case 'taxonomy_term_reference':
-        $region_hierarchy = array_reverse(taxonomy_get_parents_all($region));
-        // Leaf term (i.e. highest cluster level) is first in hierarchy.
-        foreach ($region_hierarchy as $region_term) {
+        $region_hierarchy = taxonomy_get_parents_all($region);
+        // Reverse, to order region hierarchy from large region to small.
+        foreach (array_reverse($region_hierarchy) as $region_term) {
           $location->regions[$level++] = $region_term->name;
         }
         break;
@@ -982,7 +983,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         break;
 
       default:
-        // $location->regions is meant to be ordered big to small, so reverse.
+        // Note: $location->regions is meant to be ordered big to small
         $location->regions[$level++] = $region;
     }
   }
@@ -1008,8 +1009,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $level = 1;
         foreach ($region_fields as $region_field) {
           $region_values = ip_geoloc_get_view_result($this, $region_field, $key);
+          // If the region is multi-valued, use the last value. A particular
+          // case is a hierarchical region taxonomy. We want the smallest of the
+          // regions in the hierarchy.
           $region = ($region_field['type'] == 'addressfield') ? $region_values : end($region_values);
           if (empty($region)) {
+            // Make sure region is a string, not 0 or FALSE.
             $region = '';
           }
           $this->_fill_out_location_region($region_field['type'], $locations[$key], $region, $level);
