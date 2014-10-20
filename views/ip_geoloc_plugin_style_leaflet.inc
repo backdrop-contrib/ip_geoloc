@@ -417,20 +417,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!empty($region_field_names)) {
       foreach ($region_field_names as $region_field_name) {
         $region_field = field_info_field($region_field_name);
-        if (!empty($region_field['type'])) {
-          $region_depth = $this->get_region_field_depth($region_field);
-          $zoom_titles = $this->_get_zoom_titles($region_field['type'], $fields[$region_field_name], $region_depth);
-
-          foreach ($zoom_titles as $title) {
-            $level++;
-            $form['cluster_differentiator']['zoom_ranges'][$level] = array(
-              '#type' => 'textfield',
-              '#title' => filter_xss_admin($title),
-              '#size' => 28,
-              '#default_value' => $this->options['cluster_differentiator']['zoom_ranges'][$level],
-              '#element_validate' => array('ip_geoloc_range_widget_validate'),
-            );
-          }
+        $field_type = empty($region_field['type']) ? '' : $region_field['type'];
+        $region_depth = $this->get_region_field_depth($region_field);
+        $zoom_titles = $this->_get_zoom_titles($field_type, $fields[$region_field_name], $region_depth);
+        foreach ($zoom_titles as $title) {
+          $level++;
+          $form['cluster_differentiator']['zoom_ranges'][$level] = array(
+            '#type' => 'textfield',
+            '#title' => filter_xss_admin($title),
+            '#size' => 28,
+            '#default_value' => $this->options['cluster_differentiator']['zoom_ranges'][$level],
+            '#element_validate' => array('ip_geoloc_range_widget_validate'),
+          );
         }
       }
       if ($level > 0) {
@@ -878,7 +876,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   public function get_region_field_depth($region_field) {
     if (empty($region_field['type'])) {
-      return FALSE;
+      // Dodgy business. Return 1 and hope for the best.
+      return 1;
     }
     if ($region_field['type'] === 'addressfield') {
       return 4;
