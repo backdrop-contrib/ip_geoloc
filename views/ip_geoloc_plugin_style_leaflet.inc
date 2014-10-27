@@ -224,7 +224,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
 
-    $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE);
+    $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE, TRUE);
     $form['tooltips'] = array(
       '#title' => t('Marker tooltips'),
       '#type' => 'fieldset',
@@ -395,7 +395,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ));
       $form['cluster_differentiator']['#description'] .= "<p>$note_region</p>";
     }
-    $fields = ip_geoloc_get_display_fields($this->display->handler, TRUE, FALSE);
+    $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE, FALSE);
     $form['cluster_differentiator']['cluster_differentiator_fields'] = array(
       '#title' => t('Region differentiator'),
       '#type' => 'select',
@@ -996,9 +996,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $region_fields = array();
     foreach ($this->options['cluster_differentiator']['cluster_differentiator_fields'] as $region_fieldname) {
       $region_field = field_info_field($region_fieldname);
-      if (!empty($region_field)) {
-        $region_fields[] = $region_field;
-      }
+      $region_fields[] = empty($region_field) ? $region_fieldname : $region_field;
     }
     if (empty($region_fields)) {
       return;
