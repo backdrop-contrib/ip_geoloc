@@ -948,7 +948,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $region_hierarchy = taxonomy_get_parents_all($region);
         // Reverse, to order region hierarchy from large region to small.
         foreach (array_reverse($region_hierarchy) as $region_term) {
-          $location->regions[$level++] = $region_term->name;
+          $location->regions[$level++] = trim($region_term->name);
         }
         break;
 
@@ -972,10 +972,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             //drupal_set_message(t('IPGV&M: cannot flesh out countries and states on locations. Format callback %name is not available.', array('%name' => $format_callback)), 'warning', FALSE);
           }
           $location->regions = array(
-            1 => isset($region['country']) ? $region['country'] : '',
-            2 => isset($region['administrative_area']) ? $region['administrative_area'] : '',
-            3 => isset($region['locality']) ? $region['locality'] : '',
-            4 => isset($region['postal_code']) ? $region['postal_code'] : '',
+            1 => isset($region['country']) ? trim($region['country']) : '',
+            2 => isset($region['administrative_area']) ? trim($region['administrative_area']) : '',
+            3 => isset($region['locality']) ? trim($region['locality']) : '',
+            4 => isset($region['postal_code']) ? trim($region['postal_code']) : '',
           );
           $level = 5;
         }
@@ -983,7 +983,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
       default:
         // Note: $location->regions is meant to be ordered big to small
-        $location->regions[$level++] = $region;
+        $location->regions[$level++] = trim($region);
     }
   }
 
@@ -1006,15 +1006,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $level = 1;
         foreach ($region_fields as $region_field) {
           $region_values = ip_geoloc_get_view_result($this, $region_field, $key);
+          $field_type = isset($region_field['type']) ? $region_field['type'] : 'text';
           // If the region is multi-valued, use the last value. A particular
           // case is a hierarchical region taxonomy. We want the smallest of the
           // regions in the hierarchy.
-          $region = ($region_field['type'] == 'addressfield') ? $region_values : end($region_values);
+          $region = ($field_type == 'addressfield') ? $region_values : end($region_values);
           if (empty($region)) {
             // Make sure region is a string, not 0 or FALSE.
             $region = '';
           }
-          $this->_fill_out_location_region($region_field['type'], $locations[$key], $region, $level);
+          $this->_fill_out_location_region($field_type, $locations[$key], $region, $level);
         }
       }
     }
