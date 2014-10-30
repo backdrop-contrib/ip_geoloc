@@ -1,0 +1,15 @@
+
+.leaflet-container .leafet-control-reset {
+  background-color: white;
+  color: black;
+  cursor: pointer;
+  height: 26px;
+  width: 26px;
+  line-height: 26px;
+  text-align: center;
+  font-size: larger;
+}
+.leaflet-container .leafet-control-reset:hover {
+  background-color: #f4f4f4;
+  text-decoration: none;
+}

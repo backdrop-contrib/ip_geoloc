@@ -64,6 +64,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
 
     $options['full_screen'] = array('default' => 0);
+    $options['map_reset'] = array('default' => 0);
+    $options['map_reset_css_class'] = array('default' => '');
 
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
     $options['cluster_differentiator'] = array(
@@ -333,7 +335,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('Add a full-screen toggle to the map'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['full_screen'],
-      '#weight' => 98,
+      '#weight' => 97,
     );
     $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
     if ($lib_fullscreen) {
@@ -346,6 +348,25 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $form['full_screen']['#description'] = t('Requires this <a href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
         '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
     }
+    $form['map_reset'] = array(
+      '#title' => t('Add a reset button to the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['map_reset'],
+      '#description' => t('The button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
+      '#weight' => 98,
+    );
+    $form['map_reset_css_class'] = array(
+      '#title' => t('CSS class to apply to reset button'),
+      '#type' => 'textfield',
+      '#size' => 40,
+      '#default_value' => $this->options['map_reset_css_class'],
+      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded, try <strong>fa fa-repeat</strong>. If you leave this blank the letter <strong>R</strong> will be used as a label instead.'),
+      '#weight' => 98,
+      '#states' => array(
+        'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
+      ),
+    );
+
     $lib_markercluster = module_exists('leaflet_markercluster') ? leaflet_markercluster_get_library_path() : FALSE;
 
     $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>cluster region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
@@ -572,6 +593,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $visitor_marker_color = $this->options['visitor_marker']['visitor_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
     $has_full_screen = !empty($this->options['full_screen']);
+    $has_map_reset = !empty($this->options['map_reset']);
     $cluster_radius = $this->options['cluster_radius'];
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
@@ -831,8 +853,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       // Load the Leaflet/Leaflet.fullscreen library, containing JS and CSS.
       if (drupal_add_library('ip_geoloc', 'leaflet-fullscreen')) {
         $map['settings']['fullscreenControl'] = TRUE;
-        //drupal_add_css($module_path. '/css/ip_geoloc_leaflet_fullscreen.css');
       }
+    }
+    if ($has_map_reset) {
+      $map['settings']['resetControlCss'] = $this->options['map_reset_css_class'];
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_reset.js', array('weight' => 1));
+      drupal_add_css($module_path. '/css/ip_geoloc_leaflet_reset.css');
     }
     $settings = array(
       'mapId' => $map_id,
@@ -841,7 +867,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     $options = array(
       'type' => 'setting',
-      'scope' => 'footer', // 'footer' only works for type 'inline'
+      // 'footer' only works for type 'inline'.
+      'scope' => 'footer',
     );
     drupal_add_js(array('leaflet' => array($settings)), $options);
 
