@@ -152,7 +152,7 @@ function ip_geoloc_block_configure($delta = '') {
         3 => t('Great-grandparent of selected region'),
       ),
       '#default_value' => variable_get('ip_geoloc_region_parent', 0),
-      '#description' => t('If the selected parent does not exist the next parent down will be used instead.'),
+      '#description' => t('If the selected parent does not exist the next parent up will be used instead.'),
     );
 
     $form['redirection'] = array(

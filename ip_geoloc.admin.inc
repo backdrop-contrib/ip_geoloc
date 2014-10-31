@@ -80,8 +80,8 @@ function ip_geoloc_admin_configure() {
     );
   }
   $form['font_icons']["ip_geoloc_font_icon_lib$count"]['#description']
-    = t('<strong>Note:</strong> due to this <a target="bug" href="!url_bug">bug</a>, you cannot have identical leaf names amongst the CSS filespecs. Rename .css files if there are clashes.', array(
-      '!url_bug' => url('http://drupal.org/node/1885838'),
+    = t('<strong>Note:</strong> as explained in this <a target="issue" href="!url_issue">issue</a>, you cannot have identical leaf names amongst the CSS filespecs. Rename .css files if there are clashes.', array(
+      '!url_issue' => url('http://drupal.org/node/1885838'),
     ));
 
   if (ip_geoloc_diagnose() > 0) {
