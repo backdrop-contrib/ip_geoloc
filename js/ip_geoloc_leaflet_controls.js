@@ -8,20 +8,22 @@
     attach: function (context, settings) {
       var maps = settings.leaflet;
       for (var i = 0; i < maps.length; i++) {
-        var settings = maps[i].map.settings;
-        if (settings.zoomIndicator) {
-          maps[i].lMap.addControl(new L.control.zoomIndicator(settings.zoomIndicator));
-        }
-        if (settings.resetControlCss) {
-          maps[i].lMap.addControl(L.control.reset(settings.resetControlCss));
-        }
-        if (settings.scaleControl) {
-          maps[i].lMap.addControl(L.control.scale(settings.scaleControl));
+        var map = maps[i].lMap;
+        var mapSettings = maps[i].map.settings;
+        if (map && mapSettings) {
+          if (mapSettings.zoomIndicator) {
+            map.addControl(L.control.zoomIndicator(mapSettings.zoomIndicator));
+          }
+          if (mapSettings.resetControl) {
+            map.addControl(L.control.reset(mapSettings.resetControl));
+          }
+          if (mapSettings.scaleControl) {
+            map.addControl(L.control.scale(mapSettings.scaleControl));
+          }
         }
       }
     }
   }
-
 })(jQuery);
 
 L.Control.Reset = L.Control.extend({

@@ -68,7 +68,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['scale_imperial'] = array('default' => 0);
     $options['zoom_indicator'] = array('default' => 0);
     $options['map_reset'] = array('default' => 0);
-    $options['map_reset_css_class'] = array('default' => '');
+    $options['map_reset_css_class'] = array('default' => 'R');
 
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
     $options['cluster_differentiator'] = array(
@@ -382,7 +382,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 40,
       '#default_value' => $this->options['map_reset_css_class'],
-      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded, try <strong>fa fa-repeat</strong>. If you leave this blank the letter <strong>R</strong> will be used as a label instead.'),
+      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded for your markers, try <strong>fa fa-repeat</strong>. If you enter one or two characters, these be used as the label instead.'),
       '#weight' => 99,
       '#states' => array(
         'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
@@ -623,7 +623,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'imperial' => !empty($this->options['scale_imperial']),
       );
     }
-    $has_map_reset = !empty($this->options['map_reset']);
+    $reset_control = FALSE;
+    if (!empty($this->options['map_reset'])) {
+      $label = filter_xss_admin($this->options['map_reset_css_class']);
+      $reset_control = array('label' => empty($label) ? ' ' : $label);
+    }
     $cluster_radius = $this->options['cluster_radius'];
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
@@ -886,13 +890,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
     }
     $map['settings']['zoomIndicator'] = $zoom_indicator;
+    $map['settings']['resetControl'] = $reset_control;
     $map['settings']['scaleControl'] = $scale_control;
-    if ($has_map_reset) {
-      $label = empty($this->options['map_reset_css_class']) ? 'R' : $this->options['map_reset_css_class'];
-      $map['settings']['resetControlCss'] = array('label' => $label);
-    }
-    if ($zoom_indicator || $scale_control || $has_map_reset) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js');
+    if ($zoom_indicator || $reset_control || $scale_control) {
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js', array('weight' => 1));
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_controls.css');
     }
     $settings = array(
@@ -917,7 +918,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
       drupal_set_message(t('Cannot cluster markers in View %display_name - Leaflet MarkerCluster module not enabled.', array('%display_name' => $display_name)), 'warning');
     }
-    if (!empty($has_special_markers)) {
+    if ($reset_control || !empty($has_special_markers)) {
       // Load the CSS that comes with the font icon library which in return
       // tells the browser to fetch either the WOFF, TTF or SVG files that
       // define the font faces.
