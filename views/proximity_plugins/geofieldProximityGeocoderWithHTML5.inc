@@ -14,10 +14,9 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
 
   public function value_form(&$form, &$form_state, $views_plugin) {
     parent::value_form($form, $form_state, $views_plugin);
-    $note = t("You may enter %me to indicate the visitor's current location.", array(
-      '%me' => t('me'),
-    ));
-    $form['value']['#description'] = $note;
+    // Add a description to the "Proximity Search" fields  (distance, unit,
+    // origin).
+    $form['value']['#description'] = t("Enter a partial address or leave the field blank to use the visitor's current position as the origin.");
   }
 
   public function value_validate(&$form, &$form_state, $views_plugin) {
@@ -30,6 +29,17 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
   public function options_form(&$form, &$form_state, $views_plugin) {
     parent::options_form($form, $form_state, $views_plugin);
 
+    // Make sure that the Geocoder-provided form elements are visible.
+    $form['geofield_proximity_geocoder_engine']['#dependency']['edit-options-source'][] = 'geocoder_with_HTML5';
+    $form['geofield_proximity_geocoder']['#dependency']['edit-options-source'][] = 'geocoder_with_HTML5';
+    // Add a description to Geocoder origin field.
+    $form['geofield_proximity_geocoder']['#description'] = t("Enter a partial address or leave the field blank to use the visitor's current position as the origin.");
+    /* Show/hide works on whole fields only, not on description only...
+    $form['geofield_proximity_geocoder']['#description']['#states'] = array(
+      'visible' => array(
+        'select[name="options[source]"]' => array('value' => 'geocoder_with_HTML5'),
+      ),
+    );*/
     $exposed_geofields = array();
     $filters = $views_plugin->view->display_handler->handlers['filter'];
     foreach ($filters as $name => $filter) {
@@ -37,23 +47,26 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
         $exposed_geofields[$name] = $filter->ui_name();
       }
     }
-    $options = array('' => '-- ' . t("no don't do that") . ' --') + $exposed_geofields;
-
-    $form['geofield_proximity_with_HTML5_share_exposed'] = array(
-      '#type' => 'select',
-      '#title' => t('Inherit filter values from the exposed filter belonging to the field below'),
-      '#options' => $options,
-      '#default_value' => $views_plugin->options['geofield_proximity_with_HTML5_share_exposed'],
-      '#states' => array(
-        'visible' => array(
-          ':input[name="options[expose_button][checkbox][checkbox]"]' => array('checked' => FALSE),
-          ':input[name="options[source]"]' => array('value' => 'geocoder_with_HTML5'),
+    if (!empty($exposed_geofields)) {
+      $options = array('' => '-- ' . t("no don't do that") . ' --') + $exposed_geofields;
+      $form['geofield_proximity_with_HTML5_share_exposed'] = array(
+        '#type' => 'select',
+        '#title' => t('Inherit filter values from the exposed filter belonging to the field below'),
+        '#options' => $options,
+        '#default_value' => $views_plugin->options['geofield_proximity_with_HTML5_share_exposed'],
+        '#states' => array(
+          'visible' => array(
+            ':input[name="options[expose_button][checkbox][checkbox]"]' => array('checked' => FALSE),
+            'select[name="options[source]"]' => array('value' => 'geocoder_with_HTML5'),
+          ),
         ),
-      ),
-    );
-    $form['value']['#states'] = array(
-      'visible' => array(':input[name="options[geofield_proximity_with_HTML5_share_exposed]"]' => array('value' => '')),
-    );
+      );
+      // Suppress the "Proximity Search" fields (distance, unit, origin) when
+      // an alternative Geofield filter is selected above.
+      $form['value']['#states'] = array(
+        'visible' => array(':input[name="options[geofield_proximity_with_HTML5_share_exposed]"]' => array('value' => '')),
+      );
+    }
   }
 
   public function options_validate(&$form, &$form_state, $views_plugin) {
@@ -77,10 +90,10 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
     if (empty($exposed_filter)) {
       $exposed_filter = isset($views_plugin->options['value']) ? $views_plugin->options['value'] : $views_plugin->options['geofield_proximity_geocoder'];
     }
-
     $origin = isset($exposed_filter['origin']) && is_string($exposed_filter['origin']) ? trim($exposed_filter['origin']) : '';
+    $origin_is_visitor = drupal_strlen($origin) <= 1 || in_array($origin, array('visitor', t('visitor'), 'me', t('me')));
 
-    if (drupal_strlen($origin) <= 1 || $origin === 'me' || $origin === t('me')) {
+    if ($origin_is_visitor) {
       $location = ip_geoloc_get_visitor_location();
       if (isset($location['latitude'])) {
         return array(

@@ -376,7 +376,7 @@ function ip_geoloc_views_plugins() {
 function ip_geoloc_proximity_views_handlers() {
   $handlers = array(
     'geocoder_with_HTML5' => array(
-      'name' => t('Geocoded Location with HTML5 default'),
+      'name' => t("Geocoded Location or visitor's current position"),
       'class' => 'geofieldProximityGeocoderWithHTML5',
       'module' => 'ip_geoloc',
       'path' => 'views/proximity_plugins',
