@@ -750,7 +750,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $row_contents = t('First error row:') . '<br/>';
       foreach ((array) $view->result[$first_error] as $field_name => $value) {
         if ($field_name != '_field_data') {
-          $output = print_r($value, TRUE);
+          $output = print_r(filter_xss_admin($value), TRUE);
           $output = drupal_substr($output, 0, 255) . (strlen($output) > 255 ? '...' : '');
           $row_contents .= "<strong>$field_name</strong> = $output<br/>";
         }

@@ -310,6 +310,9 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   print "ip_geoloc_locations['$div_id'] = [\n";
 
   foreach ($locations as $location) {
+    if (isset($location->type) && $location->type != 'point') {
+      continue;
+    }
     $balloon_text = isset($location->balloon_text) ? addslashes(str_replace("\n", '', $location->balloon_text)) : '';
     print '{ "type":"point"' .
       (empty($location->marker_color) ? '' : ',"marker_color":"' . $location->marker_color . '"') .
@@ -569,7 +572,7 @@ function ip_geoloc_get_visitor_location() {
  */
 function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
   if (empty($locations)) {
-    return array(0.0, 0.0);
+    return array(NULL, NULL);
   }
   if ($center_of_gravity) {
     // Because longitude turns back on itself, cannot simply average coords.
@@ -603,10 +606,8 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
     return array(rad2deg($center_lat), rad2deg($center_lng));
   }
   // Alternative method based on top & bottom lat and left & right lon.
-  $location = reset($locations);
-  $top = $bottom = isset($location->lat) ? $location->lat : $location->latitude;
-  $left = $right = isset($location->lon) ? $location->lon : $location->longitude;
-  while ($location = next($locations)) {
+  $top = $bottom = $left = $right = NULL;
+  foreach ($locations as $location) {
     if (isset($location->lon)) {
       $lng = $location->lon;
       $lat = $location->lat;
@@ -618,18 +619,21 @@ function ip_geoloc_center_of_locations($locations, $center_of_gravity = FALSE) {
     else {
       continue;
     }
-    if ($lat > $top) {
+    if (!isset($top) || $lat > $top) {
       $top = $lat;
     }
-    elseif ($lat < $bottom) {
+    if (!isset($bottom) || $lat < $bottom) {
       $bottom = $lat;
     }
-    if ($lng < $left) {
+    if (!isset($left) || $lng < $left) {
       $left = $lng;
     }
-    elseif ($lng > $right) {
+    if (!isset($right) || $lng > $right) {
       $right = $lng;
     }
+  }
+  if (!isset($top) || !isset($left)) {
+    return array(NULL, NULL);
   }
   $center_lat = 0.5 * ($top + $bottom);
   $center_lng = 0.5 * ($left + $right);

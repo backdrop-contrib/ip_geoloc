@@ -64,6 +64,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
 
     $options['full_screen'] = array('default' => 0);
+    $options['scale_metric'] = array('default' => 0);
+    $options['scale_imperial'] = array('default' => 0);
+    $options['zoom_indicator'] = array('default' => 0);
     $options['map_reset'] = array('default' => 0);
     $options['map_reset_css_class'] = array('default' => '');
 
@@ -335,7 +338,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('Add a full-screen toggle to the map'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['full_screen'],
-      '#weight' => 97,
+      '#weight' => 95,
     );
     $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
     if ($lib_fullscreen) {
@@ -348,8 +351,27 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $form['full_screen']['#description'] = t('Requires this <a href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
         '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
     }
+
+    $form['scale_metric'] = array(
+      '#title' => t('Add a metric (km) scale'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['scale_metric'],
+      '#weight' => 96,
+    );
+    $form['scale_imperial'] = array(
+      '#title' => t('Add an imperial (miles) scale'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['scale_imperial'],
+      '#weight' => 96,
+    );
+    $form['zoom_indicator'] = array(
+      '#title' => t('Add an indicator showing the active zoom level'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['zoom_indicator'],
+      '#weight' => 97,
+    );
     $form['map_reset'] = array(
-      '#title' => t('Add a reset button to the map'),
+      '#title' => t('Add a reset button'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['map_reset'],
       '#description' => t('The button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
@@ -361,7 +383,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 40,
       '#default_value' => $this->options['map_reset_css_class'],
       '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded, try <strong>fa fa-repeat</strong>. If you leave this blank the letter <strong>R</strong> will be used as a label instead.'),
-      '#weight' => 98,
+      '#weight' => 99,
       '#states' => array(
         'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
       ),
@@ -408,7 +430,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
     }
     if (!module_exists('leaflet_markercluster')) {
-      $form['cluster_differentiator']['#description'] .= $desc_b . ' ' .  t('and <a href="http://regionbound.com">RegionBound</a> JS plugin.');
+      $form['cluster_differentiator']['#description'] .= $desc_b . ' ' . t('and <a href="http://regionbound.com">RegionBound</a> JS plugin.');
     }
     elseif ($lib_markercluster && (empty($region_field_names) || !reset($region_field_names))) {
       $note_region = t('Download the .js file from <a target="regionbound" href="http://regionbound.com">regionbound.com</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
@@ -593,6 +615,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $visitor_marker_color = $this->options['visitor_marker']['visitor_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
     $has_full_screen = !empty($this->options['full_screen']);
+    $zoom_indicator = empty($this->options['zoom_indicator']) ? FALSE : TRUE; /*array('position' => 'topleft')*/;
+    $scale_control = FALSE;
+    if (!empty($this->options['scale_metric']) || !empty($this->options['scale_imperial'])) {
+      $scale_control = array(
+        'metric' => !empty($this->options['scale_metric']),
+        'imperial' => !empty($this->options['scale_imperial']),
+      );
+    }
     $has_map_reset = !empty($this->options['map_reset']);
     $cluster_radius = $this->options['cluster_radius'];
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
@@ -852,13 +882,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if ($has_full_screen) {
       // Load the Leaflet/Leaflet.fullscreen library, containing JS and CSS.
       if (drupal_add_library('ip_geoloc', 'leaflet-fullscreen')) {
-        $map['settings']['fullscreenControl'] = TRUE;
+        $map['settings']['fullscreenControl'] = array('position' => 'topright');
       }
     }
+    $map['settings']['zoomIndicator'] = $zoom_indicator;
+    $map['settings']['scaleControl'] = $scale_control;
     if ($has_map_reset) {
-      $map['settings']['resetControlCss'] = $this->options['map_reset_css_class'];
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_reset.js', array('weight' => 1));
-      drupal_add_css($module_path. '/css/ip_geoloc_leaflet_reset.css');
+      $label = empty($this->options['map_reset_css_class']) ? 'R' : $this->options['map_reset_css_class'];
+      $map['settings']['resetControlCss'] = array('label' => $label);
+    }
+    if ($zoom_indicator || $scale_control || $has_map_reset) {
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js');
+      drupal_add_css($module_path . '/css/ip_geoloc_leaflet_controls.css');
     }
     $settings = array(
       'mapId' => $map_id,
