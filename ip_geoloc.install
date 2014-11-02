@@ -33,10 +33,10 @@ function ip_geoloc_requirements($phase) {
   $t = get_t();
 
   $geolocation_methods = array();
-  if (variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+  if (variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
     $geolocation_methods[] = $t('Google Maps reverse-geocode');
   }
-  if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
+  if (variable_get('ip_geoloc_smart_ip_as_backup', FALSE)) {
     if (module_exists('smart_ip')) {
       $geolocation_methods[] = 'Smart IP';
     }

@@ -115,9 +115,9 @@ function ip_geoloc_admin_configure() {
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Employ the Google Maps API to reverse-geocode HTML5 visitor locations to street addresses'),
-    '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', TRUE),
-    '#description' => t('For present and future visitors this is done via the Javascript version of the Maps API and the HTML5 way of obtaining a visitor\'s location. This involves them being prompted to accept sharing of their location. For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server. <br/>If you are using IPGV&M only for one of the Views formats <strong>Map (..., via IPGV&M)</strong>, then you can safely untick this box.<br/>This option requires <a href="!url">Clean URLs</a> to be enabled.', array(
+    '#title' => t('Employ the free Google service to reverse-geocode HTML5 visitor locations to street addresses before storing these on the database'),
+    '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', FALSE),
+    '#description' => t('If you are using this module mainly for its mapping features, then you can safely untick this box.<br/>Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server. <br/>This option requires <a href="!url">Clean URLs</a> to be enabled.', array(
       '!url' => url('admin/config/search/clean-urls'))
     ),
   );
@@ -146,8 +146,8 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ Smart IP as a backup to the Google Maps JS API as well as declined or failed HTML5 location retrievals in Views'),
-    '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', TRUE),
-    '#description' => t('This refers to situations where the lat/long coords could not be established, for example because the browser/device is not supported or the user declined to share their location) or the Google Maps API reverse-geocode function failed or was not employed through the tick box above. Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
+    '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', FALSE),
+    '#description' => t('This refers to situations where the lat/long coords could not be established. An example is the user declining to share their location. Another is when the Google Maps API reverse-geocode function fails or is not enabled through the tick box at the top of this section.<br/>Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
       '@geoip' => url('http://drupal.org/project/geoip'),
     )),
   );
@@ -257,8 +257,8 @@ function ip_geoloc_sync_with_accesslog() {
   // Wipe previous message to avoid confusion.
   drupal_get_messages();
 
-  $use_smart_ip = variable_get('ip_geoloc_smart_ip_as_backup', TRUE) && module_exists('smart_ip');
-  $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+  $use_smart_ip = variable_get('ip_geoloc_smart_ip_as_backup', FALSE) && module_exists('smart_ip');
+  $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', FALSE);
 
   // From Configuration >> IP Geolocation form.
   $batch_size = check_plain($_POST['ip_geoloc_sync_batch_size']);

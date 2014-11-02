@@ -323,7 +323,7 @@ function _ip_geoloc_get_field_value($db_field_name) {
       require_once DRUPAL_ROOT . '/' . $list['ip_geoloc']->filename;
       // If 'Smart IP' module is enabled and set up as backup, include its
       // module file.
-      if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE) && isset($list['smart_ip'])) {
+      if (variable_get('ip_geoloc_smart_ip_as_backup', FALSE) && isset($list['smart_ip'])) {
         require_once DRUPAL_ROOT . '/' . $list['smart_ip']->filename;
       }
       // If 'GeoIP API' module is enabled, include its module file.

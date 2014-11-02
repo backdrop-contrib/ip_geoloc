@@ -212,7 +212,7 @@ function ip_geoloc_init() {
   if ($force_reverse_geocode = $reverse_geocode_count = _ip_geoloc_get_session_value('reverse_geocode_now')) {
     _ip_geoloc_set_session_value('reverse_geocode_now', --$reverse_geocode_count);
   }
-  if ($force_reverse_geocode || !variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+  if ($force_reverse_geocode || !variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
     // If HTML5 geocoding is not desired, reset 'position_pending_since' timer.
     _ip_geoloc_set_session_value('position_pending_since', NULL);
   }
@@ -362,7 +362,7 @@ function ip_geoloc_current_location_ajax_recipient() {
  *   TRUE upon success, FALSE otherwise.
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
-  if (variable_get('ip_geoloc_smart_ip_as_backup', TRUE)) {
+  if (variable_get('ip_geoloc_smart_ip_as_backup', FALSE)) {
     if (function_exists('smart_ip_get_location')) {
       if (empty($location['ip_address'])) {
         $location['ip_address'] = ip_address();
@@ -430,7 +430,7 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
  */
 function _ip_geoloc_check_location($location = NULL) {
 
-  if (!variable_get('ip_geoloc_google_to_reverse_geocode', TRUE)) {
+  if (!variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
     return FALSE;
   }
   $path_alias = drupal_get_path_alias();

@@ -415,7 +415,7 @@ function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = F
     $location = array('ip_address' => $ip_address);
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
       if (!isset($reverse_geocode)) {
-        $reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', TRUE);
+        $reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', FALSE);
       }
       if ($reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
         if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
