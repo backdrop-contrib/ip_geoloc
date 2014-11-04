@@ -591,7 +591,7 @@ function ip_geoloc_geocode($form, &$form_state) {
 }
 
 /**
- * Returns the location object belonging to supplie region taxonomy term id.
+ * Returns the location object belonging to supplied region taxonomy term id.
  *
  * @param int $tid
  *   Taxonomy term identifier
