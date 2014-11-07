@@ -536,6 +536,7 @@ function ip_geoloc_geocode($form, &$form_state) {
       }
       $location = array(
         'provider' => 'user+google',
+        'is_updated' => TRUE,
         'ip_address' => ip_address(),
         'latitude' => $point->coords[1],
         'longitude' => $point->coords[0],

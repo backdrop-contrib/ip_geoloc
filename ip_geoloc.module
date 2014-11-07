@@ -207,11 +207,8 @@ function ip_geoloc_init() {
 
   $location = ip_geoloc_get_visitor_location();
 
-  // Decrement 'reverse_geocode_now' counter, if set, like "Set my location"
-  // block. Typically only 1 forced reverse geocode in succession.
-  if ($force_reverse_geocode = $reverse_geocode_count = _ip_geoloc_get_session_value('reverse_geocode_now')) {
-    _ip_geoloc_set_session_value('reverse_geocode_now', --$reverse_geocode_count);
-  }
+  $force_reverse_geocode = _ip_geoloc_get_session_value('reverse_geocode_now');
+
   if ($force_reverse_geocode || !variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
     // If HTML5 geocoding is not desired, reset 'position_pending_since' timer.
     _ip_geoloc_set_session_value('position_pending_since', NULL);
@@ -341,6 +338,13 @@ function ip_geoloc_current_location_ajax_recipient() {
   if (ip_geoloc_store_location($location) !== FALSE) {
     // If successfully stored, don't store again.
     $location['ip_address'] = NULL;
+  }
+
+  if ($reverse_geocode_count = _ip_geoloc_get_session_value('reverse_geocode_now')) {
+    $location['is_updated'] = TRUE;
+    // Decrement 'reverse_geocode_now' counter as set by the "Set my location"
+    // block. Typically only 1 forced reverse geocode in succession.
+    _ip_geoloc_set_session_value('reverse_geocode_now', --$reverse_geocode_count);
   }
   _ip_geoloc_set_session_value('location', $location);
   // Got location so reset 'position_pending_since' timer.
@@ -852,10 +856,10 @@ function ip_geoloc_ctools_plugin_directory($module, $plugin) {
  * We use this to place the visitor marker at the centre of the contextual
  * proximity filter circle, so that the user has visual feedback as to the
  * exact proximity centre as interpreted by Geocoder. Example: "/Oregon".
- */
+ *
 function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_proximity_handler, $lat_lon_dist) {
-  // _ip_geoloc_set_session_value('location', $lat_lon_dist);
-}
+  _ip_geoloc_set_session_value('location', $lat_lon_dist);
+}*/
 
 /* A sneaky way to place leaflet features in the footer
 function ip_geoloc_js_alter(&$javascript) {
@@ -864,6 +868,20 @@ function ip_geoloc_js_alter(&$javascript) {
   }
 }
  */
+
+/**
+ * Implements hook_views_post_render().
+ *
+ * Used to clear the 'is_updated' flag on the visitor location after any
+ * map Views have had the opportunity to respond to it being set.
+ */
+function ip_geoloc_views_post_render(&$view, &$rendered_output) {
+  $name = $view->style_plugin->plugin_name;
+  if (strpos($name, 'ip_geoloc') === 0 && ($location = ip_geoloc_get_visitor_location())) {
+    $location['is_updated'] = FALSE;
+    _ip_geoloc_set_session_value('location', $location);
+  }
+}
 
 /**
  * Implements hook_views_api().
