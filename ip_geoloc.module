@@ -221,7 +221,7 @@ function ip_geoloc_init() {
 
   $use_google_to_reverse_geocode = $force_reverse_geocode || _ip_geoloc_check_location($location);
 
-  if (ip_geoloc_is_first_click() || $reverse_geocode_client_timeout) {
+  if (empty($location['fixed_address']) && ($reverse_geocode_client_timeout || ip_geoloc_is_first_click())) {
     _ip_geoloc_reinit_location($location, $reverse_geocode_client_timeout);
     ip_geoloc_store_location($location);
     _ip_geoloc_set_session_value('location', $location);

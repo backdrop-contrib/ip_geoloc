@@ -406,7 +406,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
-    $intro = t('superior marker clustering with <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
+    $intro = t('Superior marker clustering with <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
     $form['cluster_differentiator'] = array(
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
@@ -504,7 +504,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#description' => t('When hovering a cluster, a <a target="regionbound" href="http://regionbound.com/enhanced-cluster-envelope-using-heuristic-hull">coverage outline</a> visualises the envelope or footprint of the underlying marker population. Select your preferred style of doing this.'),
       );
     }
-    $intro = t('use clusters to report on region aggregates; requires <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
+    $intro = t('Use clusters to report on region aggregates; requires <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
     $desc = t('This feature aggregates values of a selected field across every region and displays the resulting <em>sum/average/min/max</em> on each cluster icon at every zoom level. It also colours each cluster icon based on its aggregated value, rather than its marker count.');
     $form['cluster_aggregation'] = array(
       '#type' => 'fieldset',
