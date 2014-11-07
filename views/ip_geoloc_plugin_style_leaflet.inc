@@ -644,13 +644,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       ? filter_xss_admin($this->options['map_options']['separator']) : '<br/>';
 
     $visitor_location = ip_geoloc_get_visitor_location();
-
-    if (!empty($this->options['map_options']['center_lat']) && !empty($this->options['map_options']['center_lon'])) {
+    if (!isset($visitor_location['latitude'])) {
+      $visitor_location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => ip_address()))->fetchAssoc();
+    }
+    $use_specified_center = !empty($this->options['map_options']['center_lat']) && !empty($this->options['map_options']['center_lon'])
+      && empty($visitor_location['is_updated']);
+    if ($use_specified_center) {
       $map['center'] = array(
         'lat' => $this->options['map_options']['center_lat'],
         'lon' => $this->options['map_options']['center_lon'],
-        // Only force center when visitor location wasn't just updated.
-        'force' => empty($visitor_location['is_updated'])
       );
     }
     elseif (!empty($locations) &&
@@ -665,19 +667,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'lon' => $center_lon,
       );
     }
-
-    uasort($locations, '_ip_geoloc_plugin_style_leaflet_compare');
-
-    if (!isset($visitor_location['latitude'])) {
-      $visitor_location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => ip_address()))->fetchAssoc();
-    }
-
-    if ((empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
+    if (!$use_specified_center && (empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
       $map['center'] = array(
         'lat' => $visitor_location['latitude'],
         'lon' => $visitor_location['longitude'],
       );
     }
+
     if (empty($locations)) {
       $ll = trim($this->options['empty_map_center']);
       if (empty($ll)) {
@@ -688,7 +684,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Empty map centered on coordinates provided.
         list($map['center']['lat'], $map['center']['lon']) = preg_split("/[\s,]+/", $ll);
       }
-      // Else Empty map centered on visitor location, as set above.
+      // else: empty map centered on visitor location, as set above.
+    }
+    else {
+      uasort($locations, '_ip_geoloc_plugin_style_leaflet_compare');
     }
 
     $marker_dimensions = explode('x', ip_geoloc_marker_dimensions());
@@ -835,11 +834,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     // If auto-box is chosen ($center_option==0), zoom only when there are
     // 0 or 1 markers [#1863374]
-    if (empty($map['center']['force']) && empty($center_option) && count($features) > 1) {
+    if (!$use_specified_center && empty($center_option) && count($features) > 1) {
       unset($map['center']);
     }
     else {
       $map['settings']['zoom'] = $zoom;
+      if (!empty($map['center'])) {
+        // A leaflet.drupal.js quirk? Have to specify AND force a center...
+        $map['center']['force'] = TRUE;
+      }
     }
     $map['settings']['maxZoom'] = $max_zoom;
     $map['settings']['scrollWheelZoom'] = $scroll_wheel_zoom;
