@@ -380,7 +380,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 40,
       '#default_value' => $this->options['map_reset_css_class'],
-      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded for your markers, try <strong>fa fa-repeat</strong>. If you enter one or two characters, these be used as the label instead.'),
+      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded for your markers, try <strong>fa fa-repeat</strong>. If you enter only one or two characters, for example <strong>R</strong>, these will be used verbatim as the label instead.'),
       '#weight' => 99,
       '#states' => array(
         'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),

@@ -14,10 +14,15 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
 
   public function value_form(&$form, &$form_state, $views_plugin) {
     parent::value_form($form, $form_state, $views_plugin);
-    // Add description to"Proximity Search" fields (distance, unit, origin).
-    $form['value']['#description'] = t("Enter a partial address or leave the field blank to use the visitor's current position as the origin.");
-    // Would like to uppress the Geocoder Service selector when no address is
-    // entered, but it is not in the $form...
+    // Add description to "Proximity Search" fields (distance, unit, origin).
+    // This description is shown on the Geofield FILTER form.
+    $form['value']['#description'] = t("Enter a partial address or %me to use your current location as the origin.", array('%me' => t('me')));
+    if (empty($form['value']['#default_value']['origin'])) {
+      // Geofield FILTER does not engage when 'origin' is empty.
+      $form['value']['#default_value']['origin'] = t('me');
+    }
+    // Would like to suppress the Geocoder Service selector when no address is
+    // entered, but it is not on the $form...
   }
 
   public function value_validate(&$form, &$form_state, $views_plugin) {
@@ -33,8 +38,8 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
     // Make sure that the Geocoder-provided form elements are visible.
     $form['geofield_proximity_geocoder_engine']['#dependency']['edit-options-source'][] = 'geocoder_with_HTML5';
     $form['geofield_proximity_geocoder']['#dependency']['edit-options-source'][] = 'geocoder_with_HTML5';
-    // Add a description to Geocoder origin field.
-    $form['geofield_proximity_geocoder']['#description'] = t("Enter a partial address or leave the field blank to use the visitor's current position as the origin.");
+    // This description is shown on the Geofield FIELD (not FILTER) form.
+    $form['geofield_proximity_geocoder']['#description'] = t("Enter a partial address or leave blank to use the visitor's current position as the origin.");
     /* Show/hide works on whole fields only, not on description only...
     $form['geofield_proximity_geocoder']['#description']['#states'] = array(
       'visible' => array(
@@ -95,11 +100,10 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
       }
     }
     if (empty($exposed_filter)) {
-      $origin = isset($views_plugin->options['value']) ? $views_plugin->options['value'] : $views_plugin->options['geofield_proximity_geocoder'];
+      $exposed_filter = isset($views_plugin->value) ? $views_plugin->value : $views_plugin->options['geofield_proximity_geocoder'];
     }
-    else {
-      $origin = isset($exposed_filter['origin']) && is_string($exposed_filter['origin']) ? trim($exposed_filter['origin']) : '';
-    }
+    $origin = isset($exposed_filter['origin']) && is_string($exposed_filter['origin']) ? trim($exposed_filter['origin']) : '';
+
     $origin_is_visitor = drupal_strlen($origin) <= 1 || in_array($origin, array('visitor', t('visitor'), 'me', t('me')));
 
     if ($origin_is_visitor) {
