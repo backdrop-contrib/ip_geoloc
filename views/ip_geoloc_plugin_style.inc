@@ -667,7 +667,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
         $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
 
-        if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
+        $location = new stdClass();
+
+        if (_ip_geoloc_plugin_style_extract_lat_lng($location, $row, $latitude, $longitude, $base)) {
           // Remaining row values go into the balloon.
           if (!empty($views_plugin_style->rendered_fields[$i])) {
             $location->balloon_text = $views_plugin_style->rendered_fields[$i][$group_field];
@@ -692,7 +694,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
         $loc_field_name = next($loc_field_names);
         $loc_field_alias = next($loc_field_aliases);
         if (empty($location)) {
-          if ($error_count++ == 0) {
+          if ($error_count++ === 0) {
             $first_error = $i;
           }
         }
@@ -710,7 +712,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
           $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
 
-          if ($location = _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $base)) {
+          $location = new stdClass();
+
+          if (_ip_geoloc_plugin_style_extract_lat_lng($location, $row, $latitude, $longitude, $base)) {
             // Remaining row values go into the balloon.
             if (!empty($views_plugin_style->rendered_fields[$i])) {
               $location->balloon_text = implode($separator, $views_plugin_style->rendered_fields[$i]);
@@ -826,6 +830,8 @@ function _ip_geoloc_plugin_style_get_base2($row, $field_name, $delta) {
  *
  * @todo This function is in flux and a bit messy at the moment....
  *
+ * @param array $location
+ *   The object to receive the extracted lat and lng
  * @param array $row
  *   View result row
  * @param string $latitude
@@ -836,7 +842,7 @@ function _ip_geoloc_plugin_style_get_base2($row, $field_name, $delta) {
  * @return object|NULL
  *   location -- @todo return array for consistency with Leaflet?
  */
-function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $loc_field_value = NULL) {
+function _ip_geoloc_plugin_style_extract_lat_lng(&$location, $row, $latitude, $longitude, $loc_field_value = NULL) {
 
   $delta = &drupal_static(__FUNCTION__);
   if (isset($delta)) {
@@ -855,7 +861,6 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $l
   if (!isset($delta) || !isset($row->{$field_name}) || $delta >= count($row->{$field_name})) {
     $delta = 0;
   }
-  $location = new stdClass();
 
   $base = _ip_geoloc_plugin_style_get_base2($row, $field_name, $delta);
   if (empty($base)) {
@@ -889,12 +894,30 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $l
         // Support WKT lines and polygons in Leaflet. Call requires:
         // $base['geo_type'] eg 'point' or 'linestring'
         // $base['geom'] eg. 'POINT(145 -37)' or 'LINESTRING(145 -37, 146, -38)'
-        if (!isset($base['wkt'])) {
-          // Until fixed in leaflet_process_geofield().
-          $base['wkt'] = $base['geom'];
+        $loc = leaflet_process_geofield(array($base));
+        $loc = reset($loc);
+        // For simple points: $loc['lat'], $loc['lon']
+        // Other: $loc['type'] = 'polygon', $loc['points'] = array(...)
+
+        if (!isset($location->type) && !isset($location->latitude)) {
+          // Normal behaviour
+          $location = (object)$loc;
         }
-        $location = leaflet_process_geofield(array($base));
-        $location = (object) reset($location);
+        elseif ($base['geotype'] == 'point') {
+          // Adding a point to a $location that already has a point via a
+          // previous column/field
+          $location->type = 'multipoint';
+          if (empty($location->points)) {
+            $location->points[] = array(
+              'type' => 'point',
+              'lat' => $location->latitude,
+              'lon' => $location->longitude
+            );
+            unset($location->latitude);
+            unset($location->longitude);
+          }
+          $location->points[] = $loc;
+        }
         // @todo get rid of this duality, use lat/lon throughout
         if (isset($location->lat)) {
           $location->latitude = $location->lat;
@@ -942,7 +965,7 @@ function _ip_geoloc_plugin_style_extract_lat_lng($row, $latitude, $longitude, $l
       $location->longitude = $row->{'field_' . $longitude}[$delta]['raw']['value'];
     }
   }
-  return isset($location->type) || (isset($location->latitude) && $location->latitude != '') ? $location : NULL;
+  return isset($location->type) || (isset($location->latitude) && $location->latitude != '');
 }
 
 /**
