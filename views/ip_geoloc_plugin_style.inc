@@ -661,12 +661,11 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
       $loc_field_name = reset($loc_field_names);
       $loc_field_alias = reset($loc_field_aliases);
+      $j = 0;
       $row = reset($set['rows']);
-
       foreach ($latitudes as $latitude) {
 
         $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
-
         $location = new stdClass();
 
         if (_ip_geoloc_plugin_style_extract_lat_lng($location, $row, $latitude, $longitude, $base)) {
@@ -688,16 +687,15 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
             $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
             $location->aggregation_value = reset($value);
           }
-          $locations[$i] = $location;
-          break;
+          $locations[$j ? "$i.$j" : $i] = $location;
+          $j++;
         }
+
         $loc_field_name = next($loc_field_names);
         $loc_field_alias = next($loc_field_aliases);
-        if (empty($location)) {
-          if ($error_count++ === 0) {
-            $first_error = $i;
-          }
-        }
+      }
+      if ($j === 0 && $error_count++ === 0) {
+        $first_error = $i;
       }
     }
     // Render as a record set.
@@ -708,10 +706,10 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
         $loc_field_name = reset($loc_field_names);
         $loc_field_alias = reset($loc_field_aliases);
+        $j = 0;
         foreach ($latitudes as $latitude) {
 
           $base = _ip_geoloc_plugin_style_get_base1($row, $loc_field_name, $loc_field_alias);
-
           $location = new stdClass();
 
           if (_ip_geoloc_plugin_style_extract_lat_lng($location, $row, $latitude, $longitude, $base)) {
@@ -727,22 +725,20 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
               $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
               $location->aggregation_value = reset($value);
             }
-            $locations[$i] = $location;
-            break;
+            $locations[$j ? "$i.$j" : $i] = $location;
+            $j++;
           }
           $loc_field_name = next($loc_field_names);
           $loc_field_alias = next($loc_field_aliases);
         }
-        if (empty($location)) {
-          if ($error_count++ == 0) {
-            $first_error = $i;
-          }
+        if ($j === 0 && $error_count++ === 0) {
+          $first_error = $i;
         }
       }
     }
   }
   global $user;
-  if ($error_count > 0 && ($user->uid === 1 || ($is_debug = ip_geoloc_debug_flag()))) {
+  if ($error_count > 0 && (($is_debug = ip_geoloc_debug_flag()) || $user->uid == 1)) {
     $row_count = count($view->result);
     $title = empty($views_plugin_style->display->display_options['title']) ? $view->get_human_name() . ' (' . $views_plugin_style->display->display_title . ')' : $views_plugin_style->display->display_options['title'];
     $t_args = array(
@@ -761,7 +757,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       $row_contents = t('First error row:') . '<br/>';
       foreach ((array) $view->result[$first_error] as $field_name => $value) {
         if ($field_name != '_field_data') {
-          $output = print_r(filter_xss_admin($value), TRUE);
+          $output = filter_xss_admin(print_r($value, TRUE));
           $output = drupal_substr($output, 0, 255) . (strlen($output) > 255 ? '...' : '');
           $row_contents .= "<strong>$field_name</strong> = $output<br/>";
         }
@@ -895,29 +891,8 @@ function _ip_geoloc_plugin_style_extract_lat_lng(&$location, $row, $latitude, $l
         // $base['geo_type'] eg 'point' or 'linestring'
         // $base['geom'] eg. 'POINT(145 -37)' or 'LINESTRING(145 -37, 146, -38)'
         $loc = leaflet_process_geofield(array($base));
-        $loc = reset($loc);
-        // For simple points: $loc['lat'], $loc['lon']
-        // Other: $loc['type'] = 'polygon', $loc['points'] = array(...)
+        $location = (object) reset($loc);
 
-        if (!isset($location->type) && !isset($location->latitude)) {
-          // Normal behaviour
-          $location = (object)$loc;
-        }
-        elseif ($base['geotype'] == 'point') {
-          // Adding a point to a $location that already has a point via a
-          // previous column/field
-          $location->type = 'multipoint';
-          if (empty($location->points)) {
-            $location->points[] = array(
-              'type' => 'point',
-              'lat' => $location->latitude,
-              'lon' => $location->longitude
-            );
-            unset($location->latitude);
-            unset($location->longitude);
-          }
-          $location->points[] = $loc;
-        }
         // @todo get rid of this duality, use lat/lon throughout
         if (isset($location->lat)) {
           $location->latitude = $location->lat;
