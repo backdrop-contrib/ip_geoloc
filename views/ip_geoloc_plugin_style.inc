@@ -40,7 +40,9 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   if (!is_array($selected_options)) {
     $selected_options = array($selected_options);
   }
+  $default_text = '';
   if (!empty($views_plugin_style->options['ip_geoloc_views_plugin_latitude_text'])) {
+    $default_text = $views_plugin_style->options['ip_geoloc_views_plugin_latitude_text'];
     $selected_options['---'] = '---';
   }
   $form['ip_geoloc_views_plugin_latitude'] = array(
@@ -53,7 +55,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $form['ip_geoloc_views_plugin_latitude_text'] = array(
     '#type' => 'textfield',
-    '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_latitude_text'],
+    '#default_value' => $default_text,
     '#states' => array(
       // Doesn't work on multi-selects, unless with patch from http://drupal.org/node/1149078
       //'visible' => array(
@@ -74,8 +76,10 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#markup' => $explanation1 . '<br/><strong>' . t('Special names') . ': </strong>' . "$explanation2<br/>$explanation3",
     '#weight' => 12,
   );
+  $default_text = '';
   $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
   if (!empty($views_plugin_style->options['ip_geoloc_views_plugin_longitude_text'])) {
+    $default_text = $views_plugin_style->options['ip_geoloc_views_plugin_longitude_text'];
     $selected_option = '---';
   }
   $form['ip_geoloc_views_plugin_longitude'] = array(
@@ -87,7 +91,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   );
   $form['ip_geoloc_views_plugin_longitude_text'] = array(
     '#type' => 'textfield',
-    '#default_value' => $views_plugin_style->options['ip_geoloc_views_plugin_longitude_text'],
+    '#default_value' => $default_text,
     '#states' => array(
       'visible' => array(
         ':input[name="style_options[ip_geoloc_views_plugin_longitude]"]' => array('value' => '---'),
