@@ -71,6 +71,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['map_reset_css_class'] = array('default' => 'R');
 
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
+    $options['disable_clustering_at_zoom'] = array('default' => '');
     $options['cluster_differentiator'] = array(
       'contains' => array(
         'cluster_differentiator_fields' => array('default' => ''),
@@ -402,6 +403,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#description' => $lib_markercluster ? $desc_a : "$desc_b.",
       '#weight' => 100,
     );
+    $form['disable_clustering_at_zoom'] = array(
+      '#title' => t('Disable clustering at zoom'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#default_value' => is_numeric($this->options['disable_clustering_at_zoom']) ? $this->options['disable_clustering_at_zoom'] : '',
+      '#description' => t('If you specify a zoom level, then there will be no clustering beyond that zoom level, regardless of the the radius specified.'),
+      '#weight' => 101,
+    );
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
     $intro = t('Superior marker clustering with <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
@@ -571,12 +580,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $max_zoom = $style_options['map_options']['maxzoom'];
     if ($max_zoom != '' && (!is_numeric($max_zoom) || $max_zoom < 0 || $max_zoom > $zoom_top)) {
-      form_error($form['map_options']['maxzoom'], t('Maximum zoom level for %map must be in range 0..@zoomtop', array(
+      form_error($form['map_options']['maxzoom'], t('"Maximum zoom level" for %map must be in range 0..@zoomtop', array(
         '%map' => $selected_map['label'], '@zoomtop' => $zoom_top)));
     }
     $zoom = $style_options['map_options']['zoom'];
     if ($zoom != '' && (!is_numeric($zoom) || $zoom < 0 || $zoom > $max_zoom)) {
-      form_error($form['map_options']['zoom'], t('Initial zoom level must be a non-negative number less than or equal to Maximum zoom level.'));
+      form_error($form['map_options']['zoom'], t('"Initial zoom level" must be a non-negative number not greater than "Maximum zoom level".'));
+    }
+    $disable_zoom = $style_options['disable_clustering_at_zoom'];
+    if ($disable_zoom != '' && (!is_numeric($disable_zoom) || $disable_zoom < 0 || $disable_zoom > $max_zoom)) {
+      form_error($form['disable_clustering_at_zoom'], t('"Disable clustering at zoom" level must be a positive number not greater than "Maximum zoom level".'));
     }
     if (isset($style_options['cluster_aggregation'])) {
       $cluster_aggregation = $style_options['cluster_aggregation'];
@@ -627,6 +640,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $reset_control = array('label' => empty($label) ? ' ' : $label);
     }
     $cluster_radius = $this->options['cluster_radius'];
+    $disable_clustering_at_zoom = $this->options['disable_clustering_at_zoom'];
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
     $cluster_aggregation_field = $this->options['cluster_aggregation']['aggregation_field'];
@@ -851,6 +865,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['maxClusterRadius'] = 0;
     if (!empty($cluster_radius)) {
       $map['settings']['maxClusterRadius'] = $cluster_radius;
+      $map['settings']['disableClusteringAtZoom'] = $disable_clustering_at_zoom;
       $map['settings']['addRegionToolTips'] = $cluster_tooltips;
       $map['settings']['hullHugFactor'] = $hull_hug_factor;
       $map['settings']['animateAddingMarkers'] = TRUE;
