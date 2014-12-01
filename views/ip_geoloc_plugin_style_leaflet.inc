@@ -472,11 +472,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $zoom_titles = $this->_get_zoom_titles($field_type, $fields[$region_field_name], $region_depth);
         foreach ($zoom_titles as $title) {
           $level++;
+          $default_value = isset($this->options['cluster_differentiator']['zoom_ranges'][$level])
+            ? $this->options['cluster_differentiator']['zoom_ranges'][$level] : '';
           $form['cluster_differentiator']['zoom_ranges'][$level] = array(
             '#type' => 'textfield',
             '#title' => filter_xss_admin($title),
             '#size' => 28,
-            '#default_value' => $this->options['cluster_differentiator']['zoom_ranges'][$level],
+            '#default_value' => $default_value,
             '#element_validate' => array('ip_geoloc_range_widget_validate'),
           );
         }
@@ -546,11 +548,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#suffix' => '</div>',
     );
     foreach (array('small', 'medium', 'large') as $size) {
+      $default_value = isset($this->options['cluster_aggregation']['ranges'][$size])
+        ? $this->options['cluster_aggregation']['ranges'][$size] : '';
       $form['cluster_aggregation']['ranges'][$size] = array(
         '#title' => "$size " . t('goes to'),
         '#type' => 'textfield',
         '#size' => 8,
-        '#default_value' => $this->options['cluster_aggregation']['ranges'][$size],
+        '#default_value' => $default_value,
       );
     }
 
