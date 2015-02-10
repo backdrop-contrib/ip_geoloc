@@ -476,8 +476,8 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
     '#disabled' => isset($location['fixed_address']) ? $location['fixed_address'] != 1 : !$is_address_editable,
     '#states' => array(
-      'enabled' => array('input[name="fixed_address"]' => array('value' => 1)),
-      'invisible' => array('input[name="fixed_address"]' => array('value' => 2)),
+      'enabled' => array('input[name="fixed_address"]' => array('value' => '1')),
+      'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
     ),
   );
   if ($has_find_visitior || $is_address_editable || $geo_vocabulary_id) {
