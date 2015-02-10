@@ -113,11 +113,12 @@ function ip_geoloc_admin_configure() {
     '#collapsed' => TRUE,
     '#title' => t('Data collection options'),
   );
+  $note = t('If you are using this module mainly for its mapping features, then you can safely untick this box.');
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ the free Google service to reverse-geocode HTML5 visitor locations to street addresses before storing these on the database'),
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', FALSE),
-    '#description' => t('If you are using this module mainly for its mapping features, then you can safely untick this box.<br/>Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server. <br/>This option requires <a href="!url">Clean URLs</a> to be enabled.', array(
+    '#description' => "<strong>$note</strong><br>" . t('Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server. <br/>This option requires <a href="!url">Clean URLs</a> to be enabled.', array(
       '!url' => url('admin/config/search/clean-urls'))
     ),
   );

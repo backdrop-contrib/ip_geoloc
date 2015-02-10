@@ -48,17 +48,23 @@ function ip_geoloc_block_configure($delta = '') {
       '#title' => t('Visitor location'),
       '#description' => t('This panel and the next offer a number of ways for the visitor to set the focus of maps created through this module.'),
     );
+    $note = t('As soon as the newly updated visitor location comes in, this is reflected on the page through an automatic refresh, unless this feature has been switched off under <a href="!url">Advanced options</a>.',
+      array('!url' => url('admin/config/system/ip_geoloc'))
+    );
     $form['address']['ip_geoloc_visitor_find'] = array(
       '#type' => 'checkbox',
       '#title' => t('Find visitor using HTML5 position detection'),
       '#default_value' => variable_get('ip_geoloc_visitor_find', TRUE),
-      '#description' => t('Displays a button for the visitor to locate themselves on the map. Takes advantage of WiFi and GPS technologies.'),
+      '#description' => t('Displays a button for the visitor to locate themselves on the map. Takes advantage of WiFi and GPS technologies.') . '<br/>' . $note,
     );
     $form['address']['ip_geoloc_visitor_reverse_geocode'] = array(
       '#type' => 'checkbox',
       '#title' => t('Reverse-geocode visitor location to a street address'),
       '#default_value' => variable_get('ip_geoloc_visitor_reverse_geocode', TRUE),
-      '#description' => t('Requires the above box <em>Find visitor ...</em> to be ticked also.'),
+      '#description' => t('This function is applied immeditaley after the HTML5 position is detected, as part of the same request.'),
+      '#states' => array(
+        'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
+      )),
     );
 
     $form['address']['ip_geoloc_visitor_find_label'] = array(
