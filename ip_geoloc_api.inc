@@ -359,14 +359,14 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  * This works via an asynchronous javascript call, so the result is not
  * immediately available on return from this function, hence the $menu_callback.
  * Upon page load the included javascript will, when ready, instigate an AJAX
- * call to the $menu_callback, which should invoke a function to retrieve the
- * lat/long and address values from the $_POST variable.
+ * call to the $menu_callback, which should invoke a function to pull the
+ * lat/long and address values out of the $_POST variable.
  * See ip_geoloc_current_location_ajax_recipient() for an example.
  *
  * Note: will result in a HTTP error 503 when the site is in maintenance mode,
  *       as in maintenance mode menu items are not available.
  */
-function ip_geoloc_get_current_location($menu_callback = 'js/ip_geoloc/current_location') {
+function ip_geoloc_get_current_location($menu_callback, $reverse_geocode = TRUE) {
   ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
@@ -377,6 +377,7 @@ function ip_geoloc_get_current_location($menu_callback = 'js/ip_geoloc/current_l
   $settings = array(
     'ip_geoloc_menu_callback' => $menu_callback,
     'ip_geoloc_refresh_page' => $refresh_page,
+    'ip_geoloc_reverse_geocode' => $reverse_geocode,
   );
   drupal_add_js($settings, 'setting');
 }

@@ -54,6 +54,13 @@ function ip_geoloc_block_configure($delta = '') {
       '#default_value' => variable_get('ip_geoloc_visitor_find', TRUE),
       '#description' => t('Displays a button for the visitor to locate themselves on the map. Takes advantage of WiFi and GPS technologies.'),
     );
+    $form['address']['ip_geoloc_visitor_reverse_geocode'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Reverse-geocode visitor location to a street address'),
+      '#default_value' => variable_get('ip_geoloc_visitor_reverse_geocode', TRUE),
+      '#description' => t('Requires the above box <em>Find visitor ...</em> to be ticked also.'),
+    );
+
     $form['address']['ip_geoloc_visitor_find_label'] = array(
       '#type' => 'textfield',
       '#title' => t('Label for find visitor button'),
@@ -520,43 +527,49 @@ function ip_geoloc_geocode($form, &$form_state) {
     // Note the use of 'input' rather than 'values'. We don't want to read
     // what WAS, but what IS typed now.
     $entered_address = check_plain($form_state['input']['street_address']);
+
     if (empty($entered_address)) {
       $location = array(
         'provider' => 'user',
         'ip_address' => ip_address(),
       );
     }
-    elseif (module_exists('geocoder')) {
-      // Use Google server-side API to retrieve lat/long from entered address.
-      $point = geocoder('google', $entered_address);
-
-      if (!$point) {
-        drupal_set_message(t('The address %address could not be geocoded to a location.', array('%address' => $entered_address)), 'warning');
-        return;
+    else {
+      if (module_exists('geocoder')) {
+        // Use Google server-side API to retrieve lat/long from entered address.
+        $point = geocoder('google', $entered_address);
       }
-      $location = array(
-        'provider' => 'user+google',
-        'is_updated' => TRUE,
-        'ip_address' => ip_address(),
-        'latitude' => $point->coords[1],
-        'longitude' => $point->coords[0],
-        'formatted_address' => $point->data['geocoder_formatted_address'],
-        'accuracy' => $point->data['geocoder_accuracy'],
-      );
-      // Flatten the point object into a straight location array.
-      foreach ($point->data['geocoder_address_components'] as $component) {
-        if (!empty($component->long_name)) {
-          $type = $component->types[0];
-          $location[$type] = $component->long_name;
-          if ($type == 'country' && !empty($component->short_name)) {
-            $location['country_code'] = $component->short_name;
+      else {
+        drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array('!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
+      }
+      if (empty($point)) {
+        drupal_set_message(t('The address %address could not be geocoded to a location.', array('%address' => $entered_address)), 'warning');
+      }
+      else {
+        $location = array(
+          'provider' => 'user+google',
+          'is_updated' => TRUE,
+          'ip_address' => ip_address(),
+          'latitude' => $point->coords[1],
+          'longitude' => $point->coords[0],
+          'formatted_address' => $point->data['geocoder_formatted_address'],
+          'accuracy' => $point->data['geocoder_accuracy'],
+        );
+        // Flatten the point object into a straight location array.
+        foreach ($point->data['geocoder_address_components'] as $component) {
+          if (!empty($component->long_name)) {
+            $type = $component->types[0];
+            $location[$type] = $component->long_name;
+            if ($type == 'country' && !empty($component->short_name)) {
+              $location['country_code'] = $component->short_name;
+            }
           }
         }
       }
     }
   }
   elseif (isset($form_state['values']['fixed_address']) && $form_state['values']['fixed_address'] == 2) {
-    // "Region" pressed
+    // "Region" pressed.
     $region = $form_state['values']['region'];
     if (!is_numeric($region)) {
       $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
@@ -572,9 +585,9 @@ function ip_geoloc_geocode($form, &$form_state) {
   }
   // If "Find me" was pressed, we set a flag indicating to ip_geoloc_init() that
   // we want to find the visitor's current position using their HTML5-based
-  // browser immediately, not waiting for the next cycle.
-  $reverse_geocode_now = variable_get('ip_geoloc_visitor_find', TRUE) && empty($form_state['values']['fixed_address']);
-  _ip_geoloc_set_session_value('reverse_geocode_now', (int) $reverse_geocode_now);
+  // browser immediately, not waiting for the next scheduled cycle.
+  $find_visitor = variable_get('ip_geoloc_visitor_find', TRUE) && empty($form_state['values']['fixed_address']);
+  _ip_geoloc_set_session_value('find_visitor', (int) $find_visitor);
 
   $location['fixed_address'] = isset($form_state['values']['fixed_address'])
     ? $form_state['values']['fixed_address']

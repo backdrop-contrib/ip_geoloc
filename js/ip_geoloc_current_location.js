@@ -4,7 +4,6 @@
     attach: function (context, settings) {
 
       var callback_url = Drupal.settings.basePath + settings.ip_geoloc_menu_callback;
-      var refresh_page = settings.ip_geoloc_refresh_page;
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
@@ -17,14 +16,20 @@
       }
 
       function getLocation(position) {
+        var refresh_page = settings.ip_geoloc_refresh_page;
+        var ip_geoloc_address = new Object;
+        ip_geoloc_address['latitude']  = position.coords.latitude;
+        ip_geoloc_address['longitude'] = position.coords.longitude;
+        ip_geoloc_address['accuracy']  = position.coords.accuracy;
+
+        if (!settings.ip_geoloc_reverse_geocode) {
+          // Pass lat/long back to Drupal without street address.
+          callback_php(callback_url, ip_geoloc_address, refresh_page);
+          return;
+        }
+        // Reverse-geocoding of lat/lon requested.
         var location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-
         new google.maps.Geocoder().geocode({'latLng': location }, function(response, status) {
-
-          var ip_geoloc_address = new Object;
-          ip_geoloc_address['latitude']  = position.coords.latitude;
-          ip_geoloc_address['longitude'] = position.coords.longitude;
-          ip_geoloc_address['accuracy']  = position.coords.accuracy;
 
           if (status === google.maps.GeocoderStatus.OK) {
             var google_address = response[0];

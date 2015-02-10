@@ -207,16 +207,18 @@ function ip_geoloc_init() {
 
   $location = ip_geoloc_get_visitor_location();
 
-  $force_reverse_geocode = _ip_geoloc_get_session_value('reverse_geocode_now');
+  // 'find_visitor' is set by the "Set my location" block.
+  $find_visitor = _ip_geoloc_get_session_value('find_visitor');
 
-  if ($force_reverse_geocode || !variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
-    // If HTML5 geocoding is not desired, reset 'position_pending_since' timer.
+  if ($find_visitor || !variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
+    // If scheduled position retrieval is not desired, reset the
+    // 'position_pending_since' timer.
     _ip_geoloc_set_session_value('position_pending_since', NULL);
   }
 
   $reverse_geocode_client_timeout = _ip_geoloc_reverse_geocode_timeout();
 
-  $use_google_to_reverse_geocode = $force_reverse_geocode || _ip_geoloc_check_location($location);
+  $scheduled_reverse_geocode = _ip_geoloc_check_location($location);
 
   if (empty($location['fixed_address']) && ($reverse_geocode_client_timeout || ip_geoloc_is_first_click())) {
     _ip_geoloc_reinit_location($location, $reverse_geocode_client_timeout);
@@ -225,21 +227,24 @@ function ip_geoloc_init() {
     _ip_geoloc_set_session_value('position_pending_since', NULL);
   }
   // 2nd condition is to avoid HTTP 503 error.
-  if ($use_google_to_reverse_geocode && !variable_get('maintenance_mode', 0)) {
-    // Insert some javascript to first retrieve the user's lat/long coords,
+  if (($find_visitor || $scheduled_reverse_geocode) && !variable_get('maintenance_mode', 0)) {
+
+    $reverse_geocode = $scheduled_reverse_geocode || ($find_visitor && variable_get('ip_geoloc_visitor_reverse_geocode', TRUE));
+
+    // Insert some javascript to first retrieve the user's lat/lon coords,
     // HTML5 style (requiring the user to accept a browser prompt) and then
-    // use Google Maps API to reverse-geocode these coords into a street
-    // address.
+    // optionally, when $reverse_geocode==TRUE, use Google Maps API to
+    // reverse-geocode the lat/lon into a street address.
     // This is all done via client-side calls, so the Drupal server
     // will not rake up any calls against its Google-imposed quotum, i.e. the
     // OVER_QUERY_LIMIT.
-    // When done the javascript calls us back on the supplied menu callback,
+    // When done, the javascript calls us back on the supplied menu callback,
     // '/js/ip_geoloc/current_location', which receives the geolocation data
-    // from the Google Maps call via the $_POST variable and stores it in
-    // the session.
+    // from the Google Maps call via the $_POST variable and stores it on the
+    // session.
     // Naturally all of this will only work if the browser is connected to
     // the internet and has javascript enabled.
-    ip_geoloc_get_current_location();
+    ip_geoloc_get_current_location('js/ip_geoloc/current_location', $reverse_geocode);
     _ip_geoloc_set_session_value('last_position_check', time());
   }
 }
@@ -340,11 +345,11 @@ function ip_geoloc_current_location_ajax_recipient() {
     $location['ip_address'] = NULL;
   }
 
-  if ($reverse_geocode_count = _ip_geoloc_get_session_value('reverse_geocode_now')) {
+  if ($find_visitor_count = _ip_geoloc_get_session_value('find_visitor')) {
     $location['is_updated'] = TRUE;
-    // Decrement 'reverse_geocode_now' counter as set by the "Set my location"
-    // block. Typically only 1 forced reverse geocode in succession.
-    _ip_geoloc_set_session_value('reverse_geocode_now', --$reverse_geocode_count);
+    // Decrement 'find_visitor' counter as set by the "Set my location"
+    // block. Typically only 1 forced HTML5 visitor find in succession.
+    _ip_geoloc_set_session_value('find_visitor', --$find_visitor_count);
   }
   _ip_geoloc_set_session_value('location', $location);
   // Got location so reset 'position_pending_since' timer.

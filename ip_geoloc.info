@@ -14,6 +14,7 @@ files[] = views/proximity_plugins/geofieldProximityGeocoderWithHTML5.inc
 dependencies[] = libraries
 ; The following aren't dependencies but are highly recommended to realise a
 ; rich feature set:
+;   Geocoder
 ;   Statistics (core)
 ;   Views
 ;   Views-PHP
