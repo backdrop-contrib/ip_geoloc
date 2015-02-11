@@ -465,7 +465,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       );
     }
     $form['region']['#states'] = array(
-      'visible' => array('input[name="fixed_address"]' => array('value' => 2)),
+      'visible' => array('input[name="fixed_address"]' => array('value' => '2')),
     );
   }
   $textarea = variable_get('ip_geoloc_address_element', 2);

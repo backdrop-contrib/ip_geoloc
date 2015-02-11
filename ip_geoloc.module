@@ -244,8 +244,13 @@ function ip_geoloc_init() {
     // session.
     // Naturally all of this will only work if the browser is connected to
     // the internet and has javascript enabled.
-    ip_geoloc_get_current_location('js/ip_geoloc/current_location', $reverse_geocode);
+    $menu_callback = variable_get('clean_url', 0) 
+      ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
+    ip_geoloc_get_current_location($menu_callback, $reverse_geocode);
+
     _ip_geoloc_set_session_value('last_position_check', time());
+    // Decrement 'find_visitor' counter as set by the "Set my location" block.
+    _ip_geoloc_set_session_value('find_visitor', --$find_visitor);
   }
 }
 
@@ -307,7 +312,6 @@ function _ip_geoloc_reinit_location(&$location, $reverse_geocode_client_timeout)
  * Receives latitude, longitude, accuracy and address via the global $_POST
  * variable from function getLocation() in ip_geoloc_current_location.js, which
  * posts these through an AJAX call.
- * @see ip_geoloc_current_location.js
  */
 function ip_geoloc_current_location_ajax_recipient() {
 
@@ -315,7 +319,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     // Device/browser does not support getCurrentPosition(), timeout or
     // Google reverse-geocode error.
     // watchdog() only works at full bootstrap, so store error here and handle
-    // in ip_geoloc_init() during next jclick/request.
+    // in ip_geoloc_init() during next click/request.
     $error = check_plain($_POST['error']);
     _ip_geoloc_set_session_value('error', $error);
     return $error;
@@ -345,12 +349,8 @@ function ip_geoloc_current_location_ajax_recipient() {
     $location['ip_address'] = NULL;
   }
 
-  if ($find_visitor_count = _ip_geoloc_get_session_value('find_visitor')) {
-    $location['is_updated'] = TRUE;
-    // Decrement 'find_visitor' counter as set by the "Set my location"
-    // block. Typically only 1 forced HTML5 visitor find in succession.
-    _ip_geoloc_set_session_value('find_visitor', --$find_visitor_count);
-  }
+  $location['is_updated'] = TRUE;
+
   _ip_geoloc_set_session_value('location', $location);
   // Got location so reset 'position_pending_since' timer.
   _ip_geoloc_set_session_value('position_pending_since', NULL);
