@@ -325,7 +325,6 @@ function ip_geoloc_current_location_ajax_recipient() {
   }
   // Flesh out $location with the returned street address components.
   $location = array(
-    'provider' => 'google',
     'ip_address' => ip_address(),
   );
   foreach ($_POST as $key => $value) {
@@ -335,7 +334,7 @@ function ip_geoloc_current_location_ajax_recipient() {
 
   $since = _ip_geoloc_get_session_value('position_pending_since');
   ip_geoloc_debug(t('IPGV&M: returned from position callback in %since s: !location', array(
-    '%since' => number_format(microtime(TRUE) - $since, 2),
+    '%since' => number_format(microtime(TRUE) - $since, 1),
     '!location' => ip_geoloc_pretty_print($location))));
 
   // If better_statistics module is enabled, we can backfill geolocation

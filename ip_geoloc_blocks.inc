@@ -5,8 +5,8 @@
  * Blocks available in IP Geolocation Views & Maps.
  */
 
-define('IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL', 'Find me');
-define('IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL', 'Move me');
+define('IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL', t('Find me'));
+define('IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL', t('Move me'));
 
 /**
  * Implements hook_block_info().
@@ -46,60 +46,79 @@ function ip_geoloc_block_configure($delta = '') {
     $form['address'] = array(
       '#type' => 'fieldset',
       '#title' => t('Visitor location'),
-      '#description' => t('This panel and the next offer a number of ways for the visitor to set the focus of maps created through this module.'),
+      '#description' => t('This panel offers various ways for the visitor to set the focus of maps created through this module.'),
     );
-    $note = t('As soon as the newly updated visitor location comes in, this is reflected on the page through an automatic refresh, unless this feature has been switched off under <a href="!url">Advanced options</a>.',
+    $note = t('As soon as the newly updated visitor location comes in, this is reflected on the page through an automatic refresh, unless the auto-refresh has been switched off under <a href="!url">Advanced options</a>.',
       array('!url' => url('admin/config/system/ip_geoloc'))
     );
-    $form['address']['ip_geoloc_visitor_find'] = array(
+    $form['address']['find_visitor'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#title' => t('"Find visitor" button'),
+    );
+    $form['address']['find_visitor']['ip_geoloc_visitor_find'] = array(
       '#type' => 'checkbox',
       '#title' => t('Find visitor using HTML5 position detection'),
       '#default_value' => variable_get('ip_geoloc_visitor_find', TRUE),
-      '#description' => t('Displays a button for the visitor to locate themselves on the map. Takes advantage of WiFi and GPS technologies.') . '<br/>' . $note,
+      '#description' => t("Displays a button for the visitor to put themselves on the map. If the confirm, this locates the visitor via their device's WiFi and GPS capabilities. This typcially adds 3 seconds of waiting time.")
+        . '<br/>' . $note,
     );
-    $form['address']['ip_geoloc_visitor_reverse_geocode'] = array(
+    $form['address']['find_visitor']['ip_geoloc_visitor_reverse_geocode'] = array(
       '#type' => 'checkbox',
       '#title' => t('Reverse-geocode visitor location to a street address'),
       '#default_value' => variable_get('ip_geoloc_visitor_reverse_geocode', TRUE),
-      '#description' => t('This function is applied immeditaley after the HTML5 position is detected, as part of the same request.'),
+      '#description' => t('If ticked, reverse-geocoding is executed immeditaley after the visitor position is detected, as part of the same request. It typically adds another 0.3 seconds of waiting time.'),
+      '#states' => array(
+        'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
+      )),
+    );
+    $form['address']['find_visitor']['ip_geoloc_visitor_find_label'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Label for "find visitor" button'),
+      '#size' => 30,
+      '#default_value' => filter_xss_admin(variable_get('ip_geoloc_visitor_find_label', '')),
+      '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
+        '%default' => IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL,
+      )),
       '#states' => array(
         'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
       )),
     );
 
-    $form['address']['ip_geoloc_visitor_find_label'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Label for find visitor button'),
-      '#size' => 30,
-      '#default_value' => filter_xss_admin(variable_get('ip_geoloc_visitor_find_label', '')),
-      '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
-        '%default' => t(IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL),
-      )),
-      '#states' => array(
-        'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
-      )),
+    $form['address']['edit'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Editable address'),
     );
-    $form['address']['ip_geoloc_visitor_address_editable'] = array(
+    $form['address']['edit']['ip_geoloc_visitor_address_editable'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Address editable'),
+      '#title' => t('Make address editable'),
       '#default_value' => variable_get('ip_geoloc_visitor_address_editable', TRUE),
-      '#description' => t('If ticked, the visitor may tweak and re-submit their reverse-geocoded address. It will be geocoded to latitude & longitude to become their new location.<br/>If not ticked, then this field simply displays the current reverse-geocoded address, without a submit button.'),
+      '#description' => t('If ticked, the visitor may enter a new address or tweak their reverse-geocoded address. It will be geocoded to latitude & longitude to become their new location.<br/>If not ticked, then this field simply displays the current reverse-geocoded address, without a submit button.'),
     );
-    $form['address']['ip_geoloc_visitor_address_label'] = array(
+    $form['address']['edit']['ip_geoloc_visitor_address_label'] = array(
       '#type' => 'textfield',
       '#title' => t('Label for editable address'),
       '#size' => 30,
       '#default_value' => filter_xss_admin(variable_get('ip_geoloc_visitor_address_label', '')),
       '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
-        '%default' => t(IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL),
+        '%default' => IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL,
       )),
       '#states' => array(
         'visible' => array('input[name="ip_geoloc_visitor_address_editable"]' => array('checked' => TRUE),
       )),
     );
-    $form['address']['ip_geoloc_address_element'] = array(
+
+    $form['address']['display'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('From element element to enter and display address'),
+    );
+    $form['address']['display']['ip_geoloc_address_element'] = array(
       '#type' => 'radios',
-      '#title' => t('UI element displayed to enter and show address'),
       '#options' => array(
         0 => t('text field'),
         1 => t('text area, 1 line'),
@@ -109,8 +128,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#default_value' => variable_get('ip_geoloc_address_element', 2),
       '#description' => t('Text areas may be resized by the visitor, text fields cannot.')
     );
-
-    $form['address']['ip_geoloc_visitor_address_default'] = array(
+    $form['address']['display']['ip_geoloc_visitor_address_default'] = array(
       '#type' => 'textarea',
       '#rows' => 2,
       '#title' => t('Default partial address'),
@@ -131,31 +149,31 @@ function ip_geoloc_block_configure($delta = '') {
     $description = t('The region selector allows the visitor to zoom in on a geographical area, such as a province or wine region, picked from a taxonomy vocabulary. The vocabulary must have a <a target="geofield" href="@url">Geofield</a> attached, providing the latitude & longitude of the centre of the region.', array(
       '@url' => url('http://drupal.org/project/geofield'),
     ));
-    $form['region'] = array(
+    $form['address']['region'] = array(
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#title' => t('Geographical region selector'),
       '#description' => $description,
     );
-    $form['region']['ip_geoloc_geo_vocabulary_id'] = array(
+    $form['address']['region']['ip_geoloc_geo_vocabulary_id'] = array(
       '#type' => 'select',
       '#options' => array(0 => '--' . t('None') . '--') + $vocabularies,
       '#default_value' => variable_get('ip_geoloc_geo_vocabulary_id', 0),
     );
     if (empty($vocabularies)) {
-      $form['region']['ip_geoloc_geo_vocabulary_id']['#description'] = t('You do not appear to have any vocabularies on which a Geofield is defined. You cannot enable this feature until you do.');
+      $form['address']['region']['ip_geoloc_geo_vocabulary_id']['#description'] = t('You do not appear to have any vocabularies on which a Geofield is defined. You cannot enable this feature until you do.');
     }
-    $form['region']['ip_geoloc_region_autocomplete'] = array(
+    $form['address']['region']['ip_geoloc_region_autocomplete'] = array(
       '#type' => 'radios',
-      '#title' => t('UI element displayed to select geographical region'),
+      '#title' => t('Form element to select geographical region'),
       '#options' => array(
         0 => t('Select (drop-down)'),
         1 => t('Autocomplete textfield'),
       ),
       '#default_value' => variable_get('ip_geoloc_region_autocomplete', 0),
     );
-    $form['region']['ip_geoloc_region_parent'] = array(
+    $form['address']['region']['ip_geoloc_region_parent'] = array(
       '#type' => 'select',
       '#title' => t('Center to use'),
       '#options' => array(
@@ -420,11 +438,11 @@ function ip_geoloc_geocode_address($form, &$form_state) {
 
   $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
   if ($has_find_visitior && $find_visitor_label != '<none>') {
-    $options[0] = $find_visitor_label ? filter_xss_admin($find_visitor_label) : t(IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL);
+    $options[0] = $find_visitor_label ? filter_xss_admin($find_visitor_label) : IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL;
   }
   $editable_address_label = variable_get('ip_geoloc_visitor_address_label', '');
   if ($is_address_editable && $editable_address_label != '<none>') {
-    $options[1] = $editable_address_label ? filter_xss_admin($editable_address_label) : t(IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL);
+    $options[1] = $editable_address_label ? filter_xss_admin($editable_address_label) : IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL;
   }
   if ($geo_vocabulary_id) {
     $options[2] = t('Region');
