@@ -5,6 +5,8 @@
 
       var callback_url = Drupal.settings.basePath + settings.ip_geoloc_menu_callback;
 
+      var startTime = (new Date()).getTime();
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
       }
@@ -16,11 +18,17 @@
       }
 
       function getLocation(position) {
+
         var refresh_page = settings.ip_geoloc_refresh_page;
         var ip_geoloc_address = new Object;
         ip_geoloc_address['latitude']  = position.coords.latitude;
         ip_geoloc_address['longitude'] = position.coords.longitude;
         ip_geoloc_address['accuracy']  = position.coords.accuracy;
+
+        if (window.console && window.console.log) { // Does not work on IE8
+          var elapsedTime = (new Date()).getTime() - startTime;
+          window.console.log(elapsedTime/1000 + ' s to locate visitor');
+        }
 
         if (!settings.ip_geoloc_reverse_geocode) {
           // Pass lat/long back to Drupal without street address.
@@ -28,6 +36,7 @@
           return;
         }
         // Reverse-geocoding of lat/lon requested.
+        startTime = (new Date()).getTime();
         var location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         new google.maps.Geocoder().geocode({'latLng': location }, function(response, status) {
 
@@ -50,6 +59,11 @@
             ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Geocoder address lookup failed with status code !code.', { '!code': status });
             refresh_page = false;
           }
+          if (window.console && window.console.log) {
+            var elapsedTime = (new Date()).getTime() - startTime;
+            window.console.log(elapsedTime/1000 + ' s to reverse-geocode to address');
+          }
+
           // Pass lat/long, accuracy and address back to Drupal
           callback_php(callback_url, ip_geoloc_address, refresh_page);
         });

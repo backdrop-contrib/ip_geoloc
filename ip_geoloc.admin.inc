@@ -170,7 +170,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_advanced']['ip_geoloc_page_refresh'] = array(
     '#type' => 'checkbox',
     '#title' => t('Auto-refresh the page as soon as an HTML5 location update has come in'),
-    '#default_value' => variable_get('ip_geoloc_page_refresh', FALSE),
+    '#default_value' => variable_get('ip_geoloc_page_refresh', TRUE),
     '#description' => t('The above tick box does not apply to administration pages.'),
   );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(

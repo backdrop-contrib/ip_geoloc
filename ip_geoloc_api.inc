@@ -373,7 +373,7 @@ function ip_geoloc_get_current_location($menu_callback, $reverse_geocode = TRUE)
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
-  $refresh_page = variable_get('ip_geoloc_page_refresh', FALSE) && !path_is_admin($_GET['q']);
+  $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
   $settings = array(
     'ip_geoloc_menu_callback' => $menu_callback,
     'ip_geoloc_refresh_page' => $refresh_page,

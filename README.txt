@@ -349,16 +349,19 @@ handler", if installed.
 Installation instructions for Nginx: http://drupal.org/node/1876418
 Installation instructions for Apache: 
 o download and enable https://drupal.org/project/js
-o find the .htacess in your document root, where your index.php lives
-o visit admin/config/system/js which displays a number of lines tailored for
+o find the .htacess in your document root -- that is where your index.php lives
+o visit admin/config/system/js; it displays a number of lines tailored for
   your server
 o copy those lines and paste them into .htaccess below the line
   "RewriteEngine on".
 
-IPGV&M will now perform its AJAX calls more efficiently. To switch this feature
-off, comment out the newly added lines from the .htaccess file (put a # in front
-of each line).
+IPGV&M will now perform its AJAX calls more efficiently. Results vary and 
+depend not so much on IPGV&M but on the complexity and speed of your site during
+initialisation. For an "average" site, expect a reduction of the page load time
+of about 0.3s for the "Find me" function of the "Set my location" block.
 
+To switch this feature off, comment out the newly added lines from the
+.htaccess file (put a # in front of each line).
 
 FOR SITE BUILDERS AND PROGRAMMERS
 =================================

@@ -210,9 +210,8 @@ function ip_geoloc_init() {
   // 'find_visitor' is set by the "Set my location" block.
   $find_visitor = _ip_geoloc_get_session_value('find_visitor');
 
-  if ($find_visitor || !variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
-    // If scheduled position retrieval is not desired, reset the
-    // 'position_pending_since' timer.
+  if ($find_visitor /*|| !variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)*/) {
+    // Reset the 'position_pending_since' timer.
     _ip_geoloc_set_session_value('position_pending_since', NULL);
   }
 
@@ -332,13 +331,16 @@ function ip_geoloc_current_location_ajax_recipient() {
   foreach ($_POST as $key => $value) {
     $location[check_plain($key)] = check_plain($value);
   }
-  ip_geoloc_debug(t('IPGV&M: received from position and reverse-geocoding callback: !location', array(
+  $location['provider'] = empty($location['country']) ? 'device' : 'device+google';
+
+  $since = _ip_geoloc_get_session_value('position_pending_since');
+  ip_geoloc_debug(t('IPGV&M: returned from position callback in %since s: !location', array(
+    '%since' => number_format(microtime(TRUE) - $since, 2),
     '!location' => ip_geoloc_pretty_print($location))));
 
   // If better_statistics module is enabled, we can backfill geolocation
   // information to {accesslog} entries occurred since the positioning was
   // requested.
-  $since = _ip_geoloc_get_session_value('position_pending_since');
   if ($since && module_exists('better_statistics')) {
     require_once 'plugins/ip_geoloc.statistics.inc';
     _ip_geoloc_statistics_backfill($since, $location);
@@ -466,7 +468,7 @@ function _ip_geoloc_check_location($location = NULL) {
   }
   if (!empty($location['fixed_address'])) {
     // If the  "Set my location" block was used to manually set an address or
-    // region, then cancell the scheduled update. If "Here" was checked, then
+    // region, then cancel the scheduled update. If "Move me" was checked, then
     // the scheduled update will occur, unless interval==0.
     ip_geoloc_debug(t('IPGV&M: location set manually, suspending scheduled service.'));
     _ip_geoloc_set_session_value('last_position_check', time() + $interval);
@@ -496,7 +498,7 @@ function _ip_geoloc_reverse_geocode_timeout() {
   $pending_since = _ip_geoloc_get_session_value('position_pending_since');
   if (isset($pending_since)) {
     $time_elapsed = microtime(TRUE) - $pending_since;
-    ip_geoloc_debug(t('IPGV&M: last reverse-geocode request was @sec s ago.', array('@sec' => number_format($time_elapsed, 1))));
+    //ip_geoloc_debug(t('IPGV&M: last reverse-geocode request was @sec s ago.', array('@sec' => number_format($time_elapsed, 1))));
     if ($time_elapsed > IP_GEOLOC_CALLBACK_TIMEOUT) {
       return $time_elapsed;
     }
