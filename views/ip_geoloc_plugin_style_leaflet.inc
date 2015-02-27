@@ -425,6 +425,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#suffix' => '</div>',
       '#weight' => 103,
     );
+    $region_field_names = NULL;
     if (isset($form_state['triggering_element'])) {
       // Get here when any form element with #ajax was changed/clicked causing
       // an auto-rebuild of the form.

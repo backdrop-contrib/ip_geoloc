@@ -115,7 +115,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-      '#title' => t('From element element to enter and display address'),
+      '#title' => t('Form element to enter and display address'),
     );
     $form['address']['display']['ip_geoloc_address_element'] = array(
       '#type' => 'radios',
