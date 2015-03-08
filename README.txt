@@ -231,7 +231,7 @@ Find on the web a marker icon set you like, eg http://mapicons.nicolasmollet.com
 Download and extract the icon image files, which must have extension .png,
 into a directory anywhere in your Drupal install, maybe
 sites/all/libraries/map_markers1.
-Now visit the the IPGV&M configuration page at admin/config/system/ip_geoloc.
+Now visit the IPGV&M configuration page at admin/config/system/ip_geoloc.
 Expand the "Alternative markers" fieldset.
 Enter the path to your markers directory and the dimensions of your markers.
 The marker set will now be available in your map settings, in particular in the

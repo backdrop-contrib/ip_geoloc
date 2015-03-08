@@ -62,7 +62,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'tag_css_class' => array('default' => 'tag-inside-marker'),
       ),
     );
-
+    $options['mini_map'] = array(
+      'contains' => array(
+        'on' => array('default' => 0),
+        'height' => array('default' => 100),
+        'width' => array('default' => 150),
+        'toggle' => array('default' => 1),
+        'scope_color' => array('default' => 'red'),
+      ),
+    );
     $options['full_screen'] = array('default' => 0);
     $options['scale_metric'] = array('default' => 0);
     $options['scale_imperial'] = array('default' => 0);
@@ -333,34 +341,98 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#description' => t('You may use most HTML tags.'),
     );
 
+    $form['mini_map'] = array(
+      '#title' => t('Mini-map inset'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => !empty($this->options['mini_map']['on']),
+      '#description' => t('A zoomed-out version of the main map as a mini-map inset in the bottom corner.'),
+      '#weight' => 91
+    );
+    $form['mini_map']['on'] = array(
+      '#title' => t('Enable mini-map inset'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->options['mini_map']['on']),
+    );
+    $form['mini_map']['height'] = array(
+      '#title' => t('Height of inset'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#field_suffix' => t('px'),
+      '#default_value' => $this->options['mini_map']['height'],
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
+    );
+    $form['mini_map']['width'] = array(
+      '#title' => t('Width of inset'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#field_suffix' => t('px'),
+      '#default_value' => $this->options['mini_map']['width'],
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
+    );
+    $form['mini_map']['toggle'] = array(
+      '#title' => t('Allow visitor to minimise inset'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->options['mini_map']['toggle']),
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
+    );
+    $form['mini_map']['scope_color'] = array(
+      '#title' => t('Scope rectangle color'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#default_value' => $this->options['mini_map']['scope_color'],
+      '#description' => t('<em>#rrggbb</em> or <a target="_colors" href="@url">color name</a>.', array(
+        '@url' => url('http://www.w3schools.com/html/html_colornames.asp'))),
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
+    );
+    $lib_minimap = libraries_get_path('leaflet-minimap');
+    if ($lib_minimap) {
+      $file_minimap = $lib_minimap . '/dist/Control.MiniMap.min.js';
+      if (!file_exists($file_minimap)) {
+        $form['mini_map']['#description'] .= '<br/>' . t('Error: <em>leaflet-minimap</em> library found, but %js_file is missing.', array('%js_file' => $file_minimap));
+      }
+    }
+    else {
+      $form['mini_map']['#description'] .= '<br/>' . t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-minimap</em>.', array(
+        '@js_lib' => 'https://github.com/Norkart/Leaflet-Minimap'));
+    }
+
     $form['full_screen'] = array(
       '#title' => t('Add a full-screen toggle to the map'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['full_screen'],
-      '#weight' => 95,
+      '#weight' => 94,
     );
     $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
     if ($lib_fullscreen) {
       $file_fullscreen = $lib_fullscreen . '/dist/Leaflet.fullscreen.min.js';
       if (!file_exists($file_fullscreen)) {
-        $form['full_screen']['#description'] = t('<em>leaflet-fullscreen</em> library found, but %js_file is missing.', array('%js_file' => $file_fullscreen));
+        $form['full_screen']['#description'] = t('Error: <em>leaflet-fullscreen</em> library found, but %js_file is missing.', array('%js_file' => $file_fullscreen));
       }
     }
     else {
-      $form['full_screen']['#description'] = t('Requires this <a href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
+      $form['full_screen']['#description'] = t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
         '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
     }
 
-    $form['scale_metric'] = array(
-      '#title' => t('Add a metric (km) scale'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['scale_metric'],
-      '#weight' => 96,
-    );
     $form['scale_imperial'] = array(
       '#title' => t('Add an imperial (miles) scale'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['scale_imperial'],
+      '#weight' => 96,
+    );
+    $form['scale_metric'] = array(
+      '#title' => t('Add a metric (km) scale'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['scale_metric'],
       '#weight' => 96,
     );
     $form['zoom_indicator'] = array(
@@ -408,7 +480,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'textfield',
       '#size' => 4,
       '#default_value' => is_numeric($this->options['disable_clustering_at_zoom']) ? $this->options['disable_clustering_at_zoom'] : '',
-      '#description' => t('If you specify a zoom level, then there will be no clustering beyond that zoom level, regardless of the the radius specified.'),
+      '#description' => t('If you specify a zoom level, then there will be no clustering beyond that zoom level, regardless of the radius specified.'),
       '#weight' => 101,
     );
     // Add wrapper for cluster differentiator drop-down and zoom level
@@ -631,6 +703,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $visitor_marker_color = $this->options['visitor_marker']['visitor_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
     $has_full_screen = !empty($this->options['full_screen']);
+    $has_mini_map = !empty($this->options['mini_map']['on']);
     $zoom_indicator = empty($this->options['zoom_indicator']) ? FALSE : TRUE; /*array('position' => 'topleft')*/;
     $scale_control = FALSE;
     if (!empty($this->options['scale_metric']) || !empty($this->options['scale_imperial'])) {
@@ -907,15 +980,41 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
 
     if ($has_full_screen) {
-      // Load the Leaflet/Leaflet.fullscreen library, containing JS and CSS.
+      // Load the 'leaflet-fullscreen' library, containing JS and CSS.
       if (drupal_add_library('ip_geoloc', 'leaflet-fullscreen')) {
         $map['settings']['fullscreenControl'] = array('position' => 'topright');
+      }
+    }
+    if ($has_mini_map) {
+      // Load the 'leaflet-minimap' library, containing JS and CSS.
+      // See https://github.com/Norkart/Leaflet-MiniMap for more settings.
+      if (drupal_add_library('ip_geoloc', 'leaflet-minimap')) {
+        $map['settings']['miniMap'] = array(
+          'autoToggleDisplay' => TRUE,
+          'height' => $this->options['mini_map']['height'],
+          'width' => $this->options['mini_map']['width'],
+          'position' => 'bottomright', // 'bottomright'
+          'toggleDisplay' => !empty($this->options['mini_map']['toggle']),
+          'zoomAnimation' => FALSE,
+          'zoomLevelOffset' => -4, // -5
+          // Rectangle showing the current map outline on the inset.
+          'aimingRectOptions' => array(
+            'color' => $this->options['mini_map']['scope_color'],
+            'weight' => 3,
+            'fillOpacity' => 0.1,
+          ),
+          // The "shadow" rectangle that shows the new map outline.
+          'shadowRectOptions' => array(
+            'color' => '#888',
+            'weight' => 1
+          ),
+        );
       }
     }
     $map['settings']['zoomIndicator'] = $zoom_indicator;
     $map['settings']['resetControl'] = $reset_control;
     $map['settings']['scaleControl'] = $scale_control;
-    if ($zoom_indicator || $reset_control || $scale_control) {
+    if ($has_mini_map || $zoom_indicator || $reset_control || $scale_control) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js', array('weight' => 1));
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_controls.css');
     }

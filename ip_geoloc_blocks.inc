@@ -61,7 +61,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'checkbox',
       '#title' => t('Find visitor using HTML5 position detection'),
       '#default_value' => variable_get('ip_geoloc_visitor_find', TRUE),
-      '#description' => t("Displays a button for the visitor to put themselves on the map. If the confirm, this locates the visitor via their device's WiFi and GPS capabilities. This typcially adds 3 seconds of waiting time.")
+      '#description' => t("Displays a button for the visitor to put themselves on the map. If they confirm the browser prompt, this locates the visitor via their device's WiFi and GPS capabilities. This typcially adds 3 seconds of waiting time.")
         . '<br/>' . $note,
     );
     $form['address']['find_visitor']['ip_geoloc_visitor_reverse_geocode'] = array(

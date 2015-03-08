@@ -20,6 +20,20 @@
           if (mapSettings.scaleControl) {
             map.addControl(L.control.scale(mapSettings.scaleControl));
           }
+          if (mapSettings.miniMap) {
+            for (var key in map._layers) {
+              var layer = map._layers[key];
+              if (layer instanceof L.TileLayer) {
+                // Copy the (first) main map layer for use in a mini-map inset.
+                var tileLayer = (layer._type === 'quad')
+                  // See leaflet_more_maps/leaflet_more_maps.js
+                  ? L.tileLayerQuad(layer._url, layer.options)
+                  : L.tileLayer(layer._url, layer.options);
+                map.addControl(L.control.minimap(tileLayer, mapSettings.miniMap));
+                break;
+              }
+            }
+          }
         }
       }
     }
@@ -77,3 +91,8 @@ L.Control.ZoomIndicator = L.Control.extend({
 L.control.zoomIndicator = function(options) {
   return new L.Control.ZoomIndicator(options);
 };
+
+L.extend(L.Control.MiniMap.prototype, {
+	hideText: Drupal.t('Hide this inset'),
+	showText: Drupal.t('Show map inset'),
+});

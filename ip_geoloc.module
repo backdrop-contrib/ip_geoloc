@@ -82,6 +82,29 @@ function ip_geoloc_library() {
     ),
   );
 
+  $path_minimap = libraries_get_path('leaflet-minimap') . '/dist';
+  $libraries['leaflet-minimap'] = array(
+    'title' => 'Leaflet MiniMap',
+    'version' => '2.1.0',
+    'js' => array(
+      array(
+        'type' => 'file',
+        'data' => "$path_minimap/Control.MiniMap.min.js",
+        'group' => JS_LIBRARY,
+        'weight' => 2,
+        'preprocess' => FALSE,
+      ),
+    ),
+    'css' => array(
+      "$path_minimap/Control.MiniMap.min.css" => array(
+        'type' => 'file',
+        'media' => 'screen',
+        'group' => CSS_DEFAULT,
+        'weight' => 2,
+      ),
+    ),
+  );
+
   foreach (ip_geoloc_get_font_icon_libs() as $css_file) {
     $css_file = trim($css_file);
     if (!empty($css_file)) {
