@@ -251,6 +251,8 @@ function ip_geoloc_init() {
   // 2nd condition is to avoid HTTP 503 error.
   if (($find_visitor || $scheduled_reverse_geocode) && !variable_get('maintenance_mode', 0)) {
 
+    drupal_set_message(t('Locating you now. Please wait a few seconds...'));
+
     $reverse_geocode = $scheduled_reverse_geocode || ($find_visitor && variable_get('ip_geoloc_visitor_reverse_geocode', TRUE));
 
     // Insert some javascript to first retrieve the user's lat/lon coords,
