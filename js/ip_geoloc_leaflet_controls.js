@@ -92,7 +92,9 @@ L.control.zoomIndicator = function(options) {
   return new L.Control.ZoomIndicator(options);
 };
 
-L.extend(L.Control.MiniMap.prototype, {
-	hideText: Drupal.t('Hide this inset'),
-	showText: Drupal.t('Show map inset'),
-});
+if (L.Control.MiniMap) {
+  L.extend(L.Control.MiniMap.prototype, {
+    hideText: Drupal.t('Hide this inset'),
+    showText: Drupal.t('Show map inset'),
+  });
+}
