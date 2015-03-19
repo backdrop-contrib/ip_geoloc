@@ -4,13 +4,16 @@
 
 (function ($) {
 
-  Drupal.behaviors.leafletAddMapReset = {
+  Drupal.behaviors.leafletAddControls = {
     attach: function (context, settings) {
+
       var maps = settings.leaflet;
       for (var i = 0; i < maps.length; i++) {
         var map = maps[i].lMap;
-        var mapSettings = maps[i].map.settings;
-        if (map && mapSettings) {
+        // Use a flag on the map object to prevent controls being added multiple
+        // times. This can happen in AJAX contexts.
+        if (map && !map._controlsInitialised && maps[i].map.settings) {
+          var mapSettings = maps[i].map.settings;
           if (mapSettings.zoomIndicator) {
             map.addControl(L.control.zoomIndicator(mapSettings.zoomIndicator));
           }
@@ -34,6 +37,7 @@
               }
             }
           }
+          map._controlsInitialised = true;
         }
       }
     }

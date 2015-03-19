@@ -363,6 +363,17 @@ of about 0.3s for the "Find me" function of the "Set my location" block.
 To switch this feature off, comment out the newly added lines from the
 .htaccess file (put a # in front of each line).
 
+CONTEXT SESSION MODULE
+======================
+You can switch context (as in the https://www.drupal.org/project/context module)
+based on any location component, if you also enable
+https://www.drupal.org/project/context_session.
+
+Example: "location.locality=Melbourne"
+
+context_session does not support the Session Cache API module, so the $_SESSION
+variable will be used internally for storage.
+
 FOR SITE BUILDERS AND PROGRAMMERS
 =================================
 IPGV&M stores location data for the current visitor in their session and makes

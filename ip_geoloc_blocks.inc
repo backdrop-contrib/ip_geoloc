@@ -6,7 +6,7 @@
  */
 
 define('IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL', t('Find me'));
-define('IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL', t('Move me'));
+define('IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL', t('Move to'));
 
 /**
  * Implements hook_block_info().
@@ -436,10 +436,6 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
 
-  $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
-  if ($has_find_visitior && $find_visitor_label != '<none>') {
-    $options[0] = $find_visitor_label ? filter_xss_admin($find_visitor_label) : IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL;
-  }
   $editable_address_label = variable_get('ip_geoloc_visitor_address_label', '');
   if ($is_address_editable && $editable_address_label != '<none>') {
     $options[1] = $editable_address_label ? filter_xss_admin($editable_address_label) : IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL;
@@ -498,15 +494,56 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
     ),
   );
-  if ($has_find_visitior || $is_address_editable || $geo_vocabulary_id) {
-    $form['submit'] = array(
+  if ($is_address_editable || $geo_vocabulary_id) {
+    $form['submit_address'] = array(
       '#type' => 'submit',
       '#value' => t('Go'),
       '#submit' => array('ip_geoloc_geocode'),
     );
   }
+  if ($has_find_visitior) {
+    $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
+    if ($find_visitor_label != '<none>') {
+      $find_visitor_label = $find_visitor_label ? filter_xss_admin($find_visitor_label) : IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL;
+    }
+    $form['find'] = array(
+      '#type' => 'button',
+      '#value' => $find_visitor_label,
+      '#ajax' => array(
+        'callback' => '_ip_geoloc_process_find_me_ajax',
+      ),
+    );
+  }
   $form['#attributes']['class'][] = 'ip-geoloc-address';
   $form['#attached']['css'][] = drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_all.css';
+  return $form;
+}
+
+function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
+  global $base_url;
+
+  _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
+
+  // Cannot load JS here. Will result in error relating to Google code:
+  // "Failed to execute 'write' on 'Document': It isn't possible to write into
+  // a document from an asynchronously-loaded external script unless it is
+  // explicitly opened."
+  // So the below JS is conditionally loaed in hook_init().
+  // drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
+
+  $form['#attached']['js'][] = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js';
+
+  $menu_callback = variable_get('clean_url', 0)
+    ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
+  $reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
+  $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
+  $settings = array(
+    'ip_geoloc_menu_callback' => "$base_url/$menu_callback",
+    'ip_geoloc_reverse_geocode' => $reverse_geocode,
+    'ip_geoloc_refresh_page' => $refresh_page,
+  );
+  drupal_add_js($settings, 'setting');
+
   return $form;
 }
 
@@ -530,7 +567,7 @@ function ip_geoloc_lookup($form, &$form_state) {
 }
 
 /**
- * Geocode the submitted street address (if any), using the Geocoder API.
+ * Form submit handler to find visitor or geocode the address they entered.
  *
  * Stores the geocoded lat/long and address info on the session.
  *
@@ -610,8 +647,8 @@ function ip_geoloc_geocode($form, &$form_state) {
   // If "Find me" was pressed, we set a flag indicating to ip_geoloc_init() that
   // we want to find the visitor's current position using their HTML5-based
   // browser immediately, not waiting for the next scheduled cycle.
-  $find_visitor = variable_get('ip_geoloc_visitor_find', TRUE) && empty($form_state['values']['fixed_address']);
-  _ip_geoloc_set_session_value('find_visitor', (int) $find_visitor);
+  //$find_visitor = variable_get('ip_geoloc_visitor_find', TRUE) && empty($form_state['values']['fixed_address']);
+  //_ip_geoloc_set_session_value('find_visitor', (int) $find_visitor);
 
   $location['fixed_address'] = isset($form_state['values']['fixed_address'])
     ? $form_state['values']['fixed_address']

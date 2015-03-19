@@ -22,6 +22,10 @@
  */
 function _ip_geoloc_set_session_value($name, $value = NULL) {
 
+  if (!variable_get('ip_geoloc_allow_session_storage', TRUE)) {
+    return NULL;
+  }
+
   if (module_exists('context_session') && $name == 'location') {
     _ip_geoloc_set_location_on_context_session($value);
   }

@@ -113,6 +113,14 @@ function ip_geoloc_admin_configure() {
     '#collapsed' => TRUE,
     '#title' => t('Data collection options'),
   );
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_allow_session_storage'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow session storage'),
+    '#default_value' => variable_get('ip_geoloc_allow_session_storage', TRUE),
+    '#description' => t('The current visitor\'s location data is temporarily stored in either the $_SESSION variable or via the module <a target="_project" href="@url_project">Session Cache API</a>, if enabled. <br/>To disable both of these session storage functions, untick this box. However unticking this box means you will lose all functions regarding Wifi/GPS-based visitor geolocation. Location of the visitor based on IP address through either the <strong>Smart IP</strong> or <strong>GeoIP</strong> modules will continue to operate normally, if enabled.', array(
+      '@url_project' => url('http://drupal.org/project/session_cache'),
+    )),
+  );
   $note = t('If you are using this module mainly for its mapping features, then you can safely untick this box.');
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
@@ -121,6 +129,9 @@ function ip_geoloc_admin_configure() {
     '#description' => "<strong>$note</strong><br>" . t('Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server. <br/>This option requires <a href="!url">Clean URLs</a> to be enabled.', array(
       '!url' => url('admin/config/search/clean-urls'))
     ),
+    '#states' => array(
+      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
+    ),
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_include_pages'] = array(
     '#type' => 'textarea',
@@ -128,6 +139,9 @@ function ip_geoloc_admin_configure() {
     '#title' => t("Pages on which the visitor's HTML5 location may be sampled and reverse-geocoded to a street address"),
     '#default_value' => variable_get('ip_geoloc_include_pages', '*'),
     '#description' => t("Enter relative paths, one per line. Where they exist use the URL aliases rather than the node numbers. <strong>&lt;front&gt;</strong> means the front page.<br/>The asterisk <em>*</em> is the wildcard character, i.e. <em>recipes/mains*</em> denotes all pages that have a path starting with <em>recipes/mains</em><br/>The asterisk by itself means any page on your site."),
+    '#states' => array(
+      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
+    ),
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_exclude_pages'] = array(
     '#type' => 'textarea',
@@ -135,6 +149,9 @@ function ip_geoloc_admin_configure() {
     '#title' => t('Exceptions: pages excluded from the set of pages specified above'),
     '#default_value' => variable_get('ip_geoloc_exclude_pages', IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS),
     '#description' => t('As above, one path specification per line.'),
+    '#states' => array(
+      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
+    ),
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_roles_to_reverse_geocode'] = array(
     '#type' => 'checkboxes',
@@ -142,6 +159,9 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID)),
     '#options' => user_roles(),
     '#description' => t('Selected roles are effective only when the check box on the data collection option above is also ticked.'),
+    '#states' => array(
+      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
+    ),
   );
 
   $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
@@ -151,14 +171,20 @@ function ip_geoloc_admin_configure() {
     '#description' => t('This refers to situations where the lat/long coords could not be established. An example is the user declining to share their location. Another is when the Google Maps API reverse-geocode function fails or is not enabled through the tick box at the top of this section.<br/>Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
       '@geoip' => url('http://drupal.org/project/geoip'),
     )),
+    '#states' => array(
+      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
+    ),
   );
   $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
     '#type' => 'textfield',
     '#size' => 10,
     '#field_suffix' => t('seconds'),
-    '#title' => t('Minimum elapsed time before geolocation data for the same user will be collected again.'),
+    '#title' => t('Minimum elapsed time before geolocation data for the same user will be collected again'),
     '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
     '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to stop repeat location collection.'),
+    '#states' => array(
+      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
+    ),
   );
 
   $form['ip_geoloc_advanced'] = array(

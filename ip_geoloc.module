@@ -230,17 +230,7 @@ function ip_geoloc_init() {
 
   $location = ip_geoloc_get_visitor_location();
 
-  // 'find_visitor' is set by the "Set my location" block.
-  $find_visitor = _ip_geoloc_get_session_value('find_visitor');
-
-  if ($find_visitor /*|| !variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)*/) {
-    // Reset the 'position_pending_since' timer.
-    _ip_geoloc_set_session_value('position_pending_since', NULL);
-  }
-
   $reverse_geocode_client_timeout = _ip_geoloc_reverse_geocode_timeout();
-
-  $scheduled_reverse_geocode = _ip_geoloc_check_location($location);
 
   if (empty($location['fixed_address']) && ($reverse_geocode_client_timeout || ip_geoloc_is_first_click())) {
     _ip_geoloc_reinit_location($location, $reverse_geocode_client_timeout);
@@ -248,12 +238,14 @@ function ip_geoloc_init() {
     _ip_geoloc_set_session_value('location', $location);
     _ip_geoloc_set_session_value('position_pending_since', NULL);
   }
+
+  if (variable_get('ip_geoloc_visitor_find', TRUE)) {
+    drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
+  }
+
+  $scheduled_reverse_geocode = _ip_geoloc_check_location($location);
   // 2nd condition is to avoid HTTP 503 error.
-  if (($find_visitor || $scheduled_reverse_geocode) && !variable_get('maintenance_mode', 0)) {
-
-    drupal_set_message(t('Locating you now. Please wait a few seconds...'));
-
-    $reverse_geocode = $scheduled_reverse_geocode || ($find_visitor && variable_get('ip_geoloc_visitor_reverse_geocode', TRUE));
+  if ($scheduled_reverse_geocode && !variable_get('maintenance_mode', 0)) {
 
     // Insert some javascript to first retrieve the user's lat/lon coords,
     // HTML5 style (requiring the user to accept a browser prompt) and then
@@ -268,13 +260,15 @@ function ip_geoloc_init() {
     // session.
     // Naturally all of this will only work if the browser is connected to
     // the internet and has javascript enabled.
+    // See also: _ip_geoloc_process_find_me_ajax().
     $menu_callback = variable_get('clean_url', 0) 
       ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
-    ip_geoloc_get_current_location($menu_callback, $reverse_geocode);
+    $reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
+    $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
+
+    ip_geoloc_get_current_location($menu_callback, $reverse_geocode, $refresh_page);
 
     _ip_geoloc_set_session_value('last_position_check', time());
-    // Decrement 'find_visitor' counter as set by the "Set my location" block.
-    _ip_geoloc_set_session_value('find_visitor', --$find_visitor);
   }
 }
 

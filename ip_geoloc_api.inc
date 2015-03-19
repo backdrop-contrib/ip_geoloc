@@ -366,14 +366,13 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  * Note: will result in a HTTP error 503 when the site is in maintenance mode,
  *       as in maintenance mode menu items are not available.
  */
-function ip_geoloc_get_current_location($menu_callback, $reverse_geocode = TRUE) {
+function ip_geoloc_get_current_location($menu_callback, $reverse_geocode = TRUE, $refresh_page = TRUE) {
   ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
-  $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
   $settings = array(
     'ip_geoloc_menu_callback' => $menu_callback,
     'ip_geoloc_refresh_page' => $refresh_page,
