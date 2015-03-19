@@ -98,11 +98,12 @@ function ip_geoloc_block_configure($delta = '') {
       '#default_value' => variable_get('ip_geoloc_visitor_address_editable', TRUE),
       '#description' => t('If ticked, the visitor may enter a new address or tweak their reverse-geocoded address. It will be geocoded to latitude & longitude to become their new location.<br/>If not ticked, then this field simply displays the current reverse-geocoded address, without a submit button.'),
     );
+    $label = variable_get('ip_geoloc_visitor_address_label', '');
     $form['address']['edit']['ip_geoloc_visitor_address_label'] = array(
       '#type' => 'textfield',
       '#title' => t('Label for editable address'),
       '#size' => 30,
-      '#default_value' => filter_xss_admin(variable_get('ip_geoloc_visitor_address_label', '')),
+      '#default_value' => $label == '<none>' ? $label : filter_xss_admin($label),
       '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
         '%default' => IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL,
       )),
@@ -491,7 +492,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     '#type' => $textarea ? 'textarea' : 'textfield',
     '#rows' => $textarea,
     '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
-    '#disabled' => isset($location['fixed_address']) ? $location['fixed_address'] != 1 : !$is_address_editable,
+    '#disabled' => isset($location['fixed_address']) ? $location['fixed_address'] > 1 : !$is_address_editable,
     '#states' => array(
       'enabled' => array('input[name="fixed_address"]' => array('value' => '1')),
       'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
@@ -518,12 +519,13 @@ function ip_geoloc_geocode_address($form, &$form_state) {
         'callback' => '_ip_geoloc_process_find_me_ajax',
         'wrapper' => 'set-location-wrapper',
         // 'fade', 'none' or 'slide'.
-        'effect' => 'fade',
+        'effect' => 'none',
         // 'fast', 'slow' or number of millisec.
-        'speed' => 'slow',
+        'speed' => '0',
+        // Example 'throbber' with t('Working...')
         'progress' => array(
-          'type' => NULL, // 'throbber',
-          'message' => NULL, // t('Working...'),
+          'type' => NULL,
+          'message' => NULL,
         ),
       ),
     );
@@ -535,7 +537,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
 
 /**
  * Submit handler for "Find me" button on the "Set my location block".
- * 
+ *
  * @param array $form
  * @param array $form_state
  *
@@ -624,7 +626,7 @@ function ip_geoloc_geocode($form, &$form_state) {
 
   $is_geocode_address = isset($form_state['values']['fixed_address'])
     ? $form_state['values']['fixed_address'] == 1
-    : variable_get('ip_geoloc_visitor_address_editable', TRUE) && !variable_get('ip_geoloc_visitor_find', TRUE);
+    : variable_get('ip_geoloc_visitor_address_editable', TRUE);
 
   if ($is_geocode_address) {
     // Note the use of 'input' rather than 'values'. We don't want to read
