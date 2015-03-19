@@ -443,6 +443,9 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   if ($geo_vocabulary_id) {
     $options[2] = t('Region');
   }
+
+  $form['#attributes']['id'] = 'set-location-wrapper';
+
   if (!empty($options)) {
     $form['fixed_address'] = array(
       '#type' => 'radios',
@@ -507,10 +510,21 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       $find_visitor_label = $find_visitor_label ? filter_xss_admin($find_visitor_label) : IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL;
     }
     $form['find'] = array(
+      // Use 'submit' to go with '#submit'. For #ajax 'buttion' may be used too.
       '#type' => 'button',
       '#value' => $find_visitor_label,
+      '#submit' => array('_ip_geoloc_process_find_me_submit'),
       '#ajax' => array(
         'callback' => '_ip_geoloc_process_find_me_ajax',
+        'wrapper' => 'set-location-wrapper',
+        // 'fade', 'none' or 'slide'.
+        'effect' => 'fade',
+        // 'fast', 'slow' or number of millisec.
+        'speed' => 'slow',
+        'progress' => array(
+          'type' => NULL, // 'throbber',
+          'message' => NULL, // t('Working...'),
+        ),
       ),
     );
   }
@@ -519,8 +533,32 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Submit handler for "Find me" button on the "Set my location block".
+ * 
+ * @param array $form
+ * @param array $form_state
+ *
+function _ip_geoloc_process_find_me_submit($form, &$form_state) {
+  $form_state['rebuild'] = TRUE;
+}
+ */
+
+/**
+ * AJAX form submit handler for the "Set my location" block.
+ *
+ * When this gets called the $form has already been rebuilt. What we do
+ * here is return to core some JS and the part of the form that needs to be
+ * updated.
+ *
+ * @global string $base_url
+ * @param array $form
+ * @param array $form_state
+ * @return array, the updated $form
+ */
 function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   global $base_url;
+  $path = drupal_get_path('module', 'ip_geoloc');
 
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
@@ -528,13 +566,14 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   // "Failed to execute 'write' on 'Document': It isn't possible to write into
   // a document from an asynchronously-loaded external script unless it is
   // explicitly opened."
-  // So the below JS is conditionally loaed in hook_init().
-  // drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
+  // So the below JS is conditionally loaded in hook_init().
+  //drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
 
-  $form['#attached']['js'][] = drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js';
+  // Either of the two lines below works.
+  drupal_add_js("$path/js/ip_geoloc_current_location.js");
+  //$form['#attached']['js'][] =  "$path/js/ip_geoloc_current_location.js";
 
-  $menu_callback = variable_get('clean_url', 0)
-    ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
+  $menu_callback = variable_get('clean_url', 0) ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
   $reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
   $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
   $settings = array(
@@ -543,7 +582,10 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
     'ip_geoloc_refresh_page' => $refresh_page,
   );
   drupal_add_js($settings, 'setting');
-
+  $form['alert'] = array(
+    '#type' => 'markup',
+    '#markup' => t('Locating you now...'),
+  );
   return $form;
 }
 
@@ -580,11 +622,11 @@ function ip_geoloc_geocode($form, &$form_state) {
 
   $location = _ip_geoloc_get_session_value('location');
 
-  $geocode_address = isset($form_state['values']['fixed_address'])
+  $is_geocode_address = isset($form_state['values']['fixed_address'])
     ? $form_state['values']['fixed_address'] == 1
     : variable_get('ip_geoloc_visitor_address_editable', TRUE) && !variable_get('ip_geoloc_visitor_find', TRUE);
 
-  if ($geocode_address) {
+  if ($is_geocode_address) {
     // Note the use of 'input' rather than 'values'. We don't want to read
     // what WAS, but what IS typed now.
     $entered_address = check_plain($form_state['input']['street_address']);
@@ -644,15 +686,9 @@ function ip_geoloc_geocode($form, &$form_state) {
     $parent = variable_get('ip_geoloc_region_parent', 0);
     $location = ip_geoloc_get_location_from_term($region, $parent);
   }
-  // If "Find me" was pressed, we set a flag indicating to ip_geoloc_init() that
-  // we want to find the visitor's current position using their HTML5-based
-  // browser immediately, not waiting for the next scheduled cycle.
-  //$find_visitor = variable_get('ip_geoloc_visitor_find', TRUE) && empty($form_state['values']['fixed_address']);
-  //_ip_geoloc_set_session_value('find_visitor', (int) $find_visitor);
-
   $location['fixed_address'] = isset($form_state['values']['fixed_address'])
     ? $form_state['values']['fixed_address']
-    : $geocode_address;
+    : $is_geocode_address;
 
   _ip_geoloc_set_session_value('location', $location);
 
