@@ -444,8 +444,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   if ($geo_vocabulary_id) {
     $options[2] = t('Region');
   }
-
-  $form['#attributes']['id'] = 'set-location-wrapper';
+  $form['#attributes']['id'] = $wrapper = 'set-location-wrapper';
 
   if (!empty($options)) {
     $form['fixed_address'] = array(
@@ -514,17 +513,17 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       // Use 'submit' to go with '#submit'. For #ajax 'buttion' may be used too.
       '#type' => 'button',
       '#value' => $find_visitor_label,
-      '#submit' => array('_ip_geoloc_process_find_me_submit'),
+      //'#submit' => array('_ip_geoloc_process_find_me_submit'),
       '#ajax' => array(
         'callback' => '_ip_geoloc_process_find_me_ajax',
-        'wrapper' => 'set-location-wrapper',
+        'wrapper' => $wrapper,
         // 'fade', 'none' or 'slide'.
         'effect' => 'none',
         // 'fast', 'slow' or number of millisec.
         'speed' => '0',
         // Example 'throbber' with t('Working...')
         'progress' => array(
-          'type' => NULL,
+          'type' => 'throbber',
           'message' => NULL,
         ),
       ),
@@ -568,7 +567,7 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   // "Failed to execute 'write' on 'Document': It isn't possible to write into
   // a document from an asynchronously-loaded external script unless it is
   // explicitly opened."
-  // So the below JS is conditionally loaded in hook_init().
+  // So the JS required is conditionally loaded in hook_init():
   //drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
 
   // Either of the two lines below works.
@@ -584,9 +583,15 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
     'ip_geoloc_refresh_page' => $refresh_page,
   );
   drupal_add_js($settings, 'setting');
+  $form['throbber'] = array(
+    '#prefix' => '<div class="ajax-progress ajax-progress-throbber"><div class="throbber">',
+    '#markup' => '&nbsp;',
+    '#suffix' => '</div>',
+  );
   $form['alert'] = array(
-    '#type' => 'markup',
-    '#markup' => t('Locating you now...'),
+    '#prefix' => '<div class="message">',
+    '#markup' => t('Locating you ...'),
+    '#suffix' => '</div></div>',
   );
   return $form;
 }

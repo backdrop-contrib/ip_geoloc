@@ -254,19 +254,14 @@ function ip_geoloc_init() {
     // This is all done via client-side calls, so the Drupal server
     // will not rake up any calls against its Google-imposed quotum, i.e. the
     // OVER_QUERY_LIMIT.
-    // When done, the javascript calls us back on the supplied menu callback,
+    // When done, the javascript calls us back on the default menu callback,
     // '/js/ip_geoloc/current_location', which receives the geolocation data
     // from the Google Maps call via the $_POST variable and stores it on the
     // session.
     // Naturally all of this will only work if the browser is connected to
     // the internet and has javascript enabled.
     // See also: _ip_geoloc_process_find_me_ajax().
-    $menu_callback = variable_get('clean_url', 0) 
-      ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
-    $reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
-    $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
-
-    ip_geoloc_get_current_location($menu_callback, $reverse_geocode, $refresh_page);
+    ip_geoloc_get_current_location();
 
     _ip_geoloc_set_session_value('last_position_check', time());
   }
