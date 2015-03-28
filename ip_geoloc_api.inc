@@ -368,6 +368,12 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  */
 function ip_geoloc_get_current_location($menu_callback = NULL, $reverse_geocode = NULL, $refresh_page = NULL) {
   ip_geoloc_debug(t('IPGV&M: initiating service to locate current position and reverse-geocode to address...'));
+
+  $throbber_text = variable_get('ip_geoloc_throbber_text2', IP_GEOLOC_THROBBER_DEFAULT_TEXT);
+  if ($throbber_text !== '<none>') {
+    drupal_set_message(filter_xss_admin($throbber_text));
+  }
+
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));

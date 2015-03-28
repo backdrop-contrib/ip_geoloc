@@ -181,10 +181,19 @@ function ip_geoloc_admin_configure() {
     '#field_suffix' => t('seconds'),
     '#title' => t('Minimum elapsed time before geolocation data for the same user will be collected again'),
     '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
-    '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to stop repeat location collection.'),
+    '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to geolocate the visitor <em>once</em> and then refrain from repeat location collection until their session has expired.'),
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
     ),
+  );
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_throbber_text2'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Message displayed while visitor is being geolocated'),
+    '#size' => 30,
+    '#default_value' => filter_xss_admin(variable_get('ip_geoloc_throbber_text2', '')),
+    '#description' => t('A standard status message to show the visitor that geolocation was initiated and is in progress. </br/>Defaults to %default <br/>You may use most HTML tags. Use <em>&lt;none&gt;</em> to have no message shown, which is probably the preferred choice if the <strong>Auto-refresh</strong> box below is unticked.', array(
+      '%default' => IP_GEOLOC_THROBBER_DEFAULT_TEXT,
+    )),
   );
 
   $form['ip_geoloc_advanced'] = array(

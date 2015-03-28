@@ -55,14 +55,14 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-      '#title' => t('"Find visitor" button'),
+      '#title' => t('"Find me" button'),
+      '#description' => t("Displays a button for the visitor to put themselves on the map. If they confirm the browser prompt, this locates the visitor via their device's WiFi and GPS capabilities. This typcially adds 3 seconds of waiting time.")
+        . '<br/>' . $note,
     );
     $form['address']['find_visitor']['ip_geoloc_visitor_find'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Find visitor using HTML5 position detection'),
+      '#title' => t('Find visitor using Wifi/GPS position detection'),
       '#default_value' => variable_get('ip_geoloc_visitor_find', TRUE),
-      '#description' => t("Displays a button for the visitor to put themselves on the map. If they confirm the browser prompt, this locates the visitor via their device's WiFi and GPS capabilities. This typcially adds 3 seconds of waiting time.")
-        . '<br/>' . $note,
     );
     $form['address']['find_visitor']['ip_geoloc_visitor_reverse_geocode'] = array(
       '#type' => 'checkbox',
@@ -75,11 +75,23 @@ function ip_geoloc_block_configure($delta = '') {
     );
     $form['address']['find_visitor']['ip_geoloc_visitor_find_label'] = array(
       '#type' => 'textfield',
-      '#title' => t('Label for "find visitor" button'),
+      '#title' => t('Label for "Find me" button'),
       '#size' => 30,
       '#default_value' => filter_xss_admin(variable_get('ip_geoloc_visitor_find_label', '')),
-      '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
+      '#description' => t('Defaults to %default <br/>You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
         '%default' => IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL,
+      )),
+      '#states' => array(
+        'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
+      )),
+    );
+    $form['address']['find_visitor']['ip_geoloc_throbber_text'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Text displayed while visitor is being geolocated'),
+      '#size' => 30,
+      '#default_value' => filter_xss_admin(variable_get('ip_geoloc_throbber_text', '')),
+      '#description' => t('A text shown together with an animated image, aka throbber, to show the visitor that geolocation is in process. </br/>Defaults to %default <br/>You may use most HTML tags. Use <em>&lt;none&gt;</em> to have no throbber and no text.', array(
+        '%default' => IP_GEOLOC_THROBBER_DEFAULT_TEXT,
       )),
       '#states' => array(
         'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
@@ -90,7 +102,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-      '#title' => t('Editable address'),
+      '#title' => t('"Move to" function (editable address)'),
     );
     $form['address']['edit']['ip_geoloc_visitor_address_editable'] = array(
       '#type' => 'checkbox',
@@ -583,16 +595,20 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
     'ip_geoloc_refresh_page' => $refresh_page,
   );
   drupal_add_js($settings, 'setting');
-  $form['throbber'] = array(
-    '#prefix' => '<div class="ajax-progress ajax-progress-throbber"><div class="throbber">',
-    '#markup' => '&nbsp;',
-    '#suffix' => '</div>',
-  );
-  $form['alert'] = array(
-    '#prefix' => '<div class="message">',
-    '#markup' => t('Locating you ...'),
-    '#suffix' => '</div></div>',
-  );
+
+  $throbber_text = variable_get('ip_geoloc_throbber_text', IP_GEOLOC_THROBBER_DEFAULT_TEXT);
+  if ($throbber_text !== '<none>') {
+    $form['throbber'] = array(
+      '#prefix' => IP_GEOLOC_THROBBER_PREFIX,
+      '#markup' => ' ',
+      '#suffix' => '</div>',
+    );
+    $form['alert'] = array(
+      '#prefix' => '<div class="message">',
+      '#markup' => filter_xss_admin($throbber_text),
+      '#suffix' => '</div></div>',
+    );
+  }
   return $form;
 }
 

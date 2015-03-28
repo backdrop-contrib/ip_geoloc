@@ -18,7 +18,7 @@ define('IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS', 10);
 
 define('IP_GEOLOC_CALLBACK_TIMEOUT', 30);
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
-define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*");
+define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*\njs/*");
 
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
 define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
@@ -34,6 +34,9 @@ define('IP_GEOLOC_RANGE_SEPARATOR1', '--');
 define('IP_GEOLOC_RANGE_SEPARATOR2', '...');
 
 define('IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS', 'leaflet.markercluster-regionbound.min.js');
+
+define('IP_GEOLOC_THROBBER_PREFIX', '<div class="ajax-progress ajax-progress-throbber"><div class="throbber">');
+define('IP_GEOLOC_THROBBER_DEFAULT_TEXT', t('Locating you') . '...');
 
 require_once 'ip_geoloc.session.inc';
 require_once 'ip_geoloc_api.inc';
