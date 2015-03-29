@@ -35,7 +35,7 @@ function _ip_geoloc_set_session_value($name, $value = NULL) {
       unset($_SESSION['ip_geoloc']);
     }
     elseif (isset($name)) {
-      $_SESSION['ip_geoloc'][$name] = isset($_SESSION['ip_geoloc']) && is_array($_SESSION['ip_geoloc'][$name]) && is_array($value)
+      $_SESSION['ip_geoloc'][$name] = isset($_SESSION) && isset($_SESSION['ip_geoloc'][$name]) && is_array($_SESSION['ip_geoloc'][$name]) && is_array($value)
         ? array_merge($_SESSION['ip_geoloc'][$name], $value)
         : $value;
     }
@@ -50,7 +50,9 @@ function _ip_geoloc_set_session_value($name, $value = NULL) {
   $variables = session_cache_get('ip_geoloc');
   if (isset($name)) {
     // Merge/override the session with the supplied value
-    $variables[$name] = is_array($variables[$name]) && is_array($value) ? array_merge($variables[$name], $value) : $value;
+    $variables[$name] = isset($variables[$name]) && is_array($variables[$name]) && is_array($value)
+      ? array_merge($variables[$name], $value)
+      : $value;
     session_cache_set('ip_geoloc', $variables);
   }
   return $variables;

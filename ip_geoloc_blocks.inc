@@ -731,7 +731,8 @@ function ip_geoloc_geocode($form, &$form_state) {
         $point = geocoder('google', $entered_address);
       }
       else {
-        drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array('!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
+        drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array(
+          '!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
       }
       if (empty($point)) {
         drupal_set_message(t('The address %address could not be geocoded to a location.', array('%address' => $entered_address)), 'warning');
@@ -787,7 +788,7 @@ function ip_geoloc_geocode($form, &$form_state) {
 
   // No need to remember the form state. It's all kept on the session.
   // Also, if set to TRUE, content is rendered before new location is set
-  // and Region selector won't work.
+  // and Region selector will be one step behind.
   $form_state['rebuild'] = FALSE;
 }
 
