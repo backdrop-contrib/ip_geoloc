@@ -61,7 +61,7 @@ function ip_geoloc_block_configure($delta = '') {
     );
     $form['address']['find_visitor']['ip_geoloc_visitor_find'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Find visitor using Wifi/GPS position detection'),
+      '#title' => t('Find visitor using Wifi/GPS location detection'),
       '#default_value' => variable_get('ip_geoloc_visitor_find', TRUE),
     );
     $form['address']['find_visitor']['ip_geoloc_visitor_reverse_geocode'] = array(
@@ -446,6 +446,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $location = ip_geoloc_get_visitor_location();
 
   $has_find_visitior = variable_get('ip_geoloc_visitor_find', TRUE);
+  $is_reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
 
@@ -458,11 +459,15 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   }
   $form['#attributes']['id'] = $wrapper = 'set-location-wrapper';
 
+  $default_radio = 1;
+  if (isset($location['fixed_address']) && (int)$location['fixed_address'] == 2) {
+    $default_radio = 2;
+  }
   if (!empty($options)) {
     $form['fixed_address'] = array(
       '#type' => 'radios',
       '#options' => $options,
-      '#default_value' => isset($location['fixed_address']) ? (int) $location['fixed_address'] : key($options),
+      '#default_value' => $default_radio,
     );
   }
   if ($geo_vocabulary_id) {
@@ -497,18 +502,20 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       'visible' => array('input[name="fixed_address"]' => array('value' => '2')),
     );
   }
-  $textarea = variable_get('ip_geoloc_address_element', 2);
-  $default_address = check_plain(variable_get('ip_geoloc_visitor_address_default', ''));
-  $form['street_address'] = array(
-    '#type' => $textarea ? 'textarea' : 'textfield',
-    '#rows' => $textarea,
-    '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
-    '#disabled' => isset($location['fixed_address']) ? $location['fixed_address'] > 1 : !$is_address_editable,
-    '#states' => array(
-      'enabled' => array('input[name="fixed_address"]' => array('value' => '1')),
-      'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
-    ),
-  );
+  if ($is_reverse_geocode || $is_address_editable) {
+    $textarea = variable_get('ip_geoloc_address_element', 2);
+    $default_address = check_plain(variable_get('ip_geoloc_visitor_address_default', ''));
+    $form['street_address'] = array(
+      '#type' => $textarea ? 'textarea' : 'textfield',
+      '#rows' => $textarea,
+      '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
+      '#disabled' => !$is_address_editable,
+      '#states' => array(
+        'enabled' => array('input[name="fixed_address"]' => array('value' => '1')),
+        'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
+      ),
+    );
+  }
   if ($is_address_editable || $geo_vocabulary_id) {
     $form['submit_address'] = array(
       '#type' => 'submit',
