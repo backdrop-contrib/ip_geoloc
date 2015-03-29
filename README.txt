@@ -374,6 +374,13 @@ Example: "location.locality=Melbourne"
 context_session does not support the Session Cache API module, so the $_SESSION
 variable will be used internally for storage.
 
+ALTERNATIVE THROBBER
+====================
+Out of the box the "Set my location" block uses core's small throbber. If you
+wish to use an alternative one, simply comment out the relevant lines in
+file ip_geoloc/css/ip_geoloc_all.css
+Depending on your theme, you may want to tweak your CSS a little.
+
 FOR SITE BUILDERS AND PROGRAMMERS
 =================================
 IPGV&M stores location data for the current visitor in their session and makes

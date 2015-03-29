@@ -69,6 +69,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'width' => array('default' => 150),
         'toggle' => array('default' => 1),
         'scope_color' => array('default' => 'red'),
+        'zoom_delta' => array('default' => -5),
       ),
     );
     $options['full_screen'] = array('default' => 0);
@@ -389,6 +390,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['mini_map']['scope_color'],
       '#description' => t('<em>#rrggbb</em> or <a target="_colors" href="@url">color name</a>.', array(
         '@url' => url('http://www.w3schools.com/html/html_colornames.asp'))),
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
+    );
+    $form['mini_map']['zoom_delta'] = array(
+      '#title' => t('Zoom delta'),
+      '#type' => 'textfield',
+      '#size' => 3,
+      '#default_value' => $this->options['mini_map']['zoom_delta'],
+      '#description' => t('The difference between the zoom levels of main map and mini-map.'),
       '#states' => array(
         'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
       ),
@@ -996,8 +1007,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           'position' => 'bottomright', // 'bottomright'
           'toggleDisplay' => !empty($this->options['mini_map']['toggle']),
           'zoomAnimation' => FALSE,
-          'zoomLevelOffset' => -4, // -5
-          // Rectangle showing the current map outline on the inset.
+          'zoomLevelOffset' => (int)$this->options['mini_map']['zoom_delta'],
+          // Superimposed rectangle showing extent of main map on the inset.
           'aimingRectOptions' => array(
             'color' => $this->options['mini_map']['scope_color'],
             'weight' => 3,

@@ -42,3 +42,22 @@ form.ip-geoloc-address {
 textarea#edit-street-address {
   resize: horizontal; /* horizontal is not supported in many browsers */
 }
+
+/* Throbber from ctools module -- uncomment if you wish to use it over core's.
+#set-location-form .ajax-progress.ajax-progress-throbber {
+  background: white;
+  display: inline-table;
+  min-width: 130px;
+}
+#set-location-form .ajax-progress.ajax-progress-throbber .throbber {
+  background: transparent url("../../ctools/images/throbber.gif") no-repeat center;
+  height: 35px;
+  width: 35px;
+  margin: 0;
+  padding: 1px;
+}
+#set-location-form .ajax-progress.ajax-progress-throbber .message {
+  margin-top: 8px;
+  white-space: nowrap;
+}
+*/

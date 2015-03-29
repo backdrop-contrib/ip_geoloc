@@ -473,7 +473,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
   $editable_address_label = variable_get('ip_geoloc_visitor_address_label', '');
   $editable_region_label = variable_get('ip_geoloc_visitor_region_label', '');
 
-  $form['#attributes']['id'] = $wrapper = 'set-location-wrapper';
+  $form['#attributes']['id'] = $wrapper_id = drupal_html_id('set-location-form');
 
   $options = array();
   if ($geo_vocabulary_id && $editable_region_label != '<none>') {
@@ -568,7 +568,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       '#submit' => array('_ip_geoloc_process_find_me_submit'),
       '#ajax' => array(
         'callback' => '_ip_geoloc_process_find_me_ajax',
-        'wrapper' => $wrapper,
+        'wrapper' => $wrapper_id,
         // 'fade', 'none' or 'slide'.
         'effect' => 'none',
         // 'fast', 'slow' or number of millisec.
