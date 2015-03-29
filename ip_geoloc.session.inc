@@ -15,7 +15,7 @@
  *   if NULL the array of all IPGV&M session variables is returned.
  *
  * @param mixed $value
- *   The value to set.
+ *   The value to set. Use NULL to wipe the existing value.
  *
  * @return array|null
  *   The requested or all session variables from ip_geoloc
@@ -35,7 +35,9 @@ function _ip_geoloc_set_session_value($name, $value = NULL) {
       unset($_SESSION['ip_geoloc']);
     }
     elseif (isset($name)) {
-      $_SESSION['ip_geoloc'][$name] = $value;
+      $_SESSION['ip_geoloc'][$name] = isset($_SESSION['ip_geoloc']) && is_array($_SESSION['ip_geoloc'][$name]) && is_array($value)
+        ? array_merge($_SESSION['ip_geoloc'][$name], $value)
+        : $value;
     }
     return isset($_SESSION) && isset($_SESSION['ip_geoloc']) ? $_SESSION['ip_geoloc'] : NULL;
   }

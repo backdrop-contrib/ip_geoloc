@@ -484,7 +484,7 @@ function _ip_geoloc_check_location($location = NULL) {
   }
   if (!empty($location['fixed_address'])) {
     // If the  "Set my location" block was used to manually set an address or
-    // region, then cancel the scheduled update. If "Move me" was checked, then
+    // region, then cancel the scheduled update. If "Move to" was checked, then
     // the scheduled update will occur, unless interval==0.
     ip_geoloc_debug(t('IPGV&M: location set manually, suspending scheduled service.'));
     _ip_geoloc_set_session_value('last_position_check', time() + $interval);
