@@ -354,13 +354,13 @@ function ip_geoloc_block_view($delta = '') {
       break;
 
     case 'address_lookup':
-      $block['subject'] = t('Global address lookup');
-      $block['content'] = drupal_get_form('ip_geoloc_address_lookup');
+      $block['subject'] = t('Global IP address lookup');
+      $block['content'] = drupal_get_form('ip_geoloc_ip_lookup_form');
       break;
 
     case 'geocode_address':
       $block['subject'] = t('Set my location');
-      $block['content'] = drupal_get_form('ip_geoloc_geocode_address');
+      $block['content'] = drupal_get_form('ip_geoloc_set_location_form');
       break;
   }
   return $block;
@@ -421,49 +421,19 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
 }
 
 /**
- * Generates a simple form for collecting the IP address to be reverse-geocoded.
- *
- * @ingroup forms
- */
-function ip_geoloc_address_lookup($form, &$form_state) {
-  $last_visit = isset($form_state['storage']['last_visit']) ? $form_state['storage']['last_visit'] : '';
-  $formatted_address = isset($form_state['storage']['formatted_address']) ? $form_state['storage']['formatted_address'] : '';
-  if (!empty($last_visit) || !empty($formatted_address)) {
-    $prefix = '<div class="ip_geoloc_address_lookup">' . $formatted_address . (empty($last_visit) ? '' : "<br/>$last_visit") . '</div>';
-  }
-  $form['ip_address'] = array(
-    '#type' => 'textfield',
-    '#title' => t('IP address'),
-    '#default_value' => '',
-    '#size' => 16,
-    '#required' => FALSE,
-    '#prefix' => isset($prefix) ? $prefix : NULL,
-  );
-  if (user_access('administer site configuration')) {
-    $form['store'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('If found, store on IP geolocation database for future reference.'),
-      '#default_value' => FALSE,
-    );
-  }
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Lookup'),
-    '#submit' => array('ip_geoloc_lookup'),
-  );
-  return $form;
-}
-
-/**
- * Generates a simple form for collecting the address to be geocoded.
+ * Form for finding the visitor or going to a region or street address.
  *
  * The value of the 'fixed_address' radio-button is stored on the location, as
- * stored on the session.
+ * stored on the session. It's value is coded as follows:
+ *   0: "Find me" button pressed
+ *   1: "Move to" radio button selected and "Go" pressed
+ *   2: "Region" radio button selected and "Go" pressed
  *
  * @ingroup forms
  */
-function ip_geoloc_geocode_address($form, &$form_state) {
+function ip_geoloc_set_location_form($form, &$form_state) {
 
+  $form_state['redirect'] = current_path();
   $location = ip_geoloc_get_visitor_location();
 
   $has_find_visitior = variable_get('ip_geoloc_visitor_find', TRUE);
@@ -496,6 +466,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       '#type' => 'radios',
       '#options' => $options,
       '#default_value' => $radio_selected,
+      '#weight' => 1,
     );
   }
 
@@ -510,6 +481,7 @@ function ip_geoloc_geocode_address($form, &$form_state) {
         'enabled' => array('input[name="fixed_address"]' => array('value' => '1')),
         'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
       ),
+      '#weight' => 5,
     );
   }
 
@@ -550,7 +522,8 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     $form['submit_address'] = array(
       '#type' => 'submit',
       '#value' => t('Go'),
-      '#submit' => array('ip_geoloc_geocode'),
+      '#submit' => array('_ip_geoloc_process_go_to_submit'),
+      '#weight' => 10,
     );
   }
 
@@ -558,9 +531,10 @@ function ip_geoloc_geocode_address($form, &$form_state) {
     $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
     $find_visitor_label = empty($find_visitor_label) ? IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL : filter_xss_admin($find_visitor_label);
 
-    $throbber_text = variable_get('ip_geoloc_throbber_text', IP_GEOLOC_THROBBER_DEFAULT_TEXT);
-    $throbber_text = ($throbber_text == '<none>')? NULL : filter_xss_admin($throbber_text);
-
+    $throbber_text = variable_get('ip_geoloc_throbber_text', '');
+    if (empty($throbber_text)) {
+      $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
+    }
     $form['find'] = array(
       // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
       '#type' => 'submit',
@@ -569,16 +543,15 @@ function ip_geoloc_geocode_address($form, &$form_state) {
       '#ajax' => array(
         'callback' => '_ip_geoloc_process_find_me_ajax',
         'wrapper' => $wrapper_id,
-        // 'fade', 'none' or 'slide'.
         'effect' => 'none',
-        // 'fast', 'slow' or number of millisec.
         'speed' => '0',
+        // This throbber positions itself immediately after the Submit button
         'progress' => array(
           'type' => 'throbber',
-          'message' => $throbber_text,
+          'message' => $throbber_text == '<none>' ? NULL : filter_xss_admin($throbber_text),
         ),
       ),
-      //'#weight' => 10,
+      '#weight' => -5,
     );
   }
 
@@ -602,6 +575,8 @@ function ip_geoloc_geocode_address($form, &$form_state) {
 /**
  * Submit handler for "Find me" button on the "Set my location block".
  *
+ * This does little. See _ip_geoloc_process_find_me_ajax() for the hard work.
+ *
  * @param array $form
  * @param array $form_state
  */
@@ -611,10 +586,11 @@ function _ip_geoloc_process_find_me_submit($form, &$form_state) {
   $location['fixed_address'] = 0;
   _ip_geoloc_set_session_value('location', $location);
 
-  // TRUE would give us access to $form_state['clicked_button']. But not needed.
+  // Note: cannot redirect when also using AJAX.
+
+  // TRUE would give access to $form_state['clicked_button'], but is not needed.
   $form_state['rebuild'] = FALSE;
 }
-
 
 /**
  * AJAX form submit handler for the "Set my location" block.
@@ -655,43 +631,29 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   );
   drupal_add_js($settings, 'setting');
 
-  $throbber_text = variable_get('ip_geoloc_throbber_text', IP_GEOLOC_THROBBER_DEFAULT_TEXT);
+  $throbber_text = variable_get('ip_geoloc_throbber_text', '');
+  if (empty($throbber_text)) {
+    $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
+  }
   if ($throbber_text !== '<none>') {
-    $form['throbber'] = array(
+    $form['find-me-throbber'] = array(
       '#prefix' => IP_GEOLOC_THROBBER_PREFIX,
       '#markup' => ' ',
       '#suffix' => '</div>',
+      '#weight' => $form['find']['#weight'] + 1,
     );
-    $form['alert'] = array(
+    $form['find-me-alert'] = array(
       '#prefix' => '<div class="message">',
       '#markup' => filter_xss_admin($throbber_text),
       '#suffix' => '</div></div>',
+      '#weight' => $form['find']['#weight'] + 2,
     );
   }
   return $form;
 }
 
 /**
- * Lookup geoloc data.
- */
-function ip_geoloc_lookup($form, &$form_state) {
-  $store = !empty($form_state['values']['store']);
-  $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), TRUE, $store);
-  if (db_table_exists('accesslog')) {
-    $last_visit = db_query('SELECT MAX(timestamp) FROM {accesslog} WHERE hostname = :ip_address', array(':ip_address' => $location['ip_address']))->fetchField();
-    if ($last_visit) {
-      $last_visit = format_date($last_visit, 'short');
-      $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
-    }
-  }
-  $form_state['storage']['formatted_address']
-    = isset($location['formatted_address']) ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address'])) : '';
-  // To preserve entered values and storage array.
-  $form_state['rebuild'] = TRUE;
-}
-
-/**
- * Form submit handler to find visitor or geocode the address they entered.
+ * Submit handler to either go to a Region or "Move to" a street address.
  *
  * Stores the geocoded lat/long and address info on the session.
  *
@@ -700,9 +662,7 @@ function ip_geoloc_lookup($form, &$form_state) {
  * @param array $form_state
  *   The form's current state
  */
-function ip_geoloc_geocode($form, &$form_state) {
-
-  $location = _ip_geoloc_get_session_value('location');
+function _ip_geoloc_process_go_to_submit($form, &$form_state) {
 
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
 
@@ -713,6 +673,8 @@ function ip_geoloc_geocode($form, &$form_state) {
   else {
     $is_geocode_address = $form_state['values']['fixed_address'] == 1;
   }
+
+  $location = _ip_geoloc_get_session_value('location');
 
   if ($is_geocode_address) {
     // Note the use of 'input' rather than 'values'. We don't want to read
@@ -793,6 +755,21 @@ function ip_geoloc_geocode($form, &$form_state) {
 }
 
 /**
+ * AJAX form submit handler for the "Go" button on the "Set my location" block.
+ *
+ * Just puts up a throbber.
+ *
+ * @param array $form
+ * @param array $form_state
+ * @return array, the updated $form
+ *
+function _ip_geoloc_process_go_to_ajax($form, &$form_state) {
+
+  return $form;
+}
+*/
+
+/**
  * Returns the location object belonging to supplied region taxonomy term id.
  *
  * @param int $tid
@@ -829,4 +806,57 @@ function ip_geoloc_get_location_from_term($tid, $parent = 0) {
       );
     }
   }
+}
+
+/**
+ * Generates a simple form for collecting the IP address to be reverse-geocoded.
+ *
+ * @ingroup forms
+ */
+function ip_geoloc_ip_lookup_form($form, &$form_state) {
+  $last_visit = isset($form_state['storage']['last_visit']) ? $form_state['storage']['last_visit'] : '';
+  $formatted_address = isset($form_state['storage']['formatted_address']) ? $form_state['storage']['formatted_address'] : '';
+  if (!empty($last_visit) || !empty($formatted_address)) {
+    $prefix = '<div class="ip_geoloc_address_lookup">' . $formatted_address . (empty($last_visit) ? '' : "<br/>$last_visit") . '</div>';
+  }
+  $form['ip_address'] = array(
+    '#type' => 'textfield',
+    '#title' => t('IP address'),
+    '#default_value' => '',
+    '#size' => 16,
+    '#required' => FALSE,
+    '#prefix' => isset($prefix) ? $prefix : NULL,
+  );
+  if (user_access('administer site configuration')) {
+    $form['store'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('If found, store on IP geolocation database for future reference.'),
+      '#default_value' => FALSE,
+    );
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Lookup'),
+    '#submit' => array('ip_geoloc_ip_lookup'),
+  );
+  return $form;
+}
+
+/**
+ * Lookup geoloc data.
+ */
+function ip_geoloc_ip_lookup($form, &$form_state) {
+  $store = !empty($form_state['values']['store']);
+  $location = ip_geoloc_get_location_by_ip(trim($form_state['values']['ip_address']), TRUE, $store);
+  if (db_table_exists('accesslog')) {
+    $last_visit = db_query('SELECT MAX(timestamp) FROM {accesslog} WHERE hostname = :ip_address', array(':ip_address' => $location['ip_address']))->fetchField();
+    if ($last_visit) {
+      $last_visit = format_date($last_visit, 'short');
+      $form_state['storage']['last_visit'] = t('<strong>Last visit:</strong> %date', array('%date' => $last_visit));
+    }
+  }
+  $form_state['storage']['formatted_address']
+    = isset($location['formatted_address']) ? t('%ip: <strong>%address</strong>', array('%ip' => $location['ip_address'], '%address' => $location['formatted_address'])) : '';
+  // To preserve entered values and storage array.
+  $form_state['rebuild'] = TRUE;
 }
