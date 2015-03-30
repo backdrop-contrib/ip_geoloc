@@ -86,12 +86,32 @@ function ip_geoloc_block_configure($delta = '') {
         'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
       )),
     );
+    $form['address']['find_visitor']['ip_geoloc_visitor_find_position'] = array(
+      '#type' => 'select',
+      '#title' => t('Position of "Find me" button'),
+      // Keys represent form element weights.
+      '#options' => array(
+        0 => t('First'),
+        7 => t('Second'),
+       12 => t('Third'),
+       17 => t('Last'),
+      ),
+      '#default_value' => variable_get('ip_geoloc_visitor_find_position', 0),
+      '#description' => t('Relative to the other buttons on the "Set my location" form'),
+      '#states' => array(
+        'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
+      )),
+    );
+    $throbber_text = variable_get('ip_geoloc_throbber_text', '');
+    if (empty($throbber_text)) {
+      $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
+    }
     $form['address']['find_visitor']['ip_geoloc_throbber_text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text displayed while visitor is being geolocated'),
       '#size' => 30,
-      '#default_value' => filter_xss_admin(variable_get('ip_geoloc_throbber_text', '')),
-      '#description' => t('A text shown together with an animated image, aka throbber, to show the visitor that geolocation is in process. </br/>Defaults to %default <br/>You may use most HTML tags. Use <em>&lt;none&gt;</em> to have no throbber and no text.', array(
+      '#default_value' => $throbber_text == '<none>' ? $throbber_text : filter_xss_admin($throbber_text),
+      '#description' => t('A text shown together with an animated image, aka throbber, to show the visitor that geolocation is in progress. </br/>Defaults to %default <br/>You may use most HTML tags. Use <em>&lt;none&gt;</em> to have no throbber and no text.', array(
         '%default' => IP_GEOLOC_THROBBER_DEFAULT_TEXT,
       )),
       '#states' => array(
@@ -433,7 +453,6 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
  */
 function ip_geoloc_set_location_form($form, &$form_state) {
 
-  $form_state['redirect'] = current_path();
   $location = ip_geoloc_get_visitor_location();
 
   $has_find_visitior = variable_get('ip_geoloc_visitor_find', TRUE);
@@ -444,6 +463,36 @@ function ip_geoloc_set_location_form($form, &$form_state) {
   $editable_region_label = variable_get('ip_geoloc_visitor_region_label', '');
 
   $form['#attributes']['id'] = $wrapper_id = drupal_html_id('set-location-form');
+
+  if ($has_find_visitior) {
+    $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
+    $find_visitor_label = empty($find_visitor_label) ? IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL : filter_xss_admin($find_visitor_label);
+
+    $form['find'] = array(
+      // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
+      '#type' => 'submit',
+      '#value' => $find_visitor_label,
+      '#submit' => array('_ip_geoloc_process_find_me_submit'),
+      '#ajax' => array(
+        'callback' => '_ip_geoloc_process_find_me_ajax',
+        'wrapper' => $wrapper_id,
+        'effect' => 'none',
+        'speed' => '0',
+        'progress' => FALSE,
+      ),
+      '#weight' => variable_get('ip_geoloc_visitor_find_position', 0),
+    );
+    $throbber_text = variable_get('ip_geoloc_throbber_text', '');
+    if (empty($throbber_text)) {
+      $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
+    }
+    if ($throbber_text != '<none>') {
+      $form['find']['#ajax']['progress'] = array(
+        'type' => 'throbber',
+        'message' => filter_xss_admin($throbber_text),
+      );
+    }
+  }
 
   $options = array();
   if ($geo_vocabulary_id && $editable_region_label != '<none>') {
@@ -466,7 +515,7 @@ function ip_geoloc_set_location_form($form, &$form_state) {
       '#type' => 'radios',
       '#options' => $options,
       '#default_value' => $radio_selected,
-      '#weight' => 1,
+      '#weight' => 5,
     );
   }
 
@@ -481,7 +530,7 @@ function ip_geoloc_set_location_form($form, &$form_state) {
         'enabled' => array('input[name="fixed_address"]' => array('value' => '1')),
         'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
       ),
-      '#weight' => 5,
+      '#weight' => 10,
     );
   }
 
@@ -504,6 +553,7 @@ function ip_geoloc_set_location_form($form, &$form_state) {
         // Refer to hook_menu().
         '#autocomplete_path' => 'ip_geoloc/region_autocomplete',
         '#executes_submit_callback' => TRUE,
+        '#weight' => 10,
       );
     }
     else {
@@ -511,6 +561,7 @@ function ip_geoloc_set_location_form($form, &$form_state) {
         '#type' => 'select',
         '#options' => $regions,
         '#default_value' => isset($location['region']) ? $location['region'] : 0,
+        '#weight' => 10,
       );
     }
     $form['region']['#states'] = array(
@@ -523,35 +574,7 @@ function ip_geoloc_set_location_form($form, &$form_state) {
       '#type' => 'submit',
       '#value' => t('Go'),
       '#submit' => array('_ip_geoloc_process_go_to_submit'),
-      '#weight' => 10,
-    );
-  }
-
-  if ($has_find_visitior) {
-    $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
-    $find_visitor_label = empty($find_visitor_label) ? IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL : filter_xss_admin($find_visitor_label);
-
-    $throbber_text = variable_get('ip_geoloc_throbber_text', '');
-    if (empty($throbber_text)) {
-      $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
-    }
-    $form['find'] = array(
-      // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
-      '#type' => 'submit',
-      '#value' => $find_visitor_label,
-      '#submit' => array('_ip_geoloc_process_find_me_submit'),
-      '#ajax' => array(
-        'callback' => '_ip_geoloc_process_find_me_ajax',
-        'wrapper' => $wrapper_id,
-        'effect' => 'none',
-        'speed' => '0',
-        // This throbber positions itself immediately after the Submit button
-        'progress' => array(
-          'type' => 'throbber',
-          'message' => $throbber_text == '<none>' ? NULL : filter_xss_admin($throbber_text),
-        ),
-      ),
-      '#weight' => -5,
+      '#weight' => 15,
     );
   }
 
@@ -623,7 +646,7 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
 
   $menu_callback = variable_get('clean_url', 0) ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
   $reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
-  $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
+  $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE);
   $settings = array(
     'ip_geoloc_menu_callback' => "$base_url/$menu_callback",
     'ip_geoloc_reverse_geocode' => $reverse_geocode,
@@ -753,21 +776,6 @@ function _ip_geoloc_process_go_to_submit($form, &$form_state) {
   // and Region selector will be one step behind.
   $form_state['rebuild'] = FALSE;
 }
-
-/**
- * AJAX form submit handler for the "Go" button on the "Set my location" block.
- *
- * Just puts up a throbber.
- *
- * @param array $form
- * @param array $form_state
- * @return array, the updated $form
- *
-function _ip_geoloc_process_go_to_ajax($form, &$form_state) {
-
-  return $form;
-}
-*/
 
 /**
  * Returns the location object belonging to supplied region taxonomy term id.
