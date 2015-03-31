@@ -93,19 +93,16 @@ function ip_geoloc_block_configure($delta = '') {
       '#options' => array(
         0 => t('First'),
         7 => t('Second'),
-       12 => t('Third'),
+       12 => t('2nd Last'),
        17 => t('Last'),
       ),
       '#default_value' => variable_get('ip_geoloc_visitor_find_position', 0),
-      '#description' => t('Relative to the other buttons on the "Set my location" form'),
+      '#description' => t('Relative to the other buttons on the "Set my location" form. If you chose not to have all available widgets on the form, then some of these options are equivalent.'),
       '#states' => array(
         'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
       )),
     );
     $throbber_text = variable_get('ip_geoloc_throbber_text', '');
-    if (empty($throbber_text)) {
-      $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
-    }
     $form['address']['find_visitor']['ip_geoloc_throbber_text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text displayed while visitor is being geolocated'),
@@ -199,8 +196,8 @@ function ip_geoloc_block_configure($delta = '') {
       $form['address']['region']['ip_geoloc_geo_vocabulary_id']['#description'] = t('You do not appear to have any vocabularies on which a Geofield is defined. You cannot enable this feature until you do.');
     }
     $form['address']['region']['ip_geoloc_region_autocomplete'] = array(
-      '#type' => 'radios',
-      '#title' => t('Form element to select geographical region'),
+      '#type' => 'select',
+      '#title' => t('Widget to select geographical region'),
       '#options' => array(
         0 => t('Select (drop-down)'),
         1 => t('Autocomplete textfield'),
@@ -216,7 +213,7 @@ function ip_geoloc_block_configure($delta = '') {
       '#title' => t('Label for region selector'),
       '#size' => 30,
       '#default_value' => $label == '<none>' ? $label : filter_xss_admin($label),
-      '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
+      '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label (and not button).', array(
         '%default' => IP_GEOLOC_VISITOR_DEFAULT_REGION_LABEL,
       )),
       '#states' => array(
@@ -453,48 +450,84 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
  */
 function ip_geoloc_set_location_form($form, &$form_state) {
 
-  $location = ip_geoloc_get_visitor_location();
-
-  $has_find_visitior = variable_get('ip_geoloc_visitor_find', TRUE);
-  $is_reverse_geocode = $has_find_visitior && variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
+  $has_find_visitor = variable_get('ip_geoloc_visitor_find', TRUE);
   $is_address_editable = variable_get('ip_geoloc_visitor_address_editable', TRUE);
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
+
+  if (!$has_find_visitor && !$is_address_editable && !$geo_vocabulary_id) {
+    drupal_set_message(t('You should select at least one of the three widgets available for the "Set my location" block.'), 'error');
+    return $form;
+  }
+
+  $location = ip_geoloc_get_visitor_location();
+
+  $form['#attributes']['id'] = $ajax_wrapper_id = drupal_html_id('set-location-form');
+
+  if ($has_find_visitor) {
+    _ip_geoloc_set_my_location_add_find_me($form, $ajax_wrapper_id);
+  }
+
+  $options = _ip_geoloc_set_my_location_add_radios($form, $location, $is_address_editable, $geo_vocabulary_id);
+
+  $is_reverse_geocode = $has_find_visitor && variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
+
+  if ($is_reverse_geocode || $is_address_editable) {
+    _ip_geoloc_set_my_location_add_address($form, $location);
+  }
+
+  if ($geo_vocabulary_id) {
+    _ip_geoloc_set_my_location_add_region($form, $location, $geo_vocabulary_id);
+  }
+
+  _ip_geoloc_set_my_location_add_logic($form, $location, $options, $is_address_editable, $geo_vocabulary_id);
+
+  if ($is_address_editable || $geo_vocabulary_id) {
+    $form['submit_address'] = array(
+      '#type' => 'submit',
+      '#value' => t('Go'),
+      '#submit' => array('_ip_geoloc_process_go_to_submit'),
+      '#weight' => 15,
+    );
+  }
+
+  $form['#attributes']['class'][] = 'ip-geoloc-address';
+  $form['#attached']['css'][] = drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_all.css';
+  return $form;
+}
+
+function _ip_geoloc_set_my_location_add_find_me(&$form, $ajax_wrapper_id) {
+  $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
+  $find_visitor_label = empty($find_visitor_label) ? IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL : filter_xss_admin($find_visitor_label);
+
+  $form['find'] = array(
+    // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
+    '#type' => 'submit',
+    '#value' => $find_visitor_label,
+    '#submit' => array('_ip_geoloc_process_find_me_submit'),
+    '#ajax' => array(
+      'callback' => '_ip_geoloc_process_find_me_ajax',
+      'wrapper' => $ajax_wrapper_id,
+      'progress' => FALSE,
+    ),
+    '#weight' => variable_get('ip_geoloc_visitor_find_position', 0),
+  );
+  $throbber_text = variable_get('ip_geoloc_throbber_text', '');
+  if (empty($throbber_text)) {
+    $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
+  }
+  if ($throbber_text != '<none>') {
+    $form['find']['#ajax']['progress'] = array(
+      'type' => 'throbber',
+      'message' => filter_xss_admin($throbber_text),
+    );
+  }
+}
+
+function _ip_geoloc_set_my_location_add_radios(&$form, &$location, $is_address_editable, $geo_vocabulary_id) {
+  $options = array();
   $editable_address_label = variable_get('ip_geoloc_visitor_address_label', '');
   $editable_region_label = variable_get('ip_geoloc_visitor_region_label', '');
 
-  $form['#attributes']['id'] = $wrapper_id = drupal_html_id('set-location-form');
-
-  if ($has_find_visitior) {
-    $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
-    $find_visitor_label = empty($find_visitor_label) ? IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL : filter_xss_admin($find_visitor_label);
-
-    $form['find'] = array(
-      // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
-      '#type' => 'submit',
-      '#value' => $find_visitor_label,
-      '#submit' => array('_ip_geoloc_process_find_me_submit'),
-      '#ajax' => array(
-        'callback' => '_ip_geoloc_process_find_me_ajax',
-        'wrapper' => $wrapper_id,
-        'effect' => 'none',
-        'speed' => '0',
-        'progress' => FALSE,
-      ),
-      '#weight' => variable_get('ip_geoloc_visitor_find_position', 0),
-    );
-    $throbber_text = variable_get('ip_geoloc_throbber_text', '');
-    if (empty($throbber_text)) {
-      $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
-    }
-    if ($throbber_text != '<none>') {
-      $form['find']['#ajax']['progress'] = array(
-        'type' => 'throbber',
-        'message' => filter_xss_admin($throbber_text),
-      );
-    }
-  }
-
-  $options = array();
   if ($geo_vocabulary_id && $editable_region_label != '<none>') {
     $options[2] = $editable_region_label ? filter_xss_admin($editable_region_label) : IP_GEOLOC_VISITOR_DEFAULT_REGION_LABEL;
   }
@@ -502,14 +535,17 @@ function ip_geoloc_set_location_form($form, &$form_state) {
     $options[1] = $editable_address_label ? filter_xss_admin($editable_address_label) : IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL;
   }
   if (!empty($options)) {
+    $radio_selected = 1;
     if (isset($location['fixed_address'])) {
-      $radio_selected = 1;
       if ($location['fixed_address'] == 2 && isset($options[2])) {
         $radio_selected = 2;
       }
-      if ($location['fixed_address'] == 0 && !isset($options[1]) && isset($options[2])) {
+      elseif ($location['fixed_address'] == 0 && !isset($options[1]) && isset($options[2])) {
         $radio_selected = 0;
       }
+    }
+    elseif (isset($options[2])) {
+      $location['fixed_address'] = $radio_selected = 2;
     }
     $form['fixed_address'] = array(
       '#type' => 'radios',
@@ -518,23 +554,21 @@ function ip_geoloc_set_location_form($form, &$form_state) {
       '#weight' => 5,
     );
   }
+  return $options;
+}
 
-  if (($has_find_visitior && $is_reverse_geocode) || $is_address_editable) {
-    $textarea = variable_get('ip_geoloc_address_element', 2);
-    $default_address = check_plain(variable_get('ip_geoloc_visitor_address_default', ''));
-    $form['street_address'] = array(
-      '#type' => $textarea ? 'textarea' : 'textfield',
-      '#rows' => $textarea,
-      '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
-      '#states' => array(
-        'enabled' => array('input[name="fixed_address"]' => array('value' => '1')),
-        'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
-      ),
-      '#weight' => 10,
-    );
-  }
+function _ip_geoloc_set_my_location_add_address(&$form, $location) {
+  $textarea = variable_get('ip_geoloc_address_element', 2);
+  $default_address = check_plain(variable_get('ip_geoloc_visitor_address_default', ''));
+  $form['street_address'] = array(
+    '#type' => $textarea ? 'textarea' : 'textfield',
+    '#rows' => $textarea,
+    '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
+    '#weight' => 10,
+  );
+}
 
-  if ($geo_vocabulary_id) {
+function _ip_geoloc_set_my_location_add_region(&$form, $location, $geo_vocabulary_id) {
     $regions = array(0 => '--' . t('none') . '--');
     foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
       $regions[$term->tid] = str_repeat('-', $term->depth) . $term->name;
@@ -567,32 +601,30 @@ function ip_geoloc_set_location_form($form, &$form_state) {
     $form['region']['#states'] = array(
       'visible' => array('input[name="fixed_address"]' => array('value' => '2')),
     );
-  }
+}
 
-  if ($is_address_editable || $geo_vocabulary_id) {
-    $form['submit_address'] = array(
-      '#type' => 'submit',
-      '#value' => t('Go'),
-      '#submit' => array('_ip_geoloc_process_go_to_submit'),
-      '#weight' => 15,
-    );
-  }
+function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_address_editable, $geo_vocabulary_id) {
 
-  // If there is only 1 radio button and the address box was requested,
-  // then make sure it is visibile when "Find me" was clicked.
-  // Also reset the Region selector to --none--
-  if (empty($location['fixed_address']) && count($options) == 1) {
-    unset($form['street_address']['#disabled']);
-    unset($form['street_address']['#states']['invisible']);
-    unset($form['region']['#default_value']);
+  if (isset($form['street_address'])) {
+    // Disable the address box when it isn't editable.
+    $form['street_address']['#disabled'] = !$is_address_editable;
   }
-  elseif ($location['fixed_address'] == 2 && count($options) == 1) {
-    unset($form['street_address']);
-  }
+  // Special logic for when there's a Region selector
+  if ($geo_vocabulary_id) {
+    $fixed_address = empty($location['fixed_address']) ? 0 : (int)$location['fixed_address'];
 
-  $form['#attributes']['class'][] = 'ip-geoloc-address';
-  $form['#attached']['css'][] = drupal_get_path('module', 'ip_geoloc') . '/css/ip_geoloc_all.css';
-  return $form;
+    // If "Move to" is NOT there, remove Address box when Go was pressed.
+    if (!isset($options[1]) && $fixed_address == 2) {
+      unset($form['street_address']);
+    }
+    elseif (count($options) > 1) {
+      // If we have 2 or more radios, then hide Address box when Region pressed.
+      $form['street_address']['#states'] = array(
+        // This does not work for a single radio by itself.
+        'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
+      );
+    }
+  }
 }
 
 /**
@@ -605,10 +637,13 @@ function ip_geoloc_set_location_form($form, &$form_state) {
  */
 function _ip_geoloc_process_find_me_submit($form, &$form_state) {
 
-  $location = ip_geoloc_get_visitor_location();
-  $location['fixed_address'] = 0;
-  _ip_geoloc_set_session_value('location', $location);
+  // Wipe existing location before getting a fresh one.
+  _ip_geoloc_set_session_value('location', NULL);
 
+  // Clear any pending position location process that may be in process.
+  _ip_geoloc_set_session_value('last_position_check', time());
+  _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
+  
   // Note: cannot redirect when also using AJAX.
 
   // TRUE would give access to $form_state['clicked_button'], but is not needed.
@@ -629,7 +664,6 @@ function _ip_geoloc_process_find_me_submit($form, &$form_state) {
  */
 function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   global $base_url;
-  $path = drupal_get_path('module', 'ip_geoloc');
 
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
@@ -638,8 +672,8 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   // a document from an asynchronously-loaded external script unless it is
   // explicitly opened."
   // So the JS required is conditionally loaded in hook_init():
-  //drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
 
+  $path = drupal_get_path('module', 'ip_geoloc');
   // Either of the two lines below works.
   drupal_add_js("$path/js/ip_geoloc_current_location.js");
   //$form['#attached']['js'][] =  "$path/js/ip_geoloc_current_location.js";
@@ -687,81 +721,28 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
  */
 function _ip_geoloc_process_go_to_submit($form, &$form_state) {
 
+  // Wipe existing location before obtaining a fresh one.
+  _ip_geoloc_set_session_value('location', NULL);
+
+  // Clear any pending position location process that may be in process.
+  _ip_geoloc_set_session_value('last_position_check', time());
+  _ip_geoloc_set_session_value('position_pending_since', NULL);
+
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
 
   if (empty($form_state['values']['fixed_address'])) {
-    // No radio button was ticked. This is rare.
-    $is_geocode_address = !$geo_vocabulary_id;
-  }
-  else {
-    $is_geocode_address = $form_state['values']['fixed_address'] == 1;
+    // No radio button was ticked. As 'Go' was pressed we need to choose 1 or 2.
+    $form_state['values']['fixed_address'] = $geo_vocabulary_id ? 2 : 1;
   }
 
-  $location = _ip_geoloc_get_session_value('location');
-
-  if ($is_geocode_address) {
-    // Note the use of 'input' rather than 'values'. We don't want to read
-    // what WAS, but what IS typed now.
-    $entered_address = check_plain($form_state['input']['street_address']);
-
-    if (empty($entered_address)) {
-      $location = array(
-        'provider' => 'user',
-        'ip_address' => ip_address(),
-      );
-    }
-    else {
-      if (module_exists('geocoder')) {
-        // Use Google server-side API to retrieve lat/long from entered address.
-        $point = geocoder('google', $entered_address);
-      }
-      else {
-        drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array(
-          '!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
-      }
-      if (empty($point)) {
-        drupal_set_message(t('The address %address could not be geocoded to a location.', array('%address' => $entered_address)), 'warning');
-      }
-      else {
-        $location = array(
-          'provider' => 'user+google',
-          'is_updated' => TRUE,
-          'ip_address' => ip_address(),
-          'latitude' => $point->coords[1],
-          'longitude' => $point->coords[0],
-          'formatted_address' => $point->data['geocoder_formatted_address'],
-          'accuracy' => $point->data['geocoder_accuracy'],
-        );
-        // Flatten the point object into a straight location array.
-        foreach ($point->data['geocoder_address_components'] as $component) {
-          if (!empty($component->long_name)) {
-            $type = $component->types[0];
-            $location[$type] = $component->long_name;
-            if ($type == 'country' && !empty($component->short_name)) {
-              $location['country_code'] = $component->short_name;
-            }
-          }
-        }
-        $location['fixed_address'] = 1;
-      }
-    }
+  if ($form_state['values']['fixed_address'] == 1) {
+    // Using new 'input' rather than current 'values'.
+    $entered_address = isset($form_state['input']['street_address']) ? check_plain($form_state['input']['street_address']) : NULL;
+    $location = ip_geoloc_set_location_from_address($entered_address);
   }
   elseif ($geo_vocabulary_id) {
     // "Region" pressed.
-    $region = $form_state['values']['region'];
-    if (!is_numeric($region)) {
-      foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
-        if (strcasecmp($term->name, $region) === 0) {
-          $region = $term->tid;
-          break;
-        }
-      }
-    }
-    // Wipe existing location and get a fresh one
-    _ip_geoloc_set_session_value('location', NULL);
-    $parent = variable_get('ip_geoloc_region_parent', 0);
-    $location = ip_geoloc_get_location_from_term($region, $parent);
-    $location['fixed_address'] = 2;
+    $location = ip_geoloc_set_location_from_region($form_state['values']['region']);
   }
 
   _ip_geoloc_set_session_value('location', $location);
@@ -770,13 +751,72 @@ function _ip_geoloc_process_go_to_submit($form, &$form_state) {
   if (!empty($redirect)) {
     $form_state['redirect'] = $redirect;
   }
-
   // No need to remember the form state. It's all kept on the session.
   // Also, if set to TRUE, content is rendered before new location is set
   // and Region selector will be one step behind.
   $form_state['rebuild'] = FALSE;
 }
 
+function ip_geoloc_set_location_from_address($entered_address) {
+
+  if (empty($entered_address)) {
+    $location = array(
+      'provider' => 'user',
+      'ip_address' => ip_address(),
+    );
+  }
+  else {
+    if (module_exists('geocoder')) {
+      // Use Google server-side API to retrieve lat/long from entered address.
+      $point = geocoder('google', $entered_address);
+    }
+    else {
+      drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array(
+        '!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
+    }
+    if (empty($point)) {
+      drupal_set_message(t('The address %address could not be geocoded to a location.', array('%address' => $entered_address)), 'warning');
+    }
+    else {
+      $location = array(
+        'provider' => 'user+google',
+        'is_updated' => TRUE,
+        'ip_address' => ip_address(),
+        'latitude' => $point->coords[1],
+        'longitude' => $point->coords[0],
+        'formatted_address' => $point->data['geocoder_formatted_address'],
+        'accuracy' => $point->data['geocoder_accuracy'],
+      );
+      // Flatten the point object into a straight location array.
+      foreach ($point->data['geocoder_address_components'] as $component) {
+        if (!empty($component->long_name)) {
+          $type = $component->types[0];
+          $location[$type] = $component->long_name;
+          if ($type == 'country' && !empty($component->short_name)) {
+            $location['country_code'] = $component->short_name;
+          }
+        }
+      }
+    }
+  }
+  $location['fixed_address'] = 1;
+  return $location;
+}
+
+function ip_geoloc_set_location_from_region($region) {
+  if (!is_numeric($region)) {
+    foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
+      if (strcasecmp($term->name, $region) === 0) {
+        $region = $term->tid;
+        break;
+      }
+    }
+  }
+  $parent = variable_get('ip_geoloc_region_parent', 0);
+  $location = ip_geoloc_get_location_from_term($region, $parent);
+  $location['fixed_address'] = 2;
+  return $location;
+}
 /**
  * Returns the location object belonging to supplied region taxonomy term id.
  *
