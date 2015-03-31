@@ -6,7 +6,7 @@
  * and/or visitors. Google Maps, Leaflet and OpenLayers maps are all supported.
  * and available through this module.
  * Using a number of optional sources IPGV&M also retrieves and stores
- * geographical and postal address information of your site visitors, based on
+ * geographical and street address information of your site visitors, based on
  * either their HTML5-retrieved positions or their IP addresses.
  * It stores this information in a form suitable for further processing,
  * reporting, exporting and displaying via the Views module, either as tables
@@ -236,8 +236,10 @@ function ip_geoloc_init() {
   $reverse_geocode_client_timeout = _ip_geoloc_reverse_geocode_timeout();
 
   if ($reverse_geocode_client_timeout || ip_geoloc_is_first_click()) {
+    // Not convinced this is desirable
     _ip_geoloc_reinit_location($location, $reverse_geocode_client_timeout);
     ip_geoloc_store_location($location);
+    //_ip_geoloc_set_session_value('location', NULL);
     _ip_geoloc_set_session_value('location', $location);
   }
   $scheduled_reverse_geocode = _ip_geoloc_check_location($location);
@@ -272,7 +274,7 @@ function ip_geoloc_init() {
 
 /**
  * Loads the Google JS, only if the Set my location block is on the page.
- * 
+ *
  * @global type $theme_key
  * @return boolean
  */
@@ -281,7 +283,7 @@ function ip_geoloc_geocode_lib_required() {
     return FALSE;
   }
   global $theme_key;
-  
+
   // Quick query, not worth caching.
   $query = db_select('block', 'block');
   $result = $query
@@ -291,7 +293,7 @@ function ip_geoloc_geocode_lib_required() {
     ->condition('block.theme', $theme_key)
     ->execute();
   $block = $result->fetchAssoc();
-  
+
   if (empty($block['region'])) {
     return FALSE;
   }
@@ -299,7 +301,7 @@ function ip_geoloc_geocode_lib_required() {
   // Pass in a list of 1 block. If it's still there after the call, return TRUE.
   $blocks = array($block['bid'] => (object)$block);
   block_block_list_alter($blocks);
-  
+
   return !empty($blocks);
 }
 
@@ -402,8 +404,10 @@ function ip_geoloc_current_location_ajax_recipient() {
 
   $location['is_updated'] = TRUE;
 
+  // Wipe old location before setting the new one (to avoid merging).
+  _ip_geoloc_set_session_value('location', NULL);
   _ip_geoloc_set_session_value('location', $location);
-  // Got location so reset 'position_pending_since' timer.
+  // Got fresh location so reset 'position_pending_since' timer.
   _ip_geoloc_set_session_value('position_pending_since', NULL);
 }
 
@@ -700,9 +704,10 @@ function ip_geoloc_openlayers_marker_layers() {
 
 /**
  * Implements hook_form_FORMID_alter().
- */
+ *
 function ip_geoloc_form_views_ui_config_item_form_alter(&$form, &$form_state) {
 }
+*/
 
 /**
  * Implements hook_form_FORMID_alter().
@@ -859,6 +864,12 @@ function ip_geoloc_get_font_icon_libs() {
   return $libs;
 }
 
+/**
+ * Returns whether debug is on for the current user.
+ *
+ * @global type $user
+ * @return boolean
+ */
 function ip_geoloc_debug_flag() {
   global $user;
   $user_names = explode(',', check_plain(variable_get('ip_geoloc_debug')));
@@ -927,6 +938,7 @@ function ip_geoloc_views_post_render(&$view, &$rendered_output) {
   $name = $view->style_plugin->plugin_name;
   if (strpos($name, 'ip_geoloc') === 0 && ($location = ip_geoloc_get_visitor_location())) {
     $location['is_updated'] = FALSE;
+    // This performs a merge.
     _ip_geoloc_set_session_value('location', $location);
   }
 }

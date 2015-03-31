@@ -637,13 +637,10 @@ function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_a
  */
 function _ip_geoloc_process_find_me_submit($form, &$form_state) {
 
-  // Wipe existing location before getting a fresh one.
-  _ip_geoloc_set_session_value('location', NULL);
-
-  // Clear any pending position location process that may be in process.
+  // Clear any pending location retrieval process that may be in process.
   _ip_geoloc_set_session_value('last_position_check', time());
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
-  
+
   // Note: cannot redirect when also using AJAX.
 
   // TRUE would give access to $form_state['clicked_button'], but is not needed.
@@ -671,10 +668,10 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   // "Failed to execute 'write' on 'Document': It isn't possible to write into
   // a document from an asynchronously-loaded external script unless it is
   // explicitly opened."
-  // So the JS required is conditionally loaded in hook_init():
+  // So the JS required is conditionally loaded in hook_init() instead.
 
   $path = drupal_get_path('module', 'ip_geoloc');
-  // Either of the two lines below works.
+  // Either of the two lines below work.
   drupal_add_js("$path/js/ip_geoloc_current_location.js");
   //$form['#attached']['js'][] =  "$path/js/ip_geoloc_current_location.js";
 
@@ -721,10 +718,7 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
  */
 function _ip_geoloc_process_go_to_submit($form, &$form_state) {
 
-  // Wipe existing location before obtaining a fresh one.
-  _ip_geoloc_set_session_value('location', NULL);
-
-  // Clear any pending position location process that may be in process.
+  // Clear any pending location retrieval process that may be in process.
   _ip_geoloc_set_session_value('last_position_check', time());
   _ip_geoloc_set_session_value('position_pending_since', NULL);
 
@@ -744,7 +738,8 @@ function _ip_geoloc_process_go_to_submit($form, &$form_state) {
     // "Region" pressed.
     $location = ip_geoloc_set_location_from_region($form_state['values']['region']);
   }
-
+  // Wipe old location before setting the new one (to avoid merging).
+  _ip_geoloc_set_session_value('location', NULL);
   _ip_geoloc_set_session_value('location', $location);
 
   $redirect = variable_get('ip_geoloc_address_redirect');
