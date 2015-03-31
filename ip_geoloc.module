@@ -279,7 +279,7 @@ function ip_geoloc_init() {
  * @return boolean
  */
 function ip_geoloc_geocode_lib_required() {
-  if (!variable_get('ip_geoloc_visitor_find') || !module_exists('block')) {
+  if (!variable_get('ip_geoloc_visitor_find') || !variable_get('ip_geoloc_allow_session_storage', TRUE) || !module_exists('block')) {
     return FALSE;
   }
   global $theme_key;
