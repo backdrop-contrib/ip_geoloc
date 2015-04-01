@@ -18,7 +18,7 @@ define('IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS', 10);
 
 define('IP_GEOLOC_CALLBACK_TIMEOUT', 30);
 define('IP_GEOLOC_LOCATION_CHECK_INTERVAL', 60);
-define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*\njs/*");
+define('IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS', "admin/*\nsites/default/*\nsystem/ajax\njs/*");
 
 define('IP_GEOLOC_MAP_DIV_DEFAULT_STYLE', 'height:300px');
 define('IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS', '{"mapTypeId":"roadmap", "disableDefaultUI":true, "zoom":15, "zoomControl":true}');
@@ -279,7 +279,11 @@ function ip_geoloc_init() {
  * @return boolean
  */
 function ip_geoloc_geocode_lib_required() {
-  if (!variable_get('ip_geoloc_visitor_find') || !variable_get('ip_geoloc_allow_session_storage', TRUE) || !module_exists('block')) {
+  if (!variable_get('ip_geoloc_visitor_find') ||
+      !variable_get('ip_geoloc_visitor_reverse_geocode') ||
+      !variable_get('ip_geoloc_allow_session_storage', TRUE) ||
+      !module_exists('block'))
+  {
     return FALSE;
   }
   global $theme_key;
