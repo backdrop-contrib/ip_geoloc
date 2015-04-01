@@ -249,10 +249,10 @@ function ip_geoloc_init() {
 
     // Insert some javascript to first retrieve the user's lat/lon coords,
     // HTML5 style (requiring the user to accept a browser prompt) and then
-    // optionally, when $reverse_geocode==TRUE, use Google Maps API to
-    // reverse-geocode the lat/lon into a street address.
-    // This is all done via client-side calls, so the Drupal server
-    // will not rake up any calls against its Google-imposed quotum, i.e. the
+    // optionally (default) use Google Maps API to reverse-geocode the lat/lon
+    // into a street address.
+    // This is all done via client-side calls, so the Drupal server will not
+    // rake up any calls against its Google-imposed quotum, i.e. the
     // OVER_QUERY_LIMIT.
     // When done, the javascript calls us back on the default menu callback,
     // '/js/ip_geoloc/current_location', which receives the geolocation data
@@ -297,7 +297,7 @@ function ip_geoloc_geocode_lib_required() {
   if (empty($block['region'])) {
     return FALSE;
   }
-  // Use this function directly, purely to re-use its visibility logic.
+  // Use block_block_list_alter() directly, purely for its visibility logic.
   // Pass in a list of 1 block. If it's still there after the call, return TRUE.
   $blocks = array($block['bid'] => (object)$block);
   block_block_list_alter($blocks);
@@ -935,6 +935,9 @@ function ip_geoloc_js_alter(&$javascript) {
  * map Views have had the opportunity to respond to it being set.
  */
 function ip_geoloc_views_post_render(&$view, &$rendered_output) {
+  if (!isset($view) || !isset($view->style_plugin->plugin_name)) {
+    return;
+  }
   $name = $view->style_plugin->plugin_name;
   if (strpos($name, 'ip_geoloc') === 0 && ($location = ip_geoloc_get_visitor_location())) {
     $location['is_updated'] = FALSE;

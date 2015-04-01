@@ -535,22 +535,10 @@ function _ip_geoloc_set_my_location_add_radios(&$form, &$location, $is_address_e
     $options[1] = $editable_address_label ? filter_xss_admin($editable_address_label) : IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL;
   }
   if (!empty($options)) {
-    $radio_selected = 1;
-    if (isset($location['fixed_address'])) {
-      if ($location['fixed_address'] == 2 && isset($options[2])) {
-        $radio_selected = 2;
-      }
-      elseif ($location['fixed_address'] == 0 && !isset($options[1]) && isset($options[2])) {
-        $radio_selected = 0;
-      }
-    }
-    elseif (isset($options[2])) {
-      $location['fixed_address'] = $radio_selected = 2;
-    }
     $form['fixed_address'] = array(
       '#type' => 'radios',
       '#options' => $options,
-      '#default_value' => $radio_selected,
+      '#default_value' => isset($options[1]) ? 1 : 2,
       '#weight' => 5,
     );
   }
@@ -605,13 +593,33 @@ function _ip_geoloc_set_my_location_add_region(&$form, $location, $geo_vocabular
 
 function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_address_editable, $geo_vocabulary_id) {
 
-  if (isset($form['street_address'])) {
-    // Disable the address box when it isn't editable.
-    $form['street_address']['#disabled'] = !$is_address_editable;
+  $fixed_address = empty($location['fixed_address']) ? 0 : (int)$location['fixed_address'];
+
+  // Check if we have any radio buttons ...
+  if (isset($form['fixed_address'])) {
+    // Default to "Move to", but change if we have to.
+    $radio_selected = 1;
+
+    if (isset($options[2])) {
+      // If there's a "Region" radio...
+      if (empty($fixed_address) && !isset($options[1])) {
+        // .. then when either nothing or "Find me" was pressed and there's only
+        // the Region radio button, no "Move to", then unset the radio.
+        $radio_selected = 0;
+      }
+      elseif ($fixed_address == 2) {
+        // "Region" was selected and "Go" pressed.
+        $radio_selected = 2;
+      }
+    }
+    $form['fixed_address']['#default_value'] = $radio_selected;
   }
+
+  // Disable the address box when it isn't editable.
+  $form['street_address']['#disabled'] = !$is_address_editable;
+
   // Special logic for when there's a Region selector
   if ($geo_vocabulary_id) {
-    $fixed_address = empty($location['fixed_address']) ? 0 : (int)$location['fixed_address'];
 
     // If "Move to" is NOT there, remove Address box when Go was pressed.
     if (!isset($options[1]) && $fixed_address == 2) {
@@ -672,8 +680,8 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
 
   $path = drupal_get_path('module', 'ip_geoloc');
   // Either of the two lines below work.
-  drupal_add_js("$path/js/ip_geoloc_current_location.js");
-  //$form['#attached']['js'][] =  "$path/js/ip_geoloc_current_location.js";
+  //drupal_add_js("$path/js/ip_geoloc_current_location.js");
+  $form['#attached']['js'][] =  "$path/js/ip_geoloc_current_location.js";
 
   $menu_callback = variable_get('clean_url', 0) ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';
   $reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
