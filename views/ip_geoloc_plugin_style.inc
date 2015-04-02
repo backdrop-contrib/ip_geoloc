@@ -654,8 +654,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
     // @todo - Add support for multiple grouping fields?
     $group_field = $views_plugin_style->options['grouping'][0]['field'];
   }
-  $map_options = json_decode($views_plugin_style->options['map_options']);
-  $separator = isset($map_options->separator) ? filter_xss_admin($map_options->separator) : '<br/>';
+  $separator = isset($views_plugin_style->options['map_options']['separator'])
+    ? filter_xss_admin($views_plugin_style->options['map_options']['separator'])
+    : '<br/>';
   
   foreach ($sets as $set) {
     // Render as a grouping set.
