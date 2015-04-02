@@ -195,25 +195,24 @@ function ip_geoloc_region_autocomplete($partial_region = '') {
 }
 
 /**
- * Implements hook_js().
+ * Implements hook_js_info().
  */
-function ip_geoloc_js() {
-  return array(
-    // Responding to /js/ip_geoloc/current_location, we get here when the
-    // root .htaccess file is configured to reroute via the root js.php file
-    // Calling the same callback as defined in ip_geoloc_menu(), but using a
-    // a faster, more economic bootstrap phase.
+function ip_geoloc_js_info() {
+  // With the js.module installed, and the .htaccess file edited to route
+  // through js.php, this array defines what function to call when a POST is
+  // received on "js/ip_geoloc/current_location".
+  // We're calling the same function as defined in ip_geoloc_menu(), but using
+  // a faster, more economic bootstrap phase, without hook_init().
+  $js_info = array(
     'current_location' => array(
-      'callback' => 'ip_geoloc_current_location_ajax_recipient',
       'bootstrap' => module_exists('better_statistics') ? DRUPAL_BOOTSTRAP_FULL : DRUPAL_BOOTSTRAP_SESSION,
-      'skip_hook_init' => TRUE,
+      'callback function' => 'ip_geoloc_current_location_ajax_recipient',
       'dependencies' => module_exists('session_cache') ? array('session_cache') : NULL,
-      // 'includes' => array(),
-      // 'access callback' => 'user_access',
-      // 'access arguments' => array('access content'),
-      // 'page arguments' => array(),
+      'skip init' => TRUE,
+      'token' => FALSE,
     ),
   );
+  return $js_info;
 }
 
 /**

@@ -680,7 +680,7 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   // "Failed to execute 'write' on 'Document': It isn't possible to write into
   // a document from an asynchronously-loaded external script unless it is
   // explicitly opened."
-  // So the Google JS required is loaded in _ip_geoloc_set_my_location_add_find_me().
+  // So the Google JS lib is loaded in _ip_geoloc_set_my_location_add_find_me().
   $path = drupal_get_path('module', 'ip_geoloc');
   $form['#attached']['js'][] =  "$path/js/ip_geoloc_current_location.js";
 
