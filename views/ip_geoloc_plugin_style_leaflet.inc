@@ -496,7 +496,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     // Add wrapper for cluster differentiator drop-down and zoom level
     // specifiers.
-    $intro = t('Superior marker clustering with <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
+    $intro = t('Superior marker clustering with <a target="regionbound" href="!url_regionbound">RegionBound</a>. See the <a target="readme" href="!url_readme">README</a> for details.', array(
+      '!url_regionbound' => url('http://regionbound.com'),
+      '!url_readme' => url("$path/README.txt"),
+    ));
     $form['cluster_differentiator'] = array(
       '#type' => 'fieldset',
       '#collapsible' => TRUE,

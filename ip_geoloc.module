@@ -265,48 +265,6 @@ function ip_geoloc_init() {
 
     _ip_geoloc_set_session_value('last_position_check', time());
   }
-  elseif (ip_geoloc_geocode_lib_required()) {
-    // See _ip_geoloc_process_find_me_ajax() for why this is done here.
-    drupal_add_js(IP_GEOLOC_GOOGLE_MAPS_GPS, array('group' => JS_LIBRARY));
-  }
-
-}
-
-/**
- * Loads the Google JS, only if the Set my location block is on the page.
- *
- * @global type $theme_key
- * @return boolean
- */
-function ip_geoloc_geocode_lib_required() {
-  if (!variable_get('ip_geoloc_visitor_find') ||
-      !variable_get('ip_geoloc_visitor_reverse_geocode') ||
-      !variable_get('ip_geoloc_allow_session_storage', TRUE) ||
-      !module_exists('block'))
-  {
-    return FALSE;
-  }
-  global $theme_key;
-
-  // Quick query, not worth caching.
-  $query = db_select('block', 'block');
-  $result = $query
-    ->fields('block')
-    ->condition('block.delta', 'geocode_address')
-    ->condition('block.module', 'ip_geoloc')
-    ->condition('block.theme', $theme_key)
-    ->execute();
-  $block = $result->fetchAssoc();
-
-  if (empty($block['region'])) {
-    return FALSE;
-  }
-  // Use block_block_list_alter() directly, purely for its visibility logic.
-  // Pass in a list of 1 block. If it's still there after the call, return TRUE.
-  $blocks = array($block['bid'] => (object)$block);
-  block_block_list_alter($blocks);
-
-  return !empty($blocks);
 }
 
 /**

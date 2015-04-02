@@ -499,6 +499,10 @@ function _ip_geoloc_set_my_location_add_find_me(&$form, $ajax_wrapper_id) {
   $find_visitor_label = variable_get('ip_geoloc_visitor_find_label', '');
   $find_visitor_label = empty($find_visitor_label) ? IP_GEOLOC_VISITOR_DEFAULT_FIND_LABEL : filter_xss_admin($find_visitor_label);
 
+  // See _ip_geoloc_process_find_me_ajax() for why this is done here.
+  if (variable_get('ip_geoloc_visitor_reverse_geocode')) {
+    $form['#attached']['js'][] = IP_GEOLOC_GOOGLE_MAPS_GPS;
+  }
   $form['find'] = array(
     // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
     '#type' => 'submit',
@@ -672,15 +676,12 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
 
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
-  // Cannot load JS here. Will result in error relating to Google code:
+  // Cannot load Google JS here. Will result in error relating to Google code:
   // "Failed to execute 'write' on 'Document': It isn't possible to write into
   // a document from an asynchronously-loaded external script unless it is
   // explicitly opened."
-  // So the JS required is conditionally loaded in hook_init() instead.
-
+  // So the Google JS required is loaded in _ip_geoloc_set_my_location_add_find_me().
   $path = drupal_get_path('module', 'ip_geoloc');
-  // Either of the two lines below work.
-  //drupal_add_js("$path/js/ip_geoloc_current_location.js");
   $form['#attached']['js'][] =  "$path/js/ip_geoloc_current_location.js";
 
   $menu_callback = variable_get('clean_url', 0) ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location';

@@ -286,11 +286,11 @@ sites/all/libraries/leaflet_markercluster/dist the .js file from the
 regionbound.com download.
 Check the Status Report page to see if IPGV&M automatically detected the new JS.
 Now you can configure the region-aware clustering algorithm by filling out the
-cluster differentiator panel on the IPGV&M Views UI.
-Your View, and therefore the content type that has a lat/lon associated with it,
-must feature one of the following.
+Cluster Region Differentiator panel on the IPGV&M Views UI.
+Your View, and subsequently the content type that has a lat/lon associated with
+it, must feature ONE of the following.
 1a An AddressField (as in the http://drupal.org/project/addressfield module)
-   in this case IPGV&M will automatically use for differenetiation the
+   in this case IPGV&M will automatically use for differentiation the
    region-hierarchy of the address field components country, administrative
    area, locality and postcode
 1b Selected AddressField components: single out the ones you want to use
@@ -348,7 +348,7 @@ IPGV&M will take advantage of the "High-performance Javascript callback
 handler", if installed.
 Installation instructions for Nginx: http://drupal.org/node/1876418
 Installation instructions for Apache: 
-o download and enable https://drupal.org/project/js
+o download and enable https://drupal.org/project/js, version 7.x-2.x
 o find the .htacess in your document root -- that is where your index.php lives
 o visit admin/config/system/js; it displays a number of lines tailored for
   your server
