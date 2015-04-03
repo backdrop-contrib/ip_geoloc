@@ -243,7 +243,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
-      '#description' => t('In addition to its balloon each marker may have a tooltip. A tooltip is a short text that appears when visitors hover their mouse over a marker.'),
+      '#description' => t('In addition to its balloon each marker may have a tooltip. A tooltip is a short text that appears when visitors hover their mouse over a marker. <br/>If you want tooltips for lines and polygons too, please use this setting in combination with <a href="@url_leaflet_label">Leaflet Label</a>.', array(
+        '@url_leaflet_label' => url('http://drupal.org/project/leaflet_label'),
+      )),
       '#weight' => 60,
     );
     $form['tooltips']['marker_tooltip'] = array(
