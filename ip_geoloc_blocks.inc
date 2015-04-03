@@ -441,7 +441,7 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
  * Form for finding the visitor or going to a region or street address.
  *
  * The value of the 'fixed_address' radio-button is stored on the location, as
- * stored on the session. It's value is coded as follows:
+ * stored on the session. Its value is coded as follows:
  *   0: "Find me" button pressed
  *   1: "Move to" radio button selected and "Go" pressed
  *   2: "Region" radio button selected and "Go" pressed

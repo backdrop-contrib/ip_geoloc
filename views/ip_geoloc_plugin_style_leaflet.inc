@@ -865,8 +865,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['specialCharClass'] = $this->options['default_marker']['default_marker_special_char_class'];
       }
       if (!empty($location->marker_tooltip)) {
-        $has_special_markers = TRUE;
-        $feature['tooltip'] = $location->marker_tooltip;
+        if (module_exists('leaflet_label')) {
+          $feature['label'] = $location->marker_tooltip;
+        }
+        else {
+          $has_special_markers = TRUE;
+          $feature['tooltip'] = $location->marker_tooltip;
+        }
       }
       if (!empty($location->regions)) {
         $has_special_markers = TRUE;
@@ -955,7 +960,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['dragging'] = $dragging;
 
     $map['settings']['maxClusterRadius'] = 0;
-    if (!empty($cluster_radius)) {
+    if (module_exists('leaflet_markercluster') && !empty($cluster_radius)) {
       $map['settings']['maxClusterRadius'] = $cluster_radius;
       $map['settings']['disableClusteringAtZoom'] = $disable_clustering_at_zoom;
       $map['settings']['addRegionToolTips'] = $cluster_tooltips;
@@ -1052,7 +1057,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     if (!empty($cluster_radius) && !module_exists('leaflet_markercluster')) {
       $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
-      drupal_set_message(t('Cannot cluster markers in View %display_name - Leaflet MarkerCluster module not enabled.', array('%display_name' => $display_name)), 'warning');
+      drupal_set_message(t('Cannot cluster markers in View %display_name, as the module Leaflet MarkerCluster is not enabled.', array('%display_name' => $display_name)), 'warning');
     }
     if ($reset_control || !empty($has_special_markers)) {
       // Load the CSS that comes with the font icon library which in return
