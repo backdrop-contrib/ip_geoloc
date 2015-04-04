@@ -1,3 +1,4 @@
+
 /* Views Table format */
 tr.synced-marker-hover,
 tr.odd.synced-marker-hover,
@@ -14,14 +15,13 @@ tr.even.synced-marker-hover {
 }
 
 /* Default markers, normal size 41x25, increase h and w by 50% each */
-.leaflet-maker-pane > img.leaflet-marker-icon.synced-content-hover {
-  opacity: 1.0;
+img.leaflet-marker-icon.synced-content-hover {
   height: 61px !important;
   width: 37px !important;
   margin-top: -61px !important;
   margin-left: -19px !important;
-  transition: all 0.3s ease-in;
-  -ms-transition: all 0.3s ease-in;
+  transition: all 0.25s ease-in;
+  -ms-transition: all 0.25s ease-in;
 }
 /* Special markers 42x32, increase h and w by 50% each */
 .leaflet-tagged-marker.synced-content-hover > img {
@@ -29,12 +29,12 @@ tr.even.synced-marker-hover {
   width: 48px !important;
   margin-top: -63px !important;
   margin-left: -24px !important;
-  transition: all 0.3s ease-in;
-  -ms-transition: all 0.3s ease-in;
+  transition: all 0.25s ease-in;
+  -ms-transition: all 0.25s ease-in;
 }
 .leaflet-tagged-marker.synced-content-hover > i {
   font-size: 30px;
   top: -54px;
-  transition: all 0.3s ease-in;
-  -ms-transition: all 0.3s ease-in;
+  transition: all 0.25s ease-in;
+  -ms-transition: all 0.25s ease-in;
 }
