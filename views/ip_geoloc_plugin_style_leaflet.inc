@@ -69,24 +69,24 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $options['sync'] = array(
       'contains' => array(
-        LEAFLET_SYNC_CONTENT_TO_MARKER => array('default' => 0),
-        LEAFLET_SYNC_MARKER_TO_CONTENT => array('default' => 0),
-        LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP => array('default' => 0),
+        LEAFLET_SYNC_CONTENT_TO_MARKER => array('default' => FALSE),
+        LEAFLET_SYNC_MARKER_TO_CONTENT => array('default' => FALSE),
+        LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP => array('default' => FALSE),
       ),
     );
-    $options['full_screen'] = array('default' => 0);
-    $options['scale_metric'] = array('default' => 0);
-    $options['scale_imperial'] = array('default' => 0);
-    $options['zoom_indicator'] = array('default' => 0);
-    $options['map_reset'] = array('default' => 0);
+    $options['full_screen'] = array('default' => FALSE);
+    $options['scale_metric'] = array('default' => FALSE);
+    $options['scale_imperial'] = array('default' => FALSE);
+    $options['zoom_indicator'] = array('default' => FALSE);
+    $options['map_reset'] = array('default' => FALSE);
     $options['map_reset_css_class'] = array('default' => 'R');
 
     $options['mini_map'] = array(
       'contains' => array(
-        'on' => array('default' => 0),
+        'on' => array('default' => FALSE),
         'height' => array('default' => 100),
         'width' => array('default' => 150),
-        'toggle' => array('default' => 1),
+        'toggle' => array('default' => TRUE),
         'scope_color' => array('default' => 'red'),
         'zoom_delta' => array('default' => -5),
       ),
@@ -395,7 +395,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('When hovering markers on the map, highlight associated content on the page'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] && $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
-      '#description' => t('Associated content must have the CSS class <em>.node-[nid]</em> for the content to be highlighted.') . ' '
+      '#description' => t('Associated content must have the CSS class <em>.sync-id-[nid]</em> for the content to be highlighted.') . ' '
         . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Table settings of an attachment display.') . '<br/>'
         . t('Content is then highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
         . $note,
@@ -839,7 +839,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $cluster_radius = $this->options['cluster_radius'];
     $disable_clustering_at_zoom = $this->options['disable_clustering_at_zoom'];
-    $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
     $cluster_aggregation_field = $this->options['cluster_aggregation']['aggregation_field'];
     $cluster_aggregation_function = $this->options['cluster_aggregation']['aggregation_function'];
@@ -988,7 +987,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Make sure we start with 0 or regions will come across as Object
         // rather than array.
         $feature['regions'] = array(0 => '') + $location->regions;
-        
+
         if (isset($location->aggregation_value)) {
           $feature['aggregationValue'] = (float)$location->aggregation_value;
         }
@@ -1316,7 +1315,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $region_field = field_info_field($region_fieldname);
       $region_fields[] = empty($region_field) ? $region_fieldname : $region_field;
     }
-    if (empty($region_fields)) {
+    if (empty($region_fields) || !reset($region_fields)) {
       return;
     }
     foreach ($this->view->result as $key => $row) {

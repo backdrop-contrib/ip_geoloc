@@ -14,7 +14,7 @@ tr.even.synced-marker-hover {
 }
 
 /* Default markers, normal size 41x25, increase h and w by 50% each */
-img.leaflet-marker-icon.synced-content-hover {
+.leaflet-maker-pane > img.leaflet-marker-icon.synced-content-hover {
   opacity: 1.0;
   height: 61px !important;
   width: 37px !important;
@@ -32,7 +32,7 @@ img.leaflet-marker-icon.synced-content-hover {
   transition: all 0.3s ease-in;
   -ms-transition: all 0.3s ease-in;
 }
-.leaflet-tagged-marker.synced-content-hover i {
+.leaflet-tagged-marker.synced-content-hover > i {
   font-size: 30px;
   top: -54px;
   transition: all 0.3s ease-in;

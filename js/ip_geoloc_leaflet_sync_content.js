@@ -9,7 +9,7 @@
 
     // lFeature is the marker, polygon, linestring... just created on the map.
     // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leafet.inc
-    var contentSelector = ".node-" + feature.feature_id;
+    var contentSelector = ".sync-id-" + feature.feature_id;
 
     if ((feature.flags & LEAFLET_SYNC_CONTENT_TO_MARKER) && feature.feature_id) {
       lFeature.on('mouseover', function(e) {
@@ -21,6 +21,7 @@
     }
 
     if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT) && feature.tooltip) {
+      // Test for "\n" inserted by region differentiator, if selected.
       var nl = feature.tooltip.indexOf("\n");
       var tooltip = (nl < 0) ? feature.tooltip : feature.tooltip.substring(0, nl);
       // Can't seem to set an id on the marker image, so abusing tooltip
@@ -28,7 +29,8 @@
       // on parent-div of img.
       // If tooltip is a number compare "whole word", otherwise "starts-with"
       var markerSelector = isNaN(tooltip)
-        ? "*[title^='" + tooltip + "']" : "*[title~='" + tooltip + "']";
+        ? ".leaflet-marker-pane *[title^='" + tooltip + "']"
+        : ".leaflet-marker-pane *[title~='" + tooltip + "']";
       // Using bind() as core's jQuery is old and does not support on()
       $(contentSelector).bind('mouseover', function(e) {
         if (lastMarkerSelector !== markerSelector) {
@@ -44,17 +46,15 @@
           }
         }
       });
-      $(contentSelector).bind('mouseout', function(e) {
-         //$(lastMarkerSelector).removeClass('synced-content-hover');
-      });
+      //$(contentSelector).bind('mouseout', function(e) {
+      //});
     }
   });
 
   $(document).ready(function() {
     // For all maps: close all popus on map mouseout.
     for (var i = 0; i < Drupal.settings.leaflet.length; i++) {
-      var map = Drupal.settings.leaflet[i].lMap;
-      map.on('mouseout', function(e) {
+      Drupal.settings.leaflet[i].lMap.on('mouseout', function(e) {
         e.target.closePopup();
       });
     }
