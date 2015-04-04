@@ -24,7 +24,7 @@ define('IP_GEOLOC_MAP_CENTER_ON_LOCATION_FROM_ARGUMENT', 5);
 /**
  * The bulk of the plugin style form.
  */
-function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form_state) {
+function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$weight, &$form, &$form_state) {
 
   // We only ever want to offer at most 1 grouping field.
   if (!empty($form['grouping']) && count($form['grouping']) > 1) {
@@ -51,7 +51,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#multiple' => TRUE,
     '#options' => $field_options,
     '#default_value' => $selected_options,
-    '#weight' => 10,
+    '#weight' => $weight++,
   );
   $form['ip_geoloc_views_plugin_latitude_text'] = array(
     '#type' => 'textfield',
@@ -64,7 +64,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       //),
     ),
     '#description' => t("If you have multiple fields to enter, separate these by comma's."),
-    '#weight' => 11,
+    '#weight' => $weight++,
   );
   $explanation1 = t("Select the field(s) holding latitude from the select-box above. Make sure you have added it to the Fields list of this View or it won't show up above. Fields from the <strong>Geofield, Get Locations</strong> and <strong>Geolocation</strong> modules can all be selected this way.");
   $explanation2 = t('Your latitude may reside in a field with a special name. This is the case when using the <strong>Location</strong> module or when you have used <strong>relationships</strong> to pull in lat & lon. To input special names, select <em>[Type a field name below]</em> and enter the field\'s machine name. This <a target="_field_names" href="!url">list of all field names</a> may help in figuring out the correct name.', array(
@@ -74,7 +74,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
   $form['ip_geoloc_views_plugin_latitude_desc'] = array(
     '#type' => 'item',
     '#markup' => $explanation1 . '<br/><strong>' . t('Special names') . ': </strong>' . "$explanation2<br/>$explanation3",
-    '#weight' => 12,
+    '#weight' => $weight++,
   );
   $default_text = '';
   $selected_option = $views_plugin_style->options['ip_geoloc_views_plugin_longitude'];
@@ -87,7 +87,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#type' => 'select',
     '#options' => $field_options,
     '#default_value' => $selected_option,
-    '#weight' => 15,
+    '#weight' => $weight++,
   );
   $form['ip_geoloc_views_plugin_longitude_text'] = array(
     '#type' => 'textfield',
@@ -97,12 +97,12 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
         ':input[name="style_options[ip_geoloc_views_plugin_longitude]"]' => array('value' => '---'),
       ),
     ),
-    '#weight' => 16,
+    '#weight' => $weight++,
   );
   $form['ip_geoloc_views_plugin_longitude_desc'] = array(
     '#type' => 'item',
     '#markup' => t('Select <em>&lt;none&gt;</em>, except when latitude and longitude are separate fields, as in the <strong>Location</strong> module. In these cases, select <em>[Type a field name below]</em> and enter the field name. For the Location module, enter <strong>location_longitude</strong>.'),
-    '#weight' => 17,
+    '#weight' => $weight++,
   );
 
   $differentiator = isset($form_state['differentiator']) ? $form_state['differentiator'] : $views_plugin_style->options['differentiator']['differentiator_field'];
@@ -133,7 +133,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>location differentiator</strong> below.'),
       '#attributes' => array(
         'class' => $is_openlayers ? array('marker-color-ol') : array('marker-color')),
-      '#weight' => 20,
+      '#weight' => $weight++,
     );
   }
   if (!$is_openlayers) {
@@ -151,7 +151,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#description' => $descr,
     '#prefix' => '<div id="differentiator-wrapper">',
     '#suffix' => '</div>',
-    '#weight' => 30,
+    '#weight' => $weight++,
   );
 
   $instances = ip_geoloc_get_field_instances($differentiator);
@@ -250,7 +250,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
       IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED => t('Use the center of gravity based on all locations, except the visitor location (this option is sensitive to location clusters)'),
     ),
     '#description' => $desc,
-    '#weight' => 40,
+    '#weight' => $weight++,
   );
   $form['empty_map_center'] = array(
     '#title' => t('No locations behaviour'),
@@ -259,7 +259,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$form, &$form
     '#default_value' => $views_plugin_style->options['empty_map_center'],
     '#description' => t('a) Show empty map: enter <em>latitude, longitude</em> of the map center.<br/>b) Show empty map centered on visitor location: enter the word %visitor.<br/>c) Show nothing: if this field is left blank, the map canvas will be suppressed when there are no locations to show. If you wish, you may use the <strong>No results behavior</strong> panel in the Advanced section of the Views UI to show an alternative text or content.', array(
       '%visitor' => t('visitor'))),
-    '#weight' => 110,
+    '#weight' => $weight++,
   );
   return $form;
 }

@@ -51,7 +51,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     parent::options_form($form, $form_state);
 
     $form_state['renderer'] = 'google';
-    ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
+    $weight = 10;
+    ip_geoloc_plugin_style_bulk_of_form($this, $weight, $form, $form_state);
 
     unset($form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_OF_LOCATIONS]);
     $form['center_option']['#options'][IP_GEOLOC_MAP_CENTER_ON_VISITOR_AND_LOCATIONS] =  t('Auto-box and zoom to fit all locations, including the visitor location.');

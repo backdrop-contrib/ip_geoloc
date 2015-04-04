@@ -1,0 +1,40 @@
+/* Views Table format */
+tr.synced-marker-hover,
+tr.odd.synced-marker-hover,
+tr.even.synced-marker-hover {
+  background-color: lightcyan;
+}
+/* For Unformatted, HTML list */
+.views-row.synced-marker-hover  {
+  background-color: lightcyan;
+}
+/* For Grid */
+.views-view-grid td.synced-marker-hover {
+  background-color: lightcyan;
+}
+
+/* Default markers, normal size 41x25, increase h and w by 50% each */
+img.leaflet-marker-icon.synced-content-hover {
+  opacity: 1.0;
+  height: 61px !important;
+  width: 37px !important;
+  margin-top: -61px !important;
+  margin-left: -19px !important;
+  transition: all 0.3s ease-in;
+  -ms-transition: all 0.3s ease-in;
+}
+/* Special markers 42x32, increase h and w by 50% each */
+.leaflet-tagged-marker.synced-content-hover > img {
+  height: 63px !important;
+  width: 48px !important;
+  margin-top: -63px !important;
+  margin-left: -24px !important;
+  transition: all 0.3s ease-in;
+  -ms-transition: all 0.3s ease-in;
+}
+.leaflet-tagged-marker.synced-content-hover i {
+  font-size: 30px;
+  top: -54px;
+  transition: all 0.3s ease-in;
+  -ms-transition: all 0.3s ease-in;
+}

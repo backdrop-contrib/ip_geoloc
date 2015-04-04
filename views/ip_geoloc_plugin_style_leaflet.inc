@@ -9,7 +9,10 @@
 
 require_once 'ip_geoloc_plugin_style.inc';
 
-define('LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER', 0x01);
+define('LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER', 1);
+define('LEAFLET_SYNC_CONTENT_TO_MARKER', 1 << 1);
+define('LEAFLET_SYNC_MARKER_TO_CONTENT', 1 << 2);
+define('LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP', 1 << 3);
 
 class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
@@ -51,17 +54,33 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $options['center_option'] = array('default' => 0);
 
-    $options['tooltips'] = array(
-      'contains' => array(
-        'marker_tooltip' => array('default' => ''),
-      ),
-    );
     $options['tags'] = array(
       'contains' => array(
         'marker_tag' => array('default' => ''),
         'tag_css_class' => array('default' => 'tag-inside-marker'),
       ),
     );
+
+    $options['tooltips'] = array(
+      'contains' => array(
+        'marker_tooltip' => array('default' => ''),
+      ),
+    );
+
+    $options['sync'] = array(
+      'contains' => array(
+        LEAFLET_SYNC_CONTENT_TO_MARKER => array('default' => 0),
+        LEAFLET_SYNC_MARKER_TO_CONTENT => array('default' => 0),
+        LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP => array('default' => 0),
+      ),
+    );
+    $options['full_screen'] = array('default' => 0);
+    $options['scale_metric'] = array('default' => 0);
+    $options['scale_imperial'] = array('default' => 0);
+    $options['zoom_indicator'] = array('default' => 0);
+    $options['map_reset'] = array('default' => 0);
+    $options['map_reset_css_class'] = array('default' => 'R');
+
     $options['mini_map'] = array(
       'contains' => array(
         'on' => array('default' => 0),
@@ -72,15 +91,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'zoom_delta' => array('default' => -5),
       ),
     );
-    $options['full_screen'] = array('default' => 0);
-    $options['scale_metric'] = array('default' => 0);
-    $options['scale_imperial'] = array('default' => 0);
-    $options['zoom_indicator'] = array('default' => 0);
-    $options['map_reset'] = array('default' => 0);
-    $options['map_reset_css_class'] = array('default' => 'R');
 
     $options['cluster_radius'] = array('default' => module_exists('leaflet_markercluster') ? 80 : '');
     $options['disable_clustering_at_zoom'] = array('default' => '');
+
     $options['cluster_differentiator'] = array(
       'contains' => array(
         'cluster_differentiator_fields' => array('default' => ''),
@@ -127,6 +141,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
    */
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+
     $path = drupal_get_path('module', 'ip_geoloc');
     $select_css_file = strpos(ip_geoloc_marker_directory(), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
 
@@ -134,6 +149,29 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       "$path/css/ip_geoloc_admin.css",
       "$path/css/$select_css_file",
     ));
+    $weight = 1;
+    $this->_add_map_and_height($form, $weight);
+
+    $form_state['renderer'] = 'leaflet';
+    ip_geoloc_plugin_style_bulk_of_form($this, $weight, $form, $form_state);
+    $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
+
+    $lib_markercluster = module_exists('leaflet_markercluster') ? leaflet_markercluster_get_library_path() : FALSE;
+    $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE, TRUE);
+
+    $this->_add_default_marker($form, $weight);
+    $this->_add_visitor_marker($form, $weight);
+    $this->_add_check_boxes($form, $weight);
+    $this->_add_mini_map_inset($form, $weight);
+    $this->_add_marker_tags($form, $fields, $weight);
+    $this->_add_marker_tooltips($form, $fields, $weight);
+    $this->_add_sync($form, $weight);
+    $this->_add_markercluster($form, $lib_markercluster, $weight);
+    $this->_add_cluster_differentiator($form, $form_state, $lib_markercluster, $weight);
+    $this->_add_more_map_options($form, $weight);
+  }
+
+  private function _add_map_and_height(&$form, &$weight) {
     $maps = array();
     foreach (ip_geoloc_plugin_style_leaflet_map_get_info() as $key => $map) {
       $maps[$key] = $map['label'];
@@ -144,7 +182,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#options' => $maps,
       '#default_value' => $this->options['map'],
       '#required' => TRUE,
-      '#weight' => -2,
+      '#weight' => $weight++,
     );
     $form['map_height'] = array(
       '#title' => t('Map height'),
@@ -153,13 +191,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 4,
       '#default_value' => $this->options['map_height'],
       '#description' => t('The default produces a map of 300 pixels high with a width extending to its bounding container.'),
-      '#weight' => -1,
+      '#weight' => $weight++,
     );
+  }
 
-    $form_state['renderer'] = 'leaflet';
-    ip_geoloc_plugin_style_bulk_of_form($this, $form, $form_state);
-    $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
-
+  private function _add_default_marker(&$form, &$weight) {
+    $path = drupal_get_path('module', 'ip_geoloc');
     $desc1 = t('In addition to selecting a color, you may superimpose a special icon on top of each marker. <br><a target="fsymbols" href="!url_fsymbols">fsymbols</a> characters can be copied and pasted straight into the <strong>Font icon character</strong> field. Other libraries like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> and <a target="flaticon" href="!url_flaticon">flaticon</a> use names that you type in the <strong>Font icon class</strong> field.', array(
       '!url_fsymbols' => url('http://fsymbols.com'),
       '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
@@ -168,15 +205,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $desc2 = t('<em>fsymbols</em> require no further installation. For other libraries see the <a target="readme" href="!url_readme">README</a>.', array(
       '!url_readme' => url("$path/README.txt"),
     ));
-
     $desc3 = t('All this works best with the markers from the <em>/amarkers</em> directory, configurable <a target="config" href="!url_config">here</a>.', array(
       '!url_config' => url('admin/config/system/ip_geoloc'),
     ));
+
     $form['default_marker'] = array(
       '#type' => 'fieldset',
       '#title' => t('Default marker style'),
       '#description' => $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
-      '#weight' => 25,
+      '#weight' => $weight++,
     );
     $form['default_marker']['default_marker_color'] = array(
       '#title' => t('Style/color'),
@@ -203,17 +240,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['default_marker']['default_marker_special_char_class'],
       '#description' => $desc4,
     );
+  }
+
+  private function _add_visitor_marker(&$form, &$weight) {
+    $form['visitor_marker'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Visitor marker style'),
+      '#weight' => $weight++,
+    );
 
     $visitor_marker_colors = array(
       'none' => '<' . t('none') . '>') +
       ip_geoloc_marker_colors();
     unset($visitor_marker_colors['0']);
 
-    $form['visitor_marker'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Visitor marker style'),
-      '#weight' => 27,
-    );
     $form['visitor_marker']['visitor_marker_color'] = array(
       '#title' => t('Style/color'),
       '#type' => 'select',
@@ -236,35 +276,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
       '#description' => t('As above.'),
     );
+  }
 
-    $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE, TRUE);
-    $form['tooltips'] = array(
-      '#title' => t('Marker tooltips'),
-      '#type' => 'fieldset',
-      '#collapsible' => TRUE,
-      '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
-      '#description' => t('In addition to its balloon each marker may have a tooltip. A tooltip is a short text that appears when visitors hover their mouse over a marker. <br/>If you want tooltips for lines and polygons too, please use this setting in combination with <a href="@url_leaflet_label">Leaflet Label</a>.', array(
-        '@url_leaflet_label' => url('http://drupal.org/project/leaflet_label'),
-      )),
-      '#weight' => 60,
-    );
-    $form['tooltips']['marker_tooltip'] = array(
-      '#title' => t('Views field to populate tooltips'),
-      '#type' => 'select',
-      //'#multiple' => TRUE,
-      //'#size' => 6,
-      '#default_value' => $this->options['tooltips']['marker_tooltip'],
-      '#options' => $fields,
-      '#description' => t('Example: "Content: Title"'),
-    );
-
+  private function _add_marker_tags(&$form, $fields, &$weight) {
     $form['tags'] = array(
       '#title' => t('Marker tags'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['tags']['marker_tag']),
       '#description' => t('Each marker may have a tag. A tag is a number or short text shown permanently above, below or inside the marker.'),
-      '#weight' => 70,
+      '#weight' => $weight++,
     );
     $form['tags']['marker_tag'] = array(
       '#title' => t('Views field to populate tags'),
@@ -279,70 +300,127 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['tags']['tag_css_class'],
       '#description' => t('The CSS class or classes applied to each tag. Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. If you opted to have <em>no markers</em>, i.e. tags only, you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. You may also create your own CSS classes and use them here.'),
     );
-    $selected_map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']);
-    $zoom_top = 18;
-    if (isset($selected_map['settings']['maxZoom'])) {
-      $zoom_top = $selected_map['settings']['maxZoom'];
-    }
-    $form['map_options'] = array(
-      '#title' => t('More map options'),
+  }
+
+  private function _add_marker_tooltips(&$form, $fields, &$weight) {
+    $form['tooltips'] = array(
+      '#title' => t('Marker tooltips'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
-      // Or: empty($this->options['map_options']['zoom']) ?
-      '#collapsed' => TRUE,
-      '#weight' => 200,
+      '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
+      '#description' => t('In addition to balloons, which pop up when markers are <em>clicked</em>, you can have tooltips. A tooltip is a short text that appears when you <em>hover</em> over a marker.'),
+      '#weight' => $weight++,
     );
-    $form['map_options']['maxzoom'] = array(
-      '#title' => t('Maximum zoom level (0..@zoomtop)', array('@zoomtop' => $zoom_top)),
-      '#type' => 'textfield',
-      '#size' => 2,
-      '#default_value' => $this->options['map_options']['maxzoom'],
-      '#description' => t('Note that not all maps support all zoom levels.'),
+    $note_polygons = t('If you want tooltips for lines and polygons too, please use this option in combination with <a href="@url_leaflet_label">Leaflet Label</a>.', array(
+      '@url_leaflet_label' => url('http://drupal.org/project/leaflet_label'))
     );
-    $initial_zoom_max = $zoom_top;
-    if (is_numeric($this->options['map_options']['maxzoom'])) {
-      $initial_zoom_max = min($zoom_top, $this->options['map_options']['maxzoom']);
+    $form['tooltips']['marker_tooltip'] = array(
+      '#title' => t('Views field to populate tooltips'),
+      '#type' => 'select',
+      //'#multiple' => TRUE,
+      //'#size' => 6,
+      '#default_value' => $this->options['tooltips']['marker_tooltip'],
+      '#options' => $fields,
+      '#description' => t('Example: "Content: Title"') . '<br/>' . $note_polygons,
+    );
+  }
+
+  private function _add_check_boxes(&$form, &$weight) {
+    $form['full_screen'] = array(
+      '#title' => t('Add a full-screen toggle to the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['full_screen'],
+      '#weight' => $weight++,
+    );
+    $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
+    if ($lib_fullscreen) {
+      $file_fullscreen = $lib_fullscreen . '/dist/Leaflet.fullscreen.min.js';
+      if (!file_exists($file_fullscreen)) {
+        $form['full_screen']['#description'] = t('Error: <em>leaflet-fullscreen</em> library found, but %js_file is missing.', array('%js_file' => $file_fullscreen));
+      }
     }
-    $form['map_options']['zoom'] = array(
-      '#title' => t('Initial zoom level (0..@maxzoom)', array('@maxzoom' => $initial_zoom_max)),
+    else {
+      $form['full_screen']['#description'] = t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
+        '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
+    }
+
+    $form['scale_imperial'] = array(
+      '#title' => t('Add an imperial (miles) scale'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['scale_imperial'],
+      '#weight' => $weight++,
+    );
+    $form['scale_metric'] = array(
+      '#title' => t('Add a metric (km) scale'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['scale_metric'],
+      '#weight' => $weight++,
+    );
+    $form['zoom_indicator'] = array(
+      '#title' => t('Add an indicator showing the active zoom level'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['zoom_indicator'],
+      '#weight' => $weight++,
+    );
+    $form['map_reset'] = array(
+      '#title' => t('Add a reset button'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['map_reset'],
+      '#description' => t('The button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
+      '#weight' => $weight++,
+    );
+    $form['map_reset_css_class'] = array(
+      '#title' => t('CSS class to apply to reset button'),
       '#type' => 'textfield',
-      '#size' => 2,
-      '#default_value' => $this->options['map_options']['zoom'],
-      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
+      '#size' => 40,
+      '#default_value' => $this->options['map_reset_css_class'],
+      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded for your markers, try <strong>fa fa-repeat</strong>. If you enter only one or two characters, for example <strong>R</strong>, these will be used verbatim as the label instead.'),
+      '#weight' => $weight++,
+      '#states' => array(
+        'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
+      ),
     );
-    $form['map_options']['center_lat'] = array(
-      '#title' => t('Latitude of initial center of map'),
-      '#type' => 'textfield',
-      '#size' => 6,
-      '#default_value' => $this->options['map_options']['center_lat'],
-      '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
+  }
+
+  private function _add_sync(&$form, &$weight) {
+    $form['sync'] = array(
+      '#title' => t('Syncing map markers with content on the page'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER]),
+      '#weight' => $weight++,
     );
-    $form['map_options']['center_lon'] = array(
-      '#title' => t('Longitude of initial center of map'),
-      '#type' => 'textfield',
-      '#size' => 6,
-      '#default_value' => $this->options['map_options']['center_lon'],
-      '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
+    $note = t('You can redefine this class to change the default look.');
+    $form['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] = array(
+      '#title' => t('When hovering markers on the map, highlight associated content on the page'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] && $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
+      '#description' => t('Associated content must have the CSS class <em>.node-[nid]</em> for the content to be highlighted.') . ' '
+        . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Table settings of an attachment display.') . '<br/>'
+        . t('Content is then highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
+        . $note,
+      '#weight' => $weight++,
     );
-    $form['map_options']['scrollwheelzoom'] = array(
-      '#title' => t('Enable scroll wheel zoom'),
-      '#type' => 'select',
-      '#default_value' => $this->options['map_options']['scrollwheelzoom'],
-      '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
+    $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT] = array(
+      '#title' => t('When hovering content, highlight associated markers on the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
+      '#description' => t('To activate this option you must set a <strong>Marker Tooltip</strong> above, for instance "Content: Title".') . '<br/>'
+        . t('Markers are then highlighted dynamically through the automatic addition of the CSS class <em>.synced-content-hover</em>.') . ' '
+        . $note,
+      '#weight' => $weight++,
     );
-    $form['map_options']['dragging'] = array(
-      '#title' => t('Dragging/Panning of the map'),
-      '#type' => 'select',
-      '#default_value' => $this->options['map_options']['dragging'],
-      '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
+   $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP] = array(
+      '#title' => t('As above, but also pop up marker balloons'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP],
+      '#states' => array(
+        'visible' => array(':input[name="style_options[sync][4]"]' => array('checked' => TRUE)),
+      ),
+      '#weight' => $weight++,
     );
-    $form['map_options']['separator'] = array(
-      '#title' => t('Separator used in marker balloons'),
-      '#type' => 'textfield',
-      '#size' => 10,
-      '#default_value' => $this->options['map_options']['separator'],
-      '#description' => t('You may use most HTML tags.'),
-    );
+  }
+  private function _add_mini_map_inset(&$form, &$weight) {
 
     $form['mini_map'] = array(
       '#title' => t('Mini-map inset'),
@@ -350,7 +428,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#collapsible' => TRUE,
       '#collapsed' => !empty($this->options['mini_map']['on']),
       '#description' => t('A zoomed-out version of the main map as a mini-map inset in the bottom corner.'),
-      '#weight' => 91
+      '#weight' => $weight++,
     );
     $form['mini_map']['on'] = array(
       '#title' => t('Enable mini-map inset'),
@@ -417,66 +495,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $form['mini_map']['#description'] .= '<br/>' . t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-minimap</em>.', array(
         '@js_lib' => 'https://github.com/Norkart/Leaflet-Minimap'));
     }
+  }
 
-    $form['full_screen'] = array(
-      '#title' => t('Add a full-screen toggle to the map'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['full_screen'],
-      '#weight' => 94,
-    );
-    $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
-    if ($lib_fullscreen) {
-      $file_fullscreen = $lib_fullscreen . '/dist/Leaflet.fullscreen.min.js';
-      if (!file_exists($file_fullscreen)) {
-        $form['full_screen']['#description'] = t('Error: <em>leaflet-fullscreen</em> library found, but %js_file is missing.', array('%js_file' => $file_fullscreen));
-      }
-    }
-    else {
-      $form['full_screen']['#description'] = t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
-        '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
-    }
-
-    $form['scale_imperial'] = array(
-      '#title' => t('Add an imperial (miles) scale'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['scale_imperial'],
-      '#weight' => 96,
-    );
-    $form['scale_metric'] = array(
-      '#title' => t('Add a metric (km) scale'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['scale_metric'],
-      '#weight' => 96,
-    );
-    $form['zoom_indicator'] = array(
-      '#title' => t('Add an indicator showing the active zoom level'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['zoom_indicator'],
-      '#weight' => 97,
-    );
-    $form['map_reset'] = array(
-      '#title' => t('Add a reset button'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['map_reset'],
-      '#description' => t('The button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
-      '#weight' => 98,
-    );
-    $form['map_reset_css_class'] = array(
-      '#title' => t('CSS class to apply to reset button'),
-      '#type' => 'textfield',
-      '#size' => 40,
-      '#default_value' => $this->options['map_reset_css_class'],
-      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded for your markers, try <strong>fa fa-repeat</strong>. If you enter only one or two characters, for example <strong>R</strong>, these will be used verbatim as the label instead.'),
-      '#weight' => 99,
-      '#states' => array(
-        'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
-      ),
-    );
-
-    $lib_markercluster = module_exists('leaflet_markercluster') ? leaflet_markercluster_get_library_path() : FALSE;
-
+  private function _add_markercluster(&$form, $lib_markercluster, &$weight) {
     $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>cluster region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
-    $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module', array(
+    $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module.', array(
       '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
     ));
     $form['cluster_radius'] = array(
@@ -485,8 +508,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#field_suffix' => t('px'),
       '#size' => 4,
       '#default_value' => $this->options['cluster_radius'],
-      '#description' => $lib_markercluster ? $desc_a : "$desc_b.",
-      '#weight' => 100,
+      '#description' => $lib_markercluster ? $desc_a : $desc_b,
+      '#weight' => $weight++,
     );
     $form['disable_clustering_at_zoom'] = array(
       '#title' => t('Disable clustering at zoom'),
@@ -494,10 +517,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 4,
       '#default_value' => is_numeric($this->options['disable_clustering_at_zoom']) ? $this->options['disable_clustering_at_zoom'] : '',
       '#description' => t('If you specify a zoom level, then there will be no clustering beyond that zoom level, regardless of the radius specified.'),
-      '#weight' => 101,
+      '#weight' => $weight++,
     );
-    // Add wrapper for cluster differentiator drop-down and zoom level
-    // specifiers.
+  }
+
+  private function _add_cluster_differentiator(&$form, &$form_state, $lib_markercluster, &$weight) {
+    $path = drupal_get_path('module', 'ip_geoloc');
     $intro = t('Superior marker clustering with <a target="regionbound" href="!url_regionbound">RegionBound</a>. See the <a target="readme" href="!url_readme">README</a> for details.', array(
       '!url_regionbound' => url('http://regionbound.com'),
       '!url_readme' => url("$path/README.txt"),
@@ -511,7 +536,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       // The id in the prefix must match the AJAX submit handlers below.
       '#prefix' => '<div id="cluster-differentiator-wrapper">',
       '#suffix' => '</div>',
-      '#weight' => 103,
+      '#weight' => $weight++,
     );
     $region_field_names = NULL;
     if (isset($form_state['triggering_element'])) {
@@ -526,7 +551,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $region_field_names = $this->options['cluster_differentiator']['cluster_differentiator_fields'];
     }
     if (!module_exists('leaflet_markercluster')) {
-      $form['cluster_differentiator']['#description'] .= $desc_b . ' ' . t('and <a href="http://regionbound.com">RegionBound</a> JS plugin.');
+      $desc = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module', array(
+        '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
+      ));
+      $form['cluster_differentiator']['#description'] .= $desc . ' ' . t('and <a href="http://regionbound.com">RegionBound</a> JS plugin.');
     }
     elseif ($lib_markercluster && (empty($region_field_names) || !reset($region_field_names))) {
       $note_region = t('Download the .js file from <a target="regionbound" href="http://regionbound.com">regionbound.com</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
@@ -610,7 +638,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#collapsed' => TRUE,
       '#title' => t('Cluster aggregation'),
       '#description' => "<em>$intro</em><p>$desc</p>",
-      '#weight' => 105,
+      '#weight' => $weight++,
     );
     $form['cluster_aggregation']['aggregation_field'] = array(
       '#title' => t('Field to perform aggregation on'),
@@ -646,13 +674,79 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#default_value' => $default_value,
       );
     }
-
     $form['cluster_aggregation']['precision'] = array(
       '#title' => t('Precision'),
       '#type' => 'textfield',
       '#size' => 2,
       '#default_value' => $this->options['cluster_aggregation']['precision'],
       '#description' => t('Number of significant digits used to display the aggregate value on the cluster icon. Leave blank for native formatting.'),
+    );
+  }
+
+  private function _add_more_map_options(&$form, &$weight) {
+    $selected_map = ip_geoloc_plugin_style_leaflet_map_get_info($this->options['map']);
+    $zoom_top = 21;
+    if (isset($selected_map['settings']['maxZoom'])) {
+      $zoom_top = $selected_map['settings']['maxZoom'];
+    }
+    $form['map_options'] = array(
+      '#title' => t('More map options'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      // Or: empty($this->options['map_options']['zoom']) ?
+      '#collapsed' => TRUE,
+      '#weight' => $weight++,
+    );
+    $form['map_options']['maxzoom'] = array(
+      '#title' => t('Maximum zoom level (0..@zoomtop)', array('@zoomtop' => $zoom_top)),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['maxzoom'],
+      '#description' => t('Note that not all maps support all zoom levels.'),
+    );
+    $initial_zoom_max = $zoom_top;
+    if (is_numeric($this->options['map_options']['maxzoom'])) {
+      $initial_zoom_max = min($zoom_top, $this->options['map_options']['maxzoom']);
+    }
+    $form['map_options']['zoom'] = array(
+      '#title' => t('Initial zoom level (0..@maxzoom)', array('@maxzoom' => $initial_zoom_max)),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['zoom'],
+      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
+    );
+    $form['map_options']['center_lat'] = array(
+      '#title' => t('Latitude of initial center of map'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['map_options']['center_lat'],
+      '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
+    );
+    $form['map_options']['center_lon'] = array(
+      '#title' => t('Longitude of initial center of map'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['map_options']['center_lon'],
+      '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
+    );
+    $form['map_options']['scrollwheelzoom'] = array(
+      '#title' => t('Enable scroll wheel zoom'),
+      '#type' => 'select',
+      '#default_value' => $this->options['map_options']['scrollwheelzoom'],
+      '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
+    );
+    $form['map_options']['dragging'] = array(
+      '#title' => t('Dragging/Panning of the map'),
+      '#type' => 'select',
+      '#default_value' => $this->options['map_options']['dragging'],
+      '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
+    );
+    $form['map_options']['separator'] = array(
+      '#title' => t('Separator used in marker balloons'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#default_value' => $this->options['map_options']['separator'],
+      '#description' => t('You may use most HTML tags.'),
     );
   }
 
@@ -718,6 +812,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_color = $this->options['default_marker']['default_marker_color'];
     $visitor_marker_color = $this->options['visitor_marker']['visitor_marker_color'];
     $center_option = !isset($this->options['center_option']) ? 0 : $this->options['center_option'];
+    $sync_flags = 0;
+    if (!empty($this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER])) {
+      $sync_flags |= LEAFLET_SYNC_CONTENT_TO_MARKER;
+    }
+    if (!empty($this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT])) {
+      $sync_flags |= LEAFLET_SYNC_MARKER_TO_CONTENT;
+    }
+    if (!empty($this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP])) {
+      $sync_flags |= LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP;
+    }
     $has_full_screen = !empty($this->options['full_screen']);
     $has_mini_map = !empty($this->options['mini_map']['on']);
     $zoom_indicator = empty($this->options['zoom_indicator']) ? FALSE : TRUE; /*array('position' => 'topleft')*/;
@@ -848,6 +952,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Points must have coords.
         continue;
       }
+      if (!empty($sync_flags)) {
+        $feature['flags'] = isset($feature['flags']) ? $feature['flags'] | $sync_flags : $sync_flags;
+      }
       if (isset($location->balloon_text)) {
         $feature['popup'] = $location->balloon_text;
       }
@@ -875,6 +982,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           $feature['tooltip'] = $location->marker_tooltip;
         }
       }
+
       if (!empty($location->regions)) {
         $has_special_markers = TRUE;
         // Make sure we start with 0 or regions will come across as Object
@@ -999,7 +1107,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
-
+    
+    if (!empty($sync_flags)) {
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_sync_content.js', array('weight' => 1));
+      drupal_add_css($module_path . '/css/ip_geoloc_leaflet_sync_content.css');
+    }
     if ($has_full_screen) {
       // Load the 'leaflet-fullscreen' library, containing JS and CSS.
       if (drupal_add_library('ip_geoloc', 'leaflet-fullscreen')) {
