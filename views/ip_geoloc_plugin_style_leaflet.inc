@@ -384,7 +384,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   private function _add_sync(&$form, &$weight) {
     $form['sync'] = array(
-      '#title' => t('Syncing map markers with content on the page'),
+      '#title' => t('Cross-highlighting of map markers with content on the page'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER]),
@@ -396,7 +396,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'checkbox',
       '#default_value' => $this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] && $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
       '#description' => t('Associated content must have the CSS class <em>.sync-id-[nid]</em> for the content to be highlighted.') . ' '
-        . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Table settings of an attachment display.') . '<br/>'
+        . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Grid, Table, HTML or Unformatted list formats of, say, a Views Attachment display.') . '<br/>'
         . t('Content is then highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
         . $note,
       '#weight' => $weight++,
@@ -840,6 +840,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $cluster_radius = $this->options['cluster_radius'];
     $disable_clustering_at_zoom = $this->options['disable_clustering_at_zoom'];
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
+    $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
     $cluster_aggregation_field = $this->options['cluster_aggregation']['aggregation_field'];
     $cluster_aggregation_function = $this->options['cluster_aggregation']['aggregation_function'];
     $cluster_aggregate_ranges = $this->options['cluster_aggregation']['ranges'];
@@ -851,8 +852,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $zoom = max(1, (int)$this->options['map_options']['zoom']);
     $scroll_wheel_zoom = (bool) $this->options['map_options']['scrollwheelzoom'];
     $dragging = (bool) $this->options['map_options']['dragging'];
-    $separator = isset($this->options['map_options']['separator'])
-      ? filter_xss_admin($this->options['map_options']['separator']) : '<br/>';
 
     $visitor_location = ip_geoloc_get_visitor_location();
     if (!isset($visitor_location['latitude'])) {

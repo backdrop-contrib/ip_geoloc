@@ -5,11 +5,11 @@ tr.odd.synced-marker-hover,
 tr.even.synced-marker-hover {
   background-color: lightcyan;
 }
-/* For Unformatted, HTML list */
+/* For Views Unformatted, HTML-list */
 .views-row.synced-marker-hover  {
   background-color: lightcyan;
 }
-/* For Grid */
+/* For Views Grid */
 .views-view-grid td.synced-marker-hover {
   background-color: lightcyan;
 }
@@ -19,7 +19,7 @@ img.leaflet-marker-icon.synced-content-hover {
   height: 61px !important;
   width: 37px !important;
   margin-top: -61px !important;
-  margin-left: -19px !important;
+  margin-left: -18px !important;
   transition: all 0.25s ease-in;
   -ms-transition: all 0.25s ease-in;
 }

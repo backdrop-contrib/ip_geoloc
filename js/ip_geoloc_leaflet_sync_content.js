@@ -3,6 +3,10 @@
   var LEAFLET_SYNC_CONTENT_TO_MARKER = 1 << 1;
   var LEAFLET_SYNC_MARKER_TO_CONTENT = 1 << 2;
   var LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP = 1 << 3;
+
+  var SYNCED_MARKER_HOVER  = 'synced-marker-hover';
+  var SYNCED_CONTENT_HOVER = 'synced-content-hover';
+
   var lastMarkerSelector = null;
 
   $(document).bind('leaflet.feature', function(e, lFeature, feature) {
@@ -13,10 +17,10 @@
 
     if ((feature.flags & LEAFLET_SYNC_CONTENT_TO_MARKER) && feature.feature_id) {
       lFeature.on('mouseover', function(e) {
-        $(contentSelector).addClass('synced-marker-hover');
+        $(contentSelector).addClass(SYNCED_MARKER_HOVER);
       });
       lFeature.on('mouseout', function(e) {
-        $(contentSelector).removeClass('synced-marker-hover');
+        $(contentSelector).removeClass(SYNCED_MARKER_HOVER);
       });
     }
 
@@ -24,21 +28,23 @@
       // Test for "\n" inserted by region differentiator, if selected.
       var nl = feature.tooltip.indexOf("\n");
       var tooltip = (nl < 0) ? feature.tooltip : feature.tooltip.substring(0, nl);
+
       // Can't seem to set an id on the marker image, so abusing tooltip
-      // to identify marker image. title attribute either appears on img or
-      // on parent-div of img.
+      // to identify marker. title attribute either appears on img or on the
+      // parent-div of img.
       // If tooltip is a number compare "whole word", otherwise "starts-with"
       var markerSelector = isNaN(tooltip)
-        ? ".leaflet-marker-pane *[title^='" + tooltip + "']"
-        : ".leaflet-marker-pane *[title~='" + tooltip + "']";
+        ? ".leaflet-marker-pane *[title^='" + tooltip + "']"  // starts-with
+        : ".leaflet-marker-pane *[title~='" + tooltip + "']"; // whole-word
+
       // Using bind() as core's jQuery is old and does not support on()
       $(contentSelector).bind('mouseover', function(e) {
-        if (lastMarkerSelector !== markerSelector) {
-          if (lastMarkerSelector) {
-            $(lastMarkerSelector).removeClass('synced-content-hover');
-          }
-          $(markerSelector).addClass('synced-content-hover');
+        if (markerSelector !== lastMarkerSelector) {
+          
+          $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
+          $(markerSelector).addClass(SYNCED_CONTENT_HOVER);
           lastMarkerSelector = markerSelector;
+
           if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP) && feature.tooltip) {
             lFeature._popup.options.offset.y -= 19;
             lFeature.openPopup();
@@ -52,10 +58,11 @@
   });
 
   $(document).ready(function() {
-    // For all maps: close all popus on map mouseout.
+    // On map mouse: revert all altered markers and close all popus.
     for (var i = 0; i < Drupal.settings.leaflet.length; i++) {
       Drupal.settings.leaflet[i].lMap.on('mouseout', function(e) {
         e.target.closePopup();
+        $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
       });
     }
   });
