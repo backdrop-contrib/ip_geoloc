@@ -80,6 +80,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['zoom_indicator'] = array('default' => FALSE);
     $options['map_reset'] = array('default' => FALSE);
     $options['map_reset_css_class'] = array('default' => 'R');
+    $options['map_cluster_toggle'] = array('default' => FALSE);
 
     $options['mini_map'] = array(
       'contains' => array(
@@ -366,7 +367,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('Add a reset button'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['map_reset'],
-      '#description' => t('The button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
+      '#description' => t('This button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
       '#weight' => $weight++,
     );
     $form['map_reset_css_class'] = array(
@@ -380,6 +381,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
       ),
     );
+    if (module_exists('leaflet_markercluster')) {
+      $form['map_cluster_toggle'] = array(
+        '#title' => t('Add cluster toggle button'),
+        '#type' => 'checkbox',
+        '#default_value' => $this->options['map_cluster_toggle'],
+        '#description' => t('This button allows the visitor to toggle marker clustering on/off, if a cluster radius is set below.'),
+        '#weight' => $weight++,
+      );
+    }
   }
 
   private function _add_sync(&$form, &$weight) {
@@ -837,7 +847,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $label = filter_xss_admin($this->options['map_reset_css_class']);
       $reset_control = array('label' => empty($label) ? ' ' : $label);
     }
-    $cluster_radius = $this->options['cluster_radius'];
+    $cluster_control = FALSE;
+    if (!empty($this->options['map_cluster_toggle'])) {
+      $cluster_control = array('label' => 'C');
+    }
+    $cluster_radius = (int)_ip_geoloc_get_session_value('markercluster-radius');
+    if ($cluster_radius < 2) {
+      $cluster_radius = (int)$this->options['cluster_radius'];
+    }
     $disable_clustering_at_zoom = $this->options['disable_clustering_at_zoom'];
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
@@ -1068,19 +1085,26 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['dragging'] = $dragging;
 
     $map['settings']['maxClusterRadius'] = 0;
-    if (module_exists('leaflet_markercluster') && !empty($cluster_radius)) {
-      $map['settings']['maxClusterRadius'] = $cluster_radius;
-      $map['settings']['disableClusteringAtZoom'] = $disable_clustering_at_zoom;
-      $map['settings']['addRegionToolTips'] = $cluster_tooltips;
-      $map['settings']['hullHugFactor'] = $hull_hug_factor;
-      $map['settings']['animateAddingMarkers'] = TRUE;
-      if (!empty($cluster_aggregation_field)) {
-        $map['settings']['clusterAggregationFunction'] = $cluster_aggregation_function;
-        $map['settings']['clusterAggregateRanges'] = $cluster_aggregate_ranges;
-        $map['settings']['clusterAggregatePrecision'] = $cluster_aggregate_precision;
-        drupal_add_css(leaflet_markercluster_get_library_path() . '/MarkerCluster.Aggregations.css');
+    if ($cluster_radius > 0) {
+      if (module_exists('leaflet_markercluster')) {
+        $map['settings']['maxClusterRadius'] = $cluster_radius;
+        $map['settings']['disableClusteringAtZoom'] = $disable_clustering_at_zoom;
+        $map['settings']['addRegionToolTips'] = $cluster_tooltips;
+        $map['settings']['hullHugFactor'] = $hull_hug_factor;
+        $map['settings']['animateAddingMarkers'] = TRUE;
+        if (!empty($cluster_aggregation_field)) {
+          $map['settings']['clusterAggregationFunction'] = $cluster_aggregation_function;
+          $map['settings']['clusterAggregateRanges'] = $cluster_aggregate_ranges;
+          $map['settings']['clusterAggregatePrecision'] = $cluster_aggregate_precision;
+          drupal_add_css(leaflet_markercluster_get_library_path() . '/MarkerCluster.Aggregations.css');
+        }
+      }
+      else {
+        $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
+        drupal_set_message(t('Cannot cluster markers in View %display_name, as the module Leaflet MarkerCluster is not enabled.', array('%display_name' => $display_name)), 'warning');
       }
     }
+
     $zoom_ranges = array_filter($this->options['cluster_differentiator']['zoom_ranges']);
     if (!empty($zoom_ranges)) {
       // Make sure we start array with 0 and no missing elements. Otherwise this
@@ -1105,8 +1129,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
-    
-    if (!empty($sync_flags)) {
+
+    // Don't load JS and CSS when only LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP
+    // or nothing is requested.
+    if ($sync_flags !== 0 && $sync_flags != LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_sync_content.js', array('weight' => 1));
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_sync_content.css');
     }
@@ -1144,8 +1170,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $map['settings']['zoomIndicator'] = $zoom_indicator;
     $map['settings']['resetControl'] = $reset_control;
+    $map['settings']['clusterControl'] = $cluster_control;
     $map['settings']['scaleControl'] = $scale_control;
-    if ($has_mini_map || $zoom_indicator || $reset_control || $scale_control) {
+    if ($has_mini_map || $zoom_indicator || $reset_control || $cluster_control || $scale_control) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js', array('weight' => 1));
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_controls.css');
     }
@@ -1167,11 +1194,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     // Leaflet More Maps, Leaflet MarkerCluster, Leaflet Hash...
     drupal_alter('leaflet_map_prebuild', $settings);
 
-    if (!empty($cluster_radius) && !module_exists('leaflet_markercluster')) {
-      $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
-      drupal_set_message(t('Cannot cluster markers in View %display_name, as the module Leaflet MarkerCluster is not enabled.', array('%display_name' => $display_name)), 'warning');
-    }
-    if ($reset_control || !empty($has_special_markers)) {
+    if ($reset_control || $cluster_control || !empty($has_special_markers)) {
       // Load the CSS that comes with the font icon library which in return
       // tells the browser to fetch either the WOFF, TTF or SVG files that
       // define the font faces.

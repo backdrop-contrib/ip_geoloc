@@ -9,17 +9,25 @@
 
   var lastMarkerSelector = null;
 
-  $(document).bind('leaflet.feature', function(e, lFeature, feature) {
+  $(document).bind('leaflet.map', function(event, map, lMap) {
+    // On map mouse hover out: revert close all popus and revert synced marker.
+    lMap.on('mouseout', function(event) {
+      event.target.closePopup();
+      $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
+    });
+  });
+
+  $(document).bind('leaflet.feature', function(event, lFeature, feature) {
 
     // lFeature is the marker, polygon, linestring... just created on the map.
     // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leafet.inc
     var contentSelector = ".sync-id-" + feature.feature_id;
 
     if ((feature.flags & LEAFLET_SYNC_CONTENT_TO_MARKER) && feature.feature_id) {
-      lFeature.on('mouseover', function(e) {
+      lFeature.on('mouseover', function(event) {
         $(contentSelector).addClass(SYNCED_MARKER_HOVER);
       });
-      lFeature.on('mouseout', function(e) {
+      lFeature.on('mouseout', function(event) {
         $(contentSelector).removeClass(SYNCED_MARKER_HOVER);
       });
     }
@@ -38,7 +46,7 @@
         : ".leaflet-marker-pane *[title~='" + tooltip + "']"; // whole-word
 
       // Using bind() as core's jQuery is old and does not support on()
-      $(contentSelector).bind('mouseover', function(e) {
+      $(contentSelector).bind('mouseover', function(event) {
         if (markerSelector !== lastMarkerSelector) {
           
           $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
@@ -54,16 +62,6 @@
       });
       //$(contentSelector).bind('mouseout', function(e) {
       //});
-    }
-  });
-
-  $(document).ready(function() {
-    // On map mouse: revert all altered markers and close all popus.
-    for (var i = 0; i < Drupal.settings.leaflet.length; i++) {
-      Drupal.settings.leaflet[i].lMap.on('mouseout', function(e) {
-        e.target.closePopup();
-        $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
-      });
     }
   });
 

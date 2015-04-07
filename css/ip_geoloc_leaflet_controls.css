@@ -1,5 +1,6 @@
 
 .leaflet-container .leafet-control-reset,
+.leaflet-container .leafet-control-cluster,
 .leaflet-container .leafet-control-zoom-indicator {
   background-color: white;
   color: black;
@@ -9,10 +10,12 @@
   text-align: center;
   text-decoration: none;
 }
-.leaflet-container .leafet-control-reset {
+.leaflet-container .leafet-control-reset,
+.leaflet-container .leafet-control-cluster {
   cursor: pointer;
   font-size: larger;
 }
-.leaflet-container .leafet-control-reset:hover {
+.leaflet-container .leafet-control-reset:hover,
+.leaflet-container .leafet-control-cluster:hover {
   background-color: #f4f4f4;
 }
