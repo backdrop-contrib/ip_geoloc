@@ -20,7 +20,7 @@
   $(document).bind('leaflet.feature', function(event, lFeature, feature) {
 
     // lFeature is the marker, polygon, linestring... just created on the map.
-    // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leafet.inc
+    // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
     var contentSelector = ".sync-id-" + feature.feature_id;
 
     if ((feature.flags & LEAFLET_SYNC_CONTENT_TO_MARKER) && feature.feature_id) {

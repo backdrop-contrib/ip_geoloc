@@ -47,7 +47,7 @@ L.Control.ZoomIndicator = L.Control.extend({
   },
 
   onAdd: function(map) {
-    this.indicator = L.DomUtil.create('div', 'leafet-control-zoom-indicator leaflet-bar');
+    this.indicator = L.DomUtil.create('div', 'leaflet-control-zoom-indicator leaflet-bar');
     this.indicator.setAttribute('title', Drupal.t('Zoom level'));
     this.indicator.innerHTML = this.options.prefix + map.getZoom();
     map.on('zoomend', this.update, this);
@@ -72,7 +72,7 @@ L.Control.Reset = L.Control.extend({
   onAdd: function(map) {
     map._initialBounds = map.getBounds();
 
-    var button = L.DomUtil.create('a', 'leafet-control-reset leaflet-bar');
+    var button = L.DomUtil.create('a', 'leaflet-control-reset leaflet-bar');
     if (this.options.label.length <= 2) {
       button.innerHTML = this.options.label;
     }
@@ -95,18 +95,10 @@ L.Control.ClusterToggle = L.Control.extend({
 
   options: {
     position: 'topright',
-    label: 'C'
   },
 
   onAdd: function(map) {
-    var button = L.DomUtil.create('a', 'leafet-control-cluster leaflet-bar');
-    if (this.options.label.length <= 2) {
-      button.innerHTML = this.options.label;
-    }
-    else {
-      // Assume label is a font-icon specification.
-      L.DomUtil.addClass(button, this.options.label);
-    }
+    var button = L.DomUtil.create('a', 'leaflet-control-cluster leaflet-bar');
     button.setAttribute('title', Drupal.t('Toggle clustering'));
 
     var leafletSettings = Drupal.settings.leaflet;

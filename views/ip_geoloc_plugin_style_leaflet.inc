@@ -150,10 +150,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       "$path/css/ip_geoloc_admin.css",
       "$path/css/$select_css_file",
     ));
+    $form_state['renderer'] = 'leaflet';
+
     $weight = 1;
     $this->_add_map_and_height($form, $weight);
-
-    $form_state['renderer'] = 'leaflet';
     ip_geoloc_plugin_style_bulk_of_form($this, $weight, $form, $form_state);
     $form['center_option']['#options'][0] = t('Auto-box to fit all markers (include visitor marker if color <strong>not</strong> set to &lt;none&gt;)');
 
@@ -162,7 +162,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $this->_add_default_marker($form, $weight);
     $this->_add_visitor_marker($form, $weight);
-    $this->_add_check_boxes($form, $weight);
+    $this->_add_check_boxes($form, $lib_markercluster, $weight);
     $this->_add_mini_map_inset($form, $weight);
     $this->_add_marker_tags($form, $fields, $weight);
     $this->_add_marker_tooltips($form, $fields, $weight);
@@ -326,7 +326,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
   }
 
-  private function _add_check_boxes(&$form, &$weight) {
+  private function _add_check_boxes(&$form, $lib_markercluster, &$weight) {
     $form['full_screen'] = array(
       '#title' => t('Add a full-screen toggle to the map'),
       '#type' => 'checkbox',
@@ -381,14 +381,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
       ),
     );
-    if (module_exists('leaflet_markercluster')) {
-      $form['map_cluster_toggle'] = array(
-        '#title' => t('Add cluster toggle button'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['map_cluster_toggle'],
-        '#description' => t('This button allows the visitor to toggle marker clustering on/off, if a cluster radius is set below.'),
-        '#weight' => $weight++,
-      );
+    $form['map_cluster_toggle'] = array(
+      '#title' => t('Add cluster toggle button'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['map_cluster_toggle'],
+      '#description' => t('This button allows the visitor to toggle marker clustering on/off at any time and at any zoom level.') . '<br/>'
+        . t('A cluster radius must be specified below.'),
+      '#weight' => $weight++,
+    );
+    if (!$lib_markercluster) {
+      $form['map_cluster_toggle']['#description'] .= '<br/>' .
+        t('<a href="!url_project">Leaflet MarkerCluster</a> must be enabled.', array('!url_project' => url('http://drupal.org/project/leaflet_markercluster')));
     }
   }
 
@@ -411,13 +414,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         . $note,
       '#weight' => $weight++,
     );
+    $caveat = t('This option and the next do not work when <a href="@leaflet_label">Leaflet Label</a> is enabled also.', array(
+        '@leaflet_label' => url('http://drupal.org/project/leaflet_label'))
+      );
     $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT] = array(
       '#title' => t('When hovering content, highlight associated markers on the map'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
       '#description' => t('To activate this option you must set a <strong>Marker Tooltip</strong> above, for instance "Content: Title".') . '<br/>'
         . t('Markers are then highlighted dynamically through the automatic addition of the CSS class <em>.synced-content-hover</em>.') . ' '
-        . $note,
+        . $note . '<br/>' . $caveat,
       '#weight' => $weight++,
     );
    $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP] = array(
@@ -430,6 +436,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#weight' => $weight++,
     );
   }
+
   private function _add_mini_map_inset(&$form, &$weight) {
 
     $form['mini_map'] = array(
@@ -848,7 +855,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $reset_control = array('label' => empty($label) ? ' ' : $label);
     }
     $cluster_control = FALSE;
-    if (!empty($this->options['map_cluster_toggle'])) {
+    if (module_exists('leaflet_markercluster') && !empty($this->options['map_cluster_toggle'])) {
       $cluster_control = array('label' => 'C');
     }
     $cluster_radius = (int)_ip_geoloc_get_session_value('markercluster-radius');
