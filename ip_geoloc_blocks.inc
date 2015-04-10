@@ -186,7 +186,7 @@ function ip_geoloc_block_set_my_location(&$form) {
     '#title' => t('Label for editable address'),
     '#size' => 30,
     '#default_value' => $label == '<none>' ? $label : filter_xss_admin($label),
-    '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label (and no button).', array(
+    '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
       '%default' => IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL,
     )),
     '#states' => array(
@@ -265,7 +265,7 @@ function ip_geoloc_block_set_my_location(&$form) {
     '#title' => t('Label for region selector'),
     '#size' => 30,
     '#default_value' => $label == '<none>' ? $label : filter_xss_admin($label),
-    '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label (and not button).', array(
+    '#description' => t('Defaults to %default. You may use most HTML tags. Use <em>&lt;none&gt;</em> for no label.', array(
       '%default' => IP_GEOLOC_VISITOR_DEFAULT_REGION_LABEL,
     )),
     '#states' => array(
@@ -442,11 +442,11 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
 /**
  * Form for finding the visitor or going to a region or street address.
  *
- * The value of the 'fixed_address' radio-button is stored on the location, as
+ * The value of the 'fixed_address' selector is stored on the location, as
  * stored on the session. Its value is coded as follows:
  *   0: "Find me" button pressed
- *   1: "Move to" radio button selected and "Go" pressed
- *   2: "Region" radio button selected and "Go" pressed
+ *   1: "Move to" selected and "Go" pressed
+ *   2: "Region" selected and "Go" pressed
  *
  * @ingroup forms
  */
@@ -469,7 +469,7 @@ function ip_geoloc_set_location_form($form, &$form_state) {
     _ip_geoloc_set_my_location_add_find_me($form, $ajax_wrapper_id);
   }
 
-  $options = _ip_geoloc_set_my_location_add_radios($form, $location, $is_address_editable, $geo_vocabulary_id);
+  $options = _ip_geoloc_set_my_location_add_selector($form, $location, $is_address_editable, $geo_vocabulary_id);
 
   $is_reverse_geocode = $has_find_visitor && variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
 
@@ -529,7 +529,7 @@ function _ip_geoloc_set_my_location_add_find_me(&$form, $ajax_wrapper_id) {
   }
 }
 
-function _ip_geoloc_set_my_location_add_radios(&$form, &$location, $is_address_editable, $geo_vocabulary_id) {
+function _ip_geoloc_set_my_location_add_selector(&$form, &$location, $is_address_editable, $geo_vocabulary_id) {
   $options = array();
   $editable_address_label = variable_get('ip_geoloc_visitor_address_label', '');
   $editable_region_label = variable_get('ip_geoloc_visitor_region_label', '');
@@ -542,7 +542,7 @@ function _ip_geoloc_set_my_location_add_radios(&$form, &$location, $is_address_e
   }
   if (!empty($options)) {
     $form['fixed_address'] = array(
-      '#type' => 'radios',
+      '#type' => 'select',
       '#options' => $options,
       '#default_value' => isset($options[1]) ? 1 : 2,
       '#weight' => 5,
@@ -593,7 +593,7 @@ function _ip_geoloc_set_my_location_add_region(&$form, $location, $geo_vocabular
       );
     }
     $form['region']['#states'] = array(
-      'visible' => array('input[name="fixed_address"]' => array('value' => '2')),
+      'visible' => array('select[name="fixed_address"]' => array('value' => '2')),
     );
 }
 
@@ -604,21 +604,21 @@ function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_a
   // Check if we have any radio buttons ...
   if (isset($form['fixed_address'])) {
     // Default to "Move to", but change if we have to.
-    $radio_selected = 1;
+    $selected = 1;
 
     if (isset($options[2])) {
-      // If there's a "Region" radio...
+      // If there's a "Region" ...
       if (empty($fixed_address) && !isset($options[1])) {
         // .. then when either nothing or "Find me" was pressed and there's only
         // the Region radio button, no "Move to", then unset the radio.
-        $radio_selected = 0;
+        $selected = 0;
       }
       elseif ($fixed_address == 2) {
         // "Region" was selected and "Go" pressed.
-        $radio_selected = 2;
+        $selected = 2;
       }
     }
-    $form['fixed_address']['#default_value'] = $radio_selected;
+    $form['fixed_address']['#default_value'] = $selected;
   }
 
   // Disable the address box when it isn't editable.
@@ -632,10 +632,9 @@ function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_a
       unset($form['street_address']);
     }
     elseif (count($options) > 1) {
-      // If we have 2 or more radios, then hide Address box when Region pressed.
+      // If 2 or more options, then hide Address box when Region pressed.
       $form['street_address']['#states'] = array(
-        // This does not work for a single radio by itself.
-        'invisible' => array('input[name="fixed_address"]' => array('value' => '2')),
+        'invisible' => array('select[name="fixed_address"]' => array('value' => '2')),
       );
     }
   }
@@ -736,7 +735,7 @@ function _ip_geoloc_process_go_to_submit($form, &$form_state) {
   $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
 
   if (empty($form_state['values']['fixed_address'])) {
-    // No radio button was ticked. As 'Go' was pressed we need to choose 1 or 2.
+    // Nothing slected. As 'Go' was pressed we need to choose 1 or 2.
     $form_state['values']['fixed_address'] = $geo_vocabulary_id ? 2 : 1;
   }
 

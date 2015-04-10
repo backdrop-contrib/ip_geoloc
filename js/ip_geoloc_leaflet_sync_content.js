@@ -47,9 +47,15 @@
 
       // Using bind() as core's jQuery is old and does not support on()
       $(contentSelector).bind('mouseover', function(event) {
+
+        // If the lFeature is not a plain marker (i.e. a cluster), abort.
+        if (!lFeature._icon) {
+          return;
+        }
+        // This does not seem to work.
+        lFeature._bringToFront();
+
         if (markerSelector !== lastMarkerSelector) {
-          // This does not seem to work.
-          lFeature._bringToFront();
           $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
           $(markerSelector).addClass(SYNCED_CONTENT_HOVER);
           lastMarkerSelector = markerSelector;
