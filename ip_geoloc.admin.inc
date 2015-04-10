@@ -53,14 +53,16 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS),
     '#description' => t('Only relevant when you have selected "differentiator" fields in your view.'),
   );
-
+  $benefits = t('Some of the benefits of font icons are explained <a target="flink" href="!url_flink">here</a>.', array(
+    '!url_flink' => url('http://flink.com.au/ramblings/spruce-your-map-markers-font-icons')
+  ));
   $form['font_icons'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Font icons (Leaflet only)'),
-    '#description' => t('Some of the benefits of font icons are explained <a target="flink" href="!url_flink">here</a>. <br/>If you decide to use them, a good spot to put the font icon libraries you choose to download is in subdirectories of %url_libs.<br/>Each font icon library normally contains a CSS file through which other files in the library are referred. Type the filespec of those CSS files below, one per library. After you have saved the configuration, check the <a target="status" href="!url_status">status report</a> page for errors.<br/><strong>Example 1</strong>, <a target="fontawesome" href="!url_fontawesome">Font Awesome</a>: %css_file1 <br/><strong>Example 2</strong>, <a target="flaticon" href="!url_flaticon">flaticon</a>: %css_file2', array(
-      '!url_flink' => url('http://flink.com.au/ramblings/spruce-your-map-markers-font-icons'),
+    '#description' => $benefits . '<br/>' .
+      t('If you decide to use them, a good spot to put the font icon libraries you choose to download is in subdirectories of %url_libs.<br/>Each font icon library normally contains a CSS file through which other files in the library are found. Type the filespec of those CSS files below, one per library. After you have saved the configuration, check the <a target="status" href="!url_status">status report</a> page for errors.<br/><strong>Example 1</strong>, <a target="fontawesome" href="!url_fontawesome">Font Awesome</a>: %css_file1 <br/><strong>Example 2</strong>, <a target="flaticon" href="!url_flaticon">flaticon</a>: %css_file2', array(
       '%url_libs' => '/sites/all/libraries',
       '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome'),
       '%css_file1' => 'sites/all/libraries/font-awesome/css/font-awesome.min.css',
@@ -79,9 +81,9 @@ function ip_geoloc_admin_configure() {
       '#default_value' => empty($libs[$i]) ? '' : $libs[$i],
     );
   }
-  $form['font_icons']["ip_geoloc_font_icon_lib$count"]['#description']
-    = t('<strong>Note:</strong> as explained in this <a target="issue" href="!url_issue">issue</a>, you cannot have identical leaf names amongst the CSS filespecs. Rename .css files if there are clashes.', array(
-      '!url_issue' => url('http://drupal.org/node/1885838'),
+  $form['font_icons']["ip_geoloc_font_icon_lib$count"]['#description'] =
+    t('<strong>Note:</strong> as explained in this <a target="issue" href="!url_issue">issue</a>, you cannot have identical leaf names amongst the CSS filespecs. Rename .css files if there are clashes.', array(
+      '!url_issue' => url('https://www.drupal.org/node/1885838#comment-8996119'),
     ));
 
   if (ip_geoloc_diagnose() > 0) {

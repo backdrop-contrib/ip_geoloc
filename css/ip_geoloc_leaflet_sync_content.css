@@ -1,8 +1,11 @@
 
 /* Views Table format */
-tr.synced-marker-hover,
-tr.odd.synced-marker-hover,
-tr.even.synced-marker-hover {
+tr.synced-marker-hover > td,
+tr.odd.synced-marker-hover > td,
+tr.even.synced-marker-hover > td,
+tr.synced-marker-hover > td.active,
+tr.odd.synced-marker-hover > td.active,
+tr.even.synced-marker-hover > td.active {
   background-color: lightcyan;
 }
 /* For Views Unformatted, HTML-list */

@@ -20,8 +20,8 @@
 }
 
 .leaflet-control-container .leaflet-control-cluster {
-  background: white url("../markers/red cluster.png") 5px 4px no-repeat;
-  background-size: 25px 28px;
+  background: white url("../markers/red-cluster.png") 5px 4px no-repeat;
+  background-size: 26px 28px;
   height: 36px;
   width: 36px !important;
   opacity: 0.8;

@@ -120,6 +120,7 @@ L.Control.ClusterToggle = L.Control.extend({
            clusterGroup._map = null;
            clusterGroup.options.maxClusterRadius = 
              (clusterGroup.options.maxClusterRadius > 0) ? 0 : (masterSettings ? masterSettings.maxClusterRadius : 80);
+           //clusterGroup.options.singleMarkerMode = (clusterGroup.options.maxClusterRadius <= 0);
            // In order for the clusterGroup to be reinitialised with the new
            // parameter(s) set above, clusterGroup._needsClustering needs to
            // contain all markers to add, before onAdd(map) can be called.

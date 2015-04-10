@@ -48,7 +48,8 @@
       // Using bind() as core's jQuery is old and does not support on()
       $(contentSelector).bind('mouseover', function(event) {
         if (markerSelector !== lastMarkerSelector) {
-          
+          // This does not seem to work.
+          lFeature._bringToFront();
           $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
           $(markerSelector).addClass(SYNCED_CONTENT_HOVER);
           lastMarkerSelector = markerSelector;
