@@ -70,7 +70,7 @@ L.Control.Reset = L.Control.extend({
   },
 
   onAdd: function(map) {
-    map._initialBounds = map.getBounds();
+    this._map._initialBounds = map.getBounds();
 
     var button = L.DomUtil.create('a', 'leaflet-control-reset leaflet-bar');
     if (this.options.label.length <= 2) {
@@ -81,10 +81,20 @@ L.Control.Reset = L.Control.extend({
       L.DomUtil.addClass(button, this.options.label);
     }
     button.setAttribute('title', Drupal.t('Reset'));
-    button.onclick = function() {
-      map.fitBounds(map._initialBounds);
-    };
+
+    // Must pass "this" in as context, or onClick() will not know us.
+    L.DomEvent
+      .on(button, 'click', this.onClick, this)
+      .on(button, 'dblclick', L.DomEvent.stopPropagation)
+      .on(button, 'dblclick', function(event) {
+         alert(Drupal.t('A single click is sufficient!'));
+      });
+
     return button;
+  },
+
+  onClick: function(event) {
+    this._map.fitBounds(this._map._initialBounds);
   }
 });
 L.control.reset = function(options) {
@@ -94,48 +104,54 @@ L.control.reset = function(options) {
 L.Control.ClusterToggle = L.Control.extend({
 
   options: {
-    position: 'topright',
+    position: 'topright'
   },
 
   onAdd: function(map) {
-    var button = L.DomUtil.create('a', 'leaflet-control-cluster leaflet-bar');
-    button.setAttribute('title', Drupal.t('Toggle clustering'));
-
     var leafletSettings = Drupal.settings.leaflet;
-    var masterSettings = null;
-
     for (var m = 0; m < leafletSettings.length; m++) {
       // Get here once per map, i.e. once per containing div.
       if (L.DomUtil.get(leafletSettings[m].mapId) === map._container) {
-        masterSettings = leafletSettings[m].map.settings;
+        this._masterSettings = leafletSettings[m].map.settings;
         break;
       }
     }
+    var button = L.DomUtil.create('a', 'leaflet-control-cluster leaflet-bar');
+    button.setAttribute('title', Drupal.t('Toggle clustering'));
 
-    button.onclick = function(event) {
-      // This normally only loops once.
-      for (var leaflet_id in map._layers) {
-         if (map._layers[leaflet_id]._topClusterLevel) {
-           var clusterGroup = map._layers[leaflet_id];
-           clusterGroup._map = null;
-           if (clusterGroup.options.disableClusteringAtZoom < 0) {
-             // Restore the old disableClusteringAtZoom setting.
-             clusterGroup.options.disableClusteringAtZoom = masterSettings ? masterSettings.disableClusteringAtZoom : null;
-           }
-           else {
-             // Easiest way to stop clustering is this way:
-             clusterGroup.options.disableClusteringAtZoom = -1;
-           }
-           clusterGroup.clearLayers();
-           // In order for the clusterGroup to be reinitialised with the new
-           // option value set above, clusterGroup._needsClustering needs to
-           // hold all markers to be added, before onAdd(map) can be called.
-           clusterGroup._needsClustering = clusterGroup._topClusterLevel.getAllChildMarkers();
-           clusterGroup.onAdd(map);
-         }
-      }
-    };
+    // Must pass "this" in as context, or onClick() will not know us.
+    L.DomEvent
+      .on(button, 'click', this.onClick, this)
+      .on(button, 'dblclick', L.DomEvent.stopPropagation)
+      .on(button, 'dblclick', function(event) {
+         alert(Drupal.t('A single click is sufficient!'));
+      });
+
     return button;
+  },
+
+  onClick: function(event) {
+    // This normally only loops once.
+    for (var leaflet_id in this._map._layers) {
+      if (this._map._layers[leaflet_id]._topClusterLevel) {
+        var clusterGroup = this._map._layers[leaflet_id];
+        clusterGroup._map = null;
+        if (clusterGroup.options.disableClusteringAtZoom < 0) {
+          // Restore the old disableClusteringAtZoom setting.
+          clusterGroup.options.disableClusteringAtZoom = this._masterSettings ? this._masterSettings.disableClusteringAtZoom : null;
+        }
+        else {
+          // Easiest way to stop clustering safely is this way:
+          clusterGroup.options.disableClusteringAtZoom = -1;
+        }
+        clusterGroup.clearLayers();
+        // In order for the clusterGroup to be reinitialised with the new
+        // option value(s) set above, clusterGroup._needsClustering needs to
+        // hold all markers to be added, before onAdd(map) can be called.
+        clusterGroup._needsClustering = clusterGroup._topClusterLevel.getAllChildMarkers();
+        clusterGroup.onAdd(this._map);
+      }
+    }
   }
 });
 L.control.clusterToggle = function(options) {
