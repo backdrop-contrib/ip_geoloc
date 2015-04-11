@@ -35,14 +35,14 @@ img.leaflet-marker-icon.synced-content-hover {
   margin-left: -24px !important;
   transition: all 0.25s ease-in;
   -ms-transition: all 0.25s ease-in;
-  z-index: 99999;
+  z-index: 9999;
 }
 .leaflet-tagged-marker.synced-content-hover > i {
   font-size: 30px;
   top: -54px;
   transition: all 0.25s ease-in;
   -ms-transition: all 0.25s ease-in;
-  z-index: 100000;
+  z-index: 10000;
 }
 
 img.leaflet-marker-hidden,

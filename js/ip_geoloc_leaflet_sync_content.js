@@ -5,11 +5,12 @@
   var LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP = 1 << 3;
   var LEALFET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT = 1 << 4;
 
-  var SYNCED_MARKER_HOVER  = 'synced-marker-hover';
   var SYNCED_CONTENT_HOVER = 'synced-content-hover';
+  var SYNCED_MARKER_HOVER  = 'synced-marker-hover';
+  var SYNCED_MARKER_HIDDEN = 'leaflet-marker-hidden';
 
   var lastMarker = null;
-  var markerWasOnMap = false;
+  //var markerWasOnMap = false;
 
   $(document).bind('leaflet.feature', function(event, marker, feature) {
 
@@ -41,16 +42,16 @@
 
           if (lastMarker && lastMarker._icon) {
             // Hide the previously highlighted marker, before highlighting next.
-            L.DomUtil.addClass(lastMarker._icon, 'leaflet-marker-hidden');
+            L.DomUtil.addClass(lastMarker._icon, SYNCED_MARKER_HIDDEN);
           }
 
           if (marker._map) {
             // Make existing marker visible, in case it was invisible.
-            markerWasOnMap = true;
-            L.DomUtil.removeClass(marker._icon, 'leaflet-marker-hidden');
+            // markerWasOnMap = true;
+            L.DomUtil.removeClass(marker._icon, SYNCED_MARKER_HIDDEN);
           }
           else {
-            markerWasOnMap = false;
+            // markerWasOnMap = false;
             // If marker doesn't have a map, but a (grand)parent does, use that.
             for (var parent = marker; parent; parent = parent.__parent) {
               if (parent._map) break;
@@ -60,11 +61,11 @@
             }
           }
           if (marker._icon) {
-            // Now that it is visible, add the special CSS class to the marker.
+            // Now that it is visible, add to the marker the special CSS class.
             L.DomUtil.addClass(marker._icon, SYNCED_CONTENT_HOVER);
+            // This does not work in Chrome or Safari, but works fine in Firefox.
+            marker._bringToFront();
           }
-          // This does not work. Doing it via SYNCED_CONTENT_HOVER CSS instead.
-          // marker._bringToFront();
 
           if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
             // Popup requested
