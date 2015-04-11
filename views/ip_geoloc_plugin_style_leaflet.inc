@@ -312,7 +312,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#description' => t('In addition to balloons, which pop up when markers are <em>clicked</em>, you can have tooltips. A tooltip is a short text that appears when you <em>hover</em> over a marker.'),
       '#weight' => $weight++,
     );
-    $note_polygons = t('If you want tooltips for lines and polygons too, please use this option in combination with <a href="@url_leaflet_label">Leaflet Label</a>.', array(
+    $note_polygons = t('Applies to markers. If you want tooltips for lines and polygons too, please use this selector in combination with <a href="@url_leaflet_label">Leaflet Label</a>.', array(
       '@url_leaflet_label' => url('http://drupal.org/project/leaflet_label'))
     );
     $form['tooltips']['marker_tooltip'] = array(
@@ -409,20 +409,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'checkbox',
       '#default_value' => $this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] && $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
       '#description' => t('Associated content must have the CSS class <em>.sync-id-[nid]</em> for the content to be highlighted.') . ' '
-        . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Grid, Table, HTML or Unformatted list formats of, say, a Views Attachment display.') . '<br/>'
+        . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Grid, Table, HTML or Unformatted list formats of, say, a Views Attachment or Block display.') . '<br/>'
         . t('Content is then highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
         . $note,
       '#weight' => $weight++,
     );
-    $caveat = t('This option and the next do not work when <a href="@leaflet_label">Leaflet Label</a> is enabled also.', array(
-        '@leaflet_label' => url('http://drupal.org/project/leaflet_label'))
-      );
+    $caveat = t('For this feature to work in combination with any sorting on the hovered content, the associated Views display must have <em>Use Ajax: No</em>.');
     $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT] = array(
       '#title' => t('When hovering content, highlight associated markers on the map'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
-      '#description' => t('To activate this option you must set a <strong>Marker Tooltip</strong> above, for instance "Content: Title".') . '<br/>'
-        . t('Markers are then highlighted dynamically through the automatic addition of the CSS class <em>.synced-content-hover</em>.') . ' '
+      '#description' => t('Markers are highlighted dynamically through the automatic addition of the CSS class <em>.synced-content-hover</em>.') . ' '
         . $note . '<br/>' . $caveat,
       '#weight' => $weight++,
     );

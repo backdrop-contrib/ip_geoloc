@@ -3,73 +3,94 @@
   var LEAFLET_SYNC_CONTENT_TO_MARKER = 1 << 1;
   var LEAFLET_SYNC_MARKER_TO_CONTENT = 1 << 2;
   var LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP = 1 << 3;
+  var LEALFET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT = 1 << 4;
 
   var SYNCED_MARKER_HOVER  = 'synced-marker-hover';
   var SYNCED_CONTENT_HOVER = 'synced-content-hover';
 
-  var lastMarkerSelector = null;
+  var lastMarker = null;
+  var markerWasOnMap = false;
 
-  $(document).bind('leaflet.map', function(event, map, lMap) {
-    // On map mouse hover out: revert close all popus and revert synced marker.
-    lMap.on('mouseout', function(event) {
-      event.target.closePopup();
-      $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
+  $(document).bind('leaflet.feature', function(event, marker, feature) {
+
+    marker.on('popupclose', function(event) {
+      if (event.target._icon) {
+        L.DomUtil.removeClass(event.target._icon, SYNCED_CONTENT_HOVER);
+      }
     });
-  });
 
-  $(document).bind('leaflet.feature', function(event, lFeature, feature) {
-
-    // lFeature is the marker, polygon, linestring... just created on the map.
+    // marker is the marker/polygon/linestring... just created on the map.
     // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
-    var contentSelector = ".sync-id-" + feature.feature_id;
 
+    var contentSelector = ".sync-id-" + feature.feature_id;
     if ((feature.flags & LEAFLET_SYNC_CONTENT_TO_MARKER) && feature.feature_id) {
-      lFeature.on('mouseover', function(event) {
+      marker.on('mouseover', function(event) {
         $(contentSelector).addClass(SYNCED_MARKER_HOVER);
       });
-      lFeature.on('mouseout', function(event) {
+      marker.on('mouseout', function(event) {
         $(contentSelector).removeClass(SYNCED_MARKER_HOVER);
       });
     }
 
-    if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT) && feature.tooltip) {
-      // Test for "\n" inserted by region differentiator, if selected.
-      var nl = feature.tooltip.indexOf("\n");
-      var tooltip = (nl < 0) ? feature.tooltip : feature.tooltip.substring(0, nl);
-
-      // Can't seem to set an id on the marker image, so abusing tooltip
-      // to identify marker. title attribute either appears on img or on the
-      // parent-div of img.
-      // If tooltip is a number compare "whole word", otherwise "starts-with"
-      var markerSelector = isNaN(tooltip)
-        ? ".leaflet-marker-pane *[title^='" + tooltip + "']"  // starts-with
-        : ".leaflet-marker-pane *[title~='" + tooltip + "']"; // whole-word
-
-      // Using bind() as core's jQuery is old and does not support on()
+    // Only do this for markers that have icons (i.e. not for clusters).
+    if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT) && !marker._icon) {
+      // Using bind() as D7 core's jQuery is old and does not support on()
       $(contentSelector).bind('mouseover', function(event) {
 
-        // If the lFeature is not a plain marker (i.e. a cluster), abort.
-        if (!lFeature._icon) {
-          return;
-        }
-        // This does not seem to work.
-        lFeature._bringToFront();
+        if (marker !== lastMarker) {
 
-        if (markerSelector !== lastMarkerSelector) {
-          $(lastMarkerSelector).removeClass(SYNCED_CONTENT_HOVER);
-          $(markerSelector).addClass(SYNCED_CONTENT_HOVER);
-          lastMarkerSelector = markerSelector;
-
-          if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP) && feature.tooltip) {
-            lFeature._popup.options.offset.y -= 19;
-            lFeature.openPopup();
-            lFeature._popup.options.offset.y += 19;
+          if (lastMarker && lastMarker._icon) {
+            // Hide the previously highlighted marker, before highlighting next.
+            L.DomUtil.addClass(lastMarker._icon, 'leaflet-marker-hidden');
           }
+
+          if (marker._map) {
+            // Make existing marker visible, in case it was invisible.
+            markerWasOnMap = true;
+            L.DomUtil.removeClass(marker._icon, 'leaflet-marker-hidden');
+          }
+          else {
+            markerWasOnMap = false;
+            // If marker doesn't have a map, but a (grand)parent does, use that.
+            for (var parent = marker; parent; parent = parent.__parent) {
+              if (parent._map) break;
+            }
+            if (parent && parent._map) {
+              marker.addTo(parent._map);
+            }
+          }
+          if (marker._icon) {
+            // Now that it is visible, add the special CSS class to the marker.
+            L.DomUtil.addClass(marker._icon, SYNCED_CONTENT_HOVER);
+          }
+          // This does not work. Doing it via SYNCED_CONTENT_HOVER CSS instead.
+          // marker._bringToFront();
+
+          if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
+            // Popup requested
+            marker._popup.options.offset.y -= 19;
+            marker.openPopup(); // 
+            marker._popup.options.offset.y += 19;
+          }
+          else if (lastMarker && lastMarker._icon) {
+            // If LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP is set, this is
+            // automatically taken care of by the 'popupclose' event handler
+            // above. This in turn is triggered by a an openPopup() call on
+            // another marker.
+            L.DomUtil.removeClass(lastMarker._icon, SYNCED_CONTENT_HOVER);
+          }
+          lastMarker = marker;
         }
       });
-      //$(contentSelector).bind('mouseout', function(e) {
-      //});
     }
   });
-
+/*
+  $(document).bind('leaflet.map', function(event, map, lMap) {
+    // On map mouse hover out: close all popus, reverting synced marker style.
+    lMap.on('mouseout', function(event) {
+      event.target.closePopup();
+      L.DomUtil.removeClass(lastMarker._icon, SYNCED_CONTENT_HOVER);
+    });
+  });
+*/
 })(jQuery);

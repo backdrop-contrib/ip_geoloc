@@ -172,7 +172,7 @@ function ip_geoloc_block_set_my_location(&$form) {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => t('"Move to" button and editable location'),
+    '#title' => t('"Move to" option with editable location'),
   );
   $form['address']['edit']['ip_geoloc_visitor_address_editable'] = array(
     '#type' => 'checkbox',
@@ -542,9 +542,10 @@ function _ip_geoloc_set_my_location_add_selector(&$form, &$location, $is_address
   }
   if (!empty($options)) {
     $form['fixed_address'] = array(
-      '#type' => 'select',
+      '#type' => count($options) <= 1 ? 'markup' : 'select',
       '#options' => $options,
       '#default_value' => isset($options[1]) ? 1 : 2,
+      '#markup' => isset($options[1]) ? $options[1] : $options[2],
       '#weight' => 5,
     );
   }
@@ -571,7 +572,7 @@ function _ip_geoloc_set_my_location_add_region(&$form, $location, $geo_vocabular
       }
     }
     if (variable_get('ip_geoloc_region_autocomplete')) {
-      $not_set = ''; // <' . t('not set') . '>';
+      $not_set = 0;
       // Use an autocomplete textfield, instead of a drop-down selector.
       $form['region'] = array(
         '#type' => 'textfield',
@@ -601,17 +602,17 @@ function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_a
 
   $fixed_address = empty($location['fixed_address']) ? 0 : (int)$location['fixed_address'];
 
-  // Check if we have any radio buttons ...
+  // Check if we have a "Region/Move to" drop-down ...
   if (isset($form['fixed_address'])) {
     // Default to "Move to", but change if we have to.
     $selected = 1;
 
     if (isset($options[2])) {
-      // If there's a "Region" ...
+      // If there's a "Region" opiton in the drop-down ...
       if (empty($fixed_address) && !isset($options[1])) {
         // .. then when either nothing or "Find me" was pressed and there's only
-        // the Region radio button, no "Move to", then unset the radio.
-        $selected = 0;
+        // the "Region" option, no "Move to", then unset the Region choice
+        $selected = $form['region']['#default_value'] = 0;
       }
       elseif ($fixed_address == 2) {
         // "Region" was selected and "Go" pressed.

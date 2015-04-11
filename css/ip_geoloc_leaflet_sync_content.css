@@ -25,6 +25,7 @@ img.leaflet-marker-icon.synced-content-hover {
   margin-left: -18px !important;
   transition: all 0.25s ease-in;
   -ms-transition: all 0.25s ease-in;
+  z-index: 9999;
 }
 /* Special markers 42x32, increase h and w by 50% each */
 .leaflet-tagged-marker.synced-content-hover > img {
@@ -34,10 +35,18 @@ img.leaflet-marker-icon.synced-content-hover {
   margin-left: -24px !important;
   transition: all 0.25s ease-in;
   -ms-transition: all 0.25s ease-in;
+  z-index: 99999;
 }
 .leaflet-tagged-marker.synced-content-hover > i {
   font-size: 30px;
   top: -54px;
   transition: all 0.25s ease-in;
   -ms-transition: all 0.25s ease-in;
+  z-index: 100000;
+}
+
+img.leaflet-marker-hidden,
+div.leaflet-marker-hidden > img,
+div.leaflet-marker-hidden > i {
+  display: none;
 }
