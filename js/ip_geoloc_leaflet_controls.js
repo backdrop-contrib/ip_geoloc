@@ -118,13 +118,18 @@ L.Control.ClusterToggle = L.Control.extend({
          if (map._layers[leaflet_id]._topClusterLevel) {
            var clusterGroup = map._layers[leaflet_id];
            clusterGroup._map = null;
-           clusterGroup.options.maxClusterRadius = 
-             (clusterGroup.options.maxClusterRadius > 0) ? 0 : (masterSettings ? masterSettings.maxClusterRadius : 80);
-           //clusterGroup.options.singleMarkerMode = (clusterGroup.options.maxClusterRadius <= 0);
-           // In order for the clusterGroup to be reinitialised with the new
-           // parameter(s) set above, clusterGroup._needsClustering needs to
-           // contain all markers to add, before onAdd(map) can be called.
+           if (clusterGroup.options.disableClusteringAtZoom < 0) {
+             // Restore the old disableClusteringAtZoom setting.
+             clusterGroup.options.disableClusteringAtZoom = masterSettings ? masterSettings.disableClusteringAtZoom : null;
+           }
+           else {
+             // Easiest way to stop clustering is this way:
+             clusterGroup.options.disableClusteringAtZoom = -1;
+           }
            clusterGroup.clearLayers();
+           // In order for the clusterGroup to be reinitialised with the new
+           // option value set above, clusterGroup._needsClustering needs to
+           // hold all markers to be added, before onAdd(map) can be called.
            clusterGroup._needsClustering = clusterGroup._topClusterLevel.getAllChildMarkers();
            clusterGroup.onAdd(map);
          }
