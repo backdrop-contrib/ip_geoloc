@@ -135,6 +135,10 @@ function ip_geoloc_library_alter(&$libraries, $module) {
     $js = $libraries['leaflet_markercluster']['js'][0]['data'];
     $last_slash = strrpos($js, '/');
     $js_new = drupal_substr($js, 0, $last_slash + 1) . IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS;
+
+    // Hack for RegionBound
+    // $js_new = drupal_get_path('theme', 'regionbound') . '/theme.js';
+
     //drupal_set_message(t('Current Leaflet MarkerCluster plugin: %js.<br/>Looking for %js_new', array('%js' => $js, '%js_new' => $js_new)));
     if (file_exists($js_new)) {
       $libraries['leaflet_markercluster']['js'][0]['data'] = $js_new;

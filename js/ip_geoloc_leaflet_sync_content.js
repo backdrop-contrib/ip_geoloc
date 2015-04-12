@@ -3,7 +3,6 @@
   var LEAFLET_SYNC_CONTENT_TO_MARKER = 1 << 1;
   var LEAFLET_SYNC_MARKER_TO_CONTENT = 1 << 2;
   var LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP = 1 << 3;
-//var LEALFET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT = 1 << 4;
 
   var SYNCED_CONTENT_HOVER = 'synced-content-hover';
   var SYNCED_MARKER_HOVER  = 'synced-marker-hover';
@@ -106,13 +105,22 @@
     }
 
   });
-/*
+
   $(document).bind('leaflet.map', function(event, map, lMap) {
-    // On map mouse hover out: close all popus, reverting synced marker style.
+    if (!map.settings.revertLastMarkerOnMapOut) {
+      return;
+    }
+    // On map mouse hover out: close all popus and revert synced marker style.
     lMap.on('mouseout', function(event) {
       event.target.closePopup();
-      L.DomUtil.removeClass(lastMarker._icon, SYNCED_CONTENT_HOVER);
+      if (lastMarker) {
+        var lastElement = lastMarker._icon ? lastMarker._icon : lastMarker._container;
+        L.DomUtil.removeClass(lastElement, SYNCED_CONTENT_HOVER);
+        if (!markersOriginallyVisible[lastMarker._leaflet_id]) {
+          L.DomUtil.addClass(lastElement, SYNCED_MARKER_HIDDEN);
+        }
+      }
+      lastMarker = null;
     });
   });
-*/
 })(jQuery);

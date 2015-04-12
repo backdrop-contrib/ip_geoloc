@@ -13,6 +13,7 @@ define('LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER', 1);
 define('LEAFLET_SYNC_CONTENT_TO_MARKER', 1 << 1);
 define('LEAFLET_SYNC_MARKER_TO_CONTENT', 1 << 2);
 define('LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP', 1 << 3);
+define('LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT', 1 << 4);
 
 class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
@@ -71,7 +72,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'contains' => array(
         LEAFLET_SYNC_CONTENT_TO_MARKER => array('default' => FALSE),
         LEAFLET_SYNC_MARKER_TO_CONTENT => array('default' => FALSE),
-        LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP => array('default' => FALSE),
+        LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP => array('default' => TRUE),
+        LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT => array('default' => TRUE),
       ),
     );
     $options['full_screen'] = array('default' => FALSE);
@@ -423,10 +425,19 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         . $note . '<br/>' . $caveat,
       '#weight' => $weight++,
     );
-   $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP] = array(
+    $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP] = array(
       '#title' => t('As above, but also pop up marker balloons'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP],
+      '#states' => array(
+        'visible' => array(':input[name="style_options[sync][4]"]' => array('checked' => TRUE)),
+      ),
+      '#weight' => $weight++,
+    );
+    $form['sync'][LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT] = array(
+      '#title' => t('Unhighlight marker and close its balloon when hovering off the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT],
       '#states' => array(
         'visible' => array(':input[name="style_options[sync][4]"]' => array('checked' => TRUE)),
       ),
@@ -832,9 +843,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     if (!empty($this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT])) {
       $sync_flags |= LEAFLET_SYNC_MARKER_TO_CONTENT;
-    }
-    if (!empty($this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP])) {
-      $sync_flags |= LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP;
+      if (!empty($this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP])) {
+        $sync_flags |= LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP;
+      }
+      if (!empty($this->options['sync'][LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT])) {
+        $sync_flags |= LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT;
+      }
     }
     $has_full_screen = !empty($this->options['full_screen']);
     $has_mini_map = !empty($this->options['mini_map']['on']);
@@ -1088,6 +1102,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['scrollWheelZoom'] = $scroll_wheel_zoom;
     $map['settings']['dragging'] = $dragging;
 
+    $map['settings']['revertLastMarkerOnMapOut'] =
+      (bool)($sync_flags & LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT);
+
     $map['settings']['maxClusterRadius'] = 0;
     if ($cluster_radius > 0) {
       if (module_exists('leaflet_markercluster')) {
@@ -1134,9 +1151,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
 
-    // Don't load JS and CSS when only LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP
-    // or nothing is requested.
-    if ($sync_flags !== 0 && $sync_flags != LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP) {
+    // Don't load sync JS and CSS when option is not requested.
+    if ($sync_flags !== 0) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_sync_content.js', array('weight' => 1));
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_sync_content.css');
     }
