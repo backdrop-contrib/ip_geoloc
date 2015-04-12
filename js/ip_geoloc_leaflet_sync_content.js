@@ -73,7 +73,7 @@
               marker.addTo(parent._map);
             }
           }
-          // This does not work in Chrome or Safari, but works in Firefox.
+          // This doesn't work in Chrome/Safari, but sometimes in Firefox.
           marker._bringToFront();
 
           if (marker._icon) {
