@@ -50,3 +50,7 @@ div.leaflet-marker-hidden > img,
 div.leaflet-marker-hidden > i {
   display: none;
 }
+
+g.synced-content-hover > path {
+  stroke: red;
+}

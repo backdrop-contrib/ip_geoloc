@@ -14,7 +14,7 @@
 
   $(document).bind('leaflet.feature', function(event, marker, feature) {
 
-    // marker is the marker/polygon/linestring... just created on the map.
+    // marker is the feature just added to the map, it could be a polygon too.
     // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
 
     if (!feature.feature_id) {
@@ -34,8 +34,9 @@
     if (feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT) {
 
       marker.on('popupclose', function(event) {
-        if (event.target._icon) {
-          L.DomUtil.removeClass(event.target._icon, SYNCED_CONTENT_HOVER);
+        var element = marker._icon ? marker._icon : marker._container;
+        if (element) {
+          L.DomUtil.removeClass(element, SYNCED_CONTENT_HOVER);
           // On popupclose hide the marker, iff it wasn't visible to begin with.
           if (!markersOriginallyVisible[event.target._leaflet_id]) {
             L.DomUtil.addClass(event.target._icon, SYNCED_MARKER_HIDDEN);
@@ -59,12 +60,8 @@
             }
             lastMarker.closePopup();
           }
-
-          if (marker._map && marker._icon) {
-            // Marker with icon: make it visible, in case it was invisible.
-            L.DomUtil.removeClass(marker._icon, SYNCED_MARKER_HIDDEN);
-          }
-          else {
+          var isVisible = marker._map;
+          if (!isVisible) {
             // If marker doesn't have a map, but a (grand)parent does, use that.
             for (var parent = marker; parent; parent = parent.__parent) {
               if (parent._map) break;
@@ -73,12 +70,20 @@
               marker.addTo(parent._map);
             }
           }
-          // This does not work in Chrome or Safari, but works in Firefox.
-          marker._bringToFront();
+          var element = marker._icon ? marker._icon : marker._container;
+          if (isVisible) {
+            // Marker with icon: make it visible, in case it was invisible.
+            L.DomUtil.removeClass(element, SYNCED_MARKER_HIDDEN);
+          }
 
-          if (marker._icon) {
+          // This does not work in Chrome or Safari, but works in Firefox.
+          if (marker._bringToFront) {
+            marker._bringToFront();
+          }
+
+          if (element) {
             // Now that it is visible, add to the marker the special CSS class.
-            L.DomUtil.addClass(marker._icon, SYNCED_CONTENT_HOVER);
+            L.DomUtil.addClass(element, SYNCED_CONTENT_HOVER);
           }
 
           if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
@@ -87,12 +92,13 @@
             marker.openPopup(); // 
             marker._popup.options.offset.y += 19;
           }
-          else if (lastMarker && lastMarker._icon) {
+          else if (lastMarker) {
             // If LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP is set, this is
             // automatically taken care of by the 'popupclose' event handler
             // above. This in turn is triggered by a an openPopup() call on
             // another marker.
-            L.DomUtil.removeClass(lastMarker._icon, SYNCED_CONTENT_HOVER);
+            var lastElement = lastMarker._icon ? lastMarker._icon : lastMarker._container;
+            L.DomUtil.removeClass(lastElement, SYNCED_CONTENT_HOVER);
           }
           lastMarker = marker;
         }
