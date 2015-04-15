@@ -544,7 +544,7 @@ function _ip_geoloc_set_my_location_add_selector(&$form, &$location, $is_address
     $form['fixed_address'] = array(
       '#type' => count($options) <= 1 ? 'markup' : 'select',
       '#options' => $options,
-      '#default_value' => isset($options[1]) ? 1 : 2,
+      '#default_value' => isset($options[2]) ? 2 : 1,
       '#markup' => isset($options[1]) ? $options[1] : $options[2],
       '#weight' => 5,
     );
@@ -604,19 +604,15 @@ function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_a
 
   // Check if we have a "Region/Move to" drop-down ...
   if (isset($form['fixed_address'])) {
-    // Default to "Move to", but change if we have to.
-    $selected = 1;
+    // Default to "Region", but change if we have to.
+    $selected = $fixed_address != 1 ? 2 : 1;
 
     if (isset($options[2])) {
-      // If there's a "Region" opiton in the drop-down ...
+      // If there's a "Region" option in the drop-down ...
       if (empty($fixed_address) && !isset($options[1])) {
         // .. then when either nothing or "Find me" was pressed and there's only
         // the "Region" option, no "Move to", then unset the Region choice
         $selected = $form['region']['#default_value'] = 0;
-      }
-      elseif ($fixed_address == 2) {
-        // "Region" was selected and "Go" pressed.
-        $selected = 2;
       }
     }
     $form['fixed_address']['#default_value'] = $selected;
@@ -761,52 +757,6 @@ function _ip_geoloc_process_go_to_submit($form, &$form_state) {
   // Also, if set to TRUE, content is rendered before new location is set
   // and Region selector will be one step behind.
   $form_state['rebuild'] = FALSE;
-}
-
-function ip_geoloc_set_location_from_address($entered_address) {
-
-  if (empty($entered_address)) {
-    $location = array(
-      'provider' => 'user',
-      'ip_address' => ip_address(),
-    );
-  }
-  else {
-    if (module_exists('geocoder')) {
-      // Use Google server-side API to retrieve lat/long from entered address.
-      $point = geocoder('google', $entered_address);
-    }
-    else {
-      drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array(
-        '!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
-    }
-    if (empty($point)) {
-      drupal_set_message(t('The address %address could not be geocoded to a location.', array('%address' => $entered_address)), 'warning');
-    }
-    else {
-      $location = array(
-        'provider' => 'user+google',
-        'is_updated' => TRUE,
-        'ip_address' => ip_address(),
-        'latitude' => $point->coords[1],
-        'longitude' => $point->coords[0],
-        'formatted_address' => $point->data['geocoder_formatted_address'],
-        'accuracy' => $point->data['geocoder_accuracy'],
-      );
-      // Flatten the point object into a straight location array.
-      foreach ($point->data['geocoder_address_components'] as $component) {
-        if (!empty($component->long_name)) {
-          $type = $component->types[0];
-          $location[$type] = $component->long_name;
-          if ($type == 'country' && !empty($component->short_name)) {
-            $location['country_code'] = $component->short_name;
-          }
-        }
-      }
-    }
-  }
-  $location['fixed_address'] = 1;
-  return $location;
 }
 
 function ip_geoloc_set_location_from_region($region) {

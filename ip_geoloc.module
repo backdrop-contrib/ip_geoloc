@@ -135,10 +135,6 @@ function ip_geoloc_library_alter(&$libraries, $module) {
     $js = $libraries['leaflet_markercluster']['js'][0]['data'];
     $last_slash = strrpos($js, '/');
     $js_new = drupal_substr($js, 0, $last_slash + 1) . IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS;
-
-    // Hack for RegionBound
-    // $js_new = drupal_get_path('theme', 'regionbound') . '/theme.js';
-
     //drupal_set_message(t('Current Leaflet MarkerCluster plugin: %js.<br/>Looking for %js_new', array('%js' => $js, '%js_new' => $js_new)));
     if (file_exists($js_new)) {
       $libraries['leaflet_markercluster']['js'][0]['data'] = $js_new;
@@ -231,6 +227,14 @@ function ip_geoloc_js_info() {
  * current position marker appears on the recent visitor map.
  */
 function ip_geoloc_init() {
+
+  foreach (arg() as $arg) {
+    if ($arg == 'erase-location') {
+      // Wipe the current visitor location
+      _ip_geoloc_set_session_value('location', NULL);
+      return;
+    }
+  }
 
   ip_geoloc_log_errors();
 
@@ -910,6 +914,61 @@ function ip_geoloc_views_post_render(&$view, &$rendered_output) {
     _ip_geoloc_set_session_value('location', $location);
   }
 }
+
+/**
+ * Returns the supplied string into an array with various address components.
+ *
+ * @param string $partial_address_or_landmark
+ * @return array, a location holding, latitude, longitude and address fields
+ */
+function ip_geoloc_set_location_from_address($partial_address_or_landmark) {
+
+  if (empty($partial_address_or_landmark)) {
+    $location = array(
+      'provider' => 'user',
+      'ip_address' => ip_address(),
+    );
+  }
+  else {
+    if (module_exists('geocoder')) {
+      // Use Google server-side API to retrieve lat/long from entered text, as
+      // well as all components of the full address.
+      $point = geocoder('google', $partial_address_or_landmark);
+    }
+    else {
+      drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array(
+        '!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
+    }
+    if (empty($point)) {
+      drupal_set_message(t('The address %address could not be geocoded to a location.', array(
+        '%address' => $partial_address_or_landmark)), 'warning');
+    }
+    else {
+      $location = array(
+        'provider' => 'user+google',
+        'is_updated' => TRUE,
+        'ip_address' => ip_address(),
+        'latitude' => $point->coords[1],
+        'longitude' => $point->coords[0],
+        'formatted_address' => $point->data['geocoder_formatted_address'],
+        'accuracy' => $point->data['geocoder_accuracy'],
+      );
+      // Flatten the point object into a straight location array.
+      foreach ($point->data['geocoder_address_components'] as $component) {
+        if (!empty($component->long_name)) {
+          $type = $component->types[0];
+          $location[$type] = $component->long_name;
+          if ($type == 'country' && !empty($component->short_name)) {
+            $location['country_code'] = $component->short_name;
+          }
+        }
+      }
+    }
+  }
+  $location['fixed_address'] = 1;
+  return $location;
+}
+
 
 /**
  * Implements hook_views_api().

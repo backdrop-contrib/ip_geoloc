@@ -6,7 +6,7 @@
  */
 
 /**
- * Default argument plugin to extract a user via menu_get_object
+ * Default argument plugin to inject attributes from the visitor's location.
  */
 class ip_geoloc_plugin_argument_default_ip_geoloc extends views_plugin_argument_default {
 
