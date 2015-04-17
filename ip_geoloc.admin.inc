@@ -123,10 +123,16 @@ function ip_geoloc_admin_configure() {
       '@url_project' => url('http://drupal.org/project/session_cache'),
     )),
   );
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_store_addresses'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Store reverse-geocoded addresses with their corresponding latitude/longitude on the database'),
+    '#default_value' => variable_get('ip_geoloc_store_addresses', TRUE),
+    '#description' => t('This allows you create maps of recent visitors to your site.'),
+  );
   $note = t('If you are using this module mainly for its mapping features, then you can safely untick this box.');
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Employ a free Google service to periodically auto reverse-geocode visitor locations to street addresses before storing these on the database'),
+    '#title' => t('Employ a free Google service to <em>periodically</em> auto reverse-geocode visitor locations to street addresses'),
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', FALSE),
     '#description' => "<strong>$note</strong><br>" . t('Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server.'),
     '#states' => array(

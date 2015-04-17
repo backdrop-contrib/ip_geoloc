@@ -362,6 +362,11 @@ of about 0.3s for the "Find me" function of the "Set my location" block.
 To switch this feature off, comment out the newly added lines from the
 .htaccess file by putting a # in front of each of the 5 lines.
 
+CONDITIONAL LOCATION FIELDS
+===========================
+Here's a great example on how to use IPGV&M in combination with the Views
+Conditional module https://www.drupal.org/node/2470265 (solution in entry #4).
+
 CONTEXT SESSION MODULE
 ======================
 You can switch context (as in the https://www.drupal.org/project/context module)

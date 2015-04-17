@@ -246,7 +246,6 @@ function ip_geoloc_init() {
     // Not convinced this is desirable
     _ip_geoloc_reinit_location($location, $reverse_geocode_client_timeout);
     ip_geoloc_store_location($location);
-    //_ip_geoloc_set_session_value('location', NULL);
     _ip_geoloc_set_session_value('location', $location);
   }
   $scheduled_reverse_geocode = _ip_geoloc_check_location($location);
@@ -304,11 +303,9 @@ function ip_geoloc_is_first_click() {
  * @param int $reverse_geocode_client_timeout
  */
 function _ip_geoloc_reinit_location(&$location, $reverse_geocode_client_timeout) {
-  $fixed_address = empty($location['fixed_address']) ? 0 : (int)$location['fixed_address'];
-  $region = isset($location['regions']) ? $location['regions'] : NULL;
   $location = array(
-    'fixed_address' => $fixed_address,
-    'regions' => $region,
+    'fixed_address' => isset($location['fixed_address']) ? (int)$location['fixed_address'] : NULL,
+    'regions' => isset($location['regions']) ? $location['regions'] : NULL,
   );
   // Calls below are synchronous, $location is filled upon return.
   if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
@@ -370,7 +367,7 @@ function ip_geoloc_current_location_ajax_recipient() {
     // If successfully stored, don't store again.
     $location['ip_address'] = NULL;
   }
-
+  $location['fixed_address'] = 0;
   $location['is_updated'] = TRUE;
 
   // Wipe old location before setting the new one (to avoid merging).

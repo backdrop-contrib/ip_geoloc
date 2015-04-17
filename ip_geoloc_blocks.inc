@@ -251,12 +251,12 @@ function ip_geoloc_block_set_my_location(&$form) {
     '#type' => 'select',
     '#title' => t('Widget to select geographical region'),
     '#options' => array(
-      0 => t('Select (drop-down)'),
-      1 => t('Autocomplete textfield'),
+      '0' => t('Select (drop-down)'),
+      '1' => t('Autocomplete textfield'),
     ),
-    '#default_value' => variable_get('ip_geoloc_region_autocomplete', 0),
+    '#default_value' => variable_get('ip_geoloc_region_autocomplete', '0'),
     '#states' => array(
-      'invisible' => array('select[name="ip_geoloc_geo_vocabulary_id"]' => array('value' => 0),
+      'invisible' => array('select[name="ip_geoloc_geo_vocabulary_id"]' => array('value' => '0'),
     )),
   );
   $label = variable_get('ip_geoloc_visitor_region_label', '');
@@ -277,15 +277,15 @@ function ip_geoloc_block_set_my_location(&$form) {
     '#type' => 'select',
     '#title' => t('Center to use'),
     '#options' => array(
-      0 => t('Selected region'),
-      1 => t('Parent of selected region'),
-      2 => t('Grandparent of selected region'),
-      3 => t('Great-grandparent of selected region'),
+      '0' => t('Selected region'),
+      '1' => t('Parent of selected region'),
+      '2' => t('Grandparent of selected region'),
+      '3' => t('Great-grandparent of selected region'),
     ),
     '#default_value' => variable_get('ip_geoloc_region_parent', 0),
     '#description' => t('If the selected parent does not exist the next parent up will be used instead.'),
     '#states' => array(
-      'invisible' => array('select[name="ip_geoloc_geo_vocabulary_id"]' => array('value' => 0),
+      'invisible' => array('select[name="ip_geoloc_geo_vocabulary_id"]' => array('value' => '0'),
     )),
   );
 
@@ -534,18 +534,18 @@ function _ip_geoloc_set_my_location_add_selector(&$form, &$location, $is_address
   $editable_address_label = variable_get('ip_geoloc_visitor_address_label', '');
   $editable_region_label = variable_get('ip_geoloc_visitor_region_label', '');
 
-  if ($geo_vocabulary_id && $editable_region_label != '<none>') {
-    $options[2] = $editable_region_label ? filter_xss_admin($editable_region_label) : IP_GEOLOC_VISITOR_DEFAULT_REGION_LABEL;
-  }
   if ($is_address_editable && $editable_address_label != '<none>') {
-    $options[1] = $editable_address_label ? filter_xss_admin($editable_address_label) : IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL;
+    $options['1'] = $editable_address_label ? filter_xss_admin($editable_address_label) : IP_GEOLOC_VISITOR_DEFAULT_ADDRESS_LABEL;
+  }
+  if ($geo_vocabulary_id && $editable_region_label != '<none>') {
+    $options['2'] = $editable_region_label ? filter_xss_admin($editable_region_label) : IP_GEOLOC_VISITOR_DEFAULT_REGION_LABEL;
   }
   if (!empty($options)) {
     $form['fixed_address'] = array(
       '#type' => count($options) <= 1 ? 'markup' : 'select',
       '#options' => $options,
-      '#default_value' => isset($options[2]) ? 2 : 1,
-      '#markup' => isset($options[1]) ? $options[1] : $options[2],
+      '#default_value' => isset($options['2']) ? '2' : '1',
+      '#markup' => isset($options['1']) ? $options['1'] : $options['2'],
       '#weight' => 5,
     );
   }
@@ -604,18 +604,13 @@ function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_a
 
   // Check if we have a "Region/Move to" drop-down ...
   if (isset($form['fixed_address'])) {
-    // Default to "Region", but change if we have to.
-    $selected = $fixed_address != 1 ? 2 : 1;
-
-    if (isset($options[2])) {
-      // If there's a "Region" option in the drop-down ...
-      if (empty($fixed_address) && !isset($options[1])) {
-        // .. then when either nothing or "Find me" was pressed and there's only
-        // the "Region" option, no "Move to", then unset the Region choice
-        $selected = $form['region']['#default_value'] = 0;
-      }
-    }
-    $form['fixed_address']['#default_value'] = $selected;
+    // Default to "Move to", unless we do not have a location at all, or when
+    // "Region" was selected and "Go" pressed.
+   $selected = '1';
+   if (isset($options['2']) && !isset($location['fixed_address']) || $fixed_address == 2) {
+     $selected = '2';
+   }
+   $form['fixed_address']['#default_value'] = $selected;
   }
 
   // Disable the address box when it isn't editable.
@@ -625,7 +620,7 @@ function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_a
   if ($geo_vocabulary_id) {
 
     // If "Move to" is NOT there, remove Address box when Go was pressed.
-    if (!isset($options[1]) && $fixed_address == 2) {
+    if (!isset($options['1']) && $fixed_address == 2) {
       unset($form['street_address']);
     }
     elseif (count($options) > 1) {
@@ -733,16 +728,16 @@ function _ip_geoloc_process_go_to_submit($form, &$form_state) {
 
   if (empty($form_state['values']['fixed_address'])) {
     // Nothing slected. As 'Go' was pressed we need to choose 1 or 2.
-    $form_state['values']['fixed_address'] = $geo_vocabulary_id ? 2 : 1;
+    $form_state['values']['fixed_address'] = $geo_vocabulary_id ? '2' : '1';
   }
 
-  if ($form_state['values']['fixed_address'] == 1) {
+  if ($form_state['values']['fixed_address'] == '1') {
     // Using new 'input' rather than current 'values'.
     $entered_address = isset($form_state['input']['street_address']) ? check_plain($form_state['input']['street_address']) : NULL;
     $location = ip_geoloc_set_location_from_address($entered_address);
   }
   elseif ($geo_vocabulary_id) {
-    // "Region" pressed.
+    // "Region" selected.
     $location = ip_geoloc_set_location_from_region($form_state['values']['region']);
   }
   // Wipe old location before setting the new one (to avoid merging).
@@ -831,7 +826,7 @@ function ip_geoloc_ip_lookup_form($form, &$form_state) {
     '#required' => FALSE,
     '#prefix' => isset($prefix) ? $prefix : NULL,
   );
-  if (user_access('administer site configuration')) {
+  if (user_access('administer site configuration') && variable_get('ip_geoloc_store_addresses', TRUE)) {
     $form['store'] = array(
       '#type' => 'checkbox',
       '#title' => t('If found, store on IP geolocation database for future reference.'),
