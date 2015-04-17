@@ -231,11 +231,14 @@ function ip_geoloc_init() {
   foreach (arg() as $arg) {
     // Only works on Views pages that have a (dummy) contextual filter defined.
     if ($arg == 'erase-location') {
-      // Wipe the current visitor location.
-      _ip_geoloc_set_session_value('location', NULL);
-      // ... now pretend to everyone it never happened
-      $_GET['q'] = str_replace('/erase-location', '', $_GET['q']);
-      return;
+      $location = ip_geoloc_get_visitor_location();
+      if (empty($location['is_updated'])) {
+        // Wipe the current visitor location.
+        _ip_geoloc_set_session_value('location', NULL);
+        // ... now pretend to everyone it never happened
+        $_GET['q'] = str_replace('/erase-location', '', $_GET['q']);
+        return;
+      }
     }
   }
 
@@ -914,61 +917,6 @@ function ip_geoloc_views_post_render(&$view, &$rendered_output) {
     _ip_geoloc_set_session_value('location', $location);
   }
 }
-
-/**
- * Returns the supplied string into an array with various address components.
- *
- * @param string $partial_address_or_landmark
- * @return array, a location holding, latitude, longitude and address fields
- */
-function ip_geoloc_set_location_from_address($partial_address_or_landmark) {
-
-  if (empty($partial_address_or_landmark)) {
-    $location = array(
-      'provider' => 'user',
-      'ip_address' => ip_address(),
-    );
-  }
-  else {
-    if (module_exists('geocoder')) {
-      // Use Google server-side API to retrieve lat/long from entered text, as
-      // well as all components of the full address.
-      $point = geocoder('google', $partial_address_or_landmark);
-    }
-    else {
-      drupal_set_message(t('<a target="project_page" href="!geocoder">Geocoder</a> module must be enabled to geocode an address.', array(
-        '!geocoder' => url('http://drupal.org/project/geocoder'))), 'warning');
-    }
-    if (empty($point)) {
-      drupal_set_message(t('The address %address could not be geocoded to a location.', array(
-        '%address' => $partial_address_or_landmark)), 'warning');
-    }
-    else {
-      $location = array(
-        'provider' => 'user+google',
-        'is_updated' => TRUE,
-        'ip_address' => ip_address(),
-        'latitude' => $point->coords[1],
-        'longitude' => $point->coords[0],
-        'formatted_address' => $point->data['geocoder_formatted_address'],
-        'accuracy' => $point->data['geocoder_accuracy'],
-      );
-      // Flatten the point object into a straight location array.
-      foreach ($point->data['geocoder_address_components'] as $component) {
-        if (!empty($component->long_name)) {
-          $type = $component->types[0];
-          $location[$type] = $component->long_name;
-          if ($type == 'country' && !empty($component->short_name)) {
-            $location['country_code'] = $component->short_name;
-          }
-        }
-      }
-    }
-  }
-  $location['fixed_address'] = 1;
-  return $location;
-}
-
 
 /**
  * Implements hook_views_api().
