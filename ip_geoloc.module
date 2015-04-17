@@ -229,9 +229,12 @@ function ip_geoloc_js_info() {
 function ip_geoloc_init() {
 
   foreach (arg() as $arg) {
+    // Only works on Views pages that have a (dummy) contextual filter defined.
     if ($arg == 'erase-location') {
-      // Wipe the current visitor location
+      // Wipe the current visitor location.
       _ip_geoloc_set_session_value('location', NULL);
+      // ... now pretend to everyone it never happened
+      $_GET['q'] = str_replace('/erase-location', '', $_GET['q']);
       return;
     }
   }
