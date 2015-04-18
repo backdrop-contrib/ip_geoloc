@@ -43,6 +43,7 @@ require_once 'ip_geoloc_api.inc';
 require_once 'ip_geoloc_blocks.inc';
 require_once 'theme/ip_geoloc_theme.inc';
 include_once 'ip_geoloc.openlayers.inc';
+include_once 'ip_geoloc.tokens.inc';
 
 /**
  * Implements hook-help().
