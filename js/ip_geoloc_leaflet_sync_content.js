@@ -20,6 +20,12 @@
       return;
     }
 
+    marker.on('click', function(event) {
+      if (event.target._leaflet_id) {
+        markersOriginallyVisible[event.target._leaflet_id] = true;
+      }
+    });
+
     var contentSelector = ".sync-id-" + feature.feature_id;
     if (feature.flags & LEAFLET_SYNC_CONTENT_TO_MARKER) {
       marker.on('mouseover', function(event) {
@@ -61,7 +67,7 @@
           }
           var isVisible = marker._map;
           if (!isVisible) {
-            // If marker doesn't have a map, but a (grand)parent does, use that.
+            // If marker doesn't have a map, but an ancestor does, use that.
             for (var parent = marker; parent; parent = parent.__parent) {
               if (parent._map) break;
             }
