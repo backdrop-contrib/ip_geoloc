@@ -13,7 +13,7 @@ function ip_geoloc_token_info() {
   $token_keys = array('country', 'country_code', 'region', 'region_code',
     'city', 'locality', 'route', 'street_number', 'postal_code',
     'administrative_area_level_1', 'formatted_address',
-    'latitude', 'longitude', 'provider');
+    'latitude', 'longitude', 'ip_address', 'provider');
 
   $token_info = array();
   foreach ($token_keys as $key) {
