@@ -58,7 +58,7 @@ The core module Statistics must be enabled also when you wish to collect visitor
 data. It is not required for maps in general.
 
 The "Session Cache API" and "High-performance Javascript callback handler"
-modules are optional, but recommended.
+(7.x-2.x) modules are optional, but recommended.
 
 If you want to center the map on the visitor's location, but don't want to use
 the HTML5 style of location retrieval involving a browser prompt, you an UNtick
@@ -345,7 +345,7 @@ reverse-geocode HTML5 visitor locations to street addresses".
 HIGH PERFORMANCE AJAX
 =====================
 IPGV&M will take advantage of the "High-performance Javascript callback
-handler", if installed.
+handler" (7.x-2.x), if installed.
 Installation instructions for Nginx: http://drupal.org/node/1876418
 Installation instructions for Apache: 
 o download and enable https://drupal.org/project/js, version 7.x-2.x
@@ -357,7 +357,8 @@ o copy those lines and paste them into .htaccess below the line
 IPGV&M will now perform its AJAX calls more efficiently. Results vary and 
 depend not so much on IPGV&M but on the complexity and speed of your site during
 initialisation. For an "average" site, expect a reduction of the page load time
-of about 0.3s for the "Find me" function of the "Set my location" block.
+of about 0.3s for the "Find me" function of the "Set my location" block, which
+currently is the only place where the Javascript callback handler is used.
 
 To switch this feature off, comment out the newly added lines from the
 .htaccess file by putting a # in front of each of the 5 lines.

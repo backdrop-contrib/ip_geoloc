@@ -204,11 +204,14 @@ function ip_geoloc_js_info() {
   // received on "js/ip_geoloc/current_location".
   // We're calling the same function as defined in ip_geoloc_menu(), but using
   // a faster, more economic bootstrap phase, without hook_init().
+  $dependencies = module_exists('session_cache_file')
+    ? array('session_cache', 'session_cache_file')
+    : (module_exists('session_cache') ? array('session_cache') : NULL);
   $js_info = array(
     'current_location' => array(
       'bootstrap' => module_exists('better_statistics') ? DRUPAL_BOOTSTRAP_FULL : DRUPAL_BOOTSTRAP_SESSION,
       'callback function' => 'ip_geoloc_current_location_ajax_recipient',
-      'dependencies' => module_exists('session_cache') ? array('session_cache') : NULL,
+      'dependencies' => $dependencies,
       'skip init' => TRUE,
       'token' => FALSE,
     ),
@@ -331,7 +334,7 @@ function _ip_geoloc_reinit_location(&$location, $reverse_geocode_client_timeout)
 /**
  * Data recipient for javascript function getLocation().
  *
- * Comes in via menu callback /ip-geoloc-current-location, see function
+ * Comes in via menu callback js/ip_geoloc/current_location, see function
  * ip_geoloc_menu() above.
  * Receives latitude, longitude, accuracy and address via the global $_POST
  * variable from function getLocation() in ip_geoloc_current_location.js, which
