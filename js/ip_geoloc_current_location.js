@@ -89,6 +89,10 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
   }
 
   function callbackServer(callbackUrl, data, refresh_page) {
+    // For drupal.org/project/js module, if enabled.
+    data['js_module'] = 'ip_geoloc';
+    data['js_callback'] = 'current_location';
+
     jQuery.ajax({
       url: callbackUrl,
       type: 'POST',

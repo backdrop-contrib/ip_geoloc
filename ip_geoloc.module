@@ -356,7 +356,10 @@ function ip_geoloc_current_location_ajax_recipient() {
     'ip_address' => ip_address(),
   );
   foreach ($_POST as $key => $value) {
-    $location[check_plain($key)] = check_plain($value);
+    // Ignore crap required for drupal.org/project/js module
+    if (drupal_substr($key, 0, 3) !== 'js_') {
+      $location[check_plain($key)] = check_plain($value);
+    }
   }
   $location['provider'] = empty($location['country']) ? 'device' : 'device+google';
 
