@@ -20,10 +20,11 @@
       return;
     }
 
-    marker.on('click', function(event) {
-      if (event.target._leaflet_id) {
-        markersOriginallyVisible[event.target._leaflet_id] = true;
-      }
+    marker.on('mouseover', function(event) {
+      markersOriginallyVisible[event.target._leaflet_id] = true;
+    });
+    marker.on('popupopen', function(event) {
+      markersOriginallyVisible[event.target._leaflet_id] = true;
     });
 
     var contentSelector = ".sync-id-" + feature.feature_id;
@@ -113,20 +114,21 @@
   });
 
   $(document).bind('leaflet.map', function(event, map, lMap) {
-    if (!map.settings.revertLastMarkerOnMapOut) {
-      return;
-    }
-    // On map mouse hover out: close all popus and revert synced marker style.
-    lMap.on('mouseout', function(event) {
-      event.target.closePopup();
-      if (lastMarker) {
-        var lastElement = lastMarker._icon ? lastMarker._icon : lastMarker._container;
-        L.DomUtil.removeClass(lastElement, SYNCED_CONTENT_HOVER);
-        if (!markersOriginallyVisible[lastMarker._leaflet_id]) {
-          L.DomUtil.addClass(lastElement, SYNCED_MARKER_HIDDEN);
+
+    if (map.settings.revertLastMarkerOnMapOut) {
+      // On map mouse hover out: close all popus and revert synced marker style.
+      lMap.on('mouseout', function(event) {
+        event.target.closePopup();
+        if (lastMarker) {
+          var lastElement = lastMarker._icon ? lastMarker._icon : lastMarker._container;
+          L.DomUtil.removeClass(lastElement, SYNCED_CONTENT_HOVER);
+          if (!markersOriginallyVisible[lastMarker._leaflet_id]) {
+            L.DomUtil.addClass(lastElement, SYNCED_MARKER_HIDDEN);
+          }
         }
-      }
-      lastMarker = null;
-    });
+        lastMarker = null;
+      });
+    }
+
   });
 })(jQuery);
