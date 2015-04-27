@@ -579,11 +579,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $desc = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module', array(
         '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
       ));
-      $form['cluster_differentiator']['#description'] .= $desc . ' ' . t('and <a href="http://regionbound.com">RegionBound</a> JS plugin.');
+      $form['cluster_differentiator']['#description'] .= $desc . ' ' . t('and <a href="!url_regionbound">RegionBound</a> JS plugin.', array('!url_regionbound' => url('http://regionbound.com')));
     }
     elseif ($lib_markercluster && (empty($region_field_names) || !reset($region_field_names))) {
-      $note_region = t('Download the .js file from <a target="regionbound" href="http://regionbound.com">regionbound.com</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
+      $note_region = t('Download the .js file from <a target="regionbound" href="!url_regionbound">Regionbound</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
         '%directory' => $lib_markercluster,
+        '!url_regionbound' => url('http://regionbound.com'),
       ));
       $form['cluster_differentiator']['#description'] .= "<p>$note_region</p>";
     }
@@ -652,10 +653,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           1 => t('Avant-garde (heuristic hull)'),
         ),
         '#default_value' => $this->options['cluster_differentiator']['cluster_outline'],
-        '#description' => t('When hovering a cluster, a <a target="regionbound" href="http://regionbound.com/enhanced-cluster-envelope-using-heuristic-hull">coverage outline</a> visualises the envelope or footprint of the underlying marker population. Select your preferred style of doing this.'),
+        '#description' => t('When hovering a cluster, a <a target="regionbound" href="!url_regionbound">coverage outline</a> visualises the envelope or footprint of the underlying marker population. Select your preferred style of doing this.', array(
+          '!url_regionbound' => url('http://regionbound.com/enhanced-cluster-envelope-using-heuristic-hull'),
+        )),
       );
     }
-    $intro = t('Use clusters to report on region aggregates; requires <a target="regionbound" href="http://regionbound.com">RegionBound</a>');
+    $intro = t('Use clusters to report on region aggregates; requires <a target="regionbound" href="!url_regionbound">RegionBound</a>', array(
+      '!url_regionbound' => url('http://regionbound.com/coffee-prices-across-melbourne'),
+    ));
     $desc = t('This feature aggregates values of a selected field across every region and displays the resulting <em>sum/average/min/max</em> on each cluster icon at every zoom level. It also colours each cluster icon based on its aggregated value, rather than its marker count.');
     $form['cluster_aggregation'] = array(
       '#type' => 'fieldset',
