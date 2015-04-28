@@ -61,8 +61,11 @@ L.sync = {};
           L.sync.removeClass(marker, SYNCED_MARKER_HIDDEN);
         }
         // This doesn't work in Chrome/Safari, but sometimes in Firefox.
-        if (marker._bringToFront) {
+        if (marker._icon) {
           marker._bringToFront();
+        }
+        else {
+          alert('Location out of scope. Please zoom out.');
         }
         // Now that it is visible, add to the marker the special CSS class.
         L.sync.addClass(marker, SYNCED_CONTENT_HOVER);
