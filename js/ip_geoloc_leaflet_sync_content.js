@@ -46,8 +46,7 @@ L.sync = {};
           L.sync.addClass(lastMarker, SYNCED_MARKER_HIDDEN);
           lastMarker.closePopup();
         }
-        var isVisible = marker._map;
-        if (!isVisible) {
+        if (!marker._map) {
           // If marker doesn't have a map, but an ancestor does, use that.
           for (var parent = marker; parent; parent = parent.__parent) {
             if (parent._map) break;
@@ -56,16 +55,15 @@ L.sync = {};
             marker.addTo(parent._map);
           }
         }
-        if (isVisible) {
-          // Marker with icon: make it visible, in case it was invisible.
+        if (marker._map) {
+          // Make marker visible, in case it was invisible.
           L.sync.removeClass(marker, SYNCED_MARKER_HIDDEN);
-        }
-        // This doesn't work in Chrome/Safari, but sometimes in Firefox.
-        if (marker._icon) {
+          // This doesn't work in Chrome/Safari, but sometimes in Firefox.
           marker._bringToFront();
         }
         else {
-          alert('Location out of scope. Please zoom out.');
+          var label = feature.label ? feature.label : (feature.tooltip ? feature.tooltip : Drupal.t('your item'));
+          alert(Drupal.t('Location of "@label" is out of current scope. \nPlease zoom out a couple of levels to locate it.', { '@label': label }));
         }
         // Now that it is visible, add to the marker the special CSS class.
         L.sync.addClass(marker, SYNCED_CONTENT_HOVER);
