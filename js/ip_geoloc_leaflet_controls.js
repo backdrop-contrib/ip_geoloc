@@ -131,7 +131,7 @@ L.Control.ClusterToggle = L.Control.extend({
   },
 
   onClick: function(event) {
-    // This normally only loops once.
+    // This normally only loops once, as there's only one _topClusterLevel
     for (var leaflet_id in this._map._layers) {
       if (this._map._layers[leaflet_id]._topClusterLevel) {
         var clusterGroup = this._map._layers[leaflet_id];

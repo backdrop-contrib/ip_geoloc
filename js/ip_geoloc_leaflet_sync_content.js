@@ -1,160 +1,180 @@
-L.sync = {};
 
-(function ($) {
+L.Sync = {
+  SYNC_CONTENT_TO_MARKER: 1 << 1,
+  SYNC_MARKER_TO_CONTENT: 1 << 2,
+  SYNC_MARKER_TO_CONTENT_WITH_POPUP: 1 << 3,
 
-  var LEAFLET_SYNC_CONTENT_TO_MARKER = 1 << 1;
-  var LEAFLET_SYNC_MARKER_TO_CONTENT = 1 << 2;
-  var LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP = 1 << 3;
+  SYNCED_CONTENT_HOVER: 'synced-content-hover',
+  SYNCED_MARKER_HOVER : 'synced-marker-hover',
+  SYNCED_MARKER_HIDDEN: 'leaflet-marker-hidden',
 
-  var SYNCED_CONTENT_HOVER = 'synced-content-hover';
-  var SYNCED_MARKER_HOVER  = 'synced-marker-hover';
-  var SYNCED_MARKER_HIDDEN = 'leaflet-marker-hidden';
+  map: null,
+  visibleMarkers: [],
+  lastMarker: null,
 
-  var lastMarker = null;
-  var markersOriginallyVisible = [];
+  isVisible: function(marker) {
+    this.ensureVisiblesAreRecorded();
+    return marker && marker._leaflet_id && this.visibleMarkers[marker._leaflet_id];
+  },
 
-  L.sync.contentToMarker = function(contentSelector, marker, className) {
+  ensureVisiblesAreRecorded: function() {
+    if (this.visibleMarkers.length) {
+      return;
+    }
+    var allMarkers = [];
+    // There's only one _topClusterLevel, find it.
+    for (var leaflet_id in this.map._layers) {
+      if (this.map._layers[leaflet_id]._topClusterLevel) {
+        var topClusterLevel = this.map._layers[leaflet_id]._topClusterLevel;
+        allMarkers = topClusterLevel.getAllChildMarkers();
+        break;
+      }
+    }
+    for (var i in allMarkers) {
+      if (allMarkers[i]._leaflet_id) {
+        var id = allMarkers[i]._leaflet_id;
+        this.visibleMarkers[id] = (allMarkers[i]._map ? true : false);
+      }
+    }
+  },
+ 
+  invalidateVisibles: function() {
+    this.visibleMarkers = [];
+  },
+
+  contentToMarker: function(contentSelector, marker, className) {
     marker.on('mouseover', function(event) {
-      $(contentSelector).addClass(className);
+      jQuery(contentSelector).addClass(className);
     });
     marker.on('mouseout', function(event) {
-      $(contentSelector).removeClass(className);
+      jQuery(contentSelector).removeClass(className);
     });
-  };
+  },
 
-  L.sync.markerToContent = function(contentSelector, marker, feature) {
+  markerToContent: function(contentSelector, marker, feature) {
 
     marker.on('popupclose', function(event) {
-      L.sync.removeClass(marker, SYNCED_CONTENT_HOVER);
+      L.Sync.removeClass(marker, L.Sync.SYNCED_CONTENT_HOVER);
       // On popupclose hide the marker, iff it wasn't visible to begin with.
-      if (!markersOriginallyVisible[event.target._leaflet_id]) {
-        L.sync.addClass(marker, SYNCED_MARKER_HIDDEN);
+      if (!L.Sync.isVisible(marker)) {
+        L.Sync.addClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
       }
-      lastMarker = null;
+      L.Sync.lastMarker = null;
     });
 
     // Using bind() as D7 core's jQuery is old and does not support on()
-    $(contentSelector).bind('mouseover', function(event) {
+    jQuery(contentSelector).bind('mouseover', function(event) {
 
-      if (typeof(markersOriginallyVisible[marker._leaflet_id]) === 'undefined') {
-        markersOriginallyVisible[marker._leaflet_id] = (marker._map ? true : false);
+      if (marker === L.Sync.lastMarker) {
+        return;
       }
-      if (marker !== lastMarker) {
+      L.Sync.ensureVisiblesAreRecorded();
 
-        if (lastMarker && !markersOriginallyVisible[lastMarker._leaflet_id]) {
-          // Hide the previously highlighted marker, before highlighting next.
-          L.sync.addClass(lastMarker, SYNCED_MARKER_HIDDEN);
-          lastMarker.closePopup();
-        }
-        if (!marker._map) {
-          // If marker doesn't have a map, but an ancestor does, use that.
-          for (var parent = marker; parent; parent = parent.__parent) {
-            if (parent._map) break;
-          }
-          if (parent && parent._map) {
-            marker.addTo(parent._map);
-          }
-        }
-        if (marker._map) {
-          // Make marker visible, in case it was invisible.
-          L.sync.removeClass(marker, SYNCED_MARKER_HIDDEN);
-          // This doesn't work in Chrome/Safari, but sometimes in Firefox.
-          marker._bringToFront();
-        }
-        else {
-          var label = feature.label ? feature.label : (feature.tooltip ? feature.tooltip : Drupal.t('your item'));
-          alert(Drupal.t('Location of "@label" is out of current scope. \nPlease zoom out a couple of levels to locate it.', { '@label': label }));
-        }
-        // Now that it is visible, add to the marker the special CSS class.
-        L.sync.addClass(marker, SYNCED_CONTENT_HOVER);
-
-        if ((feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
-          // Popup requested
-          if (marker._icon) marker._popup.options.offset.y -= 19;
-          marker.openPopup();
-          if (marker._icon) marker._popup.options.offset.y += 19;
-        }
-        else if (lastMarker) {
-          // If LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP is set, this is
-          // automatically taken care of by the 'popupclose' event handler
-          // above. This in turn is triggered by an openPopup() call on
-          // another marker.
-          L.sync.removeClass(lastMarker, SYNCED_CONTENT_HOVER);
-        }
-        lastMarker = marker;
+      if (L.Sync.lastMarker && !L.Sync.isVisible(L.Sync.lastMarker)) {
+        // Hide the previously highlighted marker, before highlighting next.
+        L.Sync.addClass(L.Sync.lastMarker, L.Sync.SYNCED_MARKER_HIDDEN);
+        L.Sync.lastMarker.closePopup();
       }
+      if (!marker._map) {
+        marker.addTo(L.Sync.map);
+      }
+      if (marker._map) {
+        // This doesn't work in Chrome/Safari, but sometimes in Firefox.
+        marker._bringToFront();
+      }
+      // Make marker visible, in case it was invisible.
+      L.Sync.removeClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
+
+      // Now that it is visible, add to the marker the special CSS class.
+      L.Sync.addClass(marker, L.Sync.SYNCED_CONTENT_HOVER);
+
+      if ((feature.flags & L.Sync.SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
+        // Popup requested
+        if (marker._icon) marker._popup.options.offset.y -= 19;
+        marker.openPopup();
+        if (marker._icon) marker._popup.options.offset.y += 19;
+      }
+      else if (L.Sync.lastMarker) {
+        // If LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP is set, this is
+        // automatically taken care of by the 'popupclose' event handler
+        // above. This in turn is triggered by an openPopup() call on
+        // another marker.
+        L.Sync.removeClass(L.Sync.lastMarker, L.Sync.SYNCED_CONTENT_HOVER);
+      }
+      L.Sync.lastMarker = marker;
     });
-  };
+  },
 
-  $(document).bind('leaflet.feature', function(event, marker, feature) {
-
-    // marker is the feature just added to the map, it could be a polygon too.
-    // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
-    if (!feature.feature_id) {
-      return;
+  addClass:function(marker, className) {
+    var elements = this.getMarkerElements(marker);
+    for (var i = 0; i < elements.length; i++) {
+      L.DomUtil.addClass(elements[i], className);
     }
+  },
 
-    marker.on('mouseover', function(event) {
-      markersOriginallyVisible[event.target._leaflet_id] = true;
-    });
-    marker.on('popupopen', function(event) {
-      markersOriginallyVisible[event.target._leaflet_id] = true;
-    });
-
-    var contentSelector = ".sync-id-" + feature.feature_id;
-
-    if (feature.flags & LEAFLET_SYNC_CONTENT_TO_MARKER) {
-      L.sync.contentToMarker(contentSelector, marker, SYNCED_MARKER_HOVER);
+  removeClass: function(marker, className) {
+    var elements = this.getMarkerElements(marker);
+    for (var i = 0; i < elements.length; i++) {
+      L.DomUtil.removeClass(elements[i], className);
     }
+  },
 
-    if (feature.flags & LEAFLET_SYNC_MARKER_TO_CONTENT) {
-      L.sync.markerToContent(contentSelector, marker, feature);
+  getMarkerElements: function(marker) {
+    var elements = [];
+    if (marker._icon) {
+      elements.push(marker._icon);
     }
+    if (marker._container) {
+      elements.push(marker._container);
+    }
+    if (marker._layers) {
+      for (var key in marker._layers) elements.push(marker._layers[key]._container);
+    }
+    return elements;
+  }
+};
+
+jQuery(document).bind('leaflet.map', function(event, map, lMap) {
+  // Todo: create instance of L.Sync
+  // At this point lMap._layers contains visitor location and clusters.
+  lMap.sync = L.Sync;
+  L.Sync.map = lMap;
+
+  // When zoom level is changed, invalidate the list of visible markers.
+  lMap.on('zoomend', function(event) {
+    event.target.sync.invalidateVisibles();
   });
 
-  $(document).bind('leaflet.map', function(event, map, lMap) {
-
-    if (map.settings.revertLastMarkerOnMapOut) {
-      // On map mouse hover out: close all popus and revert synced marker style.
-      lMap.on('mouseout', function(event) {
-        event.target.closePopup();
-        if (lastMarker) {
-          L.sync.removeClass(lastMarker, SYNCED_CONTENT_HOVER);
-          if (!markersOriginallyVisible[lastMarker._leaflet_id]) {
-            L.sync.addClass(lastMarker, SYNCED_MARKER_HIDDEN);
-          }
+  if (map.settings.revertLastMarkerOnMapOut) {
+    // On map mouse hover out: close all popus and revert synced marker style.
+    lMap.on('mouseout', function(event) {
+      var map = event.target;
+      map.closePopup();
+      if (map.sync.lastMarker) {
+        L.Sync.removeClass(map.sync.lastMarker, L.Sync.SYNCED_CONTENT_HOVER);
+        if (!map.sync.isVisible(map.sync.lastMarker)) {
+          L.Sync.addClass(map.sync.lastMarker, L.Sync.SYNCED_MARKER_HIDDEN);
         }
-        lastMarker = null;
-      });
-    }
-  });
+      }
+      map.sync.lastMarker = null;
+    });
+  }
+});
 
-})(jQuery);
+jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
+  // marker is the feature just added to the map, it could be a polygon too.
+  // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
+  if (!feature.feature_id) {
+    return;
+  }
+  // A CSS class, not an ID as multiple markers may be attached to same node.
+  var contentSelector = ".sync-id-" + feature.feature_id;
 
-L.sync.getMarkerElements = function(marker) {
-  var elements = [];
-  if (marker._icon) {
-    elements.push(marker._icon);
+  if (feature.flags & L.Sync.SYNC_CONTENT_TO_MARKER) {
+    L.Sync.contentToMarker(contentSelector, marker, L.Sync.SYNCED_MARKER_HOVER);
   }
-  if (marker._container) {
-    elements.push(marker._container);
-  }
-  if (marker._layers) {
-    for (var key in marker._layers) elements.push(marker._layers[key]._container);
-  }
-  return elements;
-};
 
-L.sync.addClass = function(marker, className) {
-  var elements = L.sync.getMarkerElements(marker);
-  for (var i = 0; i < elements.length; i++) {
-    L.DomUtil.addClass(elements[i], className);
+  if (feature.flags & L.Sync.SYNC_MARKER_TO_CONTENT) {
+    L.Sync.markerToContent(contentSelector, marker, feature);
   }
-};
-
-L.sync.removeClass = function(marker, className) {
-  var elements = L.sync.getMarkerElements(marker);
-  for (var i = 0; i < elements.length; i++) {
-    L.DomUtil.removeClass(elements[i], className);
-  }
-};
+});
