@@ -8,7 +8,7 @@ L.Sync =  L.Class.extend({
 
     SYNCED_CONTENT_HOVER: 'synced-content-hover',
     SYNCED_MARKER_HOVER : 'synced-marker-hover',
-    SYNCED_MARKER_HIDDEN: 'leaflet-marker-hidden', // use setOpacity(1);
+    SYNCED_MARKER_HIDDEN: 'leaflet-marker-hidden',
   },
 
   options: {
@@ -19,21 +19,40 @@ L.Sync =  L.Class.extend({
     L.setOptions(this, options);
     this.map = map;
     this.lastMarker = null;
+    this.zoom = map.getZoom();
 	},
 
   closePopup: function(marker) {
-    if (!marker) {
-      marker = this.lastMarker;
-    }
     if (marker && marker.closePopup) {
       marker.closePopup();
     }
   },
 
-  hideIfWasInCluster: function(marker) {
-    if (marker.wasInCluster) {
-      this.addClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
+  hide: function(marker) {
+    // Not using setOpacity() as it does not work for non-marker geometries.
+    this.addClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
+    this.closePopup(marker);
+    if (marker === this.lastMarker) {
+      this.lastMarker = null;
     }
+  },
+
+  hideIfWasInCluster: function(marker) {
+    if (marker && marker.wasInCluster) {
+      this.hide(marker);
+    }
+  },
+
+  show: function(marker) {
+    this.removeClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
+  },
+
+  highlight: function(marker) {
+    this.addClass(marker, L.Sync.SYNCED_CONTENT_HOVER);
+  },
+
+  unhighlight: function(marker) {
+    this.removeClass(marker, L.Sync.SYNCED_CONTENT_HOVER);
   },
 
   syncContentToMarker: function(contentSelector, marker) {
@@ -49,9 +68,12 @@ L.Sync =  L.Class.extend({
     var sync = this;
 
     marker.on('popupclose', function(event) {
-      sync.removeClass(event.target, L.Sync.SYNCED_CONTENT_HOVER);
-      sync.hideIfWasInCluster(event.target);
-      //sync.lastMarker = null;
+      var marker = event.target;
+      sync.unhighlight(marker)
+      if (marker._icon && (marker.flags & L.Sync.SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
+        marker._popup.options.offset.y = sync.popupOffsetY;
+      }
+      sync.hideIfWasInCluster(marker);
     });
 
     // Using bind() as D7 core's jQuery is old and does not support on()
@@ -66,9 +88,8 @@ L.Sync =  L.Class.extend({
     }
 
     if (this.lastMarker) {
-      this.removeClass(this.lastMarker, L.Sync.SYNCED_CONTENT_HOVER);
+      this.unhighlight(this.lastMarker);
       this.hideIfWasInCluster(this.lastMarker);
-      this.closePopup();
     }
 
     if (this.hasMarkerClusters() && !marker.wasInCluster) {
@@ -82,22 +103,17 @@ L.Sync =  L.Class.extend({
     if (!this.map.getBounds().contains(point)) {
       this.map.panTo(point);
     }
-
-    // Make marker visible, in case it was invisible.
-    this.removeClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
-    // Now that it's visible, add to the marker the special CSS class.
-    this.addClass(marker, L.Sync.SYNCED_CONTENT_HOVER);
+    // Make geometry visible, in case it was invisible.
+    this.show(marker)
+    this.highlight(marker);
 
     if (marker.flags & L.Sync.SYNC_MARKER_TO_CONTENT_WITH_POPUP) {
       if (marker._icon) {
-        // Only for markers, not other geometries.
-        var offset = marker._popup.options.offset.y;
-        marker._popup.options.offset.y -= 19;
+        // Adjust popup position for markers, not other geometries.
+        this.popupOffsetY = marker._popup.options.offset.y;
+        marker._popup.options.offset.y -= 20;
       }
       marker.openPopup();
-      if (marker._icon) {
-        marker._popup.options.offset.y = offset;
-      }
     }
     if (marker._icon && marker._icon.style) {
       // This does NOT work in most browsers.
@@ -172,30 +188,32 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   var sync = new L.Sync(lMap, {});
 
   lMap.on('zoomend', function(event) {
-    // On zoom-out, must make sure to remove highlighted marker from map
-    if (sync.lastMarker && sync.lastMarker.wasInCluster) {
-      sync.removeClass(sync.lastMarker, L.Sync.SYNCED_CONTENT_HOVER);
-      sync.addClass(sync.lastMarker, L.Sync.SYNCED_MARKER_HIDDEN);
-      sync.closePopup();
-      sync.lastMarker = null;
+
+    if (event.target.getZoom) {
+      var isZoomOut = event.target.getZoom() < sync.zoom;
+      sync.zoom = event.target.getZoom();
     }
-    if (sync.hasMarkerClusters()) {
-      var allMarkers = sync.getMarkersInClusters();
-      for (var i = 0; i < allMarkers.length; i++) {
-        allMarkers[i].wasInCluster = false;
-      }
+    // Hide highlighted marker on zoom when:
+    // 1) zooming out (as marker may be abosrbed by cluster) or
+    // 2) zooming-in when highlighted marker was in cluser
+    if (sync.lastMarker && (isZoomOut || sync.lastMarker.wasInCluster)) {
+      sync.unhighlight(sync.lastMarker);
+      sync.hide(sync.lastMarker);
+    }
+
+    var clusterMarkers = sync.getMarkersInClusters();
+    for (var i = 0; i < clusterMarkers.length; i++) {
+      clusterMarkers[i].wasInCluster = false;
     }
   });
 
   if (map.settings.revertLastMarkerOnMapOut) {
-    // On map mouse hover out: revert synced marker style and close popup.
     lMap.on('mouseout', function(event) {
       if (sync.lastMarker) {
-        sync.removeClass(sync.lastMarker, L.Sync.SYNCED_CONTENT_HOVER);
+        sync.unhighlight(sync.lastMarker);
+        sync.hideIfWasInCluster(sync.lastMarker);
+        //event.target.closePopup();
       }
-      sync.hideIfWasInCluster(sync.lastMarker);
-      event.target.closePopup();
-      sync.lastMarker = null;
     });
   }
 
