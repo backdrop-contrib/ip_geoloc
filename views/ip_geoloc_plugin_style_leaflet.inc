@@ -399,7 +399,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   private function _add_sync(&$form, &$weight) {
     $form['sync'] = array(
-      '#title' => t('Cross-highlighting of map markers with content on the page'),
+      '#title' => t('Cross-highlighting between map markers and page content outside the map'),
+      '#description' => '<br/>' . t('For the cross-highlighting to work, content outside the map must have the CSS class <em>.sync-id-[nid]</em>, where <em>[nid]</em> represents the content ID.') . ' '
+        . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Grid, Table, HTML or Unformatted list formats of your Views Attachment or Block displays.'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER]),
@@ -410,13 +412,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#title' => t('When hovering markers on the map, highlight associated content on the page'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] && $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
-      '#description' => t('Associated content must have the CSS class <em>.sync-id-[nid]</em> for the content to be highlighted.') . ' '
-        . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Grid, Table, HTML or Unformatted list formats of, say, a Views Attachment or Block display.') . '<br/>'
-        . t('Content is then highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
+      '#description' => t('Content is highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
         . $note,
       '#weight' => $weight++,
     );
-    $caveat = t('For this feature to work in combination with any sorting on the hovered content, the associated Views display must have <em>Use Ajax: No</em>.');
+    $caveat = t('For this feature to work in combination with any <em>sorting</em> on the hovered content, the associated Views display must have <em>Use Ajax: No</em>.');
     $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT] = array(
       '#title' => t('When hovering content, highlight associated markers on the map'),
       '#type' => 'checkbox',
