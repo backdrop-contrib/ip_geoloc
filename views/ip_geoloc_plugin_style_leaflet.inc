@@ -1158,7 +1158,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     // Don't load sync JS and CSS when option is not requested.
     if ($sync_flags !== 0) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_sync_content.js', array('weight' => 1));
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_sync_content.js', array('weight' => 2));
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_sync_content.css');
     }
     if ($has_full_screen) {

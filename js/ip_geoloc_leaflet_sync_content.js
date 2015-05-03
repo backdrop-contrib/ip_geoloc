@@ -8,7 +8,7 @@ L.Sync =  L.Class.extend({
 
     SYNCED_CONTENT_HOVER: 'synced-content-hover',
     SYNCED_MARKER_HOVER : 'synced-marker-hover',
-    SYNCED_MARKER_HIDDEN: 'leaflet-marker-hidden',
+    SYNCED_MARKER_HIDDEN: 'leaflet-marker-hidden'
   },
 
   options: {
@@ -19,7 +19,6 @@ L.Sync =  L.Class.extend({
     L.setOptions(this, options);
     this.map = map;
     this.lastMarker = null;
-    this.zoom = map.getZoom();
 	},
 
   closePopup: function(marker) {
@@ -29,21 +28,24 @@ L.Sync =  L.Class.extend({
   },
 
   hide: function(marker) {
-    // Not using setOpacity() as it does not work for non-marker geometries.
+    // Not marker.setOpacity(0) to avoid interference with leaflet.markercluster
     this.addClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
-    this.closePopup(marker);
     if (marker === this.lastMarker) {
       this.lastMarker = null;
     }
   },
 
-  hideIfWasInCluster: function(marker) {
-    if (marker && marker.wasInCluster) {
-      this.hide(marker);
+  hideIfAddedViaSync: function(marker) {
+    if (marker) {
+      this.unhighlight(marker);
+      if (marker && marker.addedViaSync) {
+        this.hide(marker);
+      }
     }
   },
 
   show: function(marker) {
+    // Not marker.setOpacity(1) to avoid interference with leaflet.markercluster
     this.removeClass(marker, L.Sync.SYNCED_MARKER_HIDDEN);
   },
 
@@ -69,11 +71,12 @@ L.Sync =  L.Class.extend({
 
     marker.on('popupclose', function(event) {
       var marker = event.target;
-      sync.unhighlight(marker)
-      if (marker._icon && (marker.flags & L.Sync.SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
-        marker._popup.options.offset.y = sync.popupOffsetY;
+      if (marker === sync.lastMarker) {
+        if (marker._icon && (marker.flags & L.Sync.SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
+          marker._popup.options.offset.y = sync.popupOffsetY;
+        }
+        sync.hideIfAddedViaSync(marker);
       }
-      sync.hideIfWasInCluster(marker);
     });
 
     // Using bind() as D7 core's jQuery is old and does not support on()
@@ -86,38 +89,36 @@ L.Sync =  L.Class.extend({
     if (marker === null || marker === this.lastMarker) {
       return;
     }
+    this.hideIfAddedViaSync(this.lastMarker);
 
-    if (this.lastMarker) {
-      this.unhighlight(this.lastMarker);
-      this.hideIfWasInCluster(this.lastMarker);
-    }
-
-    if (this.hasMarkerClusters() && !marker.wasInCluster) {
-      marker.wasInCluster = !marker._map;
-    }
+    var addedViaSync = !marker._map || !marker.options.opacity;
     if (!marker._map) {
       marker.addTo(this.map);
     }
+    marker.addedViaSync = addedViaSync || marker.addedViaSync;
 
     var point = marker.getLatLngs ? marker.getLatLngs()[0] : marker.getLatLng();
     if (!this.map.getBounds().contains(point)) {
       this.map.panTo(point);
     }
-    // Make geometry visible, in case it was invisible.
-    this.show(marker)
+    // Make geometry visible, in case it was hidden.
+    this.show(marker);
     this.highlight(marker);
 
     if (marker.flags & L.Sync.SYNC_MARKER_TO_CONTENT_WITH_POPUP) {
       if (marker._icon) {
         // Adjust popup position for markers, not other geometries.
-        this.popupOffsetY = marker._popup.options.offset.y;
-        marker._popup.options.offset.y -= 20;
+        if (!this.popupOffsetY) {
+          this.popupOffsetY = marker._popup.options.offset.y;
+        }
+        marker._popup.options.offset.y = this.popupOffsetY - 20;
       }
       marker.openPopup();
     }
     if (marker._icon && marker._icon.style) {
       // This does NOT work in most browsers.
       marker._bringToFront();
+      marker.setZIndexOffset(9999);
     }
     this.lastMarker = marker;
   },
@@ -136,22 +137,18 @@ L.Sync =  L.Class.extend({
     }
   },
 
-  hasMarkerClusters: function() {
+  markerClusterGroup: function() {
     for (var id in this.map._layers) {
       if (this.map._layers[id]._topClusterLevel) {
-        return true;
+        return this.map._layers[id];
       }
     }
-    return false;
+    return null;
   },
 
   getMarkersInClusters: function() {
-    for (var id in this.map._layers) {
-      if (this.map._layers[id]._topClusterLevel) {
-        return this.map._layers[id]._topClusterLevel.getAllChildMarkers();
-      }
-    }
-    return [];
+    var markerClusterGroup = this.markerClusterGroup();
+    return markerClusterGroup ? markerClusterGroup._topClusterLevel.getAllChildMarkers() : [];
   },
 
   getMarkerElements: function(marker) {
@@ -188,38 +185,27 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   var sync = new L.Sync(lMap, {});
 
   lMap.on('zoomend', function(event) {
-
-    if (event.target.getZoom) {
-      var isZoomOut = event.target.getZoom() < sync.zoom;
-      sync.zoom = event.target.getZoom();
-    }
-    // Hide highlighted marker on zoom when:
-    // 1) zooming out (as marker may be abosrbed by cluster) or
-    // 2) zooming-in when highlighted marker was in cluser
-    if (sync.lastMarker && (isZoomOut || sync.lastMarker.wasInCluster)) {
-      sync.unhighlight(sync.lastMarker);
-      sync.hide(sync.lastMarker);
-    }
-
-    var clusterMarkers = sync.getMarkersInClusters();
-    for (var i = 0; i < clusterMarkers.length; i++) {
-      clusterMarkers[i].wasInCluster = false;
+    // To avoid interference with Leaflet's way of controlling visibility via
+    // setOpacity(), we remove the special 'hidden' class on 'zoomend'.
+    if (sync.lastMarker) {
+      sync.show(sync.lastMarker);
+      sync.lastMarker.addedViaSync = false;
     }
   });
 
   if (map.settings.revertLastMarkerOnMapOut) {
     lMap.on('mouseout', function(event) {
       if (sync.lastMarker) {
-        sync.unhighlight(sync.lastMarker);
-        sync.hideIfWasInCluster(sync.lastMarker);
-        //event.target.closePopup();
+        sync.lastMarker.closePopup();
+        sync.hideIfAddedViaSync(sync.lastMarker);
+        sync.lastMarker = null;
       }
     });
   }
 
   var clusterMarkers = sync.getMarkersInClusters();
-  // Convert lMap._layers to array.
-  var otherMarkers = Object.keys(lMap._layers).map(function(key) { return lMap._layers[key] });
+  // Convert lMap._layers to array before concatenating
+  var otherMarkers = Object.keys(lMap._layers).map(function(key) { return lMap._layers[key]; });
   var allMarkers = clusterMarkers.concat(otherMarkers);
 
   for (var i = 0; i < allMarkers.length; i++) {
@@ -227,13 +213,19 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
     if (marker.flags) {
       // A CSS class, not an ID as multiple markers may be attached to same node.
       var contentSelector = ".sync-id-" + marker.feature_id;
- 
+
       if (marker.flags & L.Sync.SYNC_CONTENT_TO_MARKER) {
         sync.syncContentToMarker(contentSelector, marker);
       }
       if (marker.flags & L.Sync.SYNC_MARKER_TO_CONTENT) {
         sync.syncMarkerToContent(contentSelector, marker);
       }
+      marker.on('add', function(event) {
+        event.target.addedViaSync = false;
+      });
+      marker.on('remove', function(event) {
+        event.target.addedViaSync = false;
+      });
     }
   }
 
