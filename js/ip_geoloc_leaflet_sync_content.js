@@ -75,7 +75,8 @@ L.Sync =  L.Class.extend({
         if (marker._icon && (marker.flags & L.Sync.SYNC_MARKER_TO_CONTENT_WITH_POPUP)) {
           marker._popup.options.offset.y = sync.popupOffsetY;
         }
-        sync.hideIfAddedViaSync(marker);
+        sync.unhighlight(marker);
+        //sync.hideIfAddedViaSync(marker);
       }
     });
 
