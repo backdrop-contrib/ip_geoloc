@@ -66,7 +66,9 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
         }
       }
       else {
-        //alert(Drupal.t('IPGV&M: Google Geocoder returned error !code.', { '!code': status }));
+        if (window.console && window.console.log) {
+          window.console.log(Drupal.t('IPGV&M: Google Geocoder returned error !code.', { '!code': status }));
+        }
         ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Geocoder address lookup failed with status code !code.', { '!code': status });
         refreshPage = false;
       }
@@ -98,19 +100,30 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       type: 'POST',
       dataType: 'json',
       data: data,
-      success: function () {
-      },
-      error: function (http) {
-        if (http.status > 0 && http.status !== 200 && http.status !== 404 && http.status !== 503) {
-          // 404 may happen intermittently and when Clean URLs isn't enabled
-          // 503 may happen intermittently, see [#2158847]
-          alert(Drupal.t('IPGV&M: an HTTP error @status occurred.', { '@status': http.status }));
+      success: function (serverData, textStatus, http) {
+        if (window.console && window.console.log && serverData && serverData.messages) {
+          // When JS module is used, it collects msgs via drupal_get_messages().
+          var messages = serverData.messages['status'].toString();
+          // Remove any HTML markup.
+          var msg = jQuery('<p>' + messages + '</p>').text();
+          window.console.log('From server, via JS: ' + msg);
         }
-      },
-      complete: function() {
         if (refresh_page) {
           window.location.reload();
         }
+      },
+      error: function (http, textStatus, error) {
+        // 404 may happen intermittently and when Clean URLs isn't enabled
+        // 503 may happen intermittently, see [#2158847]
+        var msg = Drupal.t('IPGV&M, ip_geoloc_current_location.js @status: @error (@code)', { '@status': textStatus, '@error': error, '@code': http.status });
+        if (wiondow.console && window.console.log) {
+          window.console.log(msg);
+        }
+        if (http.status > 0 && http.status !== 200 && http.status !== 404 && http.status !== 503) {
+          alert(msg);
+        }
+      },
+      complete: function(http, textStatus) {
       }
     });
   }

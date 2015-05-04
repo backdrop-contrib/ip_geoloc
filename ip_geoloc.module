@@ -206,7 +206,7 @@ function ip_geoloc_js_info() {
   // a faster, more economic bootstrap phase, without hook_init().
   $dependencies = module_exists('session_cache_file')
     ? array('session_cache', 'session_cache_file')
-    : (module_exists('session_cache') ? array('session_cache') : NULL);
+    : (module_exists('session_cache') ? array('session_cache') : array());
   $js_info = array(
     'current_location' => array(
       'bootstrap' => module_exists('better_statistics') ? DRUPAL_BOOTSTRAP_FULL : DRUPAL_BOOTSTRAP_SESSION,
