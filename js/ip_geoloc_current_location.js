@@ -101,7 +101,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       dataType: 'json',
       data: data,
       success: function (serverData, textStatus, http) {
-        if (window.console && window.console.log && serverData && serverData.messages) {
+        if (window.console && window.console.log && serverData && serverData.messages && serverData.messages['status']) {
           // When JS module is used, it collects msgs via drupal_get_messages().
           var messages = serverData.messages['status'].toString();
           // Remove any HTML markup.
