@@ -116,7 +116,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
         // 404 may happen intermittently and when Clean URLs isn't enabled
         // 503 may happen intermittently, see [#2158847]
         var msg = Drupal.t('IPGV&M, ip_geoloc_current_location.js @status: @error (@code)', { '@status': textStatus, '@error': error, '@code': http.status });
-        if (wiondow.console && window.console.log) {
+        if (window.console && window.console.log) {
           window.console.log(msg);
         }
         if (http.status > 0 && http.status !== 200 && http.status !== 404 && http.status !== 503) {
