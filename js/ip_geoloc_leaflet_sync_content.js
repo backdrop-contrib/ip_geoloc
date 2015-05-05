@@ -77,6 +77,7 @@ L.Sync =  L.Class.extend({
         }
         sync.unhighlight(marker);
         //sync.hideIfAddedViaSync(marker);
+        sync.lastMarker = null;
       }
     });
 
