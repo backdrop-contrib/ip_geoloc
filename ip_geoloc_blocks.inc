@@ -572,12 +572,11 @@ function _ip_geoloc_set_my_location_add_region(&$form, $location, $geo_vocabular
       }
     }
     if (variable_get('ip_geoloc_region_autocomplete')) {
-      $not_set = 0;
       // Use an autocomplete textfield, instead of a drop-down selector.
       $form['region'] = array(
         '#type' => 'textfield',
         '#size' => 29,
-        '#default_value' => isset($current_region_name) ? $current_region_name : $not_set,
+        '#default_value' => isset($current_region_name) ? $current_region_name : '',
         '#description' => t('Type the first letters of a region.'),
         // Refer to hook_menu().
         '#autocomplete_path' => 'ip_geoloc/region_autocomplete',

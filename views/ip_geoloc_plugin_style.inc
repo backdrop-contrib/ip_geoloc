@@ -748,6 +748,12 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
         }
         if ($j === 0 && $error_count++ === 0) {
           $first_error = $i;
+          if (isset($row->nid)) {
+            $id = 'nid #'. $row->nid;
+          }
+          if (isset($row->node_title)) {
+            $id .= ': ' . $row->node_title;
+          }
         }
       }
     }
@@ -761,11 +767,12 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
       '@total' => $row_count,
       '@error_count' => $error_count,
       '@first' => $first_error + 1,
+      '%id' => isset($id) ? " ($id)" : '',
       '%latitudes' => implode(' ' . t('or') . ' ', $latitudes),
     );
     $msg = ($error_count >= $row_count) 
       ? t('None of the @total result rows in view %view_title had their %latitudes set. Therefore those rows could not be displayed as locations on the map. Are you using the correct field names?', $t_args)
-      : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitudes set and therefore could not be shown on the map. The first row that could not be located was row #@first. You can improve execution efficiency by using the Views UI to add an "is not empty" filter for %latitudes.', $t_args);
+      : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitudes set and therefore could not be shown on the map. The first row that could not be located was row #@first%id. You can improve execution efficiency by using the Views UI to add an "is not empty" filter for %latitudes.', $t_args);
     drupal_set_message($msg);
 
     if ($is_debug) {
