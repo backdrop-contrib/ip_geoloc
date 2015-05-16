@@ -311,24 +311,34 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   print "\n<script>\nif (typeof(ip_geoloc_locations) === 'undefined') {\n ip_geoloc_locations = new Array();\n}\n";
   print "ip_geoloc_locations['$div_id'] = [\n";
 
+  $illegal_chars = array("\n", "\r");
   foreach ($locations as $location) {
     if (isset($location->type) && $location->type != 'point') {
       continue;
     }
-    $balloon_text = isset($location->balloon_text) ? addslashes(str_replace("\n", '', $location->balloon_text)) : '';
-    print '{ "type":"point"' .
+    // Balloon text must not have newlines, use <br/> instead.
+    $balloon_text = NULL;
+    $location->balloon_text = '<a href="http://regionbound.com">RegionBound</a>';
+    if (!empty($location->balloon_text)) {
+      $balloon_text = str_replace($illegal_chars, ' ', $location->balloon_text);
+      $balloon_text = addslashes($balloon_text);
+    }
+    $output = '{' .
+      '"type":"point"' .
       (empty($location->marker_color) ? '' : ',"marker_color":"' . $location->marker_color . '"') .
+      (empty($balloon_text) ? '' : ',"balloon_text":"' . $balloon_text . '"') .
       (empty($location->open) ? '' : ',"open":1') .
       ',"latitude":' . $location->latitude .
       ',"longitude":' . $location->longitude .
-      ',"balloon_text":\'' . $balloon_text . '\'},';
+    "},\n";
+    print $output;
 
     $color = empty($location->marker_color) ? t('default') . " [$marker_color]" : $location->marker_color;
     $coords = isset($location->latitude) ? $location->latitude . ', ' . $location->longitude : '';
     $msg = '- ' . t('marker') . " $color ($coords)<br/>$balloon_text<br/>";
     ip_geoloc_debug($msg);
   }
-  print "\n];\n</script>\n";
+  print "];\n</script>\n";
 
   $settings = array(
     'ip_geoloc_multi_location_map_div' => $div_id,
