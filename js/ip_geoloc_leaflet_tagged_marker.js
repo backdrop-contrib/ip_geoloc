@@ -12,6 +12,9 @@
     lMap.bounds.push(latLng);
 
     var options = { title: marker.tooltip, riseOnHover: true };
+    if (marker.zIndex) {
+      options.zIndexOffset = marker.zIndex;
+    }
     if (marker.regions) {
       options.regions = marker.regions;
     }

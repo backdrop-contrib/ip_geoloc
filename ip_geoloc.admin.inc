@@ -129,12 +129,15 @@ function ip_geoloc_admin_configure() {
     '#default_value' => variable_get('ip_geoloc_store_addresses', TRUE),
     '#description' => t('This allows you create maps of recent visitors to your site.'),
   );
-  $note = t('If you are using this module mainly for its mapping features, then you can safely untick this box.');
+  $note1 = t('Untick, if you do not need periodic visitor location updates. Consider the <em>Set my location</em> block as an alternative.');
+  $note2 = ''; // t('Used in conjunction with the options below.');
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ a free Google service to <em>periodically</em> auto reverse-geocode visitor locations to street addresses'),
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', FALSE),
-    '#description' => "<strong>$note</strong><br>" . t('Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server.'),
+    '#description' => "<strong>$note1</strong><br>"
+      . t('Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server.')
+      . '<br/>' . $note2,
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
     ),

@@ -249,6 +249,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form['visitor_marker'] = array(
       '#type' => 'fieldset',
       '#title' => t('Visitor marker style'),
+      '#description' => t('For the visitor marker to show, enable the <em>Set my location</em> block and/or tick the option to periodically reverse-geocode via Google, under the <a href="@config_page">Data collection options</a>.', array(
+        '@config_page' => url('admin/config/system/ip_geoloc'),
+      )),
       '#weight' => $weight++,
     );
 
@@ -1074,6 +1077,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
         'popup' => t('Your approximate location'),
         'tooltip' => t('Your approximate location'),
+        'zIndex' => 9999,
         // See leaflet_markercluster.drupal.js.
         'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
       );

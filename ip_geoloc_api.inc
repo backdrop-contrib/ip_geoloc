@@ -380,7 +380,10 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  */
 function ip_geoloc_get_current_location($menu_callback = NULL, $reverse_geocode = NULL, $refresh_page = NULL) {
 
-  $throbber_text = variable_get('ip_geoloc_throbber_text2', IP_GEOLOC_THROBBER_DEFAULT_TEXT);
+  $throbber_text = variable_get('ip_geoloc_throbber_text2');
+  if (empty($throbber_text)) {
+    $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
+  }
   if ($throbber_text !== '<none>') {
     drupal_set_message(filter_xss_admin($throbber_text));
   }
