@@ -1436,7 +1436,7 @@ function _ip_geoloc_is_no_marker($marker_color) {
  * Note: this indirectly calls ip_geoloc_leaflet_map_info_alter($map_info).
  */
 function ip_geoloc_plugin_style_leaflet_map_get_info($map_name = NULL) {
-  return leaflet_map_get_info($map_name);
+  return module_exists('leaflet') ? leaflet_map_get_info($map_name) : array();
 }
 
 /**
