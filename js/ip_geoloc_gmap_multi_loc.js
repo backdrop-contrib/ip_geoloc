@@ -8,7 +8,7 @@
         return;
       }
       // Create map as a global, see [#1954876].
-      // As we can have multiple maps on the same page, this is now an array.
+      // As we can have multiple maps on the same page, maps is an array.
       maps = [];
       mapBounds = [];
       var imageExt = '.png';
@@ -135,7 +135,8 @@
         for (var m in maps) {
           if (isNaN(m)) continue;
           if (settings[m].ip_geoloc_multi_location_visitor_marker) {
-            showSpecialMarker(m, visitorPosition, Drupal.t('Your approximate location (' + latitude + ', ' + longitude + ')'));
+            var p = '(' + latitude + ', ' + longitude + ')';
+            showSpecialMarker(m, visitorPosition, Drupal.t('Your approximate location') + "\n" + p);
           }
           if (settings[m].ip_geoloc_multi_location_center_option === 2) {
             maps[m].setCenter(visitorPosition);
@@ -175,7 +176,14 @@
           // Note: cannot use https: here...
           var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=" + pinChar + "|" + pinColor + "|" + textColor,
             new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34));
-          specialMarker = new google.maps.Marker({ map: maps[m], icon: pinImage, /*shadow: shadowImage,*/ position: position, title: mouseOverText });
+          specialMarker = new google.maps.Marker({
+            map: maps[m],
+            position: position,
+            zIndex: 9999,
+            title: mouseOverText,
+            icon: pinImage 
+          //shadow: shadowImage
+          });
         }
         addMarkerBalloon(maps[m], specialMarker, mouseOverText);
       }
@@ -197,5 +205,5 @@
         }
       }
     }
-  }
+  };
 })(jQuery);
