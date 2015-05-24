@@ -749,7 +749,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
         if ($j === 0 && $error_count++ === 0) {
           $first_error = $i;
           if (isset($row->nid)) {
-            $id = 'nid #'. $row->nid;
+            $id = 'nid #' . $row->nid;
           }
           if (isset($row->node_title)) {
             $id .= ': ' . $row->node_title;

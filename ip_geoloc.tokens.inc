@@ -26,7 +26,7 @@ function ip_geoloc_token_info() {
   $token_info['provider']['description'] = t('Provider of location, for example <em>user</em> or <em>google</em>');
 
   return array(
-	  'types' => $types,
+    'types' => $types,
     'tokens' => array('visitor-location' => $token_info),
   );
 }

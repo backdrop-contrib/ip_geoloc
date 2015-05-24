@@ -220,7 +220,7 @@ function ip_geoloc_views_data() {
 
   $data['ip_geoloc']['locality'] = array(
     'title' => t('Suburb'),
-    'help' => t('Locality (e.g. suburb)'),
+    'help' => t('Locality (e.g., suburb)'),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
@@ -304,7 +304,7 @@ function ip_geoloc_views_plugins() {
     'style' => array(
       'ip_geoloc_map' => array(
         'title' => t('Map (Google API, via IPGV&M)'),
-        'help' => t('Displays the view as a Google map.'),
+        'help' => t('Displays the view as a Google map, using the Google API.'),
         'help topic' => 'style-ip-geoloc-map',
         'handler' => 'ip_geoloc_plugin_style_map',
         'path' => $path . '/views',
@@ -372,7 +372,7 @@ function ip_geoloc_views_plugins() {
   return $plugins;
 }
 
-/*
+/**
  * Returns meta info about each of the Geofield proximity views class.
  */
 function ip_geoloc_proximity_views_handlers() {

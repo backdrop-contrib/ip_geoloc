@@ -368,16 +368,19 @@ CONDITIONAL LOCATION FIELDS
 Here's a great example on how to use IPGV&M in combination with the Views
 Conditional module https://www.drupal.org/node/2470265 (solution in entry #4).
 
-CONTEXT SESSION MODULE
-======================
-You can switch context (as in the https://www.drupal.org/project/context module)
-based on any location component, if you also enable
-https://www.drupal.org/project/context_session.
+CONTEXT AND CONTEXT-SESSION MODULES
+===================================
+IPGV&M implements a "Locate visitor using GPS/Wifi" reaction for the Context
+module, https://www.drupal.org/project/context.
+If you also use enable the https://www.drupal.org/project/context_mobile_detect
+module, then you can locate a visitor only when they're using, say, a phone or
+tablet and only on certain pages (using Context's path condition).
 
+You can also switch context using any address component as a condition, if you
+also enable https://www.drupal.org/project/context_session.
 Example: "location.locality=Melbourne"
-
-context_session does not support the Session Cache API module, so the $_SESSION
-variable will be used internally for storage.
+context_session does not support the Session Cache API module, so, if you use it
+the $_SESSION variable will still be used internally for storage.
 
 ALTERNATIVE THROBBER
 ====================

@@ -44,6 +44,21 @@ require_once 'ip_geoloc_blocks.inc';
 require_once 'theme/ip_geoloc_theme.inc';
 include_once 'ip_geoloc.openlayers.inc';
 include_once 'ip_geoloc.tokens.inc';
+include_once 'ip_geoloc.context.inc';
+
+/**
+ * Implements hook_ctools_plugin_api().
+ *
+ * Required to add a layer to OpenLayers, see ip_geoloc_openlayers_layers().
+ */
+function ip_geoloc_ctools_plugin_api($module, $api) {
+  if ($module == 'context') {
+    return array('version' => 3);
+  }
+  if ($module == 'openlayers' && $api == 'openlayers_layers') {
+    return array('version' => 1);
+  }
+}
 
 /**
  * Implements hook-help().
@@ -125,7 +140,7 @@ function ip_geoloc_library() {
   return $libraries;
 }
 
-/*
+/**
  * Implements hook_library_alter().
  *
  * Swaps in the region-bound extension of the Leaflet MarkerCluster library,
@@ -259,7 +274,7 @@ function ip_geoloc_init() {
     _ip_geoloc_set_session_value('location', $location);
   }
   $scheduled_reverse_geocode = _ip_geoloc_check_location($location);
-  
+
   // 2nd condition is to avoid HTTP 503 error.
   if ($scheduled_reverse_geocode && !variable_get('maintenance_mode', 0)) {
 
@@ -624,7 +639,7 @@ function ip_geoloc_marker_directory() {
 
 /**
  * Return the height and width of the markers in the selected set.
- * 
+ *
  * @return string, for example '32 x 42' or '21 x 34'
  */
 function ip_geoloc_marker_dimensions() {
@@ -680,13 +695,6 @@ function ip_geoloc_openlayers_marker_layers() {
   }
   return $marker_layers;
 }
-
-/**
- * Implements hook_form_FORMID_alter().
- *
-function ip_geoloc_form_views_ui_config_item_form_alter(&$form, &$form_state) {
-}
-*/
 
 /**
  * Implements hook_form_FORMID_alter().

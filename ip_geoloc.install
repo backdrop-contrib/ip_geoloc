@@ -9,11 +9,10 @@
  * Implments hook_enable().
  */
 function ip_geoloc_enable() {
-  drupal_set_message(t('IP Geolocation Views & Maps is now enabled. Please note that some of the canned Views that come with this module require the "<a target="project_page" href="!views_php">Views PHP</a>" module. The "Set my location" block requires <a target="project_page" href="!geocoder">Geocoder</a>. <br/>Modules "<a target="project_page" href="!session_cache">Session Cache API</a>" and "<a target="project_page" href="!js">High-performance JS Callback Handler</a>" are optional and recommended.', array(
+  drupal_set_message(t('IP Geolocation Views & Maps is now enabled. Please note that some of the canned Views that come with this module require the "<a target="project_page" href="!views_php">Views PHP</a>" module. The "Set my location" block requires <a target="project_page" href="!geocoder">Geocoder</a>. <br/>Module "<a target="project_page" href="!session_cache">Session Cache API</a>" is optional and recommended.', array(
     '!views_php' => url('http://drupal.org/project/views_php'),
     '!geocoder' => url('http://drupal.org/project/geocoder'),
     '!session_cache' => url('http://drupal.org/project/session_cache'),
-    '!js' => url('http://drupal.org/project/js'),
   )));
 }
 

@@ -130,14 +130,26 @@ function ip_geoloc_admin_configure() {
     '#description' => t('This allows you create maps of recent visitors to your site.'),
   );
   $note1 = t('Untick, if you do not need periodic visitor location updates. Consider the <em>Set my location</em> block as an alternative.');
-  $note2 = ''; // t('Used in conjunction with the options below.');
+  $note2 = t('You can also use the <a href="@project_context">Context module</a> to conditionally geolocate the visitor based on device type, page visited etc.', array('@project_context' => url('http://drupal.org/project/context')));
+  $note3 = ''; // t('Used in conjunction with the options below.');
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ a free Google service to <em>periodically</em> auto reverse-geocode visitor locations to street addresses'),
     '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', FALSE),
-    '#description' => "<strong>$note1</strong><br>"
+    '#description' => "$note1<br>$note2<br/>"
       . t('Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server.')
-      . '<br/>' . $note2,
+      . '<br/>' . $note3,
+    '#states' => array(
+      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
+    ),
+  );
+  $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
+    '#type' => 'textfield',
+    '#size' => 10,
+    '#field_suffix' => t('seconds'),
+    '#title' => t('Minimum elapsed time before geolocation data for the same user will be collected again'),
+    '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
+    '#description' => t('Operates in combination with the checkbox above. Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to geolocate the visitor <em>once</em> and then refrain from repeat location collection until their session has expired.'),
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
     ),
@@ -180,17 +192,6 @@ function ip_geoloc_admin_configure() {
     '#description' => t('This refers to situations where the lat/long coords could not be established. An example is the user declining to share their location. Another is when the Google Maps API reverse-geocode function fails or is not enabled through the tick box at the top of this section.<br/>Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
       '@geoip' => url('http://drupal.org/project/geoip'),
     )),
-    '#states' => array(
-      'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
-    ),
-  );
-  $form['ip_geoloc_data_collection_options']['ip_geoloc_location_check_interval'] = array(
-    '#type' => 'textfield',
-    '#size' => 10,
-    '#field_suffix' => t('seconds'),
-    '#title' => t('Minimum elapsed time before geolocation data for the same user will be collected again'),
-    '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
-    '#description' => t('Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to geolocate the visitor <em>once</em> and then refrain from repeat location collection until their session has expired.'),
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
     ),

@@ -66,10 +66,11 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
         }
       }
       else {
+        var error = ''; // from response or status?
         if (window.console && window.console.log) {
           window.console.log(Drupal.t('IPGV&M: Google Geocoder returned error !code.', { '!code': status }));
         }
-        ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Geocoder address lookup failed with status code !code.', { '!code': status });
+        ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Geocoder address lookup failed with status code !code. @error', { '!code': status, '@error': error });
         refreshPage = false;
       }
       if (window.console && window.console.log) {

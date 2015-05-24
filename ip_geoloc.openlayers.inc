@@ -40,17 +40,6 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
 }
 
 /**
- * Implements hook_ctools_plugin_api().
- *
- * Required to add a layer to OpenLayers, see ip_geoloc_openlayers_layers().
- */
-function ip_geoloc_ctools_plugin_api($module, $api) {
-  if ($module == 'openlayers' && $api == 'openlayers_layers') {
-    return array('version' => 1);
-  }
-}
-
-/**
  * Implements hook_openlayers_layers().
  *
  * Called via ctools in the heart of openlayers_build_map().
@@ -71,8 +60,8 @@ function ip_geoloc_openlayers_layers() {
     'projection' => array('EPSG:900913'),
   );
   // Add the visitor's location as a single feature in its own layer, so
-  // that it may be separately styled (eg marker colour) and activated on page
-  // admin/structure/openlayers/maps/<map-name>/edit
+  // that it may be separately styled (e.g., marker colour) and activated on
+  // page admin/structure/openlayers/maps/<map-name>/edit
   $location = ip_geoloc_get_visitor_location();
   if (!empty($location) && isset($location['longitude'])) {
     $longitude = $location['longitude'];

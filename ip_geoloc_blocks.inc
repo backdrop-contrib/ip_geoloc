@@ -109,8 +109,8 @@ function ip_geoloc_block_set_my_location(&$form) {
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#title' => t('"Find me" button'),
-    '#description' => t("Displays a button for the visitor to put themselves on the map. If they confirm the browser prompt, this locates the visitor via their device's WiFi and GPS capabilities. This typcially adds 3 seconds of waiting time.")
-      . '<br/>' . $note,
+    '#description' => t("Displays a button for the visitor to put themselves on the map. If they confirm the browser prompt, this locates the visitor via their device's WiFi and GPS capabilities. This typcially takes 3 seconds.")
+      . ' ' . $note,
   );
   $form['address']['find_visitor']['ip_geoloc_visitor_find'] = array(
     '#type' => 'checkbox',
@@ -149,7 +149,7 @@ function ip_geoloc_block_set_my_location(&$form) {
      17 => t('Last'),
     ),
     '#default_value' => variable_get('ip_geoloc_visitor_find_position', 0),
-    '#description' => t('Relative to the other buttons on the "Set my location" form. If you chose not to have all available widgets on the form, then some of these options are equivalent.'),
+    '#description' => t('Relative to the other buttons on the "Set my location" form, if present. These buttons can be configured below.'),
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
     )),
@@ -216,7 +216,7 @@ function ip_geoloc_block_set_my_location(&$form) {
     '#rows' => 2,
     '#title' => t('Default partial address'),
     '#default_value' => check_plain(variable_get('ip_geoloc_visitor_address_default', '')),
-    '#description' => t("You may use this to pre-populate the visitor address box with, say, a country, so that both user and geocoding service have a context to the partial address entered. You may use comma's, newlines and blank lines if you wish."),
+    '#description' => t("You may use this to pre-populate the visitor address box with, say, a country, so that the visitor and the geocoding service have a context to the partial address entered. You may use comma's, newlines and blank lines if you wish."),
   );
 
   $vocabularies = array();
@@ -442,12 +442,6 @@ function ip_geoloc_get_recent_visitor_locations($how_many) {
 /**
  * Form for finding the visitor or going to a region or street address.
  *
- * The value of the 'fixed_address' selector is stored on the location, as
- * stored on the session. Its value is coded as follows:
- *   0: "Find me" button pressed
- *   1: "Move to" selected and "Go" pressed
- *   2: "Region" selected and "Go" pressed
- *
  * @ingroup forms
  */
 function ip_geoloc_set_location_form($form, &$form_state) {
@@ -597,6 +591,13 @@ function _ip_geoloc_set_my_location_add_region(&$form, $location, $geo_vocabular
     );
 }
 
+/*
+ * The value of the 'fixed_address' selector is stored on the location, as
+ * stored on the session. Its value is coded as follows:
+ *   0: "Find me" button pressed
+ *   1: "Move to" selected and "Go" pressed
+ *   2: "Region" selected and "Go" pressed
+ */
 function _ip_geoloc_set_my_location_add_logic(&$form, $location, $options, $is_address_editable, $geo_vocabulary_id) {
 
   $fixed_address = empty($location['fixed_address']) ? 0 : (int)$location['fixed_address'];
