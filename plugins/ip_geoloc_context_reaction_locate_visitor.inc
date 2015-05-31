@@ -23,11 +23,15 @@ class ip_geoloc_context_reaction_locate_visitor extends context_reaction {
   function execute() {
     foreach (context_active_contexts() as $context) {
       if (!empty($context->reactions['locate_visitor'])) {
-        //drupal_set_message(t("Context: %context, reacting with %reaction", array(
-        //  '%context' => $context->name,
-        //  '%reaction' => t('Locate visitor using GPS/Wifi'),
-        //)));
-        ip_geoloc_get_current_location();
+        /* drupal_set_message(t("Referer, %referer, path: %path, context: %context, reacting with %reaction", array(
+          '%referer' => $_SERVER['HTTP_REFERER'],
+          '%path' => drupal_get_path_alias(),
+          '%context' => $context->name,
+          '%reaction' => t('Locate visitor using GPS/Wifi'),
+        ))); */
+        if (!ip_geoloc_same_path()) {
+          ip_geoloc_get_current_location();
+        }
       }
     }
   }

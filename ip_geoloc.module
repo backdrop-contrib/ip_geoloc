@@ -888,6 +888,25 @@ function ip_geoloc_debug($message, $type = 'status') {
 }
 
 /**
+ * Returns true if the previous page was reloaded.
+ */
+function ip_geoloc_same_path() {
+  if (empty($_SERVER['HTTP_REFERER'])) {
+    return FALSE;
+  }
+  $referer = $_SERVER['HTTP_REFERER'];
+  global $base_url;
+  if (strpos($referer, $base_url) === 0) {
+    $prev_path = drupal_substr($referer, drupal_strlen($base_url) + 1);
+    if (empty($prev_path) && drupal_is_front_page()) {
+      return TRUE;
+    }
+    return $prev_path == current_path() || $prev_path == drupal_get_path_alias();
+  }
+  return FALSE;
+}
+
+/**
  * Implements hook_ctools_plugin_directory().
  */
 function ip_geoloc_ctools_plugin_directory($module, $plugin) {
