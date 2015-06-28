@@ -1088,6 +1088,19 @@ function _ip_geoloc_plugin_style_get_differentiator_value($row, $differentiator,
   }
   elseif (!empty($row->_entity_properties)) {
     // Search API
+    $differentiator_value = _ip_geoloc_plugin_style_get_search_api_value($row, $differentiator);
+  }
+  else {
+    $differentiator_value = '';
+    if (!isset($row->{'field_' . $differentiator})) {
+      drupal_set_message(t('IPGV&M: no differentiator values found for %diff. Cannot assign marker images.', array(
+        '%diff' => $differentiator)), 'warning', FALSE);
+    }
+  }
+  return $differentiator_value;
+}
+
+function _ip_geoloc_plugin_style_get_search_api_value($row, $differentiator) {
     $differentiator_value = '';
     if (!empty($row->_entity_properties[$differentiator])) {
       $differentiator_value = $row->_entity_properties[$differentiator];
@@ -1099,20 +1112,12 @@ function _ip_geoloc_plugin_style_get_differentiator_value($row, $differentiator,
       }
     }
     if (empty($differentiator_value)) {
-      drupal_set_message(t('IPGV&M: differentiator %diff does not appear among these Search API keys: %keys', array(
+      drupal_set_message(t('IPGV&M: field %diff does not appear among these Search API keys: %keys', array(
         '%diff' => $differentiator,
         '%keys' => implode(', ', array_keys($row->_entity_properties)),
       )), 'warning', FALSE);
     }
-  }
-  else {
-    $differentiator_value = '';
-    if (!isset($row->{'field_' . $differentiator})) {
-      drupal_set_message(t('IPGV&M: no differentiator values found for %diff. Cannot set marker images.', array(
-        '%diff' => $differentiator)), 'warning', FALSE);
-    }
-  }
-  return $differentiator_value;
+    return $differentiator_value;
 }
 
 function _ip_geoloc_plugin_style_decorate(&$location, $row, $tooltip_field, $tag_field) {
@@ -1222,6 +1227,10 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
   }
   elseif (isset($views_plugin_style->view->field[$field_name])) {
     $values = $views_plugin_style->get_field_value($index, $field_name);
+  }
+  elseif (!empty($row->_entity_properties)) {
+    // Search API
+    $values = _ip_geoloc_plugin_style_get_search_api_value($row, $field_name);
   }
   else {
     return array('');

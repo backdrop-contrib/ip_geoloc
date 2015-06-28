@@ -551,7 +551,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   private function _add_cluster_differentiator(&$form, &$form_state, $lib_markercluster, &$weight) {
     $path = drupal_get_path('module', 'ip_geoloc');
-    $intro = t('Superior marker clustering with <a target="regionbound" href="!url_regionbound">RegionBound</a>. See the <a target="readme" href="!url_readme">README</a> for details.', array(
+    $intro = t('Region-aware marker clustering with <a target="regionbound" href="!url_regionbound">RegionBound</a>. See the <a target="readme" href="!url_readme">README</a> for details.', array(
       '!url_regionbound' => url('http://regionbound.com'),
       '!url_readme' => url("$path/README.txt"),
     ));
@@ -585,7 +585,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $form['cluster_differentiator']['#description'] .= $desc . ' ' . t('and <a href="!url_regionbound">RegionBound</a> JS plugin.', array('!url_regionbound' => url('http://regionbound.com')));
     }
     elseif ($lib_markercluster && (empty($region_field_names) || !reset($region_field_names))) {
-      $note_region = t('Download the .js file from <a target="regionbound" href="!url_regionbound">Regionbound</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
+      $note_region = t('Download the file %js from <a target="regionbound" href="!url_regionbound">Regionbound</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
+        '%js' => IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS,
         '%directory' => $lib_markercluster,
         '!url_regionbound' => url('http://regionbound.com'),
       ));

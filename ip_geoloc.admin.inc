@@ -127,7 +127,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'checkbox',
     '#title' => t('Store reverse-geocoded addresses with their corresponding latitude/longitude on the database'),
     '#default_value' => variable_get('ip_geoloc_store_addresses', TRUE),
-    '#description' => t('This allows you create maps of recent visitors to your site.'),
+    '#description' => t('This allows you to create maps of recent visitors to your site.'),
   );
   $note1 = t('Untick, if you do not need periodic visitor location updates. Consider the <em>Set my location</em> block as an alternative.');
   $note2 = t('You can also use the <a href="@project_context">Context module</a> to conditionally geolocate the visitor based on device type, page visited etc.', array('@project_context' => url('http://drupal.org/project/context')));
