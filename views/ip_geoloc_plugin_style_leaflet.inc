@@ -187,13 +187,15 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#required' => TRUE,
       '#weight' => $weight++,
     );
+    $desc1 = t('Examples: <em>250</em> or <em>50em</em> or <em>40vh</em> (percentage of viewport height).');
+    $desc2 = t('If left blank, the height defaults to 300 pixels. The width of the map will extend to its bounding container.');
+    $desc3 = t('You may enter <em>&lt;none></em>. If you do, then the height attribute must be set through Javascript or CSS elsewhere or the map will not display. CSS example: <em>.ip-geoloc-map .leaflet-container { height: 150px; }</em>');
     $form['map_height'] = array(
       '#title' => t('Map height'),
       '#type' => 'textfield',
-      '#field_suffix' => t('px'),
-      '#size' => 4,
+      '#size' => 7,
       '#default_value' => $this->options['map_height'],
-      '#description' => t('The default produces a map of 300 pixels high with a width extending to its bounding container.'),
+      '#description' =>  $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
       '#weight' => $weight++,
     );
   }
@@ -790,9 +792,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   public function options_validate(&$form, &$form_state) {
     ip_geoloc_plugin_style_bulk_of_form_validate($form, $form_state);
     $style_options = $form_state['values']['style_options'];
-    $map_height = $style_options['map_height'];
-    if (!is_numeric($map_height) || $map_height <= 0) {
-      form_error($form['map_height'], t('Map height cannot be blank and must be a positive number.'));
+    $map_height = trim($style_options['map_height']);
+    if (is_numeric($map_height) && $map_height <= 0) {
+      form_error($form['map_height'], t('Map height must be a positive number.'));
     }
     $selected_map = ip_geoloc_plugin_style_leaflet_map_get_info($style_options['map']);
     $zoom_top = 18;
@@ -1235,7 +1237,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $output = theme('ip_geoloc_leaflet', array(
       'map_id' => $map_id,
-      'height' => $this->options['map_height'],
+      'height' => trim($this->options['map_height']),
       'view' => $this->view,
     ));
 
