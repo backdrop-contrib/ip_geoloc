@@ -94,7 +94,10 @@
               // scaledSize
               new google.maps.Size(markerWidth, markerHeight));
           }
-          var marker = new google.maps.Marker({ map: maps[m], icon: pinImage, /*shadow: shadowImage,*/ position: position, title: mouseOverText });
+          var marker = new google.maps.Marker({
+            map: maps[m], icon: pinImage, /*shadow: shadowImage,*/
+            position: position, title: mouseOverText, optimized: false
+          });
 
           var balloonText = '<div class="balloon">' + locations[key].balloon_text + '</div>';
           addMarkerBalloon(maps[m], marker, balloonText);
