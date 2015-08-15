@@ -1100,24 +1100,24 @@ function _ip_geoloc_plugin_style_get_differentiator_value($row, $differentiator,
   return $differentiator_value;
 }
 
-function _ip_geoloc_plugin_style_get_search_api_value($row, $differentiator) {
-    $differentiator_value = '';
-    if (!empty($row->_entity_properties[$differentiator])) {
-      $differentiator_value = $row->_entity_properties[$differentiator];
+function _ip_geoloc_plugin_style_get_search_api_value($row, $field_name) {
+    $field_value = '';
+    if (!empty($row->_entity_properties[$field_name])) {
+      $field_value = $row->_entity_properties[$field_name];
     }
-    elseif ($last_ = strrpos($differentiator, '_')) {
-      $differentiator = drupal_substr($differentiator, $last_ + 1);
-      if (!empty($row->_entity_properties[$differentiator])) {
-        $differentiator_value = $row->_entity_properties[$differentiator];
+    elseif ($last_ = strrpos($field_name, '_')) {
+      $field_name = drupal_substr($field_name, $last_ + 1);
+      if (!empty($row->_entity_properties[$field_name])) {
+        $field_value = $row->_entity_properties[$field_name];
       }
     }
-    if (empty($differentiator_value)) {
-      drupal_set_message(t('IPGV&M: field %diff does not appear among these Search API keys: %keys', array(
-        '%diff' => $differentiator,
+    if (empty($field_value)) {
+      drupal_set_message(t('IPGV&M: Could not retrieve value of field %name, as its name does not appear among these Search API keys: %keys', array(
+        '%name' => $field_name,
         '%keys' => implode(', ', array_keys($row->_entity_properties)),
       )), 'warning', FALSE);
     }
-    return $differentiator_value;
+    return $field_value;
 }
 
 function _ip_geoloc_plugin_style_decorate(&$location, $row, $tooltip_field, $tag_field) {
@@ -1216,7 +1216,7 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
     return NULL;
   }
   $row = $views_plugin_style->view->result[$index];
-  if (isset($row->{"field_$field_name"})) {
+  if (isset($row->{"field_$field_name"}) && $row->{"field_$field_name"} != array()) {
     $values = $row->{"field_$field_name"};
   }
   elseif (isset($row->{"views_$field_name"})) {
