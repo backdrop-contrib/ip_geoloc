@@ -681,7 +681,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'select',
       '#default_value' => $this->options['cluster_aggregation']['aggregation_field'],
       '#options' => $fields,
-      '#description' => t('Must be a numeric field in order for aggregation to make sense.'),
+      '#description' => t('For aggregation to make sense, the selected field must be numeric or represent a list. If a list, aggregation will be applied to the element <em>count</em>.'),
     );
     $form['cluster_aggregation']['aggregation_function'] = array(
       '#title' => t('Aggregation function'),

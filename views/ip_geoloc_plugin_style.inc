@@ -617,6 +617,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   }
   if (!empty($views_plugin_style->options['cluster_aggregation']['aggregation_field'])) {
     $aggregation_field = $views_plugin_style->options['cluster_aggregation']['aggregation_field'];
+    if (isset($view->field[$aggregation_field]->definition)) {
+      $is_count = (substr($view->field[$aggregation_field]->definition['type'], 0, 4) == 'list');
+    }
   }
   $tooltip_field = FALSE;
   if (isset($views_plugin_style->options['tooltips']['marker_tooltip'])) {
@@ -700,7 +703,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
 
           if (isset($aggregation_field)) {
             $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
-            $location->aggregation_value = reset($value);
+            $location->aggregation_value = empty($is_count) ? reset($value) : count($value);
           }
           $locations[$j ? "$i.$j" : $i] = $location;
           $j++;
@@ -738,7 +741,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
             _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
             if (isset($aggregation_field)) {
               $value = ip_geoloc_get_view_result($views_plugin_style, $aggregation_field, $i);
-              $location->aggregation_value = reset($value);
+              $location->aggregation_value = empty($is_count) ? reset($value) : count($value);
             }
             $locations[$j ? "$i.$j" : $i] = $location;
             $j++;
@@ -1229,7 +1232,7 @@ function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
     $values = $views_plugin_style->get_field_value($index, $field_name);
   }
   elseif (!empty($row->_entity_properties)) {
-    // Search API
+    // Search API emergency fallback
     $values = _ip_geoloc_plugin_style_get_search_api_value($row, $field_name);
   }
   else {
