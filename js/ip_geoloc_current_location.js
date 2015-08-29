@@ -34,7 +34,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
 
     if (window.console && window.console.log) { // Does not work on IE8
       var elapsedTime = (new Date()).getTime() - startTime;
-      window.console.log(elapsedTime/1000 + ' s to locate visitor');
+      window.console.log(Drupal.t('!time s to locate visitor', { '!time' : elapsedTime/1000 }));
     }
     var ip_geoloc_address = new Object;
     ip_geoloc_address['latitude']  = position.coords.latitude;
@@ -75,7 +75,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       }
       if (window.console && window.console.log) {
         var elapsedTime = (new Date()).getTime() - startTime;
-        window.console.log(elapsedTime/1000 + ' s to reverse-geocode to address');
+        window.console.log(Drupal.t('!time s to reverse-geocode to address', { '!time' : elapsedTime/1000 }));
       }
 
       // Pass lat/long, accuracy and address back to Drupal
@@ -102,12 +102,17 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       dataType: 'json',
       data: data,
       success: function (serverData, textStatus, http) {
-        if (window.console && window.console.log && serverData && serverData.messages && serverData.messages['status']) {
-          // When JS module is used, it collects msgs via drupal_get_messages().
-          var messages = serverData.messages['status'].toString();
-          // Remove any HTML markup.
-          var msg = jQuery('<p>' + messages + '</p>').text();
-          window.console.log('From server, via JS: ' + msg);
+        if (window.console && window.console.log) {
+          if (serverData && serverData.messages && serverData.messages['status']) {
+            // When JS module is used, it collects msgs via drupal_get_messages().
+            var messages = serverData.messages['status'].toString();
+            // Remove any HTML markup.
+            var msg = Drupal.t('From server, via JS: ') + jQuery('<p>' + messages + '</p>').text();
+          }
+          else {
+            //var msg = Drupal.t('Server confirmed with: @status', { '@status': textStatus });
+          }
+          window.console.log(msg);
         }
         if (refresh_page) {
           window.location.reload();
@@ -125,6 +130,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
         }
       },
       complete: function(http, textStatus) {
+        window.console.log(Drupal.t('AJAX call completed with @status', { '@status': textStatus }));
       }
     });
   }
