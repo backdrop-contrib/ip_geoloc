@@ -818,9 +818,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $cluster_aggregation = $style_options['cluster_aggregation'];
       if (!empty($cluster_aggregation['aggregation_field'])) {
         $aggregation_field_info = field_info_field($cluster_aggregation['aggregation_field']);
-        $valid_types = array('number_integer', 'number_decimal', 'number_float');
+        $valid_types = array('number_integer', 'number_decimal', 'number_float', 'entityreference');
         if (!$aggregation_field_info || !in_array($aggregation_field_info['type'], $valid_types)) {
-          drupal_set_message(t('A cluster aggregation field that is not a single number may cause severe errors.'));
+          drupal_set_message(t('A cluster aggregation field that cannot be interpreted as a number may cause unexpected errors.'));
         }
       }
     }
