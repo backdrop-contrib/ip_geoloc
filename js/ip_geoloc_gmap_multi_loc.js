@@ -12,6 +12,7 @@
       maps = [];
       mapBounds = [];
       var imageExt = '.png';
+      var infoWindow = new google.maps.InfoWindow();
 
       $(settings, context).each(function() {
 
@@ -103,7 +104,8 @@
           addMarkerBalloon(maps[m], marker, balloonText);
 
           if (locations[key].open) {
-            new google.maps.InfoWindow({content: balloonText, maxWidth: 200}).open(maps[m], marker);
+            infoWindow = new google.maps.InfoWindow({content: balloonText, maxWidth: 200});
+            infoWindow.open(maps[m], marker);
           }
         }
         if (centerOption === 3 && locations.length > 0) {
@@ -154,11 +156,15 @@
 
       function addMarkerBalloon(map, marker, infoText) {
         google.maps.event.addListener(marker, 'click', function(event) {
-          new google.maps.InfoWindow({
+          if (infoWindow) {
+            infoWindow.close();
+          }
+          infoWindow.setOptions({
             content: infoText,
             // See [#1777664].
             maxWidth: 200
-          }).open(map, marker);
+          });
+          infoWindow.open(map, marker);
         });
       }
 
