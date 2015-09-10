@@ -318,7 +318,6 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     }
     // Balloon text must not have newlines, use <br/> instead.
     $balloon_text = NULL;
-    $location->balloon_text = '<a href="http://regionbound.com">RegionBound</a>';
     if (!empty($location->balloon_text)) {
       $balloon_text = str_replace($illegal_chars, ' ', $location->balloon_text);
       $balloon_text = addslashes($balloon_text);
