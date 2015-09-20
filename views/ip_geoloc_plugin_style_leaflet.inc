@@ -978,13 +978,14 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['lat'] = isset($location->latitude)  ? $location->latitude  : $location->lat;
         $feature['lon'] = isset($location->longitude) ? $location->longitude : $location->lon;
         if (!empty($location->random_displacement)) {
+            ip_geoloc_add_random_displacement($feature, $location->random_displacement);
             $circle = array(
               'type'=> 'circle',
               'lat' => $feature['lat'],
               'lon' => $feature['lon'],
               'radius' => $location->random_displacement,
             );
-            ip_geoloc_add_random_displacement($circle, $location->random_displacement);
+            $features[] = $circle;
         }
       }
       elseif (isset($location->component)) {
