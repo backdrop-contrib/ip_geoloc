@@ -788,3 +788,43 @@ function ip_geoloc_earth_radius_semiminor() {
 function ip_geoloc_earth_flattening() {
   return (1.0 / 298.257223563);
 }
+
+/**
+ * Return a random point within the circle centered on the supplied location.
+ * @param array $location, holding 'lat' and 'lon' entries
+ * @param float $radius, expressed in meters, should be greater than zero
+ * @return array with randomly displaced 'lat' and 'lon'
+ *
+ * From: http://stackoverflow.com/a/5838991/5350316
+ */
+function ip_geoloc_add_random_displacement(&$location, $radius_km) {
+
+  $a = ip_geoloc_random(0, 1);
+  $b = ip_geoloc_random(0, 1);
+  if ($b < $a) {
+    // Swap
+    $c = $a;
+    $a = $b;
+    $b = $c;
+  }
+  $angle = 2 * pi() * $a / $b;
+  // Approximate km to degrees conversion
+  // See http://stackoverflow.com/questions/1253499/simple-calculations-for-working-with-lat-lon-km-distance
+  $radius = $radius_km / 111000;
+
+  $location['lat'] += $b * $radius * cos($angle);
+  $location['lon'] += $b * $radius * sin($angle);
+}
+
+/**
+ * Generate a random number uniformly distributed between supplied limits.
+ *
+ * @param float $min
+ * @param float $max
+ * @return float
+ *
+ * @ee http://php.net/manual/en/function.mt-getrandmax.php
+ */
+function ip_geoloc_random($min = 0, $max = 1) {
+    return $min + mt_rand() / mt_getrandmax() * ($max - $min);
+}

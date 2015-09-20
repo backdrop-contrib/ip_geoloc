@@ -44,6 +44,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'visitor_marker_color' => array('default' => ''),
         'visitor_marker_special_char' => array('default' => ''),
         'visitor_marker_special_char_class' => array('default' => ''),
+        'visitor_marker_accuracy_circle' => array('default' => FALSE),
       ),
     );
 
@@ -283,6 +284,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#size' => 25,
       '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
       '#description' => t('As above.'),
+    );
+    $form['visitor_marker']['visitor_marker_accuracy_circle'] = array(
+      '#title' => t('Accuracy circle'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_accuracy_circle'],
+      '#description' => t("Display a circle depicting where the visitor's real location is most likely to be."),
     );
   }
 
@@ -968,8 +975,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $feature = array();
       if (isset($location->latitude) || isset($location->lat)) {
         $feature['type'] = 'point';
-        $feature['lat'] = isset($location->latitude) ? $location->latitude : $location->lat;
+        $feature['lat'] = isset($location->latitude)  ? $location->latitude  : $location->lat;
         $feature['lon'] = isset($location->longitude) ? $location->longitude : $location->lon;
+        if (!empty($location->random_displacement)) {
+            $circle = array(
+              'type'=> 'circle',
+              'lat' => $feature['lat'],
+              'lon' => $feature['lon'],
+              'radius' => $location->random_displacement,
+            );
+            ip_geoloc_add_random_displacement($circle, $location->random_displacement);
+        }
       }
       elseif (isset($location->component)) {
         // Possibly parsed by leaflet_process_geofield()
@@ -1070,33 +1086,48 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       $features[] = $feature;
     }
-    if ($visitor_marker_color != 'none' && isset($visitor_location['latitude'])) {
-      // See leaflet/README.txt for examples of Leaflet "features"
-      $visitor_feature = array(
-        'type' => 'point',
-        'lat' => $visitor_location['latitude'],
-        'lon' => $visitor_location['longitude'],
-        'specialChar' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char']),
-        'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
-        'popup' => t('Your approximate location'),
-        'tooltip' => t('Your approximate location'),
-        'zIndex' => 9999,
-        // See leaflet_markercluster.drupal.js.
-        'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
-      );
-      if ($visitor_marker_color != '') {
-        if (!empty($visitor_feature['specialChar']) || !empty($visitor_feature['specialCharClass'])) {
-          $has_special_markers = TRUE;
-        }
-        $visitor_feature['icon'] = array(
-          'iconUrl' => $marker_path . "/$visitor_marker_color.png",
-          'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
-          'iconAnchor' => array('x' => (int) (($marker_width + 1) / 2), 'y' => $marker_anchor),
-          // Just above topline, center.
-          'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1),
+    if (isset($visitor_location['latitude'])) {
+        if ($visitor_marker_color != 'none') {
+        // See leaflet/README.txt for examples of Leaflet "features"
+        $visitor_feature = array(
+          'type' => 'point',
+          'lat' => $visitor_location['latitude'],
+          'lon' => $visitor_location['longitude'],
+          'specialChar' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char']),
+          'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
+          'popup' => t('Your approximate location'),
+          'tooltip' => t('Your approximate location'),
+          'zIndex' => 9999,
+          // See leaflet_markercluster.drupal.js.
+          'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
         );
+        if ($visitor_marker_color != '') {
+          if (!empty($visitor_feature['specialChar']) || !empty($visitor_feature['specialCharClass'])) {
+            $has_special_markers = TRUE;
+          }
+          $visitor_feature['icon'] = array(
+            'iconUrl' => $marker_path . "/$visitor_marker_color.png",
+            'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
+            'iconAnchor' => array('x' => (int) (($marker_width + 1) / 2), 'y' => $marker_anchor),
+            // Just above topline, center.
+            'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1),
+          );
+        }
+        $features[] = $visitor_feature;
       }
-      $features[] = $visitor_feature;
+      if (!empty($this->options['visitor_marker']['visitor_marker_accuracy_circle']) && !empty($visitor_location['accuracy'])) {
+        $visitor_accuracy_circle = array(
+          'type' => 'circle',
+          'lat' => $visitor_location['latitude'],
+          'lon' => $visitor_location['longitude'],
+          'radius' => (float) $visitor_location['accuracy'],
+          'popup' => t("You are within @m meters of the centre of this circle.", array('@m' => $visitor_location['accuracy'])),
+          'label' => t('You are within this circle'), // requires Leaflet Label
+          'zIndex' => 9998,
+          'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
+        );
+        $features[] = $visitor_accuracy_circle;
+      }
     }
     // If auto-box is chosen ($center_option==0), zoom only when there are
     // 0 or 1 markers [#1863374]

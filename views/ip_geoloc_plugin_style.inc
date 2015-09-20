@@ -1089,6 +1089,17 @@ function _ip_geoloc_plugin_style_get_differentiator_value($row, $differentiator,
       }
     }
   }
+  elseif (!empty($row->_field_data[$differentiator]['entity'])) {
+    $differentiator_value = '';
+    // Retrieve first value, regardless of language.
+    $v = reset($row->_field_data[$differentiator]['entity']->{$differentiator});
+    if (is_array($v)) {
+       $v = reset($v);
+       if (is_array($v)) {
+         $differentiator_value = isset($v['value']) ? $v['value'] : reset($v);
+       }
+    }
+  }
   elseif (!empty($row->_entity_properties)) {
     // Search API
     $differentiator_value = _ip_geoloc_plugin_style_get_search_api_value($row, $differentiator);
@@ -1104,23 +1115,35 @@ function _ip_geoloc_plugin_style_get_differentiator_value($row, $differentiator,
 }
 
 function _ip_geoloc_plugin_style_get_search_api_value($row, $field_name) {
-    $field_value = '';
-    if (!empty($row->_entity_properties[$field_name])) {
+    $field_value = null;
+    if (isset($row->_entity_properties[$field_name])) {
+      //drupal_set_message(t('IPGV&M (1): Search API checking value for %name', array('%name' => $field_name)), 'warning', FALSE);
       $field_value = $row->_entity_properties[$field_name];
     }
     elseif ($last_ = strrpos($field_name, '_')) {
-      $field_name = drupal_substr($field_name, $last_ + 1);
-      if (!empty($row->_entity_properties[$field_name])) {
-        $field_value = $row->_entity_properties[$field_name];
+      $alt_field_name = drupal_substr($field_name, $last_ + 1);
+      //drupal_set_message(t('IPGV&M (2): Search API checking value for %name', array('%name' => $alt_field_name)), 'warning', FALSE);
+      if (isset($row->_entity_properties[$alt_field_name])) {
+        $field_value = $row->_entity_properties[$alt_field_name];
       }
     }
-    if (empty($field_value)) {
+    else {
+      $alt_field_name = 'field_' . $field_name;
+      //drupal_set_message(t('IPGV&M (3): Search API checking value for %name', array('%name' => $alt_field_name)), 'warning', FALSE);
+      if (isset($row->_entity_properties[$alt_field_name])) {
+        $field_value = $row->_entity_properties[$alt_field_name];
+      }
+    }
+    if (isset($field_value)) {
+      //drupal_set_message(t('IPGV&M (success!): Search API %name=%value', array('%name' => $field_name, '%value' => $field_value)), 'warning', FALSE);
+    }
+    else {
       drupal_set_message(t('IPGV&M: Could not retrieve value of field %name, as its name does not appear among these Search API keys: %keys', array(
         '%name' => $field_name,
         '%keys' => implode(', ', array_keys($row->_entity_properties)),
       )), 'warning', FALSE);
     }
-    return $field_value;
+    return isset($field_value) ? $field_value : '';
 }
 
 function _ip_geoloc_plugin_style_decorate(&$location, $row, $tooltip_field, $tag_field) {
