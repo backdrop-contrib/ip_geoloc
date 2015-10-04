@@ -346,6 +346,10 @@ HIGH PERFORMANCE AJAX
 =====================
 IPGV&M will take advantage of the "High-performance Javascript callback
 handler" (7.x-2.x), if installed.
+
+NOTE: the 7.x-2.x version of https://drupal.org/project/js has not been
+working very well with IPGV&M lately. We discourage using it with IPGV&M
+
 Installation instructions for Nginx: http://drupal.org/node/1876418
 Installation instructions for Apache: 
 o download and enable https://drupal.org/project/js, version 7.x-2.x
