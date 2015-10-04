@@ -617,7 +617,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style) {
   }
   if (!empty($views_plugin_style->options['cluster_aggregation']['aggregation_field'])) {
     $aggregation_field = $views_plugin_style->options['cluster_aggregation']['aggregation_field'];
-    if (isset($view->field[$aggregation_field]->definition)) {
+    if (isset($view->field[$aggregation_field]->definition['type'])) {
       $is_count = (substr($view->field[$aggregation_field]->definition['type'], 0, 4) == 'list');
     }
   }

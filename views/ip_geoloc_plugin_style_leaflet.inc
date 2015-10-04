@@ -1267,6 +1267,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js', array('weight' => 1));
     }
 
+    // drupal_alter('leaflet_build_map', $build); // @todo [#2567391]
+
     $output = theme('ip_geoloc_leaflet', array(
       'map_id' => $map_id,
       'height' => trim($this->options['map_height']),
