@@ -576,7 +576,9 @@ function ip_geoloc_reverse_geocode($latitude, $longitude, $lang = NULL) {
  *   Lat/Lon array from SESSION
  */
 function ip_geoloc_get_visitor_location() {
-  return _ip_geoloc_get_session_value('location');
+  $location = _ip_geoloc_get_session_value('location');
+  drupal_alter('ip_geoloc_get_visitor_location', $location);
+  return $location;
 }
 
 /**

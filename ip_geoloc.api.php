@@ -69,5 +69,18 @@ function hook_ip_geoloc_marker_locations_alter(&$marker_locations, &$view) {
 }
 
 /**
+ * Alter the visitor's location attributes.
+ *
+ * @param array $location
+ *   an array with with keys for latitude, longitude, popup and tooltip.
+ */
+function hook_ip_geoloc_get_visitor_location_alter(&$location) {
+  $location['latitude'] = 46.734;
+  $location['longitude'] = 8.957;
+  $location['popup'] = t('Your current location');
+  $location['tooltip'] = t('Current location');
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

@@ -1096,8 +1096,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           'lon' => $visitor_location['longitude'],
           'specialChar' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char']),
           'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
-          'popup' => t('Your approximate location'),
-          'tooltip' => t('Your approximate location'),
+          'popup' => !empty($visitor_location['popup']) ? $visitor_location['popup'] : t('Your approximate location'),
+          'tooltip' => !empty($visitor_location['tooltip']) ? $visitor_location['tooltip'] : t('Your approximate location'),
           'zIndex' => 9999,
           // See leaflet_markercluster.drupal.js.
           'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
@@ -1122,8 +1122,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           'lat' => $visitor_location['latitude'],
           'lon' => $visitor_location['longitude'],
           'radius' => (float) $visitor_location['accuracy'],
-          'popup' => t("You are within @m meters of the centre of this circle.", array('@m' => $visitor_location['accuracy'])),
-          'label' => t('You are within this circle'), // requires Leaflet Label
+          'popup' => !empty($visitor_location['popup']) ? $visitor_location['popup'] : t("You are within @m meters of the centre of this circle.", array('@m' => $visitor_location['accuracy'])),
+          'label' => !empty($visitor_location['tooltip']) ? $visitor_location['tooltip'] : t('You are within this circle'), // requires Leaflet Label
           'zIndex' => 9998,
           'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
         );
