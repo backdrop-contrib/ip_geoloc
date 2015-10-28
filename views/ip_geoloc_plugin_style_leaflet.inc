@@ -128,6 +128,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'contains' => array(
         'maxzoom' => array('default' => 18),
         'zoom' => array('default' => 2),
+        'zoom_on_click' => array('default' => ''),
         'center_lat' => array('default' => ''),
         'center_lon' => array('default' => ''),
         'scrollwheelzoom' => array('default' => TRUE),
@@ -758,6 +759,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['map_options']['zoom'],
       '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
     );
+    $form['map_options']['zoom_on_click'] = array(
+      '#title' => t('Zoom-on-click zoom level (1..@maxzoom)', array('@maxzoom' => $zoom_top)),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['zoom_on_click'],
+      '#description' => t('Level to zoom map to when a marker is clicked. Leave blank to disable this feature.'),
+    );
     $form['map_options']['center_lat'] = array(
       '#title' => t('Latitude of initial center of map'),
       '#type' => 'textfield',
@@ -903,6 +911,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_path = file_create_url(ip_geoloc_marker_directory());
     $max_zoom = (int) $this->options['map_options']['maxzoom'];
     $zoom = max(1, (int)$this->options['map_options']['zoom']);
+    $zoom_on_click = (int) $this->options['map_options']['zoom_on_click'];
     $scroll_wheel_zoom = (bool) $this->options['map_options']['scrollwheelzoom'];
     $dragging = (bool) $this->options['map_options']['dragging'];
 
@@ -1233,6 +1242,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
     }
     $map['settings']['zoomIndicator'] = $zoom_indicator;
+    $map['settings']['zoomOnClick'] = $zoom_on_click;
     $map['settings']['resetControl'] = $reset_control;
     $map['settings']['clusterControl'] = $cluster_control;
     $map['settings']['scaleControl'] = $scale_control;
@@ -1266,7 +1276,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js', array('weight' => 1));
     }
-
+    if ($zoom_on_click) {
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_zoom_on_click.js', array('scope' => 'footer'));
+    }
     // drupal_alter('leaflet_build_map', $build); // @todo [#2567391]
 
     $output = theme('ip_geoloc_leaflet', array(
