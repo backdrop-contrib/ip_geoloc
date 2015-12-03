@@ -497,7 +497,7 @@ function _ip_geoloc_set_my_location_add_find_me(&$form, $ajax_wrapper_id) {
 
   // See _ip_geoloc_process_find_me_ajax() for why this is done here.
   if (variable_get('ip_geoloc_visitor_reverse_geocode')) {
-    $form['#attached']['js'][] = IP_GEOLOC_GOOGLE_MAPS_GPS;
+    $form['#attached']['js'][] = IP_GEOLOC_GOOGLE_MAPS;
   }
   $form['find'] = array(
     // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
