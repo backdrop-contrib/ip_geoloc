@@ -691,7 +691,7 @@ function _ip_geoloc_process_find_me_ajax($form, &$form_state) {
   if (empty($throbber_text)) {
     $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
   }
-  if ($throbber_text !== '<none>') {
+  if ($throbber_text != '<none>') {
     $form['find-me-throbber'] = array(
       '#prefix' => IP_GEOLOC_THROBBER_PREFIX,
       '#markup' => ' ',

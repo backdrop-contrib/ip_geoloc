@@ -383,7 +383,7 @@ function ip_geoloc_get_current_location($menu_callback = NULL, $reverse_geocode 
   if (empty($throbber_text)) {
     $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
   }
-  if ($throbber_text !== '<none>') {
+  if ($throbber_text != '<none>') {
     drupal_set_message(filter_xss_admin($throbber_text));
   }
   _ip_geoloc_set_session_value('last_position_check', time());
