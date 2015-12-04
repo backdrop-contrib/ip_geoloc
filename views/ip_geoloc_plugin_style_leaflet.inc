@@ -406,16 +406,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         . t('A cluster radius must be specified below.'),
       '#weight' => $weight++,
     );
-    $form['goto_content_on_click'] = array(
-      '#title' => t('When clicking a marker open the associated content page.'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['goto_content_on_click'],
-      '#weight' => $weight++,
-    );
     $form['enable_balloons'] = array(
       '#title' => t('Allow fields not excluded from display to appear in a balloon above the marker when clicked.'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['enable_balloons'],
+      '#weight' => $weight++,
+    );
+    $form['goto_content_on_click'] = array(
+      '#title' => t('When a marker is clicked open the associated content page.'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['goto_content_on_click'],
       '#weight' => $weight++,
     );
     if (!$lib_markercluster) {

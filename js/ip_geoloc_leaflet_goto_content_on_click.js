@@ -6,7 +6,7 @@ jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
     marker.feature_id = feature.feature_id;
   }
 
-  marker.on('click', function(event) {
-    document.location.href = 'node/' + this.feature_id;
+  marker.on('click', function(e) {
+    document.location.href = Drupal.settings.basePath + 'node/' + this.feature_id;
   });
 });
