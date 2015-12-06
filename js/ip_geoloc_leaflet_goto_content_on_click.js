@@ -1,31 +1,19 @@
 
-jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
+jQuery(document).bind('leaflet.map', function(event, map, lMap) {
 
-  var leafletSettings = Drupal.settings.leaflet;
-
-  // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
-  // see also ip_geoloc_leaflet_sync_content.js
-  if (feature.feature_id) {
-    marker.feature_id = feature.feature_id;
+  if (map.settings.gotoContentOnClick) {
+    for (var leaflet_id in lMap._layers) {
+      lMap._layers[leaflet_id].on('click', function(e) {
+        document.location.href = Drupal.settings.basePath + 'node/' + this.feature_id;
+      });
+    }
+  }
+  if (map.settings.openBalloonsOnHover) {
+    for (var leaflet_id in lMap._layers) {
+      lMap._layers[leaflet_id].on('mouseover', function(e) {
+        this.openPopup();
+      });
+    }
   }
 
-  marker.on('click', function(e) {
-    for (var i = 0; i < leafletSettings.length; i++) {
-      if ((this._map === leafletSettings[i].lMap) && leafletSettings[i].map.settings.gotoContentOnClick) {
-        document.location.href = Drupal.settings.basePath + 'node/' + this.feature_id;
-        return;
-      }
-    }
-  });
-
-  marker.on('mouseover', function(e) {
-    for (var i = 0; i < leafletSettings.length; i++) {
-      if ((this._map === leafletSettings[i].lMap) && leafletSettings[i].map.settings.openBalloonsOnHover) {
-        marker.openPopup();
-        return;
-      }
-    }
-  });
-
 });
-
