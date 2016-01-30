@@ -108,6 +108,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'zoom_ranges' => array('default' => array()),
         'cluster_tooltips' => array('default' => TRUE),
         'cluster_outline' => array('default' => 0),
+        'cluster_touch_mode' => array('default' => 1),
       ),
     );
 
@@ -680,6 +681,16 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#default_value' => $this->options['cluster_differentiator']['cluster_tooltips'],
         '#description' => t("When hovering a cluster, tooltips reveal the cluster region name and the names of its populated subregions."),
       );
+      $form['cluster_differentiator']['cluster_touch_mode'] = array(
+        '#title' => t('Cluster action on touch devices (e.g. mobile phones)'),
+        '#type' => 'radios',
+        '#options' => array(
+          1 => t('Single tap displays cluster regions, double-tap drills into cluster'),
+          0 => t('Single tap drills into cluster. Sub-region names not displayed, but visible on mouse devices.'),
+        ),
+        '#default_value' => $this->options['cluster_differentiator']['cluster_touch_mode'],
+        '#description' => t('Applies only to devices that do not have a mouse, like mobile phones.'),
+      );
       $form['cluster_differentiator']['cluster_outline'] = array(
         '#title' => t('Cluster population outline'),
         '#type' => 'select',
@@ -929,6 +940,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $disable_clustering_at_zoom = $this->options['disable_clustering_at_zoom'];
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
     $cluster_tooltips = !empty($this->options['cluster_differentiator']['cluster_tooltips']);
+    $cluster_touch_mode = empty($this->options['cluster_differentiator']['cluster_touch_mode']) ? 0 : 'auto';
     $cluster_aggregation_field = $this->options['cluster_aggregation']['aggregation_field'];
     $cluster_aggregation_function = $this->options['cluster_aggregation']['aggregation_function'];
     $cluster_aggregate_ranges = $this->options['cluster_aggregation']['ranges'];
@@ -1192,6 +1204,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $map['settings']['disableClusteringAtZoom'] = $disable_clustering_at_zoom;
         $map['settings']['addRegionToolTips'] = $cluster_tooltips;
         $map['settings']['hullHugFactor'] = $hull_hug_factor;
+        $map['settings']['touchMode'] = $cluster_touch_mode;
         $map['settings']['animateAddingMarkers'] = TRUE;
         if (!empty($cluster_aggregation_field)) {
           $map['settings']['clusterAggregationFunction'] = $cluster_aggregation_function;
