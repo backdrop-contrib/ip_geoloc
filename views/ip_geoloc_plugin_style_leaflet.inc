@@ -685,7 +685,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#title' => t('Cluster action on touch devices (e.g. mobile phones)'),
         '#type' => 'radios',
         '#options' => array(
-          1 => t('Single tap displays cluster regions, double-tap drills into cluster'),
+          1 => t('Single tap displays cluster regions, double-tap drills into cluster (default)'),
           0 => t('Single tap drills into cluster. Sub-region names not displayed, but visible on mouse devices.'),
         ),
         '#default_value' => $this->options['cluster_differentiator']['cluster_touch_mode'],
