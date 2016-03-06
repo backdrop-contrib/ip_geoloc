@@ -3,7 +3,7 @@
 /**
  * @file
  * IPGV&M is a mapping engine for Views that contain locations of entities
- * and/or visitors. Google Maps, Leaflet and OpenLayers maps are all supported.
+ * and/or visitors. Google Maps, Leaflet and OpenLayers2 maps are all supported.
  * and available through this module.
  * Using a number of optional sources IPGV&M also retrieves and stores
  * geographical and street address information of your site visitors, based on
