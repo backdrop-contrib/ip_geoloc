@@ -1191,7 +1191,11 @@ function _ip_geoloc_plugin_style_decorate(&$location, $row, $tooltip_field, $tag
     $tag = $tag_field->theme($row);
     $location->marker_tag = _ip_geoloc_plugin_style_add_label_and_styling($tag_field, $tag);
   }
-  if (isset($row->nid)) {
+  if (isset($row->id)) {
+    // CiviCRM [#2549825]
+    $location->id = $row->id;
+  }
+  elseif (isset($row->nid)) {
     $location->id = $row->nid;
   }
   elseif (isset($row->tid)) {
