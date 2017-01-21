@@ -5,6 +5,15 @@ This documentation concentrates on the installation and configuration of the
 IP Geolocation Views & Maps (IPGV&M) module. For an overall introduction see
 http://drupal.org/project/ip_geoloc.
 
+IMPORTANT:
+---------
+The Google Maps API, which include geolocation services, requires either a
+Google API Key or a Google Client ID. If you are using Leaflet maps you may
+still need a key when you use geolocation services also.
+Obtain a free API Key or Client ID here:
+https://developers.google.com/maps/documentation/javascript/get-api-key
+
+
 CONFIGURATION OF VIEW-BASED MAPS
 ================================
 Read this if you are using IPGV&M primarily for its Views mapping interface. If

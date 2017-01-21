@@ -1223,7 +1223,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         }
         if ($allow_clusters_of_one) {
           $map['settings']['allowClustersOfOne'] = TRUE;
-          $map['settings']['spiderfyDistanceMultiplier'] = 3;
+          $map['settings']['spiderfyDistanceMultiplier'] = 4.0;
         }
       }
       else {
