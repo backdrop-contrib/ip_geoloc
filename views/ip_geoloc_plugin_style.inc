@@ -1207,6 +1207,9 @@ function _ip_geoloc_plugin_style_decorate(&$location, $row, $tooltip_field, $tag
   elseif (isset($row->entity) && is_numeric($row->entity)) {
     $location->id = $row->entity;
   }
+  elseif (isset($row->entity->nid) && is_numeric($row->entity->nid)) {
+    $location->id = $row->entity->nid;
+  }
 }
 
 /**
