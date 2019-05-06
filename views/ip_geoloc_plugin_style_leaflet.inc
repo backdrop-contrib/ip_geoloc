@@ -141,6 +141,18 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             'separator' => array('default' => '<br/>'),
         ),
     );
+    $options['vector_display']['contains'] = array(
+        'stroke_override' => array('default' => 0),
+        'stroke' => array('default' => 1),
+        'color' => array('default' => ''),
+        'weight' => array('default' => ''),
+        'opacity' => array('default' => ''),
+        'dashArray' => array('default' => ''),
+        'fill' => array('default' => 1),
+        'fillColor' => array('default' => ''),
+        'fillOpacity' => array('default' => ''),
+        'clickable' => array('default' => 1),
+    );
     return $options;
   }
 
@@ -179,6 +191,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $this->_add_markercluster($form, $lib_markercluster, $weight);
     $this->_add_cluster_differentiator($form, $form_state, $lib_markercluster, $weight);
     $this->_add_more_map_options($form, $weight);
+    $this->_add_vector_display_options($form, $weight);
   }
 
   private function _add_map_and_height(&$form, &$weight) {
@@ -841,6 +854,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
   }
 
+  private function _add_vector_display_options(&$form, &$weight) {
+    // From leaflet/leaflet.formatters.inc. Leaflet Views can be disabled.
+    $form['vector_display'] = leaflet_form_elements('vector_display', $this->options, array('path' => 'style_options'));
+    $form['vector_display']['#weight'] = $weight++;
+  }
+
   /**
    * Validate the options form.
    */
@@ -1030,6 +1049,28 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $features = array();
     foreach ($locations as $location) {
       $feature = array();
+
+      // Add Vector Display options for polygons, circles etc.
+      // Tokens may be used to generate different colours etc. for individual
+      // features.
+      if (isset($location->points) && !empty($this->options['vector_display']['stroke_override'])) {
+        $feature_options = $this->options['vector_display'];
+
+        if (module_exists('token')) {
+          $entity = isset($location->id) ? node_load($location->id) : FALSE;
+          if ($entity) {
+            foreach ($feature_options as &$option) {
+              $option = token_replace($option, array('node' => $entity), array('clear' => TRUE));
+            }
+          }
+        }
+        // To avoid overwriting options with empty values, removes all NULL
+        // FALSE and empty strings, but leave zero values.
+        $feature_options = array_filter($feature_options, 'strlen');
+        unset($feature_options['stroke_override']);
+        $feature['options'] = $feature_options;
+      }
+
       if (isset($location->latitude) || isset($location->lat)) {
         $feature['type'] = 'point';
         $feature['lat'] = isset($location->latitude)  ? $location->latitude  : $location->lat;
@@ -1056,11 +1097,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['points'] = $location->points;
       }
 
-      if (isset($location->id)) {
-        // Allow marker events to identify the corresponding node.
-        $feature['feature_id'] = $location->id;
-      }
-
       // At this point $feature['type'] should be set.
       if (!empty($feature['type']) && $feature['type'] != 'point') {
         // Linestring, polygon ...
@@ -1070,6 +1106,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // Points must have coords.
         continue;
       }
+
+      if (isset($location->id)) {
+        // Allow marker events to identify the corresponding node.
+        $feature['feature_id'] = $location->id;
+      }
+
       if (!empty($sync_flags)) {
         $feature['flags'] = isset($feature['flags']) ? $feature['flags'] | $sync_flags : $sync_flags;
       }

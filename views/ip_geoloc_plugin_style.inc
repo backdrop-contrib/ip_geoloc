@@ -673,7 +673,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
   elseif (isset($views_plugin_style->options['map_options']['separator'])) {
     $separator = filter_xss_admin($views_plugin_style->options['map_options']['separator']);
   }
-  
+
   foreach ($sets as $set) {
     // Render as a grouping set.
     if (!empty($set['group'])) {
@@ -718,6 +718,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
           if (!empty($diff_color_ass[$display_id][$differentiator])) {
             _ip_geoloc_plugin_style_set_marker_color($location, $row, $differentiator, $is_tax_term, $view->args, $diff_color_ass[$display_id][$differentiator]);
           }
+          // Amongst other things this sets the row node/entity id on $location.
           _ip_geoloc_plugin_style_decorate($location, $row, $tooltip_field, $tag_field);
 
           if (isset($aggregation_field)) {
@@ -809,7 +810,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
       '%id' => isset($id) ? " ($id)" : '',
       '%latitudes' => implode(' ' . t('or') . ' ', $latitudes),
     );
-    $msg = ($error_count >= $row_count) 
+    $msg = ($error_count >= $row_count)
       ? t('None of the @total result rows in view %view_title had their %latitudes set. Therefore those rows could not be displayed as locations on the map. Are you using the correct field names?', $t_args)
       : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitudes set and therefore could not be shown on the map. The first row that could not be located was row #@first%id. You can improve execution efficiency by using the Views UI to add an "is not empty" filter for %latitudes.', $t_args);
     drupal_set_message($msg);
@@ -1247,7 +1248,7 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       // ticked on those fields. So even if Excluded is ticked for this field,
       // we need to theme() it for the potential sake of those other fields.
       $field_value = $field->theme($row);
-      
+
       // Add the special 'views_' fields that normally aren't in the results
       // set to the row, if required for the $differentiator or lat/lon that
       // have math expressions applied through the Views UI.
