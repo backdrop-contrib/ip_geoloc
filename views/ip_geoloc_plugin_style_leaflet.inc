@@ -855,9 +855,23 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   }
 
   private function _add_vector_display_options(&$form, &$weight) {
-    // From leaflet/leaflet.formatters.inc. Leaflet Views can be disabled.
+    // From leaflet/leaflet.formatters.inc. Leaflet Views can remain disabled.
     $form['vector_display'] = leaflet_form_elements('vector_display', $this->options, array('path' => 'style_options'));
+
+    $form['vector_display']['#title'] = t('Options for Polygons, Polylines and Circles');
+    $link_options = array('attributes' => array('target' => 'leaflet-manual'));
+    $descr1 = t('These settings will overwrite these !options, that apply to Polygons, Multi-Polygons Polylines and Circles.', array(
+        '!options' => l(t('default Leaflet options'), 'http://leafletjs.com/reference.html#path', $link_options)));
+    $descr2 = t('You may use tokens. For example, if your location content type has a color field, you can use that to assign different colors to your polygons, polylines and circles.');
+    $form['vector_display']['#description'] = $descr1 . '<br/>' . $descr2;
     $form['vector_display']['#weight'] = $weight++;
+
+    $form['vector_display']['token_browser'] = array(
+      '#type' => 'markup',
+      '#theme' => 'token_tree_link',
+      '#token_types' => array('node'),
+      '#weight' => 0,
+    );
   }
 
   /**
@@ -1048,19 +1062,22 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $features = array();
     foreach ($locations as $location) {
-      $feature = array();
+
+      $feature = array('type' => empty($location->type) ? 'point' : $location->type);
 
       // Add Vector Display options for polygons, circles etc.
-      // Tokens may be used to generate different colours etc. for individual
+      // Tokens may be used to generate different colours etc.for individual
       // features.
-      if (isset($location->points) && !empty($this->options['vector_display']['stroke_override'])) {
+      if (($feature['type'] != 'point') && !empty($this->options['vector_display']['stroke_override'])) {
         $feature_options = $this->options['vector_display'];
 
         if (module_exists('token')) {
-          $entity = isset($location->id) ? node_load($location->id) : FALSE;
+          $entity_type = empty($location->entity_type) ? 'node' : $location->entity_type;
+          $entity = isset($location->id) ? entity_load_single($entity_type, $location->id) : FALSE;
+
           if ($entity) {
             foreach ($feature_options as &$option) {
-              $option = token_replace($option, array('node' => $entity), array('clear' => TRUE));
+              $option = token_replace($option, array($entity_type => $entity), array('clear' => TRUE));
             }
           }
         }
@@ -1072,7 +1089,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
 
       if (isset($location->latitude) || isset($location->lat)) {
-        $feature['type'] = 'point';
+        // GeoJSON does not support circles, but Leaflet does
         $feature['lat'] = isset($location->latitude)  ? $location->latitude  : $location->lat;
         $feature['lon'] = isset($location->longitude) ? $location->longitude : $location->lon;
         if (!empty($location->random_displacement)) {
@@ -1089,11 +1106,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       elseif (isset($location->component)) {
         // Possibly parsed by leaflet_process_geofield()
         // see _ip_geoloc_plugin_style_extract_lat_lng().
-        $feature['type'] = $location->type;
         $feature['component'] = $location->component;
       }
       elseif (isset($location->points)) {
-        $feature['type'] = $location->type;
         $feature['points'] = $location->points;
       }
 
