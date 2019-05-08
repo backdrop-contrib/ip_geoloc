@@ -1262,7 +1262,7 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       }
       // If Excluded is ticked, we don't style and don't add the field to the
       // rendered_fields.
-      if (!$field->options['exclude']) {
+      if (!$field->options['exclude'] && !($field_value == '' && $field->options['hide_empty'])) {
         $styled_field_value = _ip_geoloc_plugin_style_add_label_and_styling($field, $field_value);
         $views_plugin_style->rendered_fields[$i][$field_id] = $styled_field_value;
       }

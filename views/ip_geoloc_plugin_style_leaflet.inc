@@ -1113,7 +1113,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
 
       // At this point $feature['type'] should be set.
-      if (!empty($feature['type']) && $feature['type'] != 'point') {
+      if ($feature['type'] != 'point') {
         // Linestring, polygon ...
         $feature['flags'] = LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER;
       }
