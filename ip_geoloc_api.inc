@@ -8,9 +8,12 @@
  */
 
 // Note: secure http was chosen, as plain http may cause warnings popping up in
-// environments using certificates. Alternatively headless may work?
-// Size 5k.
+// environments using certificates.
+// IP_GEOLOC_GOOGLE_MAPS is only used for client-side geocoding to an address,
+// if enabled on "Set my location" block options.
 define('IP_GEOLOC_GOOGLE_MAPS', ip_geoloc_build_google_api_url());
+
+// Server-side reverse geocoding of an entered address, if enabled.
 define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'https://maps.googleapis.com/maps/api/geocode/json');
 
 /**
@@ -373,6 +376,8 @@ function ip_geoloc_get_current_location($menu_callback = NULL, $reverse_geocode 
   _ip_geoloc_set_session_value('last_position_check', time());
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
+  // Note that IP_GEOLOC_GOOGLE_MAPS includes Google API or Client key.
+  // See ip_geoloc_build_google_api_url().
   drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
   drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
@@ -474,13 +479,12 @@ function ip_geoloc_get_address($latitude, $longitude, $lang = NULL) {
  * Uses the Google webservice to retrieve address information based on lat/long.
  *
  * Effectively makes calls of this form:
- * http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=-37,144
+ * https://maps.googleapis.com/maps/api/geocode/json?latlng=-37.87,144.98
  *
  * CALLER BEWARE:
  * This is a server-side, as opposed to client-side call. If you want to call
- * this function repeatedly, remember that Google imposes a limit of 2500 calls
- * from the same IP address per 24 hours. It may return an OVER_QUERY_LIMIT
- * response.
+ * this function repeatedly, remember that Google 1) requires an API key (free)
+ * and 2) imposes other restrictions, like quotas and billing.
  *
  * @param string|double $latitude
  *   e.g. "-37.87" or -37.87

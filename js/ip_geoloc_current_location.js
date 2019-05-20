@@ -1,3 +1,4 @@
+
 (function ($) {
 
   Drupal.behaviors.addCurrentLocation = {
@@ -16,12 +17,14 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
 
   if (typeof(getCurrentPositionCalled) !== 'undefined') {
     // Been here, done that (can happen in AJAX context).
+    // Stop throbber
+    jQuery('#set-location-form .ajax-progress.ajax-progress-throbber').hide();
     return;
   }
 
   if (navigator.geolocation) {
     var startTime = (new Date()).getTime();
-    navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 20000});
+    navigator.geolocation.getCurrentPosition(getLocation, handleLocationError, {enableHighAccuracy: true, timeout: 19000});
     getCurrentPositionCalled = true;
   }
   else {
@@ -34,7 +37,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
 
     if (window.console && window.console.log) { // Does not work on IE8
       var elapsedTime = (new Date()).getTime() - startTime;
-      window.console.log(Drupal.t('!time s to locate visitor', { '!time' : elapsedTime/1000 }));
+      window.console.log(Drupal.t('!time s to determine visitor coords', { '!time' : elapsedTime/1000 }));
     }
     var ip_geoloc_address = new Object;
     ip_geoloc_address['latitude']  = position.coords.latitude;
@@ -44,6 +47,11 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
     if (!reverseGeocode) {
       // Pass lat/long back to Drupal without street address.
       callbackServer(callbackUrl, ip_geoloc_address, refreshPage);
+      return;
+    }
+    else if (typeof(google) === 'undefined' || typeof(google.maps) === 'undefined') {
+      ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Maps API not loaded, cannot reverse-geocode position to address')
+      callbackServer(callbackUrl, ip_geoloc_address, true);
       return;
     }
     // Reverse-geocoding of lat/lon requested.
@@ -73,9 +81,9 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
         ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Geocoder address lookup failed with status code !code. @error', { '!code': status, '@error': error });
         refreshPage = false;
       }
-      if (window.console && window.console.log) {
+      if (window.console && window.console.log && ip_geoloc_address['formatted_address']) {
         var elapsedTime = (new Date()).getTime() - startTime;
-        window.console.log(Drupal.t('!time s to reverse-geocode to address', { '!time' : elapsedTime/1000 }));
+        window.console.log(Drupal.t('!time s to reverse-geocode to !address', { '!time' : elapsedTime/1000, '!address' : ip_geoloc_address['formatted_address'] }));
       }
 
       // Pass lat/long, accuracy and address back to Drupal
@@ -92,6 +100,9 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
   }
 
   function callbackServer(callbackUrl, data, refresh_page) {
+    // Stop throbber
+    jQuery('#set-location-form .ajax-progress.ajax-progress-throbber').hide();
+
     // For drupal.org/project/js module, if enabled.
     data['js_module'] = 'ip_geoloc';
     data['js_callback'] = 'current_location';
@@ -130,7 +141,13 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
         }
       },
       complete: function(http, textStatus) {
-        window.console.log(Drupal.t('AJAX call completed with @status', { '@status': textStatus }));
+        var msg = !http.responseText ? '' : http.responseText.replace(/(^"|"$)/g, '');
+        if (msg !== '') {
+          window.console.log(Drupal.t('AJAX call completed with @status and response: @msg', { '@status': textStatus, '@msg': msg }));
+        }
+        else {
+          window.console.log(Drupal.t('AJAX call completed with @status and empty response.', { '@status': textStatus }));
+        }
       }
     });
   }

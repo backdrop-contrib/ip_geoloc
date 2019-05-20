@@ -862,7 +862,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $link_options = array('attributes' => array('target' => 'leaflet-manual'));
     $descr1 = t('These settings will overwrite these !options, that apply to Polygons, Multi-Polygons Polylines and Circles.', array(
         '!options' => l(t('default Leaflet options'), 'http://leafletjs.com/reference.html#path', $link_options)));
-    $descr2 = t('You may use tokens. For example, if your location content type has a color field, you can use that to assign different colors to your polygons, polylines and circles.');
+    $descr2 = t('You may use tokens. For example, if your location content type has a color field, e.g. [node:field_color], you can use that to assign different colors to your polygons, polylines and circles.');
     $form['vector_display']['#description'] = $descr1 . '<br/>' . $descr2;
     $form['vector_display']['#weight'] = $weight++;
 
@@ -870,7 +870,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#type' => 'markup',
       '#theme' => 'token_tree_link',
       '#token_types' => array('node'),
-      '#weight' => 0,
+      '#weight' => -1,
     );
   }
 

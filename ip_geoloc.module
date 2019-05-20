@@ -364,7 +364,8 @@ function ip_geoloc_current_location_ajax_recipient() {
     // in ip_geoloc_init() during next click/request.
     $error = check_plain($_POST['error']);
     _ip_geoloc_set_session_value('error', $error);
-    return $error;
+    drupal_json_output($error);
+    drupal_exit();
   }
   // Flesh out $location with the returned street address components.
   $location = array(
@@ -985,8 +986,6 @@ function ip_geoloc_statistics_api() {
  */
 function ip_geoloc_build_google_api_url() {
 
-  $google_api_url = 'https://maps.googleapis.com/maps/api/js';
-
   // Append query parameters for the Google Maps url.
   // See https://developers.google.com/maps/documentation/javascript/versions
   $query = array();
@@ -1011,13 +1010,14 @@ function ip_geoloc_build_google_api_url() {
       break;
 
     default:
+      return '';
   }
 
-  // Add query params to API url.
+  // Add query params to API URL and return.
   if (!empty($query)) {
-    // Include version number as it's required for Premium plans.
-    $query['v'] = '3.26';
-    $google_api_url .= '?' . drupal_http_build_query($query);
+    $query['v'] = 'weekly';
+    $query['libraries'] = 'places';
+    return 'https://maps.googleapis.com/maps/api/js?' . drupal_http_build_query($query);
   }
-  return $google_api_url;
+  return '';
 }

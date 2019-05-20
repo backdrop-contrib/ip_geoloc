@@ -15,7 +15,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_google_auth'] = array(
     '#type' => 'fieldset',
     '#title' => t('Authentication of maps and geolocation services'),
-    '#description' => t('The <a target="_blank" href="!url1">Google Maps API</a>, which include geolocation services, requires either a Google API Key or a Google Client ID. <br/>If you are using <a target="_blank" href="!url2">Leaflet maps</a> you may still need a Google API Key or Client ID when you use this module\'s geolocation services also.', array(
+    '#description' => t('The <a target="_blank" href="!url1">Google Maps API</a>, which include address geolocation services, requires either a Google API Key or a Google Client ID. <br/>If you are using <a target="_blank" href="!url2">Leaflet maps</a> you will only need a Google API Key or Client ID when you use this module\'s address geolocation services.', array(
       '!url1' => url('https://developers.google.com/maps/documentation/javascript/get-api-key'),
       '!url2' => url('http://leafletjs.com'),
     )),
@@ -23,12 +23,13 @@ function ip_geoloc_admin_configure() {
 
   $form['ip_geoloc_google_auth']['ip_geoloc_auth_method'] = array(
     '#type' => 'select',
-    '#title' => t('Select Google API Authentication Method'),
-    '#description' => t('Google API Authentication Method'),
-    '#default_value' => variable_get('ip_geoloc_auth_method', 1),
+    '#title' => t('Google API Authentication Method'),
+  //'#description' => t('Google API Authentication Method'),
+    '#default_value' => variable_get('ip_geoloc_auth_method', 0),
     '#options' => array(
-      1 => t('API Key'),
-      2 => t('Client ID'),
+      0 => t("I don't use the Google API"),
+      1 => t('Use Google API via API Key'),
+      2 => t('Use Google API via Client ID'),
     ),
   );
 

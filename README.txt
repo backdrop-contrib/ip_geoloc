@@ -7,30 +7,46 @@ http://drupal.org/project/ip_geoloc.
 
 IMPORTANT:
 ---------
-The Google Maps API, which include geolocation services, requires either a
-Google API Key or a Google Client ID. If you are using Leaflet maps you may
-still need a key when you use geolocation services also.
-Obtain a free API Key or Client ID here:
-https://developers.google.com/maps/documentation/javascript/get-api-key
+The Google Maps API, which include addrss geocodingservices, requires either
+Google API Key or a Google Client ID.
+
+If you use Leaflet maps you will NOT need a Google API Key or Google CLient ID. 
+
+However, if you wish to use the feature in the "Set my Location" block that
+autofills the address box after it has found the visitor's location, then
+you do need a (free) Google API Key or Client ID, which you can obtain here:
+https://developers.google.com/maps/documentation/javascript/get-api-key.
+Then enter it at admin/config/system/ip_geoloc, at the top of the page,
+section "AUTHENTICATION OF MAPS AND GEOLOCATION SERVICES"
+
+Note: if you have enabled the Geocoder module, for reverse-geocoding an
+arbitrary address entered by the user to a location on the map, then you can
+use that same Google API Key to configure Geocoder at this page:
+/admin/config/content/geocoder.
 
 
 CONFIGURATION OF VIEW-BASED MAPS
 ================================
-Read this if you are using IPGV&M primarily for its Views mapping interface. If
-you focus is on the recording of visitor locations, past and present, read the
-next section.
+Read this if you are using IPGV&M primarily for its Views mapping interface. 
+If your focus is on the recording of visitor locations, past and present, skip
+to the next section.
 
 Download and enable IPGV&M like any other module. Then visit its configuration
 page, .../admin/config/system/ip_geoloc.
-If you intend to use IPGV&M's built-in interface to Google Maps, untick all
-"Data collection option" boxes.
+If you intend to use IPGV&M's built-in interface to Google Maps, enter you
+API key or Client ID key. You may untick all "Data collection option" boxes.
+
 If you intend to use IPGV&M with the OpenLayers (v2) or Leaflet modules and also
-wish to show and center on the visitor's HTML5 retrieved location, then you have
-two options:
-a) tick the first "Data collection option" and select applicable roles below it
-b) enable the "Set my location" block, so visitors can center the map using
-their HTML5 location, or, using the same block type, a city or partial address,
-like "New York".
+wish to show and center on the visitor's location, then for a great user
+experience proceed as follows.
+a) Under "Data collection option" tick "Allow session storage".
+b) Under "Advanced options", tick "Auto-refresh the page as soon as an HTML5 
+location update has come in"
+c) At admin/structure/block, enable the "IPGV&M: Set my location" block, so 
+visitors can center the map using their GPS location, or using any (partial) 
+address the type, like "Manhattan".
+There are quite a few self-explanator options to taylor the appearance of the
+block to your needs.
 
 You are now ready to map your View of Location, Geofield, Geolocation Field or
 GetLocations.
