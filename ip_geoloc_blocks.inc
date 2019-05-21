@@ -126,6 +126,25 @@ function ip_geoloc_block_set_my_location(&$form) {
       'visible' => array('input[name="ip_geoloc_visitor_find"]' => array('checked' => TRUE),
     )),
   );
+  $form['address']['find_visitor']['explanation'] = array(
+    '#type' => 'markup',
+    '#markup' => t('Select the parts of the address you wish to display. If you select none, the full formatted address will be displayed.'),
+  );
+  $form['address']['find_visitor']['ip_geoloc_return_address_street'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display the street & number parts of the reverse-geocoded address'),
+    '#default_value' => variable_get('ip_geoloc_return_address_street', TRUE),
+  );
+  $form['address']['find_visitor']['ip_geoloc_return_address_locality'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display the suburb and postcode parts of the reverse-geocoded address'),
+    '#default_value' => variable_get('ip_geoloc_return_address_locality', TRUE),
+  );
+  $form['address']['find_visitor']['ip_geoloc_return_address_country'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display the country part of the reverse-geocoded address'),
+    '#default_value' => variable_get('ip_geoloc_return_address_country', TRUE),
+  );
   $form['address']['find_visitor']['ip_geoloc_visitor_find_label'] = array(
     '#type' => 'textfield',
     '#title' => t('Label for "Find me" button'),
@@ -548,11 +567,44 @@ function _ip_geoloc_set_my_location_add_selector(&$form, &$location, $is_address
 
 function _ip_geoloc_set_my_location_add_address(&$form, $location) {
   $textarea = variable_get('ip_geoloc_address_element', 2);
-  $default_address = check_plain(variable_get('ip_geoloc_visitor_address_default', ''));
+  $address = check_plain(variable_get('ip_geoloc_visitor_address_default', ''));
+  if (!empty($location['formatted_address'])) {
+    $need_street = variable_get('ip_geoloc_return_address_street');
+    $need_locality = variable_get('ip_geoloc_return_address_locality');
+    $need_country = variable_get('ip_geoloc_return_address_country');
+    if (!$need_street && !$need_locality && !$need_country) {
+      $address = $location['formatted_address'];
+    }
+    else {
+      if ($need_street) {
+        if (!empty($location['street_number'])) {
+          $address = $location['street_number'];
+        }
+        if (!empty($location['route'])) {
+          $address .= empty($address) ? $location['route'] : (' ' . $location['route']);
+        }
+      }
+      if ($need_locality) {
+        if (!empty($address)) {
+          $address .= ', ';
+        }
+        $address .= $location['locality'] . ' ' . $location['administrative_area_level_1'];
+        if (!empty($location['postal_code'])) {
+          $address .= ' ' . $location['postal_code'];
+        }
+      }
+      if ($need_country) {
+        if (!empty($address)) {
+          $address .= ', ';
+        }
+        $address .= $location['country'];
+      }
+    }
+  }
   $form['street_address'] = array(
     '#type' => $textarea ? 'textarea' : 'textfield',
     '#rows' => $textarea,
-    '#default_value' => empty($location['formatted_address']) ? $default_address : $location['formatted_address'],
+    '#default_value' => $address,
     '#weight' => 10,
   );
 }
