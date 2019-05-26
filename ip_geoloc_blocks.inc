@@ -137,7 +137,7 @@ function ip_geoloc_block_set_my_location(&$form) {
   );
   $form['address']['find_visitor']['ip_geoloc_return_address_locality'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Display the suburb and postcode parts of the reverse-geocoded address'),
+    '#title' => t('Display the suburb & postcode parts of the reverse-geocoded address'),
     '#default_value' => variable_get('ip_geoloc_return_address_locality', TRUE),
   );
   $form['address']['find_visitor']['ip_geoloc_return_address_country'] = array(
@@ -520,7 +520,7 @@ function _ip_geoloc_set_my_location_add_find_me(&$form, $ajax_wrapper_id) {
   }
   $form['find'] = array(
     // Use 'submit' to go with '#submit'. For #ajax 'button' may be used too.
-    '#type' => 'submit',
+    '#type' => 'button',
     '#value' => $find_visitor_label,
     '#submit' => array('_ip_geoloc_process_find_me_submit'),
     '#ajax' => array(
@@ -585,10 +585,15 @@ function _ip_geoloc_set_my_location_add_address(&$form, $location) {
         }
       }
       if ($need_locality) {
-        if (!empty($address)) {
+        if (!empty($address) && !empty($location['locality']) && !empty($location['administrative_area_level_1'])) {
           $address .= ', ';
         }
-        $address .= $location['locality'] . ' ' . $location['administrative_area_level_1'];
+        if (!empty($location['locality'])) {
+          $address .= $location['locality'];
+        }
+        if (!empty($location['administrative_area_level_1'])) {
+          $address .= (empty($location['locality']) ? '' : ', ') . $location['administrative_area_level_1'];
+        }
         if (!empty($location['postal_code'])) {
           $address .= ' ' . $location['postal_code'];
         }
