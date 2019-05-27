@@ -35,7 +35,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
         if (map.settings.openBalloonsOnHover) {
           this.openPopup();
         }
-        // setStyle is only avaible on some features
+        // setStyle is only available on some features types.
         if (map.settings.polygon_fill_opacity_on_hover && typeof(this.setStyle) == 'function') {
           this.setStyle({
             fillOpacity: map.settings.polygon_fill_opacity_on_hover,
@@ -48,7 +48,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   if (map.settings.polygon_fill_opacity_on_hover) {
     for (var leaflet_id in lMap._layers) {
       var layer = lMap._layers[leaflet_id];
-      // setStyle is only avaible on some features
+      // setStyle is only available on some features types.
       if (typeof(layer.setStyle) == 'function') {
         layer.on('mouseout', function(e) {
           this.setStyle({

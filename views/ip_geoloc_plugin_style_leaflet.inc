@@ -464,24 +464,25 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     $form['on_hover_options']['open_balloons_on_hover'] = array(
         '#title' => t('When <em>hovered</em>, pop up a balloon showing non-excluded fields'),
+        '#description' => t('Applies to markers, polygons and polylines.'),
         '#type' => 'checkbox',
         '#default_value' => $this->options['on_hover_options']['open_balloons_on_hover'],
     );
     $form['on_hover_options']['polygon_fill_opacity_on_hover'] = array(
-        '#title' => t('For polygons: when <em>hovered</em> change its <em>opacity</em> to'),
+        '#title' => t('For polygons: when <em>hovered</em> change <em>fill opacity</em> to'),
         '#description' => t('A fraction between 0 (transparent) and 1 (solid). Leave blank for no change.'),
         '#type' => 'textfield',
         '#size' => 4,
         '#default_value' => $this->options['on_hover_options']['polygon_fill_opacity_on_hover'],
     );
     $form['on_hover_options']['polygon_line_weight_on_hover'] = array(
-        '#title' => t('For polygons: when <em>hovered</em> change its <em>line weight</em> to'),
+        '#title' => t('For polygons: when <em>hovered</em> change <em>line weight</em> to'),
         '#description' =>
-           t('Width in pixels, typically 1..5. Use 0 to remove line. Leave blank for no change.') . '<br/>' .
-           t('Line color, opacity and pattern remain unchanged.'),
+           t('Width in pixels, typically 1..10. Use 0 to remove outline altogether. Leave blank for no change.') . '<br/>' .
+           t('Line color, line opacity and line dash pattern remain unchanged.'),
         '#type' => 'textfield',
         '#size' => 4,
-        '#default_value' => $this->options['on_hover_options']['polygon_fill_line_weight_on_hover'],
+        '#default_value' => $this->options['on_hover_options']['polygon_line_weight_on_hover'],
     );
     if (!$lib_markercluster) {
       $form['map_cluster_toggle']['#description'] .= '<br/>' .
