@@ -22,42 +22,5 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
       });
     }
   }
-  // Handle mouseover and mouseout events
-  if (map.settings.openBalloonsOnHover || map.settings.polygon_fill_opacity_on_hover) {
-    for (var leaflet_id in lMap._layers) {
-      var layer = lMap._layers[leaflet_id];
-      if (layer._path) {
-        // Store the current fill opacity, so we can revert to it on mouseout
-        layer._fillOpacity = layer._path.getAttribute('fill-opacity');
-        layer._strokeWidth = layer._path.getAttribute('stroke-width');
-      }
-      layer.on('mouseover', function(e) {
-        if (map.settings.openBalloonsOnHover) {
-          this.openPopup();
-        }
-        // setStyle is only available on some features types.
-        if (map.settings.polygon_fill_opacity_on_hover && typeof(this.setStyle) == 'function') {
-          this.setStyle({
-            fillOpacity: map.settings.polygon_fill_opacity_on_hover,
-            weight: map.settings.polygon_line_weight_on_hover,
-         });
-        }
-      });
-    }
-  }
-  if (map.settings.polygon_fill_opacity_on_hover) {
-    for (var leaflet_id in lMap._layers) {
-      var layer = lMap._layers[leaflet_id];
-      // setStyle is only available on some features types.
-      if (typeof(layer.setStyle) == 'function') {
-        layer.on('mouseout', function(e) {
-          this.setStyle({
-            fillOpacity: this._fillOpacity,
-            weight: this._strokeWidth,
-          });
-        })
-      }
-    }
-  }
 
 });

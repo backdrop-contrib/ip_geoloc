@@ -91,6 +91,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['on_hover_options'] = array(
       'contains' => array(
         'open_balloons_on_hover' => array('default' => FALSE),
+        'polygon_add_shadow_on_hover' => array('default' => FALSE),
         'polygon_fill_opacity_on_hover' => array('default' => '0.6'),
         'polygon_line_weight_on_hover'=> array('default' => ''),
       )
@@ -467,6 +468,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#description' => t('Applies to markers, polygons and polylines.'),
         '#type' => 'checkbox',
         '#default_value' => $this->options['on_hover_options']['open_balloons_on_hover'],
+    );
+    $form['on_hover_options']['polygon_add_shadow_on_hover'] = array(
+        '#title' => t('When <em>hovered</em>, add a drop shadow'),
+        '#description' => t('Applies to polygons. Does not apply to markers.'),
+        '#type' => 'checkbox',
+        '#default_value' => $this->options['on_hover_options']['polygon_add_shadow_on_hover'],
     );
     $form['on_hover_options']['polygon_fill_opacity_on_hover'] = array(
         '#title' => t('For polygons: when <em>hovered</em> change <em>fill opacity</em> to'),
@@ -979,6 +986,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $goto_content_on_click  = !empty($this->options['on_click_options']['goto_content_on_click']);
     $open_balloons_on_click = !empty($this->options['on_click_options']['open_balloons_on_click']);
     $open_balloons_on_hover = !empty($this->options['on_hover_options']['open_balloons_on_hover']);
+
+    $polygon_add_shadow_on_hover = $this->options['on_hover_options']['polygon_add_shadow_on_hover'];
     $polygon_fill_opacity_on_hover = $this->options['on_hover_options']['polygon_fill_opacity_on_hover'];
     $polygon_line_weight_on_hover  = $this->options['on_hover_options']['polygon_line_weight_on_hover'];
 
@@ -1408,13 +1417,17 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js', array('weight' => 1));
       drupal_add_css($module_path . '/css/ip_geoloc_leaflet_controls.css');
     }
-    $map['settings']['openBalloonsOnHover'] = $open_balloons_on_hover;
     $map['settings']['gotoContentOnClick'] = $goto_content_on_click;
-    $map['settings']['polygon_fill_opacity_on_hover'] = $polygon_fill_opacity_on_hover;
-    $map['settings']['polygon_line_weight_on_hover'] = $polygon_line_weight_on_hover;
+    $map['settings']['openBalloonsOnHover'] = $open_balloons_on_hover;
+    $map['settings']['polygonAddShadowOnHover'] = $polygon_add_shadow_on_hover;
+    $map['settings']['polygonFillOpacityOnHover'] = $polygon_fill_opacity_on_hover;
+    $map['settings']['polygonLineWeightOnHover'] = $polygon_line_weight_on_hover;
 
-    if ($open_balloons_on_hover || $goto_content_on_click || is_numeric($polygon_fill_opacity_on_hover) || is_numeric($polygon_line_weight_on_hover)) {
+    if ($goto_content_on_click) {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_goto_content_on_click.js', array('scope' => 'footer'));
+    }
+    if ($open_balloons_on_hover || $polygon_add_shadow_on_hover || is_numeric($polygon_fill_opacity_on_hover) || is_numeric($polygon_line_weight_on_hover)) {
+      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_hover.js', array('scope' => 'footer'));
     }
     $settings = array(
         'mapId' => $map_id,
