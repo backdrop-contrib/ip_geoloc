@@ -323,7 +323,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             '#type' => 'textarea',
             '#rows' => 3,
             '#default_value' => $this->options['visitor_marker']['visitor_marker_balloon_text'],
-            '#description' => t("You may use safe HTML and tokens. This special token <em>[visitor-location:surrounding-polygon]</em> returns the title of the node that contains a Geofield polygon that surrounds the visitor's location."),
+            '#description' => t("You may use safe HTML and tokens. The special token <em>[visitor-location:surrounding-polygon]</em> returns the title of the node that contains a Geofield polygon that surrounds the visitor's location."),
         );
         $form['visitor_marker']['token_browser'] = array(
             '#type' => 'markup',

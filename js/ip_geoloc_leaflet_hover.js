@@ -42,8 +42,11 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
               defs = document.getElementsByTagName('defs');
             }
             defs[0].insertAdjacentHTML('beforeend', filterHTML('f' + layer.feature_id));
+
             // Link the path to the filter def.
             layer._path.setAttribute('filter', 'url(#f' + layer.feature_id + ')');
+            // Set id on path for use below
+            layer._path.setAttribute('id', 'p' + layer.feature_id);
           }
         }
         // Store the current fill opacity, so we can revert to it on mouseout.
@@ -57,7 +60,16 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
         }
         if (map.settings.polygonAddShadowOnHover) {
           const blur = document.getElementById("blur-on-f" + this.feature_id)
-          if (blur) blur.beginElement();
+          if (blur) {
+            const gs = document.getElementsByTagName("g")
+            if (gs) {
+               const path = document.getElementById("p" + this.feature_id);
+              // appendChild() is so that the hovered element is on top and
+              // will show shadow on all sides.
+              gs[0].appendChild(path)
+            }
+            blur.beginElement();
+          }
         }
         // setStyle is only available on some feature types.
         if (map.settings.polygonFillOpacityOnHover && typeof(this.setStyle) == 'function') {
@@ -66,7 +78,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
             this.setStyle({ weight: map.settings.polygonLineWeightOnHover })
           }
         }
-      });
+      })
     }
   }
 
