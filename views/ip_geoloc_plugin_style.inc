@@ -706,6 +706,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
           }
         }
         if ($is_location) {
+          if (isset($row->node_title)) {
+            $location->title = $row->node_title;
+          }
           // Remaining row values go into the balloon.
           if ($enable_balloons && !empty($views_plugin_style->rendered_fields[$i])) {
             $location->balloon_text = $views_plugin_style->rendered_fields[$i][$group_field];
@@ -768,6 +771,9 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
             }
           }
           if ($is_location) {
+            if (isset($row->node_title)) {
+              $location->title = $row->node_title;
+            }
             // Remaining row values go into the balloon.
             if ($enable_balloons && !empty($views_plugin_style->rendered_fields[$i])) {
               $location->balloon_text = implode($separator, $views_plugin_style->rendered_fields[$i]);

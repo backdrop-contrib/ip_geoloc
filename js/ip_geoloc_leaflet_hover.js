@@ -56,7 +56,8 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
           this.openPopup();
         }
         if (map.settings.polygonAddShadowOnHover) {
-          document.getElementById("blur-on-f" + this.feature_id).beginElement();
+          const blur = document.getElementById("blur-on-f" + this.feature_id)
+          if (blur) blur.beginElement();
         }
         // setStyle is only available on some feature types.
         if (map.settings.polygonFillOpacityOnHover && typeof(this.setStyle) == 'function') {
@@ -77,7 +78,8 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
       layer.on('mouseout', function(e) {
 
         if (map.settings.polygonAddShadowOnHover) {
-          document.getElementById("blur-off-f" + this.feature_id).beginElement();
+          const blur = document.getElementById("blur-off-f" + this.feature_id);
+          if (blur) blur.beginElement();
         }
         if (typeof(this.setStyle) == 'function') {
           this.setStyle({

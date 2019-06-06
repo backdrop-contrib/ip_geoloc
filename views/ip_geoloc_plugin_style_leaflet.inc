@@ -44,6 +44,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             'visitor_marker_color' => array('default' => ''),
             'visitor_marker_special_char' => array('default' => ''),
             'visitor_marker_special_char_class' => array('default' => ''),
+            'visitor_marker_balloon_text' => array('default' => ''),
             'visitor_marker_accuracy_circle' => array('default' => FALSE),
         ),
     );
@@ -316,6 +317,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             '#size' => 25,
             '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
             '#description' => t('As above.'),
+        );
+        $form['visitor_marker']['visitor_marker_balloon_text'] = array(
+            '#title' => t('Visitor balloon text'),
+            '#type' => 'textarea',
+            '#rows' => 3,
+            '#default_value' => $this->options['visitor_marker']['visitor_marker_balloon_text'],
+            '#description' => t("You may use safe HTML and tokens. This special token <em>[visitor-location:surrounding-polygon]</em> returns the title of the node that contains a Geofield polygon that surrounds the visitor's location."),
+        );
+        $form['visitor_marker']['token_browser'] = array(
+            '#type' => 'markup',
+            '#theme' => 'token_tree_link',
+            '#token_types' => array('visitor-location'),
+            '#prefix' => '<div>',
+            '#suffix' => '</div>'
         );
         $form['visitor_marker']['visitor_marker_accuracy_circle'] = array(
             '#title' => t('Accuracy circle'),
@@ -1057,6 +1072,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!isset($visitor_location['latitude'])) {
       $visitor_location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => ip_address()))->fetchAssoc();
     }
+    if (empty($visitor_location['popup'])) {
+      $visitor_location['popup'] = $this->options['visitor_marker']['visitor_marker_balloon_text'];
+    }
+    if (strpos($visitor_location['popup'], '[visitor-location:surrounding-polygon]')) {
+      drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_pip.js');
+    }
+
     $use_specified_center = !empty($this->options['map_options']['center_lat']) && !empty($this->options['map_options']['center_lon'])
       && empty($visitor_location['is_updated']);
     if ($use_specified_center) {
@@ -1121,6 +1143,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     foreach ($locations as $location) {
 
       $feature = array('type' => empty($location->type) ? 'point' : $location->type);
+      if (isset($location->title)) {
+        $feature['title'] = $location->title;
+      }
 
       // Add Vector Display options for polygons, circles etc.
       // Tokens may be used to generate different colours etc.for individual
@@ -1263,16 +1288,22 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         // See leaflet/README.txt for examples of Leaflet "features"
         $visitor_feature = array(
             'type' => 'point',
+            'isVisitor' => true,
             'lat' => $visitor_location['latitude'],
             'lon' => $visitor_location['longitude'],
             'specialChar' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char']),
             'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
-            'popup' => !empty($visitor_location['popup']) ? $visitor_location['popup'] : t('Your approximate location'),
+            'popup' => t('Your approximate location'),
             'tooltip' => !empty($visitor_location['tooltip']) ? $visitor_location['tooltip'] : t('Your approximate location'),
             'zIndex' => 9999,
             // See leaflet_markercluster.drupal.js.
             'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
         );
+
+        if (!empty($visitor_location['popup']) && module_exists('token')) {
+          $visitor_feature['popup'] = token_replace($visitor_location['popup'], $visitor_location, array());
+        }
+
         if ($visitor_marker_color != '') {
           if (!empty($visitor_feature['specialChar']) || !empty($visitor_feature['specialCharClass'])) {
             $has_special_markers = TRUE;
