@@ -15,6 +15,8 @@ define('LEAFLET_SYNC_MARKER_TO_CONTENT', 1 << 2);
 define('LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP', 1 << 3);
 define('LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT', 1 << 4);
 
+define('TWEENMAX_VERSION', '2.1.3'); // May 2019
+
 class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   /**
@@ -93,6 +95,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'contains' => array(
         'open_balloons_on_hover' => array('default' => FALSE),
         'polygon_add_shadow_on_hover' => array('default' => FALSE),
+        'use_tweenmax_for_shadow_on_hover' => array('default' => TWEENMAX_VERSION),
         'polygon_fill_opacity_on_hover' => array('default' => '0.6'),
         'polygon_line_weight_on_hover'=> array('default' => ''),
       )
@@ -490,6 +493,20 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#type' => 'checkbox',
         '#default_value' => $this->options['on_hover_options']['polygon_add_shadow_on_hover'],
     );
+    $form['on_hover_options']['use_tweenmax_for_shadow_on_hover'] = array(
+        '#title' => t('Version of <em>TweenMax</em> to use for generating aniamated drop shadows on polygons.'),
+        '#description' =>
+           t('Instead of pure HTML, you can opt for the <em>TweenMax</em> library to generate aniamated drop shadows.') . '<br/>' .
+           t('<a href="!url" target="_tween">TweenMax</a> offers higher performance and wider cross-browser support, but does add 0.12MB to your map page download size.', array('!url' => url('https://greensock.com/tweenmax'))) . '<br/>' .
+           t("If entered the minimised version of the TweenMax library will be included automatically from the CDN closest to the visitor.") . '<br/>' .
+           t("The default version is %version. Leave blank to use pure HTML instead.", array('%version' => TWEENMAX_VERSION)),
+        '#type' => 'textfield',
+        '#size' => 6,
+        '#default_value' => $this->options['on_hover_options']['use_tweenmax_for_shadow_on_hover'],
+        '#states' => array(
+           'invisible' => array(':input[name="style_options[on_hover_options][polygon_add_shadow_on_hover]"]' => array('checked' => FALSE)),
+        ),
+    );
     $form['on_hover_options']['polygon_fill_opacity_on_hover'] = array(
         '#title' => t('For polygons: when <em>hovered</em> change <em>fill opacity</em> to'),
         '#description' => t('A fraction between 0 (transparent) and 1 (solid). Leave blank for no change.'),
@@ -508,7 +525,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     $form['on_hover_options']['tip'] = array(
         '#type' => 'markup',
-        '#markup' => t('You can animate the transition of <em>fill opacity</em> and <em>line weight</em> by adding a CCS rule like this to your theme: <br/>  <code>path.leaflet-interactive { transition: all 0.7s linear }</code>')
+        '#markup' => t('TIP: You can animate the transition of <em>fill opacity</em> and <em>line weight</em> by adding a CCS rule like this to your theme: <br/>  <code>path.leaflet-interactive { transition: all 0.7s linear }</code>')
     );
     if (!$lib_markercluster) {
       $form['map_cluster_toggle']['#description'] .= '<br/>' .
@@ -1007,6 +1024,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $open_balloons_on_hover = !empty($this->options['on_hover_options']['open_balloons_on_hover']);
 
     $polygon_add_shadow_on_hover = $this->options['on_hover_options']['polygon_add_shadow_on_hover'];
+    $use_tweenmax_for_shadow_on_hover = $this->options['on_hover_options']['use_tweenmax_for_shadow_on_hover'];
     $polygon_fill_opacity_on_hover = $this->options['on_hover_options']['polygon_fill_opacity_on_hover'];
     $polygon_line_weight_on_hover  = $this->options['on_hover_options']['polygon_line_weight_on_hover'];
 
@@ -1455,6 +1473,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['gotoContentOnClick'] = $goto_content_on_click;
     $map['settings']['openBalloonsOnHover'] = $open_balloons_on_hover;
     $map['settings']['polygonAddShadowOnHover'] = $polygon_add_shadow_on_hover;
+    $map['settings']['useTweenMaxForShadowOnHover'] = $use_tweenmax_for_shadow_on_hover;
     $map['settings']['polygonFillOpacityOnHover'] = $polygon_fill_opacity_on_hover;
     $map['settings']['polygonLineWeightOnHover'] = $polygon_line_weight_on_hover;
 
@@ -1462,6 +1481,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_goto_content_on_click.js', array('scope' => 'footer'));
     }
     if ($open_balloons_on_hover || $polygon_add_shadow_on_hover || is_numeric($polygon_fill_opacity_on_hover) || is_numeric($polygon_line_weight_on_hover)) {
+      if ($polygon_add_shadow_on_hover && $use_tweenmax_for_shadow_on_hover) {
+        $version = $use_tweenmax_for_shadow_on_hover;
+        drupal_add_js("https://cdnjs.cloudflare.com/ajax/libs/gsap/$version/TweenMax.min.js", array('scope' => 'footer'));
+      }
       drupal_add_js($module_path . '/js/ip_geoloc_leaflet_hover.js', array('scope' => 'footer'));
     }
     $settings = array(
