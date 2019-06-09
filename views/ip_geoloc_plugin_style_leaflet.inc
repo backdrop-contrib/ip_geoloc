@@ -485,7 +485,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#default_value' => $this->options['on_hover_options']['open_balloons_on_hover'],
     );
     $form['on_hover_options']['polygon_add_shadow_on_hover'] = array(
-        '#title' => t('When <em>hovered</em>, add a drop shadow'),
+        '#title' => t('When <em>hovered</em>, add an animated drop shadow'),
         '#description' => t('Applies to polygons. Does not apply to markers.'),
         '#type' => 'checkbox',
         '#default_value' => $this->options['on_hover_options']['polygon_add_shadow_on_hover'],
@@ -505,6 +505,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#type' => 'textfield',
         '#size' => 4,
         '#default_value' => $this->options['on_hover_options']['polygon_line_weight_on_hover'],
+    );
+    $form['on_hover_options']['tip'] = array(
+        '#type' => 'markup',
+        '#markup' => t('You can animate the transition of <em>fill opacity</em> and <em>line weight</em> by adding a CCS rule like this to your theme: <br/>  <code>path.leaflet-interactive { transition: all 0.7s linear }</code>')
     );
     if (!$lib_markercluster) {
       $form['map_cluster_toggle']['#description'] .= '<br/>' .

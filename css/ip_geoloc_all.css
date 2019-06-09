@@ -34,6 +34,8 @@ textarea#edit-street-address {
   resize: horizontal; /* horizontal is not supported in many browsers */
 }
 
+/* path.leaflet-interactive { transition: all 0.5s linear } */
+
 /* Throbber from ctools module -- uncomment if you wish to use it over core's.
 #set-location-form .ajax-progress.ajax-progress-throbber {
   background: white;

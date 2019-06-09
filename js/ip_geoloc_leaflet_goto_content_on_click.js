@@ -3,7 +3,7 @@ jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
   // marker is the lFeature just added to the map, it could be a polygon too.
   // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
   // The same code is used for cross-highlighting. See ip_geoloc_leaflet_sync_content.js
-  if (feature.feature_id) {
+  if (feature.feature_id && !marker.feature_id) {
     marker.feature_id = feature.feature_id;
   }
 });
