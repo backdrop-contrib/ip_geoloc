@@ -508,12 +508,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         ),
     );
     $form['on_hover_options']['use_tweenmax_for_shadow_on_hover'] = array(
-        '#title' => t('Version of <em>TweenMax</em> to use for generating aniamated drop shadows on polygons.'),
+        '#title' => t('Version of <em>TweenMax</em> to use for generating animated hover effects.'),
         '#description' =>
-           t('Instead of pure HTML, you can opt for the <em>TweenMax</em> library to generate anamated drop shadows.') . '<br/>' .
+           t('You may opt for the <em>TweenMax</em> library to generate anamated drop shadows.') . '<br/>' .
            t('<a href="!url" target="_tween">TweenMax</a> offers higher performance and wider cross-browser support, but does add 0.12MB to your map page download size.', array('!url' => url('https://greensock.com/tweenmax'))) . '<br/>' .
            t("If entered the minimised version of the TweenMax library will be included automatically from the CDN closest to the visitor.") . '<br/>' .
-           t("The default version is %version. Leave blank to use pure HTML instead.", array('%version' => TWEENMAX_VERSION)),
+           t("The default version is %version. Leave blank to use pure HTML for animations instead.", array('%version' => TWEENMAX_VERSION)),
         '#type' => 'textfield',
         '#size' => 6,
         '#default_value' => $this->options['on_hover_options']['use_tweenmax_for_shadow_on_hover'],

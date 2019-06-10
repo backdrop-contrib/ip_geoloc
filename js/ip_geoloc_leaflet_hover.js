@@ -28,10 +28,13 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   // Return the <filter> HTML for the shadow effect.
   // The default is a simple animated 'blur'.
   // The 'surge' effect was designed by Matt Winans for surgemovement.com
-  // Note that the off-transition is half the duration of the on-transition.
-  // You may specify up to 3 animation effects, with the parent element being
-  // call effect1-ID, and the associated animations called effect1-onID and
-  // effect1-offID, where ID is a unique (polygon) ID.
+  // Note that the off-transition is set to half the duration of the on-
+  // transition.
+  // You may specify up to 4 animation effects, with the parent element, e.g.
+  // the <feGaussianBlur>, called effect#-ID, and the associated animations
+  // called effect#-onID and effect#-offID, where # is a digit 1..4 and ID is
+  // the unique ID used in both <filter id="fID"> and <path id="pID">.
+  // The ID is in fact the Drupal node ID.
   function filterHTML(id, duration, effect) {
     if (effect == 'surge') {
       let html =
@@ -47,7 +50,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
       ` </feGaussianBlur>
 
         <feComponentTransfer result="offsetmorph">
-          <feFuncA type="table" tableValues="0 .05 1 1 1 1 1 1 .5 0 0 0 0 0 0 0 0 0.01 0"/>
+          <feFuncA type="table" tableValues="0 .05 1 1 1 1 1 1 .5 0 0 0 0 0 0 0 0 .01 0"/>
         </feComponentTransfer>
         <feFlood id="effect2-${id}" flood-color="black" flood-opacity="0">`
       if (!useTween) {
@@ -97,7 +100,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   function prepareLayer(layer) {
     // The check for ._path excludes markers (and circles ?)
     if (!layer._path) return
-    // Store the current fill opacity, so we can revert to it on mouseout.
+    // Store the current fill opacity and stroke so we can revert on mouseout.
     layer._fillOpacity = layer._path.getAttribute('fill-opacity')
     layer._strokeWidth = layer._path.getAttribute('stroke-width')
 
@@ -124,7 +127,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
         // Attach TweenMax animation, as opposed to using HTML5 <animate> tag.
         if (map.settings.shadowOnHoverEffect == 'surge') {
           layer.tweenMaxAnimations = [
-            TweenMax.to('#effect1-' + id, duration, { attr: { 'stdDeviation' : 4.00 }, paused: true }),
+            //TweenMax.to('#effect1-' + id, duration, { attr: { 'stdDeviation' : 4.00 }, paused: true }),
             TweenMax.to('#effect2-' + id, duration, { attr: { 'flood-opacity': 0.35 }, paused: true }),
             TweenMax.to('#effect3-' + id, duration, { attr: { 'stdDeviation' : 5.00 }, paused: true })
           ]
@@ -135,6 +138,15 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
       }
       // Link the path to the filter def.
       layer._path.setAttribute('filter', `url(#f${id})`)
+    }
+  }
+
+  function resetPolygonAttributes(layer) {
+    if (layer && typeof(layer.setStyle) == 'function') {
+      layer.setStyle({
+        fillOpacity: layer._fillOpacity,
+        weight     : layer._strokeWidth,
+      })
     }
   }
 
@@ -152,31 +164,22 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
       return;
     }
 
-    // Pure HTML: allow up to 4 animationa.
+    // Pure HTML: allow up to 4 animations.
     for (let i = 1; i <= 4; i++) {
       const effect = document.getElementById(`effect${i}-` + (on ? 'on' : 'off') + layer.feature_id);
       if (effect) effect.beginElement();
     }
   }
 
-  function handlePolygonMouseOver(layer, toElement) {
+  function handlePolygonMouseOver(layer) {
 
-    if (!toElement.id) {
-      return
-    }
-    // Don't do anything when returning to ourselves while still active.
-    if (activeFeature && (toElement.id == 'p' + activeFeature.feature_id)) {
-      return
-    }
+    if (layer == activeFeature) return;
 
-    if (map.settings.polygonFillOpacityOnHover && typeof(layer.setStyle) == 'function') {
-      if (activeFeature && (activeFeature != layer)) {
-        // Reset style on the previously active polygon, if still lingering.
-        activeFeature.setStyle({
-          fillOpacity: activeFeature._fillOpacity,
-          weight     : activeFeature._strokeWidth,
-        })
-      }
+    if (map.settings.polygonFillOpacityOnHover) {
+      // Reset style on the previously active polygon, if still lingering,
+      // e.g. when we've hovered in from a balloon that overlaps 2 polygons.
+      resetPolygonAttributes(activeFeature)
+
       // Now set the highlight style for the hovered polygon.
       layer.setStyle({ fillOpacity: map.settings.polygonFillOpacityOnHover })
       if (map.settings.polygonLineWeightOnHover) {
@@ -191,33 +194,26 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
       // appendChild() so that the hovered element is on top and will show
       // blur/shadow effect on all sides at all times.
       const gs = document.getElementsByTagName("g")
-      if (gs) {
-        const path = document.getElementById("p" + layer.feature_id)
-        gs[0].appendChild(path)
-      }
-
-      // Apply the effect animation.
+      gs[0].appendChild(document.getElementById("p" + layer.feature_id))
+      // Apply the effects animation.
       effects(true, layer)
     }
     activeFeature = layer
   }
 
-  function handlePolygonMouseOut(layer, toElement) {
-    // Only respond when a hover-out occurs on a feature we've given an ID.
-    // toElement==null when mousing out from border polygon and out of map.
-    if (!toElement || !toElement.id || !activeFeature) {
-      return
-    }
-    // Don't do anything when returning to ourselves while still active.
-    if (toElement.id == 'p' + activeFeature.feature_id) {
-      return
-    }
+  function handlePolygonMouseOut(layer, related) {
+    // If there is no activeFeature, we have nothing to deactivate.
+    if (!activeFeature) return
+
+    // A mouse-out with an empty "related.id" usually indicates a mouse-over
+    // on a marker surrounded by the polygon the mouse is in. Or an open popup
+    // overlapping with the polygon. We ignore such spurious mouse-outs.
+    // Note that the "map" itself DOES have a related.id that starts with
+    // "ip-geoloc-map-..."
+    if (!related || !related.id) return
 
     if (map.settings.polygonFillOpacityOnHover) {
-      activeFeature.setStyle({
-        fillOpacity: activeFeature._fillOpacity,
-        weight     : activeFeature._strokeWidth,
-      })
+      resetPolygonAttributes(activeFeature)
     }
     if (map.settings.polygonAddShadowOnHover) {
       effects(false, activeFeature)
@@ -228,41 +224,35 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   // Loop through the map layers, initialise each and assign hover handlers.
   for (let leaflet_id in lMap._layers) {
     let layer = lMap._layers[leaflet_id]
+    if (!layer._path) continue;
 
     if (map.settings.polygonFillOpacityOnHover || map.settings.polygonAddShadowOnHover) {
-      // Set ids on layers with _path (polygons) and assign animation.
+      // Set ids on polygons and assign animation.
       prepareLayer(layer);
 
       // Handle mouseouts
-      layer.on('mouseout', function(e) {
-        handlePolygonMouseOut(this, e.originalEvent.toElement)
+      layer.on('mouseout', function(event) {
+        handlePolygonMouseOut(this, event.originalEvent.relatedTarget)
       });
     }
     // Handle mouseovers
-    layer.on('mouseover', function(e) {
+    layer.on('mouseover', function(event) {
       if (map.settings.openBalloonsOnHover) {
         this.openPopup()
       }
       if (map.settings.polygonFillOpacityOnHover || map.settings.polygonAddShadowOnHover) {
-        handlePolygonMouseOver(this, e.originalEvent.toElement)
+        handlePolygonMouseOver(this)
       }
     })
   }
 
   // Safety net: when pointer moves out from map, terminate active hightlights.
-  lMap.on('mouseout', function(e) {
-    // Take down popups here?
-
-    if (!activeFeature) return;
-
+  lMap.on('mouseout', function(event) {
     // Remove fill opacity and blur/shadow, if still lingering.
     if (map.settings.polygonFillOpacityOnHover) {
-      activeFeature.setStyle({
-        fillOpacity: activeFeature._fillOpacity,
-        weight     : activeFeature._strokeWidth,
-      })
+      resetPolygonAttributes(activeFeature)
     }
-    if (map.settings.polygonAddShadowOnHover && !activeFeature.tweenMaxAnimations) {
+    if (map.settings.polygonAddShadowOnHover) {
       effects(false, activeFeature)
     }
     activeFeature = null
