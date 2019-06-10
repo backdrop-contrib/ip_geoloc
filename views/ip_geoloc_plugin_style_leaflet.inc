@@ -95,6 +95,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       'contains' => array(
         'open_balloons_on_hover' => array('default' => FALSE),
         'polygon_add_shadow_on_hover' => array('default' => FALSE),
+        'shadow_on_hover_effect' => array('default' => 'animated blur'),
         'use_tweenmax_for_shadow_on_hover' => array('default' => TWEENMAX_VERSION),
         'polygon_fill_opacity_on_hover' => array('default' => '0.6'),
         'polygon_line_weight_on_hover'=> array('default' => ''),
@@ -488,15 +489,28 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#default_value' => $this->options['on_hover_options']['open_balloons_on_hover'],
     );
     $form['on_hover_options']['polygon_add_shadow_on_hover'] = array(
-        '#title' => t('When <em>hovered</em>, add an animated drop shadow'),
+        '#title' => t('When <em>hovered</em>, add an effect to highlight the hovered element'),
         '#description' => t('Applies to polygons. Does not apply to markers.'),
         '#type' => 'checkbox',
         '#default_value' => $this->options['on_hover_options']['polygon_add_shadow_on_hover'],
     );
+    $form['on_hover_options']['shadow_on_hover_effect'] = array(
+        '#title' => t('Choose hover effect'),
+        '#description' => t('The SURGE effect was designed by Matt Winans for <a href="!url">the SURGE Surgemovent</a>.', array('!url' => url('http://surgemovement.com/map'))),
+        '#type' => 'radios',
+        '#options' => array(
+          'animated blur' => t('Blur/shadow, animated'),
+          'surge' => t('SURGE effect, animated'),
+        ),
+        '#default_value' => $this->options['on_hover_options']['shadow_on_hover_effect'],
+        '#states' => array(
+            'invisible' => array(':input[name="style_options[on_hover_options][polygon_add_shadow_on_hover]"]' => array('checked' => FALSE)),
+        ),
+    );
     $form['on_hover_options']['use_tweenmax_for_shadow_on_hover'] = array(
         '#title' => t('Version of <em>TweenMax</em> to use for generating aniamated drop shadows on polygons.'),
         '#description' =>
-           t('Instead of pure HTML, you can opt for the <em>TweenMax</em> library to generate aniamated drop shadows.') . '<br/>' .
+           t('Instead of pure HTML, you can opt for the <em>TweenMax</em> library to generate anamated drop shadows.') . '<br/>' .
            t('<a href="!url" target="_tween">TweenMax</a> offers higher performance and wider cross-browser support, but does add 0.12MB to your map page download size.', array('!url' => url('https://greensock.com/tweenmax'))) . '<br/>' .
            t("If entered the minimised version of the TweenMax library will be included automatically from the CDN closest to the visitor.") . '<br/>' .
            t("The default version is %version. Leave blank to use pure HTML instead.", array('%version' => TWEENMAX_VERSION)),
@@ -518,7 +532,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         '#title' => t('For polygons: when <em>hovered</em> change <em>line weight</em> to'),
         '#description' =>
            t('Width in pixels, typically 1..10. Use 0 to remove outline altogether. Leave blank for no change.') . '<br/>' .
-           t('Line color, line opacity and line dash pattern remain unchanged.'),
+           t('Line color, line opacity and line dash pattern remain unchanged from what you specified in the section <em>Options for Polygons, Polylines and Circles</em>, below.'),
         '#type' => 'textfield',
         '#size' => 4,
         '#default_value' => $this->options['on_hover_options']['polygon_line_weight_on_hover'],
@@ -1024,9 +1038,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $open_balloons_on_hover = !empty($this->options['on_hover_options']['open_balloons_on_hover']);
 
     $polygon_add_shadow_on_hover = $this->options['on_hover_options']['polygon_add_shadow_on_hover'];
-    $use_tweenmax_for_shadow_on_hover = $this->options['on_hover_options']['use_tweenmax_for_shadow_on_hover'];
-    $polygon_fill_opacity_on_hover = $this->options['on_hover_options']['polygon_fill_opacity_on_hover'];
-    $polygon_line_weight_on_hover  = $this->options['on_hover_options']['polygon_line_weight_on_hover'];
+    $shadow_on_hover_effect = $this->options['on_hover_options']['shadow_on_hover_effect'];
+    $use_tweenmax_for_shadow_on_hover = trim($this->options['on_hover_options']['use_tweenmax_for_shadow_on_hover']);
+    $polygon_fill_opacity_on_hover = trim($this->options['on_hover_options']['polygon_fill_opacity_on_hover']);
+    $polygon_line_weight_on_hover  = trim($this->options['on_hover_options']['polygon_line_weight_on_hover']);
 
     $enable_balloons = $open_balloons_on_click || $open_balloons_on_hover;
     $locations = ip_geoloc_plugin_style_extract_locations($this, $enable_balloons);
@@ -1473,6 +1488,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['gotoContentOnClick'] = $goto_content_on_click;
     $map['settings']['openBalloonsOnHover'] = $open_balloons_on_hover;
     $map['settings']['polygonAddShadowOnHover'] = $polygon_add_shadow_on_hover;
+    $map['settings']['shadowOnHoverEffect'] = $shadow_on_hover_effect;
     $map['settings']['useTweenMaxForShadowOnHover'] = $use_tweenmax_for_shadow_on_hover;
     $map['settings']['polygonFillOpacityOnHover'] = $polygon_fill_opacity_on_hover;
     $map['settings']['polygonLineWeightOnHover'] = $polygon_line_weight_on_hover;
