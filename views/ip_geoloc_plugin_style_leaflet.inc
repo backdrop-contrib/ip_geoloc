@@ -496,7 +496,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     $form['on_hover_options']['shadow_on_hover_effect'] = array(
         '#title' => t('Choose hover effect'),
-        '#description' => t('The SURGE effect was designed by Matt Winans for <a href="!url">the SURGE Surgemovent</a>.', array('!url' => url('http://surgemovement.com/map'))),
+        '#description' => t('The SURGE effect was designed by Matt Winans for <a href="!url">the SURGE movement</a>.', array('!url' => url('http://surgemovement.com/map'))),
         '#type' => 'radios',
         '#options' => array(
           'animated blur' => t('Blur/shadow, animated'),
