@@ -1021,3 +1021,39 @@ function ip_geoloc_build_google_api_url() {
   }
   return '';
 }
+
+function _ip_geoloc_custom_formatted_address($location, $need_street = FALSE, $need_locality = FALSE, $need_country = FALSE) {
+  if (!$need_street && !$need_locality && !$need_country) {
+    return $location['formatted_address'];
+  }
+  $address = '';
+  if ($need_street) {
+    if (!empty($location['street_number'])) {
+      $address = $location['street_number'];
+    }
+    if (!empty($location['route'])) {
+      $address .= empty($address) ? $location['route'] : (' ' . $location['route']);
+    }
+  }
+  if ($need_locality) {
+    if (!empty($address) && !empty($location['locality']) && !empty($location['administrative_area_level_1'])) {
+      $address .= ', ';
+    }
+    if (!empty($location['locality'])) {
+      $address .= $location['locality'];
+    }
+    if (!empty($location['administrative_area_level_1'])) {
+      $address .= (empty($location['locality']) ? '' : ', ') . $location['administrative_area_level_1'];
+    }
+    if (!empty($location['postal_code'])) {
+      $address .= ' ' . $location['postal_code'];
+    }
+  }
+  if ($need_country) {
+    if (!empty($address)) {
+      $address .= ', ';
+    }
+    $address .= $location['country'];
+  }
+  return $address;
+}

@@ -18,16 +18,16 @@ jQuery(document).bind('leaflet.feature', function(event, lFeature, feature) {
     lFeature.title = feature.title;
   }
   if (feature.type == 'point' && feature.isVisitor) {
-    visitorMarker = lFeature;
+    visitorMarker = lFeature
   }
 })
 
 jQuery(document).bind('leaflet.map', function(event, map, lMap) {
 
     if (!visitorMarker || !visitorMarker._popup) {
-      return;
+      return
     }
-    let layer;
+    let layer
     for (let leaflet_id in lMap._layers) {
       layer = lMap._layers[leaflet_id];
       if (layer._latlngs) {
@@ -35,12 +35,12 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
           // Apply PiP on visitor being inside polygons associated with layer.
           if (point_in_polygon(visitorMarker._latlng, layer._latlngs[i])) {
             visitorMarker._popup._content = visitorMarker._popup._content.replace('[visitor-location:surrounding-polygon]', layer.title)
-            visitorMarker.openPopup();
-            return;
+            visitorMarker.openPopup()
+            return
           }
         }
       }
     }
-    visitorMarker._popup._content = 'You are not within any of the regions shown on this map.';
-    visitorMarker.openPopup();
+    visitorMarker._popup._content = "You are not within any of the<br/>regions shown on this map.";
+    visitorMarker.openPopup()
 })

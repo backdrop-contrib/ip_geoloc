@@ -45,6 +45,13 @@ function ip_geoloc_tokens($type, $tokens, array $data = array(), array $options 
         $replacements[$original] = $is_sanitize ? filter_xss_admin($location[$key]) : $location[$key];
       }
     }
+    if (!empty($replacements['[visitor-location:formatted_address]'])) {
+      $need_street = variable_get('ip_geoloc_return_address_street');
+      $need_locality = variable_get('ip_geoloc_return_address_locality');
+      $need_country = variable_get('ip_geoloc_return_address_country');
+      $address = _ip_geoloc_custom_formatted_address($location, $need_street, $need_locality, $need_country);
+      $replacements['[visitor-location:formatted_address]'] = $is_sanitize ? filter_xss_admin($address) : $address;
+    }
   }
   return $replacements;
 }

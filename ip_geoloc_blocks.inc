@@ -572,39 +572,7 @@ function _ip_geoloc_set_my_location_add_address(&$form, $location) {
     $need_street = variable_get('ip_geoloc_return_address_street');
     $need_locality = variable_get('ip_geoloc_return_address_locality');
     $need_country = variable_get('ip_geoloc_return_address_country');
-    if (!$need_street && !$need_locality && !$need_country) {
-      $address = $location['formatted_address'];
-    }
-    else {
-      if ($need_street) {
-        if (!empty($location['street_number'])) {
-          $address = $location['street_number'];
-        }
-        if (!empty($location['route'])) {
-          $address .= empty($address) ? $location['route'] : (' ' . $location['route']);
-        }
-      }
-      if ($need_locality) {
-        if (!empty($address) && !empty($location['locality']) && !empty($location['administrative_area_level_1'])) {
-          $address .= ', ';
-        }
-        if (!empty($location['locality'])) {
-          $address .= $location['locality'];
-        }
-        if (!empty($location['administrative_area_level_1'])) {
-          $address .= (empty($location['locality']) ? '' : ', ') . $location['administrative_area_level_1'];
-        }
-        if (!empty($location['postal_code'])) {
-          $address .= ' ' . $location['postal_code'];
-        }
-      }
-      if ($need_country) {
-        if (!empty($address)) {
-          $address .= ', ';
-        }
-        $address .= $location['country'];
-      }
-    }
+    $address = _ip_geoloc_custom_formatted_address($location, $need_street, $need_locality, $need_country);
   }
   $form['street_address'] = array(
     '#type' => $textarea ? 'textarea' : 'textfield',
@@ -918,6 +886,8 @@ function ip_geoloc_set_location_from_address($partial_address_or_landmark) {
           }
         }
       }
+      ip_geoloc_debug(t('IPGV&M: received from Geocoder (via Google) !location', array(
+        '!location' => ip_geoloc_pretty_print($location))));
     }
   }
   $location['fixed_address'] = 1;

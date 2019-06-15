@@ -37,51 +37,44 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   // The ID is in fact the Drupal node ID.
   function filterHTML(id, duration, effect) {
     if (effect == 'surge') {
+      //    Filter primitive "feOffset" by itself was not necessary to obtain the alpha channel so has been taken out.
+      // 1) Filter primitive "feGaussianBlur" takes the alpha channel of the source graphic as its input and applies an animated standard deviation blur.
+      // 2) Filter primitive "feComponentTransfer" takes the previous blur as its input and uses the feFuncA filter primitive to remap its alpha pixels according to the specified table values.
+      //    This is output into a new buffer called "offsetmorph."
+      // 3) Filter primitive "feFlood" fills the entire filter subregion with the color and opacity defined. This results in a square color overlay.
+      // 4) Filter primitive "feComposite" masks the last two primitives in image space using the "in" Porter-Duff compositing operation. This is output into a new buffer called "surgeShadow."
+      //    Three additional Filter primitives: feGaussianBlur, feFlood, & feComposite have been taken out as they together created an additional and unnecessary second blur effect.
+      // 5) Filter primitive "feMerge" applies the surgeShadow filter result and the original source graphic in front.
       let html =
-      `<filter id="f${id}" width="200%" height="200%"  x="-50%" y="-50%" filterRes="1000">
-        <feOffset in="SourceAlpha" result="offOut" dx="0" dy="0"/>
-        <feGaussianBlur id="effect1-${id}" in="offOut" result="blurOut" stdDeviation="0">`
-      if (!useTween) {
+        `<filter id="f${id}" width="200%" height="200%" x="-50%" y="-50%">
+          <feGaussianBlur id="effect1-${id}" in="SourceAlpha" result="blurOut" stdDeviation="0">`
+        if (!useTween) {
+          html +=
+            `  <animate id="effect1-on${id}"  attributeName="stdDeviation" to="4" begin="indefinite" dur="${duration}s" fill="freeze"/>
+               <animate id="effect1-off${id}" attributeName="stdDeviation" to="0" begin="indefinite" dur="${duration/2}s" fill="freeze"/>`
+        }
         html +=
-          `  <animate id="effect1-on${id}"  attributeName="stdDeviation" to="4" begin="indefinite" dur="${duration}s" fill="freeze"/>
-             <animate id="effect1-off${id}" attributeName="stdDeviation" to="0" begin="indefinite" dur="${duration/2}s" fill="freeze"/>`
-      }
-      html +=
-      ` </feGaussianBlur>
-
-        <feComponentTransfer result="offsetmorph">
-          <feFuncA type="table" tableValues="0 .05 1 1 1 1 1 1 .5 0 0 0 0 0 0 0 0 .01 0"/>
-        </feComponentTransfer>
-        <feFlood id="effect2-${id}" flood-color="black" flood-opacity="0">`
-      if (!useTween) {
+        ` </feGaussianBlur>
+          <feComponentTransfer in="blurOut" result="offsetmorph">
+            <feFuncA type="table" tableValues="0 .05 1 1 1 1 1 1 .5 0 0 0 0 0 0 0 0 .01 0"/>
+          </feComponentTransfer>
+          <feFlood id="effect2-${id}" flood-color="black" flood-opacity="0">`
+        if (!useTween) {
+          html +=
+            `  <animate id="effect2-on${id}"  attributeName="flood-opacity" to="0.45" begin="indefinite" dur="${duration}s" fill="freeze"/>
+               <animate id="effect2-off${id}" attributeName="flood-opacity" to="0.00" begin="indefinite" dur="${duration/2}s" fill="freeze"/>`
+        }
         html +=
-          `  <animate id="effect2-on${id}"  attributeName="flood-opacity" to="0.35" begin="indefinite" dur="${duration}s" fill="freeze"/>
-             <animate id="effect2-off${id}" attributeName="flood-opacity" to="0.00" begin="indefinite" dur="${duration/2}s" fill="freeze"/>`
-      }
-      html +=
-       ` </feFlood>
-
-        <feComposite operator="in" in2="offsetmorph" result="stroke"/>
-        <feGaussianBlur id="effect3-{id}" stdDeviation="0" result="offsetblur">`
-      if (!useTween) {
-        html +=
-          `  <animate id="effect3-on${id}"  attributeName="stdDeviation" to="5" begin="indefinite" dur="${duration}s" fill="freeze"/>
-             <animate id="effect3-off${id}" attributeName="stdDeviation" to="0" begin="indefinite" dur="${duration/2}s" fill="freeze"/>`
-      }
-      html +=
-      ` </feGaussianBlur>
-
-        <feFlood flood-color="black"/>
-        <feComposite operator="in" in2="offsetblur" result="blur"/>
-        <feMerge>
-          <feMergeNode in="blur"></feMergeNode>
-          <feMergeNode in="stroke"></feMergeNode>
-          <feMergeNode in="SourceGraphic"></feMergeNode>
-        </feMerge>
-      </filter>`;
-      return html;
+         ` </feFlood>
+          <feComposite operator="in" in2="offsetmorph" result="surgeShadow"/>
+          <feMerge>
+            <feMergeNode in="surgeShadow"></feMergeNode>
+            <feMergeNode in="SourceGraphic"></feMergeNode>
+          </feMerge>
+        </filter>`;
+        return html;
     }
-    // Default to simple Gaussian blur shaddow.
+    // Default to simple Gaussian blur shadow.
     let html =
       `<filter id="f${id}">
          <feOffset in="SourceAlpha" result="offOut" dx="0" dy="0"/>
@@ -127,9 +120,8 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
         // Attach TweenMax animation, as opposed to using HTML5 <animate> tag.
         if (map.settings.shadowOnHoverEffect == 'surge') {
           layer.tweenMaxAnimations = [
-            //TweenMax.to('#effect1-' + id, duration, { attr: { 'stdDeviation' : 4.00 }, paused: true }),
-            TweenMax.to('#effect2-' + id, duration, { attr: { 'flood-opacity': 0.35 }, paused: true }),
-            TweenMax.to('#effect3-' + id, duration, { attr: { 'stdDeviation' : 5.00 }, paused: true })
+            TweenMax.to('#effect1-' + id, duration, { attr: { 'stdDeviation' : 4.00 }, paused: true }),
+            TweenMax.to('#effect2-' + id, duration, { attr: { 'flood-opacity': 0.45 }, paused: true })
           ]
         }
         else {
