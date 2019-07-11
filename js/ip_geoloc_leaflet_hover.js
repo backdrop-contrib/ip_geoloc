@@ -61,8 +61,8 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
           <feFlood id="effect2-${id}" flood-color="black" flood-opacity="0">`
         if (!useTween) {
           html +=
-            `  <animate id="effect2-on${id}"  attributeName="flood-opacity" to="0.45" begin="indefinite" dur="${duration}s" fill="freeze"/>
-               <animate id="effect2-off${id}" attributeName="flood-opacity" to="0.00" begin="indefinite" dur="${duration/2}s" fill="freeze"/>`
+            `  <animate id="effect2-on${id}"  attributeName="flood-opacity" to="0.4" begin="indefinite" dur="${duration}s" fill="freeze"/>
+               <animate id="effect2-off${id}" attributeName="flood-opacity" to="0.0" begin="indefinite" dur="${duration/2}s" fill="freeze"/>`
         }
         html +=
          ` </feFlood>
@@ -113,15 +113,15 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
         svgs[0].insertAdjacentHTML('afterbegin', '<defs></defs>')
         defs = document.getElementsByTagName('defs')
       }
-      const duration = 0.45
+      const duration = 0.3
       defs[0].insertAdjacentHTML('beforeend', filterHTML(id, duration, map.settings.shadowOnHoverEffect))
 
       if (useTween) {
         // Attach TweenMax animation, as opposed to using HTML5 <animate> tag.
         if (map.settings.shadowOnHoverEffect == 'surge') {
           layer.tweenMaxAnimations = [
-            TweenMax.to('#effect1-' + id, duration, { attr: { 'stdDeviation' : 4.00 }, paused: true }),
-            TweenMax.to('#effect2-' + id, duration, { attr: { 'flood-opacity': 0.45 }, paused: true })
+            TweenMax.to('#effect1-' + id, duration, { attr: { 'stdDeviation' : 4.0 }, paused: true }),
+            TweenMax.to('#effect2-' + id, duration, { attr: { 'flood-opacity': 0.4 }, paused: true })
           ]
         }
         else {
