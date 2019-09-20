@@ -4,8 +4,6 @@ backdrop = 1.x
 type = module
 configure = admin/config/system/ip_geoloc
 
-; List files containing classes
-dependencies[] = libraries
 ; The following aren't dependencies but are highly recommended to realise a
 ; rich feature set:
 ;   Geocoder
