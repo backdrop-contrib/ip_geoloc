@@ -2,11 +2,11 @@
 
 (function ($) {
 
-  Drupal.leaflet._create_point_orig = Drupal.leaflet.create_point;
+  Backdrop.leaflet._create_point_orig = Backdrop.leaflet.create_point;
 
-  Drupal.leaflet.create_point = function(marker, lMap) {
+  Backdrop.leaflet.create_point = function(marker, lMap) {
 
-    // Follow create_point() in leaflet.drupal.js
+    // Follow create_point() in leaflet.backdrop.js
     var latLng = new L.LatLng(marker.lat, marker.lon);
     latLng = latLng.wrap();
     lMap.bounds.push(latLng);
@@ -54,7 +54,7 @@
       ? new L.Icon.Tagged(marker.tag, marker.specialChar, {iconUrl: marker.icon.iconUrl, className: marker.cssClass, specialCharClass: marker.specialCharClass})
       : new L.Icon({iconUrl: marker.icon.iconUrl});
 
-    // All of this is like create_point() in leaflet.drupal.js, but with tooltip.
+    // All of this is like create_point() in leaflet.backdrop.js, but with tooltip.
     if (marker.icon.iconSize) {
       icon.options.iconSize = new L.Point(parseInt(marker.icon.iconSize.x), parseInt(marker.icon.iconSize.y));
     }

@@ -26,7 +26,7 @@ function ip_geoloc_openlayers_map_preprocess_alter(&$map) {
   // ip_geoloc_openlayers_layers().
   $map['layers'][IP_GEOLOC_VISITOR_MARKER_LAYER] = IP_GEOLOC_VISITOR_MARKER_LAYER;
 
-  $num_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+  $num_marker_layers = config_get('ip_geoloc.settings', 'ip_geoloc_num_location_marker_layers');
   for ($layer = 1; $layer <= $num_marker_layers; $layer++) {
     $map['layers'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
     $map['layer_activated'][IP_GEOLOC_MARKER_LAYER . $layer] = IP_GEOLOC_MARKER_LAYER . $layer;
@@ -74,7 +74,7 @@ function ip_geoloc_openlayers_layers() {
   }
   $layers[$visitor_layer->name] = $visitor_layer;
 
-  $num_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+  $num_marker_layers = config_get('ip_geoloc.settings', 'ip_geoloc_num_location_marker_layers');
   for ($layer = 1; $layer <= $num_marker_layers; $layer++) {
     $marker_layer = new stdClass();
     $marker_layer->api_version = 1;
@@ -109,7 +109,7 @@ function ip_geoloc_openlayers_layer_types() {
       'title' => t('Raw'),
       'description' => t('Layer type for raw data input'),
       'type' => 'layer',
-      'path' => drupal_get_path('module', 'openlayers') . '/plugins/layer_types',
+      'path' => backdrop_get_path('module', 'openlayers') . '/plugins/layer_types',
       'file' => 'openlayers_layer_type_raw.inc',
       'layer_type' => array(
         'file' => 'openlayers_layer_type_raw.inc',
@@ -125,5 +125,4 @@ function ip_geoloc_openlayers_layer_types() {
  *
  * Called at the end of openlayers_build_map().
  */
-function ip_geoloc_openlayers_map_alter(&$map) {
-}
+function ip_geoloc_openlayers_map_alter(&$map) { }

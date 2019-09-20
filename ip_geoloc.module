@@ -67,7 +67,7 @@ function ip_geoloc_help($path, $arg) {
   if ($path == 'admin/help#ip_geoloc') {
     return t('Detailed information is on the <a href="@ip_geoloc">IP Geolocation project page</a> and in the <a href="@README">README</a> file', array(
       '@ip_geoloc' => url('http://drupal.org/project/ip_geoloc'),
-      '@README' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'),
+      '@README' => url(backdrop_get_path('module', 'ip_geoloc') . '/README.txt'),
     ));
   }
 }
@@ -150,8 +150,8 @@ function ip_geoloc_library_alter(&$libraries, $module) {
   if (isset($libraries['leaflet_markercluster']['js'][0]['data'])) {
     $js = $libraries['leaflet_markercluster']['js'][0]['data'];
     $last_slash = strrpos($js, '/');
-    $js_new = drupal_substr($js, 0, $last_slash + 1) . IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS;
-    //drupal_set_message(t('Current Leaflet MarkerCluster plugin: %js.<br/>Looking for %js_new', array('%js' => $js, '%js_new' => $js_new)));
+    $js_new = backdrop_substr($js, 0, $last_slash + 1) . IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS;
+    //backdrop_set_message(t('Current Leaflet MarkerCluster plugin: %js.<br/>Looking for %js_new', array('%js' => $js, '%js_new' => $js_new)));
     if (file_exists($js_new)) {
       $libraries['leaflet_markercluster']['js'][0]['data'] = $js_new;
     }
@@ -169,7 +169,7 @@ function ip_geoloc_menu() {
   $items['admin/config/system/ip_geoloc'] = array(
     'title' => 'IP Geolocation Views & Maps',
     'description' => 'Configure map markers and how geolocation information is updated.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('ip_geoloc_admin_configure'),
     'access arguments' => array('administer site configuration'),
     'file' => 'ip_geoloc.admin.inc',
@@ -190,6 +190,16 @@ function ip_geoloc_menu() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function ip_geoloc_config_info() {
+  $prefixes['ip_geoloc.settings'] = array(
+    'label' => t('Module name settings'),
+    'group' => t('Configuration'),
+  );
+}
+
+/**
  * Autocompletes the partial region received.
  *
  * @param string $partial_region
@@ -197,7 +207,7 @@ function ip_geoloc_menu() {
 function ip_geoloc_region_autocomplete($partial_region = '') {
   $matches = array();
   if (strlen($partial_region) >= 2) {
-    $geo_vocabulary_id = variable_get('ip_geoloc_geo_vocabulary_id', 0);
+    $geo_vocabulary_id = config_get('ip_geoloc.settings', 'ip_geoloc_geo_vocabulary_id');
     foreach (taxonomy_get_tree($geo_vocabulary_id) as $term) {
       $term_name = check_plain($term->name);
       // We define a "match" as any 2 consecutive chars, case-insensitive.
@@ -207,7 +217,7 @@ function ip_geoloc_region_autocomplete($partial_region = '') {
       }
     }
   }
-  drupal_json_output($matches);
+  backdrop_json_output($matches);
 }
 
 /**
@@ -224,7 +234,7 @@ function ip_geoloc_js_info() {
     : (module_exists('session_cache') ? array('session_cache') : array());
   $js_info = array(
     'current_location' => array(
-      'bootstrap' => module_exists('better_statistics') ? DRUPAL_BOOTSTRAP_FULL : DRUPAL_BOOTSTRAP_SESSION,
+      'bootstrap' => module_exists('better_statistics') ? BACKDROP_BOOTSTRAP_FULL : BACKDROP_BOOTSTRAP_SESSION,
       'callback function' => 'ip_geoloc_current_location_ajax_recipient',
       'dependencies' => $dependencies,
       'skip init' => TRUE,
@@ -239,7 +249,7 @@ function ip_geoloc_js_info() {
  *
  * Due to the weight set in ip_geoloc.install this hook is called after all
  * other hook_init() implementations have completed.
- * hook_inits are called as the last step in _drupal_bootstrap_full(), file
+ * hook_inits are called as the last step in _backdrop_bootstrap_full(), file
  * includes/common.inc
  * Note that the {accesslog} is updated in statistics_exit(), i.e. after the
  * page is loaded. This means that a second click may be required before the
@@ -276,13 +286,13 @@ function ip_geoloc_init() {
   $scheduled_reverse_geocode = _ip_geoloc_check_location($location);
 
   // 2nd condition is to avoid HTTP 503 error.
-  if ($scheduled_reverse_geocode && !variable_get('maintenance_mode', 0)) {
+  if ($scheduled_reverse_geocode && !state_get('maintenance_mode', 0)) {
 
     // Insert some javascript to first retrieve the user's lat/lon coords,
     // HTML5 style (requiring the user to accept a browser prompt) and then
     // optionally (default) use Google Maps API to reverse-geocode the lat/lon
     // into a street address.
-    // This is all done via client-side calls, so the Drupal server will not
+    // This is all done via client-side calls, so the Backdrop server will not
     // rake up any calls against its Google-imposed quotum, i.e. the
     // OVER_QUERY_LIMIT.
     // When done, the javascript calls us back on the default menu callback,
@@ -329,7 +339,7 @@ function ip_geoloc_is_first_click() {
  */
 function _ip_geoloc_reinit_location(&$location, $reverse_geocode_client_timeout) {
   $location = array(
-    'fixed_address' => isset($location['fixed_address']) ? (int)$location['fixed_address'] : NULL,
+    'fixed_address' => isset($location['fixed_address']) ? (int) $location['fixed_address'] : NULL,
     'regions' => isset($location['regions']) ? $location['regions'] : NULL,
   );
   // Calls below are synchronous, $location is filled upon return.
@@ -337,7 +347,8 @@ function _ip_geoloc_reinit_location(&$location, $reverse_geocode_client_timeout)
     if ($reverse_geocode_client_timeout) {
       watchdog('IPGV&M', 'Location timeout (waited %sec s). Fallback: %address.', array(
         '%sec' => number_format($reverse_geocode_client_timeout, 1),
-        '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : ''),
+        '%address' => isset($location['formatted_address']) ? $location['formatted_address'] : '',
+      ),
         WATCHDOG_NOTICE);
     }
   }
@@ -364,8 +375,8 @@ function ip_geoloc_current_location_ajax_recipient() {
     // in ip_geoloc_init() during next click/request.
     $error = check_plain($_POST['error']);
     _ip_geoloc_set_session_value('error', $error);
-    drupal_json_output($error);
-    drupal_exit();
+    backdrop_json_output($error);
+    backdrop_exit();
   }
   // Flesh out $location with the returned street address components.
   $location = array(
@@ -373,7 +384,7 @@ function ip_geoloc_current_location_ajax_recipient() {
   );
   foreach ($_POST as $key => $value) {
     // Ignore crap required for drupal.org/project/js module
-    if (drupal_substr($key, 0, 3) !== 'js_') {
+    if (backdrop_substr($key, 0, 3) !== 'js_') {
       $location[check_plain($key)] = check_plain($value);
     }
   }
@@ -382,7 +393,8 @@ function ip_geoloc_current_location_ajax_recipient() {
   $since = _ip_geoloc_get_session_value('position_pending_since');
   ip_geoloc_debug(t('IPGV&M: returned from position callback in %since s: !location', array(
     '%since' => isset($since) ? number_format(microtime(TRUE) - $since, 1) : '?',
-    '!location' => ip_geoloc_pretty_print($location))));
+    '!location' => ip_geoloc_pretty_print($location),
+  )));
 
   // If better_statistics module is enabled, we can backfill geolocation
   // information to {accesslog} entries occurred since the positioning was
@@ -405,8 +417,8 @@ function ip_geoloc_current_location_ajax_recipient() {
   // Got fresh location so reset 'position_pending_since' timer.
   _ip_geoloc_set_session_value('position_pending_since', NULL);
   // [#2599950], #6
-  drupal_json_output('');
-  drupal_exit();
+  backdrop_json_output('');
+  backdrop_exit();
 }
 
 /**
@@ -424,7 +436,7 @@ function ip_geoloc_current_location_ajax_recipient() {
  *   TRUE upon success, FALSE otherwise.
  */
 function ip_geoloc_use_smart_ip_if_enabled(&$location) {
-  if (variable_get('ip_geoloc_smart_ip_as_backup', FALSE)) {
+  if (config_get('ip_geoloc.settings', 'ip_geoloc_smart_ip_as_backup')) {
     if (function_exists('smart_ip_get_location')) {
       if (empty($location['ip_address'])) {
         $location['ip_address'] = ip_address();
@@ -435,7 +447,8 @@ function ip_geoloc_use_smart_ip_if_enabled(&$location) {
       $location = array(
         'provider' => 'smart_ip',
         'fixed_address' => $fixed_address,
-        'region' => $region) +
+        'region' => $region,
+      ) +
         smart_ip_get_location($location['ip_address']);
       return TRUE;
     }
@@ -491,29 +504,30 @@ function ip_geoloc_use_geoip_api_if_enabled(&$location) {
  *   TRUE if an update is due.
  */
 function _ip_geoloc_check_location($location = NULL) {
+  $config = config('ip_geoloc.settings');
 
-  if (!variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
+  if (!$config->get('ip_geoloc_google_to_reverse_geocode')) {
     return FALSE;
   }
-  $path_alias = drupal_get_path_alias();
+  $path_alias = backdrop_get_path_alias();
 
-  $include_pages = variable_get('ip_geoloc_include_pages', '*');
-  if (!drupal_match_path($path_alias, $include_pages)) {
+  $include_pages = $config->get('ip_geoloc_include_pages');
+  if (!backdrop_match_path($path_alias, $include_pages)) {
     return FALSE;
   }
-  $exclude_pages = variable_get('ip_geoloc_exclude_pages', IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS);
-  if (drupal_match_path($path_alias, $exclude_pages)) {
+  $exclude_pages = $config->get('ip_geoloc_exclude_pages');
+  if (backdrop_match_path($path_alias, $exclude_pages)) {
     return FALSE;
   }
 
   global $user;
-  $roles_to_reverse_geocode = variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
+  $roles_to_reverse_geocode = $config->get('ip_geoloc_roles_to_reverse_geocode');
   $roles_applicable = array_intersect($roles_to_reverse_geocode, array_keys($user->roles));
   if (empty($roles_applicable)) {
     return FALSE;
   }
 
-  $interval = (int) variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL);
+  $interval = (int) $config->get('ip_geoloc_location_check_interval');
   if ($interval == 0) {
     return !isset($location['latitude']);
   }
@@ -523,7 +537,8 @@ function _ip_geoloc_check_location($location = NULL) {
     $time_elapsed = time() - $last_position_check;
     if ($time_elapsed < $interval) {
       ip_geoloc_debug(t('IPGV&M: next update scheduled for first click after %seconds seconds (unless overridden or on excluded page).', array(
-        '%seconds' => $interval - $time_elapsed)));
+        '%seconds' => $interval - $time_elapsed,
+      )));
       return FALSE;
     }
   }
@@ -637,8 +652,8 @@ function ip_geoloc_pretty_print($location) {
  * @return string
  */
 function ip_geoloc_marker_directory() {
-  $path = drupal_get_path('module', 'ip_geoloc');
-  return variable_get('ip_geoloc_marker_directory', "$path/" . (module_exists('leaflet') ? 'amarkers' : 'markers'));
+  $path = backdrop_get_path('module', 'ip_geoloc');
+  return config_get('ip_geoloc.settings', 'ip_geoloc_marker_directory');
 }
 
 /**
@@ -647,7 +662,7 @@ function ip_geoloc_marker_directory() {
  * @return string, for example '32 x 42' or '21 x 34'
  */
 function ip_geoloc_marker_dimensions() {
-  $dimensions = variable_get('ip_geoloc_marker_dimensions');
+  $dimensions = config_get('ip_geoloc.settings', 'ip_geoloc_marker_dimensions');
   if (empty($dimensions)) {
     $directory = ip_geoloc_marker_directory();
     $dimensions = strpos($directory, '/amarkers') ? '32 x 42' : '21 x 34';
@@ -664,7 +679,7 @@ function ip_geoloc_marker_dimensions() {
  *   Array of color names indexed by machine names
  */
 function ip_geoloc_marker_colors() {
-  $color_list = &drupal_static(__FUNCTION__);
+  $color_list = &backdrop_static(__FUNCTION__);
   if (!isset($color_list)) {
     $color_list = array(
       '' => '<' . t('default') . '>',
@@ -673,7 +688,7 @@ function ip_geoloc_marker_colors() {
     if ($directory_handle = opendir(ip_geoloc_marker_directory())) {
       while (($filename = readdir($directory_handle)) !== FALSE) {
         if ($ext_pos = strrpos($filename, '.png')) {
-          $color = drupal_substr($filename, 0, $ext_pos);
+          $color = backdrop_substr($filename, 0, $ext_pos);
           // Ok... relies on translations done elsewhere.
           $color_list[$color] = t($color);
         }
@@ -692,7 +707,7 @@ function ip_geoloc_marker_colors() {
  *   An array indexed by marker layer number (1..n)
  */
 function ip_geoloc_openlayers_marker_layers() {
-  $num_location_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+  $num_location_marker_layers = config_get('ip_geoloc.settings', 'ip_geoloc_num_location_marker_layers');
   $marker_layers = array();
   for ($layer = 1; $layer <= $num_location_marker_layers; $layer++) {
     $marker_layers[$layer] = t('Marker layer') . " #$layer";
@@ -843,7 +858,7 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
 function ip_geoloc_get_font_icon_libs() {
   $libs = array();
   for ($i = 1; $i <= IP_GEOLOC_MAX_NUM_FONT_ICON_LIBS; $i++) {
-    $file = variable_get("ip_geoloc_font_icon_lib$i");
+    $file = config_get('ip_geoloc.settings', "ip_geoloc_font_icon_lib$i");
     if (!empty($file)) {
       $libs[$i] = $file;
     }
@@ -863,10 +878,10 @@ function ip_geoloc_get_font_icon_libs() {
  */
 function ip_geoloc_debug_flag() {
   global $user;
-  $user_names = explode(',', check_plain(variable_get('ip_geoloc_debug')));
+  $user_names = explode(',', check_plain(config_get('ip_geoloc.settings', 'ip_geoloc_debug')));
   foreach ($user_names as $user_name) {
-    $user_name = drupal_strtolower(trim($user_name));
-    $match = isset($user->name) ? $user_name == drupal_strtolower(trim($user->name)) : ($user_name == 'anon' || $user_name == 'anonymous');
+    $user_name = backdrop_strtolower(trim($user_name));
+    $match = isset($user->name) ? $user_name == backdrop_strtolower(trim($user->name)) : ($user_name == 'anon' || $user_name == 'anonymous');
     if ($match) {
       return TRUE;
     }
@@ -887,7 +902,7 @@ function ip_geoloc_debug_flag() {
  */
 function ip_geoloc_debug($message, $type = 'status') {
   if (ip_geoloc_debug_flag()) {
-    return drupal_set_message($message, $type, FALSE);
+    return backdrop_set_message($message, $type, FALSE);
   }
 }
 
@@ -901,11 +916,11 @@ function ip_geoloc_same_path() {
   $referer = $_SERVER['HTTP_REFERER'];
   global $base_url;
   if (strpos($referer, $base_url) === 0) {
-    $prev_path = drupal_substr($referer, drupal_strlen($base_url) + 1);
-    if (empty($prev_path) && drupal_is_front_page()) {
+    $prev_path = backdrop_substr($referer, backdrop_strlen($base_url) + 1);
+    if (empty($prev_path) && backdrop_is_front_page()) {
       return TRUE;
     }
-    return $prev_path == current_path() || $prev_path == drupal_get_path_alias();
+    return $prev_path == current_path() || $prev_path == backdrop_get_path_alias();
   }
   return FALSE;
 }
@@ -926,16 +941,16 @@ function ip_geoloc_ctools_plugin_directory($module, $plugin) {
  * proximity filter circle, so that the user has visual feedback as to the
  * exact proximity centre as interpreted by Geocoder. Example: "/Oregon".
  *
-function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_proximity_handler, $lat_lon_dist) {
-  _ip_geoloc_set_session_value('location', $lat_lon_dist);
-}*/
+ function ip_geoloc_geofield_handler_argument_proximity_alter($contextual_filter_proximity_handler, $lat_lon_dist) {
+ _ip_geoloc_set_session_value('location', $lat_lon_dist);
+ }*/
 
 /* A sneaky way to place leaflet features in the footer
-function ip_geoloc_js_alter(&$javascript) {
-  if (isset($javascript[0]['data']['leaflet'])) {
-    $javascript[0]['type'] = 'setting';
-  }
-}
+ function ip_geoloc_js_alter(&$javascript) {
+ if (isset($javascript[0]['data']['leaflet'])) {
+ $javascript[0]['type'] = 'setting';
+ }
+ }
  */
 
 /**
@@ -962,7 +977,7 @@ function ip_geoloc_views_post_render(&$view, &$rendered_output) {
 function ip_geoloc_views_api() {
   return array(
     'api' => views_api_version(),
-    'path' => drupal_get_path('module', 'ip_geoloc') . '/views',
+    'path' => backdrop_get_path('module', 'ip_geoloc') . '/views',
   );
 }
 
@@ -974,7 +989,7 @@ function ip_geoloc_views_api() {
 function ip_geoloc_statistics_api() {
   return array(
     'version' => 1,
-    'path' => drupal_get_path('module', 'ip_geoloc') . '/plugins',
+    'path' => backdrop_get_path('module', 'ip_geoloc') . '/plugins',
     'file' => 'ip_geoloc.statistics.inc',
   );
 }
@@ -985,24 +1000,25 @@ function ip_geoloc_statistics_api() {
  * Patch from https://www.drupal.org/node/2776209
  */
 function ip_geoloc_build_google_api_url() {
+  $config = config('ip_geoloc.settings');
 
   // Append query parameters for the Google Maps url.
   // See https://developers.google.com/maps/documentation/javascript/versions
   $query = array();
 
-  switch (variable_get('ip_geoloc_auth_method', 0)) {
+  switch ($config->get('ip_geoloc_auth_method')) {
     case 1:
-      $key = trim(variable_get('ip_geoloc_apikey', ''));
+      $key = trim($config->get('ip_geoloc_apikey'));
       if (!empty($key)) {
         $query['key'] = $key;
       }
       break;
 
     case 2:
-      $client_id = trim(variable_get('ip_geoloc_client_id', ''));
+      $client_id = trim($config->get('ip_geoloc_client_id'));
       if (!empty($client_id)) {
         $query['client'] = $client_id;
-        $signature = trim(variable_get('ip_geoloc_signature', ''));
+        $signature = trim($config->get('ip_geoloc_signature'));
         if (!empty($signature)) {
           $query['signature'] = $signature;
         }
@@ -1017,7 +1033,7 @@ function ip_geoloc_build_google_api_url() {
   if (!empty($query)) {
     $query['v'] = 'weekly';
     $query['libraries'] = 'places';
-    return 'https://maps.googleapis.com/maps/api/js?' . drupal_http_build_query($query);
+    return 'https://maps.googleapis.com/maps/api/js?' . backdrop_http_build_query($query);
   }
   return '';
 }
@@ -1056,4 +1072,18 @@ function _ip_geoloc_custom_formatted_address($location, $need_street = FALSE, $n
     $address .= $location['country'];
   }
   return $address;
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function ip_geoloc_autoload_info() {
+  return array(
+    'ip_geoloc_context_reaction_locate_visitor' => 'plugins/ip_geoloc_context_reaction_locate_visitor.inc',
+    'ip_geoloc_plugin_argument_default_ip_geoloc' => 'views/ip_geoloc_plugin_argument_default_ip_geoloc.inc',
+    'ip_geoloc_plugin_style_leaflet' => 'views/ip_geoloc_plugin_style_leaflet.inc',
+    'ip_geoloc_plugin_style_map' => 'views/ip_geoloc_plugin_style_map.inc',
+    'ip_geoloc_plugin_style_openlayers' => 'views/ip_geoloc_plugin_style_openlayers.inc',
+    'geofieldProximityGeocoderWithHTML5' => 'views/proximity_plugins/geofieldProximityGeocoderWithHTML5.inc',
+  );
 }

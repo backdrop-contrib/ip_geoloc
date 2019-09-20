@@ -1,6 +1,6 @@
 (function ($) {
 
-  Drupal.behaviors.addGMapMultiLocation = {
+  Backdrop.behaviors.addGMapMultiLocation = {
     attach: function (context, settings) {
 
       if (typeof(google) !== 'object') {
@@ -28,7 +28,7 @@
         }
         var mapOptions = settings[m].ip_geoloc_multi_location_map_options;
         if (!mapOptions) {
-          alert(Drupal.t('IPGV&M: syntax error in Google map options.'));
+          alert(Backdrop.t('IPGV&M: syntax error in Google map options.'));
         }
         maps[m] = new google.maps.Map(mapDiv, mapOptions);
         // A map must have a type, a zoom and a center or nothing will show.
@@ -74,7 +74,7 @@
           }
           catch(err) { }
           if (mouseOverText.length === 0) {
-            mouseOverText = Drupal.t('Location #@i', { '@i': parseInt(key) + 1});
+            mouseOverText = Backdrop.t('Location #@i', { '@i': parseInt(key) + 1});
           }
 
           var position = new google.maps.LatLng(locations[key].latitude, locations[key].longitude);
@@ -141,7 +141,7 @@
           if (isNaN(m)) continue;
           if (settings[m].ip_geoloc_multi_location_visitor_marker) {
             var p = '(' + latitude + ', ' + longitude + ')';
-            showSpecialMarker(m, visitorPosition, Drupal.t('Your approximate location') + "\n" + p);
+            showSpecialMarker(m, visitorPosition, Backdrop.t('Your approximate location') + "\n" + p);
           }
           if (settings[m].ip_geoloc_multi_location_center_option === 2) {
             maps[m].setCenter(visitorPosition);

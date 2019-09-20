@@ -66,13 +66,11 @@ function ip_geoloc_theme($existing_themes, $type, $theme, $path) {
  *
  * Preprocesses variables for theme/ip_geoloc_map_multi_visitor.tpl.php
  */
-function template_preprocess_ip_geoloc_visitor_map(&$variables) {
-}
+function template_preprocess_ip_geoloc_visitor_map(&$variables) { }
 
 /**
  * Template preprocess function for the ip_geoloc_map_current_visitor theme.
  *
  * Preprocesses variables for theme/ip_geoloc_map_current_visitor.tpl.php
  */
-function template_preprocess_ip_geoloc_map_current_visitor(&$variables) {
-}
+function template_preprocess_ip_geoloc_map_current_visitor(&$variables) { }

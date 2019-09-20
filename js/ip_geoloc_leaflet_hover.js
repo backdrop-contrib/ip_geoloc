@@ -34,7 +34,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
   // the <feGaussianBlur>, called effect#-ID, and the associated animations
   // called effect#-onID and effect#-offID, where # is a digit 1..4 and ID is
   // the unique ID used in both <filter id="fID"> and <path id="pID">.
-  // The ID is in fact the Drupal node ID.
+  // The ID is in fact the Backdrop node ID.
   function filterHTML(id, duration, effect) {
     if (effect == 'surge') {
       //    Filter primitive "feOffset" by itself was not necessary to obtain the alpha channel so has been taken out.

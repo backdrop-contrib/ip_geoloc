@@ -299,7 +299,7 @@ function ip_geoloc_views_data() {
  * 3 Views style/format plugins and 1 contextual filter default argument plugin.
  */
 function ip_geoloc_views_plugins() {
-  $path = drupal_get_path('module', 'ip_geoloc');
+  $path = backdrop_get_path('module', 'ip_geoloc');
   $plugins = array(
     'style' => array(
       'ip_geoloc_map' => array(

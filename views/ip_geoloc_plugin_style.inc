@@ -68,7 +68,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$weight, &$fo
   );
   $explanation1 = t("Select the field(s) holding latitude from the select-box above. Make sure you have added it to the Fields list of this View or it won't show up above. Fields from the <strong>Geofield, Get Locations</strong> and <strong>Geolocation</strong> modules can all be selected this way.");
   $explanation2 = t('Your latitude may reside in a field with a special name. This is the case when using the <strong>Location</strong> module or when you have used <strong>relationships</strong> to pull in lat & lon. To input special names, select <em>[Type a field name below]</em> and enter the field\'s machine name. This <a target="_field_names" href="!url">list of all field names</a> may help in figuring out the correct name.', array(
-    '!url' => url('admin/reports/fields')));
+    '!url' => url('admin/reports/fields'),
+  ));
   $explanation3 = t('If you use a view based on the <strong>Location</strong> module, the special name is <strong>location_latitude</strong>.');
 
   $form['ip_geoloc_views_plugin_latitude_desc'] = array(
@@ -132,12 +133,13 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$weight, &$fo
       '#options' => $is_openlayers ? ip_geoloc_openlayers_marker_layers() : ip_geoloc_marker_colors(),
       '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>location differentiator</strong> below.'),
       '#attributes' => array(
-        'class' => $is_openlayers ? array('marker-color-ol') : array('marker-color')),
+        'class' => $is_openlayers ? array('marker-color-ol') : array('marker-color'),
+      ),
       '#weight' => $weight++,
     );
   }
   if (!$is_openlayers) {
-    $path = drupal_get_path('module', 'ip_geoloc');
+    $path = backdrop_get_path('module', 'ip_geoloc');
     $css_file = strpos(ip_geoloc_marker_directory(), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
     $form['default_marker_color']['#attached']['css'] = array("$path/css/$css_file");
   }
@@ -173,7 +175,7 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$weight, &$fo
     }
     $description .= '<br/>' . t('You can refer to View URL arguments via !1, !2 etc.')
       . '<br/>' . t('To use components of complex field types like Date or AddressField use replacement tokens in the <em>Global: Custom text</em> field.');
-    $description .='<br/>' . t('Font icon character and class columns apply to Leaflet only.');
+    $description .= '<br/>' . t('Font icon character and class columns apply to Leaflet only.');
   }
   $form['differentiator']['differentiator_field'] = array(
     '#title' => t('Location differentiator'),
@@ -190,8 +192,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$weight, &$fo
     // Container for the differentiator color associations table.
     $form['differentiator']['color_table'] = array(
       '#theme' => 'ip_geoloc_plugin_style_differentiator_color_table',
-    // '#prefix' => '<div id="differentiator-color-table-wrapper">',
-    // '#suffix' => '</div>'
+      // '#prefix' => '<div id="differentiator-color-table-wrapper">',
+      // '#suffix' => '</div>'
     );
 
     _ip_geoloc_plugin_style_differentiator_color_table_form($form, $form_state);
@@ -258,7 +260,8 @@ function ip_geoloc_plugin_style_bulk_of_form($views_plugin_style, &$weight, &$fo
     '#size' => 30,
     '#default_value' => $views_plugin_style->options['empty_map_center'],
     '#description' => t('a) Show empty map: enter <em>latitude, longitude</em> of the map center.<br/>b) Show empty map centered on visitor location: enter the word %visitor.<br/>c) Show nothing: if this field is left blank, the map canvas will be suppressed when there are no locations to show. If you wish, you may use the <strong>No results behavior</strong> panel in the Advanced section of the Views UI to show an alternative text or content.', array(
-      '%visitor' => t('visitor'))),
+      '%visitor' => t('visitor'),
+    )),
     '#weight' => $weight++,
   );
   return $form;
@@ -333,7 +336,7 @@ function ip_geoloc_plugin_style_diff_color_ass_submit($form, &$form_state) {
   $differentiator = $form_state['differentiator'];
 
   // Erase differentiator values for this display, then rebuild based on form.
-  $diff_color_ass = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
+  $diff_color_ass = config_get('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings');
   unset($diff_color_ass[$display_id][$differentiator]);
 
   if (!empty($form_state['values']['color_table'])) {
@@ -376,7 +379,7 @@ function ip_geoloc_plugin_style_diff_color_ass_submit($form, &$form_state) {
       }
     }
   }
-  variable_set('ip_geoloc_' . $view_id . '_color_mappings', $diff_color_ass);
+  config_set('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings', $diff_color_ass);
 }
 
 /**
@@ -393,7 +396,7 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
   $display_id = $form_state['display_id'];
   $differentiator = $form_state['differentiator'];
 
-  $diff_color_ass = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
+  $diff_color_ass = config_get('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings');
   if (empty($diff_color_ass[$display_id][$differentiator])) {
     $diff_color_ass[$display_id] = array($differentiator => array());
   }
@@ -515,13 +518,25 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
   // We'll manually set the #parents property of these fields so that their
   // values appear in the $form_state['values']['color_table'] array.
   $form[$differentiator]['#parents'] = array(
-    'color_table', $row, $differentiator);
+    'color_table',
+    $row,
+    $differentiator,
+  );
   $form['color']['#parents'] = array(
-    'color_table', $row, 'color');
+    'color_table',
+    $row,
+    'color',
+  );
   $form['special char']['#parents'] = array(
-    'color_table', $row, 'special char');
+    'color_table',
+    $row,
+    'special char',
+  );
   $form['special char class']['#parents'] = array(
-    'color_table', $row, 'special char class');
+    'color_table',
+    $row,
+    'special char class',
+  );
 
   return $form;
 }
@@ -544,7 +559,7 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
   }
   $key = reset($form_children);
   foreach ($form[$key] as $attribute_name => $element) {
-    if (drupal_substr($attribute_name, 0, 1) != '#' && $attribute_name != 'color') {
+    if (backdrop_substr($attribute_name, 0, 1) != '#' && $attribute_name != 'color') {
       $differentiator = $attribute_name;
       break;
     }
@@ -564,11 +579,14 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
   );
   $rows = array();
   foreach ($form_children as $key) {
-    $row = array('data' => array(), 'class' => array());
-    $row['data'][] = drupal_render($form[$key][$differentiator]);
-    $row['data'][] = drupal_render($form[$key]['color']);
-    $row['data'][] = drupal_render($form[$key]['special char']);
-    $row['data'][] = drupal_render($form[$key]['special char class']);
+    $row = array(
+      'data' => array(),
+      'class' => array(),
+    );
+    $row['data'][] = backdrop_render($form[$key][$differentiator]);
+    $row['data'][] = backdrop_render($form[$key]['color']);
+    $row['data'][] = backdrop_render($form[$key]['special char']);
+    $row['data'][] = backdrop_render($form[$key]['special char class']);
     $rows[] = $row;
   }
 
@@ -577,7 +595,7 @@ function theme_ip_geoloc_plugin_style_differentiator_color_table($variables) {
     'rows' => $rows,
     'attributes' => array('id' => 'differentiator-color-table'),
   ));
-  $output .= drupal_render_children($form);
+  $output .= backdrop_render_children($form);
   return $output;
 }
 
@@ -611,7 +629,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
   if (!empty($views_plugin_style->options['differentiator']['differentiator_field'])) {
     $differentiator = $views_plugin_style->options['differentiator']['differentiator_field'];
     $is_tax_term = ip_geoloc_is_taxonomy_term($differentiator);
-    $diff_color_ass = variable_get('ip_geoloc_' . $view_id . '_color_mappings', array());
+    $diff_color_ass = config_get('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings');
     if (empty($diff_color_ass[$display_id])) {
       $diff_color_ass[$display_id] = array($differentiator => array());
     }
@@ -642,7 +660,7 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
 
   foreach ($latitudes as $latitude) {
     if (isset($view->field[$latitude])) {
-    //$loc_field_names[] = $view->field[$latitude]->definition['field_name'];
+      //$loc_field_names[] = $view->field[$latitude]->definition['field_name'];
       // Search API [#2603450]
       $loc_field_names[] = $view->field[$latitude]->field;
       $loc_field_aliases[] = $view->field[$latitude]->field_alias;
@@ -819,23 +837,23 @@ function ip_geoloc_plugin_style_extract_locations($views_plugin_style, $enable_b
     $msg = ($error_count >= $row_count)
       ? t('None of the @total result rows in view %view_title had their %latitudes set. Therefore those rows could not be displayed as locations on the map. Are you using the correct field names?', $t_args)
       : t('Out of a total of @total result rows in view %view_title, @error_count rows did not have their %latitudes set and therefore could not be shown on the map. The first row that could not be located was row #@first%id. You can improve execution efficiency by using the Views UI to add an "is not empty" filter for %latitudes.', $t_args);
-    drupal_set_message($msg);
+    backdrop_set_message($msg);
 
     if ($is_debug) {
       $row_contents = t('First error row:') . '<br/>';
       foreach ((array) $view->result[$first_error] as $field_name => $value) {
         if ($field_name != '_field_data') {
           $output = filter_xss_admin(print_r($value, TRUE));
-          $output = drupal_substr($output, 0, 255) . (strlen($output) > 255 ? '...' : '');
+          $output = backdrop_substr($output, 0, 255) . (strlen($output) > 255 ? '...' : '');
           $row_contents .= "<strong>$field_name</strong> = $output<br/>";
         }
       }
-      drupal_set_message($row_contents);
+      backdrop_set_message($row_contents);
     }
   }
   // Allow other modules to implement
   // hook_ip_geoloc_marker_locations_alter(&$locations, &$view)
-  drupal_alter('ip_geoloc_marker_locations', $locations, $view);
+  backdrop_alter('ip_geoloc_marker_locations', $locations, $view);
 
   return $locations;
 }
@@ -908,7 +926,7 @@ function _ip_geoloc_plugin_style_get_base2($row, $field_name, $delta) {
  */
 function _ip_geoloc_plugin_style_extract_lat_lng(&$location, $row, $latitude, $longitude, $loc_field_value = NULL) {
 
-  $delta = &drupal_static(__FUNCTION__);
+  $delta = &backdrop_static(__FUNCTION__);
   if (isset($delta)) {
     $delta++;
   }
@@ -916,7 +934,7 @@ function _ip_geoloc_plugin_style_extract_lat_lng(&$location, $row, $latitude, $l
   // In the View, AddressField must have "Display all values in the same row"
   // UNTICKED, while Geofield (and all other fields) must have it TICKED.
   foreach ((array) $row as $key => $value) {
-    if (drupal_substr($key, -6) == '_delta' && strpos($key, 'field_data_field_') === 0) {
+    if (backdrop_substr($key, -6) == '_delta' && strpos($key, 'field_data_field_') === 0) {
       $delta = $value;
       break;
     }
@@ -979,9 +997,9 @@ function _ip_geoloc_plugin_style_extract_lat_lng(&$location, $row, $latitude, $l
           // @todo Consider using the following:
           // $geometry = geoPHP::load($base['geom']);
           // $location = json_decode($geometry->out('json'));
-          $is_point = (drupal_substr(trim($point), 0, 7) == 'POINT (');
+          $is_point = (backdrop_substr(trim($point), 0, 7) == 'POINT (');
           if ($is_point) {
-            $parts = explode(' ', drupal_substr($point, 7));
+            $parts = explode(' ', backdrop_substr($point, 7));
             $is_point = count($parts) > 1;
           }
         }
@@ -1088,7 +1106,7 @@ function _ip_geoloc_plugin_style_match_on_taxonomy_term_or_parent($differentiato
   }
   // Starting with the current child find the first ancestor in the
   // taxonomy hierarchy that matches.
-  foreach (taxonomy_get_parents_all($tid) as $term) {
+  foreach (taxonomy_term_load_parents_all($tid) as $term) {
     $value = empty($is_name) ? $term->tid : $term->name;
     $association = _ip_geoloc_plugin_style_find_association_by_differentiator_value($value, $diff_color_associations);
     if (!empty($association)) {
@@ -1137,10 +1155,10 @@ function _ip_geoloc_plugin_style_get_differentiator_value($row, $differentiator,
     // Retrieve first value, regardless of language.
     $v = reset($row->_field_data[$differentiator]['entity']->{$differentiator});
     if (is_array($v)) {
-       $v = reset($v);
-       if (is_array($v)) {
-         $differentiator_value = isset($v['value']) ? $v['value'] : reset($v);
-       }
+      $v = reset($v);
+      if (is_array($v)) {
+        $differentiator_value = isset($v['value']) ? $v['value'] : reset($v);
+      }
     }
   }
   elseif (!empty($row->_entity_properties)) {
@@ -1150,43 +1168,44 @@ function _ip_geoloc_plugin_style_get_differentiator_value($row, $differentiator,
   else {
     $differentiator_value = '';
     if (!isset($row->{'field_' . $differentiator})) {
-      drupal_set_message(t('IPGV&M: no differentiator values found for %diff. Cannot assign marker images.', array(
-        '%diff' => $differentiator)), 'warning', FALSE);
+      backdrop_set_message(t('IPGV&M: no differentiator values found for %diff. Cannot assign marker images.', array(
+        '%diff' => $differentiator,
+      )), 'warning', FALSE);
     }
   }
   return $differentiator_value;
 }
 
 function _ip_geoloc_plugin_style_get_search_api_value($row, $field_name) {
-    $field_value = null;
-    if (isset($row->_entity_properties[$field_name])) {
-      //drupal_set_message(t('IPGV&M (1): Search API checking value for %name', array('%name' => $field_name)), 'warning', FALSE);
-      $field_value = $row->_entity_properties[$field_name];
+  $field_value = null;
+  if (isset($row->_entity_properties[$field_name])) {
+    //backdrop_set_message(t('IPGV&M (1): Search API checking value for %name', array('%name' => $field_name)), 'warning', FALSE);
+    $field_value = $row->_entity_properties[$field_name];
+  }
+  elseif ($last_ = strrpos($field_name, '_')) {
+    $alt_field_name = backdrop_substr($field_name, $last_ + 1);
+    //backdrop_set_message(t('IPGV&M (2): Search API checking value for %name', array('%name' => $alt_field_name)), 'warning', FALSE);
+    if (isset($row->_entity_properties[$alt_field_name])) {
+      $field_value = $row->_entity_properties[$alt_field_name];
     }
-    elseif ($last_ = strrpos($field_name, '_')) {
-      $alt_field_name = drupal_substr($field_name, $last_ + 1);
-      //drupal_set_message(t('IPGV&M (2): Search API checking value for %name', array('%name' => $alt_field_name)), 'warning', FALSE);
-      if (isset($row->_entity_properties[$alt_field_name])) {
-        $field_value = $row->_entity_properties[$alt_field_name];
-      }
+  }
+  else {
+    $alt_field_name = 'field_' . $field_name;
+    //backdrop_set_message(t('IPGV&M (3): Search API checking value for %name', array('%name' => $alt_field_name)), 'warning', FALSE);
+    if (isset($row->_entity_properties[$alt_field_name])) {
+      $field_value = $row->_entity_properties[$alt_field_name];
     }
-    else {
-      $alt_field_name = 'field_' . $field_name;
-      //drupal_set_message(t('IPGV&M (3): Search API checking value for %name', array('%name' => $alt_field_name)), 'warning', FALSE);
-      if (isset($row->_entity_properties[$alt_field_name])) {
-        $field_value = $row->_entity_properties[$alt_field_name];
-      }
-    }
-    if (isset($field_value)) {
-      //drupal_set_message(t('IPGV&M (success!): Search API %name=%value', array('%name' => $field_name, '%value' => $field_value)), 'warning', FALSE);
-    }
-    else {
-      drupal_set_message(t('IPGV&M: Could not retrieve value of field %name, as its name does not appear among these Search API keys: %keys', array(
-        '%name' => $field_name,
-        '%keys' => implode(', ', array_keys($row->_entity_properties)),
-      )), 'warning', FALSE);
-    }
-    return isset($field_value) ? $field_value : '';
+  }
+  if (isset($field_value)) {
+    //backdrop_set_message(t('IPGV&M (success!): Search API %name=%value', array('%name' => $field_name, '%value' => $field_value)), 'warning', FALSE);
+  }
+  else {
+    backdrop_set_message(t('IPGV&M: Could not retrieve value of field %name, as its name does not appear among these Search API keys: %keys', array(
+      '%name' => $field_name,
+      '%keys' => implode(', ', array_keys($row->_entity_properties)),
+    )), 'warning', FALSE);
+  }
+  return isset($field_value) ? $field_value : '';
 }
 
 function _ip_geoloc_plugin_style_decorate(&$location, $row, $tooltip_field, $tag_field) {
@@ -1259,8 +1278,8 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
       // set to the row, if required for the $differentiator or lat/lon that
       // have math expressions applied through the Views UI.
       // Examples:
-      //  "User: Roles" used as differentiator becomes 'views_rid'
-      //  "Global: View result counter" as differentiator becomes 'views_counter'
+//  "User: Roles" used as differentiator becomes 'views_rid'
+//  "Global: View result counter" as differentiator becomes 'views_counter'
       $special_field_id = 'views_' . $field_id;
       if (($special_field_id == $differentiator || $special_field_id == $aggregation_field ||
         in_array($special_field_id, $latitudes) || $special_field_id == $longitude) && empty($row->{$special_field_id})) {
@@ -1294,7 +1313,7 @@ function ip_geoloc_plugin_style_render_fields($views_plugin_style) {
 function ip_geoloc_get_view_result($views_plugin_style, $field, $index) {
   $field_name = is_array($field) ? $field['field_name'] : $field;
   if (!isset($views_plugin_style->view->result[$index])) {
-    drupal_set_message(t("Field %name: no value found amongst view results.", array('%name' => $field_name)), 'warning', FALSE);
+    backdrop_set_message(t("Field %name: no value found amongst view results.", array('%name' => $field_name)), 'warning', FALSE);
     return NULL;
   }
   $row = $views_plugin_style->view->result[$index];
@@ -1428,7 +1447,7 @@ function ip_geoloc_get_display_fields($view_display, $with_table_prefixes = TRUE
         $field_id = 'views_rid';
       }
       elseif (!in_array($field_id, $exceptions)
-        && strpos($field_id, 'field_') === FALSE
+         && strpos($field_id, 'field_') === FALSE
         /*&& strpos($field_handler->table, 'search_api_index' !== 0)
         && strpos($field_handler->table, 'entity' !== 0)*/) {
         // Example: 'title' becomes 'node_title'.

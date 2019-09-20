@@ -9,7 +9,7 @@
  * Implments hook_enable().
  */
 function ip_geoloc_enable() {
-  drupal_set_message(t('IP Geolocation Views & Maps is now enabled. Please note that some of the canned Views that come with this module require the "<a target="project_page" href="!views_php">Views PHP</a>" module. The "Set my location" block requires <a target="project_page" href="!geocoder">Geocoder</a>. <br/>Module "<a target="project_page" href="!session_cache">Session Cache API</a>" is optional and recommended.', array(
+  backdrop_set_message(t('IP Geolocation Views & Maps is now enabled. Please note that some of the canned Views that come with this module require the "<a target="project_page" href="!views_php">Views PHP</a>" module. The "Set my location" block requires <a target="project_page" href="!geocoder">Geocoder</a>. <br/>Module "<a target="project_page" href="!session_cache">Session Cache API</a>" is optional and recommended.', array(
     '!views_php' => url('http://drupal.org/project/views_php'),
     '!geocoder' => url('http://drupal.org/project/geocoder'),
     '!session_cache' => url('http://drupal.org/project/session_cache'),
@@ -22,6 +22,7 @@ function ip_geoloc_enable() {
  * $phase typically is one of 'install', 'runtime', 'update'.
  */
 function ip_geoloc_requirements($phase) {
+  $config = config('ip_geoloc.settings');
 
   $requirements = array();
   // Avoid 'undefined function: ip_geoloc_get_css_library_path' during 'install'
@@ -32,10 +33,10 @@ function ip_geoloc_requirements($phase) {
   $t = get_t();
 
   $geolocation_methods = array();
-  if (variable_get('ip_geoloc_google_to_reverse_geocode', FALSE)) {
+  if ($config->get('ip_geoloc_google_to_reverse_geocode')) {
     $geolocation_methods[] = $t('Google Maps reverse-geocode');
   }
-  if (variable_get('ip_geoloc_smart_ip_as_backup', FALSE)) {
+  if ($config->get('ip_geoloc_smart_ip_as_backup')) {
     if (module_exists('smart_ip')) {
       $geolocation_methods[] = 'Smart IP';
     }
@@ -62,7 +63,7 @@ function ip_geoloc_requirements($phase) {
     }
   }
 
-  $library = drupal_get_library('leaflet_markercluster', 'leaflet_markercluster');
+  $library = backdrop_get_library('leaflet_markercluster', 'leaflet_markercluster');
   if (isset($library['js'][0]['data'])) {
     $requirements['ip_geoloc_markercluster']['title'] = t('IP Geolocation Views & Maps; Leaflet MarkerCluster library');
     if (strpos($library['js'][0]['data'], IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS)) {
@@ -83,7 +84,7 @@ function ip_geoloc_requirements($phase) {
   $requirements['ip_geoloc_font_libs']['description'] = $t('When using Leaflet you may superimpose font icons on your markers. <a target="fsymbols" href="!url_fsymbols">fsymbols</a> do not require any files to be downloaded. Other font icons like those from <a target="fontello" href="!url_fontello">Fontello</a> do. See the <a target="readme" href="!url_readme">README</a> for more details on font icon repositories.', array(
     '!url_fsymbols' => url('http://text-symbols.com'),
     '!url_fontello' => url('http://fontello.com'),
-    '!url_readme' => url(drupal_get_path('module', 'ip_geoloc') . '/README.txt'),
+    '!url_readme' => url(backdrop_get_path('module', 'ip_geoloc') . '/README.txt'),
   ));
   $requirements['ip_geoloc_font_libs']['value'] = '';
   $num_font_libs = 0;
@@ -113,13 +114,13 @@ function ip_geoloc_requirements($phase) {
     ));
   }
 
-  switch (variable_get('ip_geoloc_auth_method', 0)) {
+  switch ($config->get('ip_geoloc_auth_method')) {
     case 1:
-      $key_provided = variable_get('ip_geoloc_apikey', FALSE);
+      $key_provided = $config->get('ip_geoloc_apikey');
       break;
 
     case 2:
-      $key_provided = variable_get('ip_geoloc_client_id', FALSE);
+      $key_provided = $config->get('ip_geoloc_client_id');
       break;
 
     default:
@@ -129,7 +130,7 @@ function ip_geoloc_requirements($phase) {
       'title' => 'IP Geolocation Views & Maps',
       'severity' => REQUIREMENT_WARNING,
       'value' => t('No Google Maps API Key or Client ID. Keyless access to Google Maps is no longer supported and may impact rendering of maps. Obtain and enter an API Key or Client ID <a href="!url">here</a>.', array(
-        '!url' => url('admin/config/system/ip_geoloc')
+        '!url' => url('admin/config/system/ip_geoloc'),
       )),
     );
   }
@@ -146,6 +147,12 @@ function ip_geoloc_install() {
     ->fields(array('weight' => 10))
     ->condition('name', 'ip_geoloc')
     ->execute();
+  // Dynamically generated variable data was detected on the following lines.
+  // /ip_geoloc/ip_geoloc.module line 510
+  // /ip_geoloc/ip_geoloc.module line 641
+  // /ip_geoloc/ip_geoloc.module line 846
+  // /ip_geoloc/ip_geoloc_blocks.inc line 359
+  // /ip_geoloc/views/ip_geoloc_plugin_style.inc line 614
 }
 
 /**
@@ -183,96 +190,96 @@ function ip_geoloc_schema() {
     'fields' => array(
       'id' => array(
         'description' => 'Unique id',
-        'type'        => 'serial',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
       'ip_address' => array(
         'description' => 'IP address',
-        'type'        => 'varchar',
+        'type' => 'varchar',
         // Support IPv6 as well as standard IPv4 addresses, e.g.
         // 2001:0db8:0000:0000:0000:ff00:0042:8329
         // http://en.wikipedia.org/wiki/IPv6
-        'length'      => '64',
-        'not null'    => TRUE,
+        'length' => '64',
+        'not null' => TRUE,
       ),
       'latitude' => array(
         'description' => 'Latitude',
-        'type'        => 'float',
-        'size'        => 'big',
-        'not null'    => FALSE,
+        'type' => 'float',
+        'size' => 'big',
+        'not null' => FALSE,
       ),
       'longitude' => array(
         'description' => 'Longitude',
-        'type'        => 'float',
-        'size'        => 'big',
-        'not null'    => FALSE,
+        'type' => 'float',
+        'size' => 'big',
+        'not null' => FALSE,
       ),
       'country' => array(
         'description' => 'Country',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
       ),
       'country_code' => array(
         'description' => 'ISO 3166 2-Character Country Code',
-        'type'        => 'varchar',
-        'length'      => 3,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 3,
+        'not null' => FALSE,
       ),
       'region' => array(
         'description' => 'Region',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
       ),
       'region_code' => array(
         'description' => '2-Character Region Code',
-        'type'        => 'varchar',
-        'length'      => 3,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 3,
+        'not null' => FALSE,
       ),
       'city' => array(
         'description' => 'City',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
       ),
       'postal_code' => array(
         'description' => 'Post code',
-        'type'        => 'varchar',
-        'length'      => 12,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 12,
+        'not null' => FALSE,
       ),
       'locality' => array(
         'description' => 'Suburb',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
       ),
       'route' => array(
         'description' => 'Street',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
       ),
       'street_number' => array(
         'description' => 'Street number',
-        'type'        => 'varchar',
-        'length'      => 32,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => FALSE,
       ),
       'administrative_area_level_1' => array(
         'description' => 'State or province',
-        'type'        => 'varchar',
-        'length'      => 64,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
       ),
       'formatted_address' => array(
         'description' => 'Address',
-        'type'        => 'varchar',
-        'length'      => 128,
-        'not null'    => FALSE,
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
       ),
     ),
     'primary key' => array('id'),
@@ -283,20 +290,105 @@ function ip_geoloc_schema() {
   return $schema;
 }
 
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function ip_geoloc_update_7125() { }
+
 /**
- * Allow for the storage of ipv6 as well as standard IP addresses.
+ * Implements hook_update_last_removed().
  */
-function ip_geoloc_update_7125() {
-  db_drop_index('ip_geoloc', 'ip_address');
-  $spec = array(
-    'description' => 'IP address',
-    'type'        => 'varchar',
-    // Support IPv6 as well as standard IPv4 addresses.
-    'length'      => '64',
-    'not null'    => TRUE,
-  );
-  $index = array('indexes' => array('ip_address' => array('ip_address')));
-  db_change_field('ip_geoloc', 'ip_address', 'ip_address', $spec, $index);
-  // db_add_index('ip_geoloc', 'ip_address', array('ip_address'));
-  return t('ip_address column updated.');
+function ip_geoloc_update_last_removed() {
+  return 7125;
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function ip_geoloc_update_1000() {
+  $config = config('ip_geoloc.settings');
+  $config->set('ip_geoloc_auth_method', update_variable_get('ip_geoloc_auth_method', 'novalue'));
+  $config->set('ip_geoloc_apikey', update_variable_get('ip_geoloc_apikey', ''));
+  $config->set('ip_geoloc_client_id', update_variable_get('ip_geoloc_client_id', ''));
+  $config->set('ip_geoloc_signature', update_variable_get('ip_geoloc_signature', ''));
+  $config->set('ip_geoloc_marker_anchor_pos', update_variable_get('ip_geoloc_marker_anchor_pos', 'bottom'));
+  $config->set('ip_geoloc_num_location_marker_layers', update_variable_get('ip_geoloc_num_location_marker_layers', 'IP_GEOLOC_DEF_NUM_MARKER_LAYERS'));
+  $config->set('ip_geoloc_sync_batch_size', update_variable_get('ip_geoloc_sync_batch_size', '500'));
+  $config->set('ip_geoloc_allow_session_storage', update_variable_get('ip_geoloc_allow_session_storage', 'TRUE'));
+  $config->set('ip_geoloc_store_addresses', update_variable_get('ip_geoloc_store_addresses', 'TRUE'));
+  $config->set('ip_geoloc_google_to_reverse_geocode', update_variable_get('ip_geoloc_google_to_reverse_geocode', 'FALSE'));
+  $config->set('ip_geoloc_location_check_interval', update_variable_get('ip_geoloc_location_check_interval', 'IP_GEOLOC_LOCATION_CHECK_INTERVAL'));
+  $config->set('ip_geoloc_include_pages', update_variable_get('ip_geoloc_include_pages', '*'));
+  $config->set('ip_geoloc_exclude_pages', update_variable_get('ip_geoloc_exclude_pages', 'IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS'));
+  $config->set('ip_geoloc_roles_to_reverse_geocode', update_variable_get('ip_geoloc_roles_to_reverse_geocode', 'dynamic value in file /ip_geoloc/ip_geoloc.module line 510'));
+  $config->set('ip_geoloc_smart_ip_as_backup', update_variable_get('ip_geoloc_smart_ip_as_backup', 'FALSE'));
+  $config->set('ip_geoloc_throbber_text2', update_variable_get('ip_geoloc_throbber_text2', 'novalue'));
+  $config->set('ip_geoloc_page_refresh', update_variable_get('ip_geoloc_page_refresh', 'TRUE'));
+  $config->set('ip_geoloc_debug', update_variable_get('ip_geoloc_debug', 'novalue'));
+  $config->set('ip_geoloc_geo_vocabulary_id', update_variable_get('ip_geoloc_geo_vocabulary_id', 'novalue'));
+  $config->set('ip_geoloc_marker_directory', update_variable_get('ip_geoloc_marker_directory', 'dynamic value in file /ip_geoloc/ip_geoloc.module line 641'));
+  $config->set('ip_geoloc_marker_dimensions', update_variable_get('ip_geoloc_marker_dimensions', 'novalue'));
+  $config->set('ip_geoloc_font_icon_libi', update_variable_get('ip_geoloc_font_icon_libi', 'dynamic variable in file /ip_geoloc/ip_geoloc.module line 846'));
+  $config->set('ip_geoloc_return_address_street', update_variable_get('ip_geoloc_return_address_street', 'novalue'));
+  $config->set('ip_geoloc_return_address_locality', update_variable_get('ip_geoloc_return_address_locality', 'novalue'));
+  $config->set('ip_geoloc_return_address_country', update_variable_get('ip_geoloc_return_address_country', 'novalue'));
+  $config->set('ip_geoloc_visitor_reverse_geocode', update_variable_get('ip_geoloc_visitor_reverse_geocode', 'TRUE'));
+  $config->set('ip_geoloc_recent_visitors_map_number_of_visitors', update_variable_get('ip_geoloc_recent_visitors_map_number_of_visitors', '20'));
+  $config->set('ip_geoloc_delta_div_style', update_variable_get('ip_geoloc_delta_div_style', 'dynamic variable in file /ip_geoloc/ip_geoloc_blocks.inc line 359'));
+  $config->set('ip_geoloc_current_visitor_map_options', update_variable_get('ip_geoloc_current_visitor_map_options', 'IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS'));
+  $config->set('ip_geoloc_recent_visitors_map_options', update_variable_get('ip_geoloc_recent_visitors_map_options', 'IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS'));
+  $config->set('ip_geoloc_visitor_find', update_variable_get('ip_geoloc_visitor_find', 'TRUE'));
+  $config->set('ip_geoloc_visitor_find_label', update_variable_get('ip_geoloc_visitor_find_label', ''));
+  $config->set('ip_geoloc_visitor_find_position', update_variable_get('ip_geoloc_visitor_find_position', 'novalue'));
+  $config->set('ip_geoloc_throbber_text', update_variable_get('ip_geoloc_throbber_text', ''));
+  $config->set('ip_geoloc_visitor_address_editable', update_variable_get('ip_geoloc_visitor_address_editable', 'TRUE'));
+  $config->set('ip_geoloc_visitor_address_label', update_variable_get('ip_geoloc_visitor_address_label', ''));
+  $config->set('ip_geoloc_address_element', update_variable_get('ip_geoloc_address_element', '2'));
+  $config->set('ip_geoloc_visitor_address_default', update_variable_get('ip_geoloc_visitor_address_default', ''));
+  $config->set('ip_geoloc_region_autocomplete', update_variable_get('ip_geoloc_region_autocomplete', 'novalue'));
+  $config->set('ip_geoloc_visitor_region_label', update_variable_get('ip_geoloc_visitor_region_label', ''));
+  $config->set('ip_geoloc_region_parent', update_variable_get('ip_geoloc_region_parent', 'novalue'));
+  $config->set('ip_geoloc_address_redirect', update_variable_get('ip_geoloc_address_redirect', 'novalue'));
+  $config->set('ip_geoloc_view_id_color_mappings', update_variable_get('ip_geoloc_view_id_color_mappings', 'dynamic variable in file /ip_geoloc/views/ip_geoloc_plugin_style.inc line 614'));
+  update_variable_del('ip_geoloc_auth_method');
+  update_variable_del('ip_geoloc_apikey');
+  update_variable_del('ip_geoloc_client_id');
+  update_variable_del('ip_geoloc_signature');
+  update_variable_del('ip_geoloc_marker_anchor_pos');
+  update_variable_del('ip_geoloc_num_location_marker_layers');
+  update_variable_del('ip_geoloc_sync_batch_size');
+  update_variable_del('ip_geoloc_allow_session_storage');
+  update_variable_del('ip_geoloc_store_addresses');
+  update_variable_del('ip_geoloc_google_to_reverse_geocode');
+  update_variable_del('ip_geoloc_location_check_interval');
+  update_variable_del('ip_geoloc_include_pages');
+  update_variable_del('ip_geoloc_exclude_pages');
+  update_variable_del('ip_geoloc_roles_to_reverse_geocode');
+  update_variable_del('ip_geoloc_smart_ip_as_backup');
+  update_variable_del('ip_geoloc_throbber_text2');
+  update_variable_del('ip_geoloc_page_refresh');
+  update_variable_del('ip_geoloc_debug');
+  update_variable_del('ip_geoloc_geo_vocabulary_id');
+  update_variable_del('ip_geoloc_marker_directory');
+  update_variable_del('ip_geoloc_marker_dimensions');
+  update_variable_del('ip_geoloc_font_icon_libi');
+  update_variable_del('ip_geoloc_return_address_street');
+  update_variable_del('ip_geoloc_return_address_locality');
+  update_variable_del('ip_geoloc_return_address_country');
+  update_variable_del('ip_geoloc_visitor_reverse_geocode');
+  update_variable_del('ip_geoloc_recent_visitors_map_number_of_visitors');
+  update_variable_del('ip_geoloc_delta_div_style');
+  update_variable_del('ip_geoloc_current_visitor_map_options');
+  update_variable_del('ip_geoloc_recent_visitors_map_options');
+  update_variable_del('ip_geoloc_visitor_find');
+  update_variable_del('ip_geoloc_visitor_find_label');
+  update_variable_del('ip_geoloc_visitor_find_position');
+  update_variable_del('ip_geoloc_throbber_text');
+  update_variable_del('ip_geoloc_visitor_address_editable');
+  update_variable_del('ip_geoloc_visitor_address_label');
+  update_variable_del('ip_geoloc_address_element');
+  update_variable_del('ip_geoloc_visitor_address_default');
+  update_variable_del('ip_geoloc_region_autocomplete');
+  update_variable_del('ip_geoloc_visitor_region_label');
+  update_variable_del('ip_geoloc_region_parent');
+  update_variable_del('ip_geoloc_address_redirect');
+  update_variable_del('ip_geoloc_view_id_color_mappings');
 }

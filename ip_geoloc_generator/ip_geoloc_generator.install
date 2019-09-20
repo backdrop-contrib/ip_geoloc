@@ -9,7 +9,7 @@
  * Implments hook_enable().
  */
 function ip_geoloc_generator_enable() {
-  drupal_set_message(t('Geolocation Generator is now enabled. Proceed to the <a href="!config_page">configuration page</a> to generate locations.', array(
+  backdrop_set_message(t('Geolocation Generator is now enabled. Proceed to the <a href="!config_page">configuration page</a> to generate locations.', array(
     '!config_page' => url('admin/config/system/ip_geolocation_generator'),
   )));
 }
@@ -20,4 +20,33 @@ function ip_geoloc_generator_enable() {
 function ip_geoloc_generator_uninstall() {
   // Delete all ip_geoloc_generator_* variables at once.
   db_query("DELETE FROM {variable} WHERE name LIKE 'ip_geoloc_generator_%%'");
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function ip_geoloc_generator_update_1000() {
+  $config = config('ip_geoloc_generator.settings');
+  $config->set('ip_geoloc_generator_views', update_variable_get('ip_geoloc_generator_views', 'dynamic value in file /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 122'));
+  $config->set('ip_geoloc_generator_center_lat', update_variable_get('ip_geoloc_generator_center_lat', 'IP_GEOLOC_GENERATOR_GREENWICH_OBSERVATORY_LAT'));
+  $config->set('ip_geoloc_generator_center_lon', update_variable_get('ip_geoloc_generator_center_lon', 'IP_GEOLOC_GENERATOR_GREENWICH_OBSERVATORY_LON'));
+  $config->set('ip_geoloc_generator_range_lat', update_variable_get('ip_geoloc_generator_range_lat', 'dynamic value in file /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 86'));
+  $config->set('ip_geoloc_generator_range_lon', update_variable_get('ip_geoloc_generator_range_lon', 'dynamic value in file /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 93'));
+  $config->set('ip_geoloc_generator_no_points', update_variable_get('ip_geoloc_generator_no_points', '10'));
+  update_variable_del('ip_geoloc_generator_views');
+  update_variable_del('ip_geoloc_generator_center_lat');
+  update_variable_del('ip_geoloc_generator_center_lon');
+  update_variable_del('ip_geoloc_generator_range_lat');
+  update_variable_del('ip_geoloc_generator_range_lon');
+  update_variable_del('ip_geoloc_generator_no_points');
+}
+
+/**
+ * Implements hook_install().
+ */
+function ip_geoloc_generator_install() {
+  // Dynamically generated variable data was detected.
+  // /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 122
+  // /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 86
+  // /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 93
 }

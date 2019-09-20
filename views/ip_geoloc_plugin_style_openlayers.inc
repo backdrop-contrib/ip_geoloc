@@ -41,6 +41,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
+    // TODO This variable was probably removed in Backdrop without replacement.
     $form['map'] = array(
       '#type' => 'select',
       '#title' => t('Map'),
@@ -90,15 +91,16 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
 
     // This somewhat mimics function openlayers_render_map_data() and class
     // openlayers_views_style_map, function render()
+    // TODO This variable was probably removed in Backdrop without replacement.
     $map = openlayers_map_load(isset($this->options['map']) ? $this->options['map'] : variable_get('openlayers_default_map', 'default'));
 
     // Function openlayers_build_map() invokes:
     // - hook_openlayers_map_preprocess_alter(&$map), which introduces the names
-    //   of the layers we'll use: IP_GEOLOC_MARKER_LAYER_1..3 and
-    //   IP_GEOLOC_VISITOR_MARKER_LAYER
+//   of the layers we'll use: IP_GEOLOC_MARKER_LAYER_1..3 and
+//   IP_GEOLOC_VISITOR_MARKER_LAYER
     // - hook_openlayers_layers(), which creates barebone layers for the above
     // - hook_openlayers_map_alter(&$map), for modules to make final changes to
-    //   the map and its layers.
+//   the map and its layers.
     $map = openlayers_build_map($map->data);
 
     // Return themed map if no errors found.
@@ -161,7 +163,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       // If "Hide empty map for Views" is ticked, then if the map has no
       // features, it should not be displayed.
       if (!empty($map['hide_empty_map'])) {
-        $num_location_marker_layers = variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS);
+        $num_location_marker_layers = config_get('ip_geoloc.settings', 'ip_geoloc_num_location_marker_layers');
         for ($layer = 1; $layer <= $num_location_marker_layers; $layer++) {
           if (!empty($map['layers'][IP_GEOLOC_MARKER_LAYER . $layer]['features'])) {
             $some_location_layers = TRUE;
@@ -175,7 +177,7 @@ class ip_geoloc_plugin_style_openlayers extends views_plugin_style {
       }
 
       $js = array('openlayers' => array('maps' => array($map['id'] => $map)));
-      drupal_add_js($js, 'setting');
+      backdrop_add_js($js, 'setting');
 
       // Unlike openlayers.theme.inc, theme_openlayers_map(), we use a template.
       //

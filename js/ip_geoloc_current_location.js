@@ -1,7 +1,7 @@
 
 (function ($) {
 
-  Drupal.behaviors.addCurrentLocation = {
+  Backdrop.behaviors.addCurrentLocation = {
     attach: function (context, settings) {
       ip_geoloc_getCurrentPosition(
         settings.ip_geoloc_menu_callback,
@@ -29,7 +29,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
   }
   else {
     var data = new Object;
-    data['error'] = Drupal.t('IPGV&M: device does not support W3C API.');
+    data['error'] = Backdrop.t('IPGV&M: device does not support W3C API.');
     callbackServer(callbackUrl, data, false);
   }
 
@@ -37,7 +37,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
 
     if (window.console && window.console.log) { // Does not work on IE8
       var elapsedTime = (new Date()).getTime() - startTime;
-      window.console.log(Drupal.t('!time s to determine visitor coords', { '!time' : elapsedTime/1000 }));
+      window.console.log(Backdrop.t('!time s to determine visitor coords', { '!time' : elapsedTime/1000 }));
     }
     var ip_geoloc_address = new Object;
     ip_geoloc_address['latitude']  = position.coords.latitude;
@@ -45,12 +45,12 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
     ip_geoloc_address['accuracy']  = position.coords.accuracy;
 
     if (!reverseGeocode) {
-      // Pass lat/long back to Drupal without street address.
+      // Pass lat/long back to Backdrop without street address.
       callbackServer(callbackUrl, ip_geoloc_address, refreshPage);
       return;
     }
     else if (typeof(google) === 'undefined' || typeof(google.maps) === 'undefined') {
-      ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Maps API not loaded, cannot reverse-geocode position to address')
+      ip_geoloc_address['error'] = Backdrop.t('getLocation(): Google Maps API not loaded, cannot reverse-geocode position to address')
       callbackServer(callbackUrl, ip_geoloc_address, true);
       return;
     }
@@ -76,24 +76,24 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       else {
         var error = ''; // from response or status?
         if (window.console && window.console.log) {
-          window.console.log(Drupal.t('IPGV&M: Google Geocoder returned error !code.', { '!code': status }));
+          window.console.log(Backdrop.t('IPGV&M: Google Geocoder returned error !code.', { '!code': status }));
         }
-        ip_geoloc_address['error'] = Drupal.t('getLocation(): Google Geocoder address lookup failed with status code !code. @error', { '!code': status, '@error': error });
+        ip_geoloc_address['error'] = Backdrop.t('getLocation(): Google Geocoder address lookup failed with status code !code. @error', { '!code': status, '@error': error });
         refreshPage = false;
       }
       if (window.console && window.console.log && ip_geoloc_address['formatted_address']) {
         var elapsedTime = (new Date()).getTime() - startTime;
-        window.console.log(Drupal.t('!time s to reverse-geocode to !address', { '!time' : elapsedTime/1000, '!address' : ip_geoloc_address['formatted_address'] }));
+        window.console.log(Backdrop.t('!time s to reverse-geocode to !address', { '!time' : elapsedTime/1000, '!address' : ip_geoloc_address['formatted_address'] }));
       }
 
-      // Pass lat/long, accuracy and address back to Drupal
+      // Pass lat/long, accuracy and address back to Backdrop
       callbackServer(callbackUrl, ip_geoloc_address, refreshPage);
     });
   }
 
   function handleLocationError(error) {
     var data = new Object;
-    data['error'] = Drupal.t('getCurrentPosition() returned error !code: !text. Browser: @browser',
+    data['error'] = Backdrop.t('getCurrentPosition() returned error !code: !text. Browser: @browser',
       {'!code': error.code, '!text': error.message, '@browser': navigator.userAgent});
     // Pass error back to PHP rather than alert();
     callbackServer(callbackUrl, data, false);
@@ -115,13 +115,13 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       success: function (serverData, textStatus, http) {
         if (window.console && window.console.log) {
           if (serverData && serverData.messages && serverData.messages['status']) {
-            // When JS module is used, it collects msgs via drupal_get_messages().
+            // When JS module is used, it collects msgs via backdrop_get_messages().
             var messages = serverData.messages['status'].toString();
             // Remove any HTML markup.
-            var msg = Drupal.t('From server, via JS: ') + jQuery('<p>' + messages + '</p>').text();
+            var msg = Backdrop.t('From server, via JS: ') + jQuery('<p>' + messages + '</p>').text();
           }
           else {
-            //var msg = Drupal.t('Server confirmed with: @status', { '@status': textStatus });
+            //var msg = Backdrop.t('Server confirmed with: @status', { '@status': textStatus });
           }
           if (msg) window.console.log(msg);
         }
@@ -132,7 +132,7 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       error: function (http, textStatus, error) {
         // 404 may happen intermittently and when Clean URLs isn't enabled
         // 503 may happen intermittently, see [#2158847]
-        var msg = Drupal.t('IPGV&M, ip_geoloc_current_location.js @status: @error (@code)', { '@status': textStatus, '@error': error, '@code': http.status });
+        var msg = Backdrop.t('IPGV&M, ip_geoloc_current_location.js @status: @error (@code)', { '@status': textStatus, '@error': error, '@code': http.status });
         if (window.console && window.console.log) {
           window.console.log(msg);
         }
@@ -143,10 +143,10 @@ function ip_geoloc_getCurrentPosition(callbackUrl, reverseGeocode, refreshPage) 
       complete: function(http, textStatus) {
         var msg = !http.responseText ? '' : http.responseText.replace(/(^"|"$)/g, '');
         if (msg !== '') {
-          window.console.log(Drupal.t('AJAX call completed with @status and response: @msg', { '@status': textStatus, '@msg': msg }));
+          window.console.log(Backdrop.t('AJAX call completed with @status and response: @msg', { '@status': textStatus, '@msg': msg }));
         }
         else {
-          window.console.log(Drupal.t('AJAX call completed with @status and empty response.', { '@status': textStatus }));
+          window.console.log(Backdrop.t('AJAX call completed with @status and empty response.', { '@status': textStatus }));
         }
       }
     });

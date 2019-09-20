@@ -35,9 +35,9 @@ define('IP_GEOLOC_GOOGLE_MAPS_SERVER', 'https://maps.googleapis.com/maps/api/geo
 function ip_geoloc_store_location($location) {
   // Give contributed modules a chance to add their 2 cents by implementing
   // hook_get_ip_geolocation_alter()
-  drupal_alter('get_ip_geolocation', $location);
+  backdrop_alter('get_ip_geolocation', $location);
 
-  if (!variable_get('ip_geoloc_store_addresses', TRUE)) {
+  if (!config_get('ip_geoloc.settings', 'ip_geoloc_store_addresses')) {
     return;
   }
 
@@ -61,7 +61,7 @@ function ip_geoloc_store_location($location) {
     $full_location = &$location;
   }
   else {
-    // When updating, drupal_write_record() does not erase fields not present
+    // When updating, backdrop_write_record() does not erase fields not present
     // in $location.
     $empty_location['latitude'] = '';
     $empty_location['longitude'] = '';
@@ -81,15 +81,15 @@ function ip_geoloc_store_location($location) {
     ip_geoloc_debug(t('IPGV&M: updating db with above location'));
   }
   try {
-    $result = drupal_write_record('ip_geoloc', $full_location, $existing_location ? array('id') : array());
+    $result = backdrop_write_record('ip_geoloc', $full_location, $existing_location ? array('id') : array());
   }
   catch (PDOException $e) {
     // May happen when a fields contains illegal characters.
-    drupal_set_message(check_plain($e->getMessage()), 'error');
+    backdrop_set_message(check_plain($e->getMessage()), 'error');
     $result = FALSE;
   }
   if ($result === FALSE) {
-    drupal_set_message(t('IPGV&M: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
+    backdrop_set_message(t('IPGV&M: could not save location to db: !location', array('!location' => ip_geoloc_pretty_print($full_location))), 'error');
   }
   return $result;
 }
@@ -111,11 +111,11 @@ function ip_geoloc_store_location($location) {
  */
 function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', $style = '', $balloon_text = '') {
 
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
-  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap.js');
+  backdrop_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
+  backdrop_add_js(backdrop_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap.js');
 
   $script_code = "displayGMap($latitude, $longitude, '$div_id', '$balloon_text');";
-  drupal_add_js($script_code, array('type' => 'inline', 'scope' => 'footer'));
+  backdrop_add_js($script_code, array('type' => 'inline', 'scope' => 'footer'));
 
   $map_placeholder = "<div id='$div_id'" . (empty($style) ? '' : " style='$style'") . '></div>';
   return $map_placeholder;
@@ -147,19 +147,19 @@ function ip_geoloc_output_map($latitude, $longitude, $div_id = 'ip-geoloc-map', 
 function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-location',
     $map_options = NULL, $map_style = NULL, $latitude = NULL, $longitude = NULL, $info_text = NULL) {
 
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
-  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_current_loc.js');
+  backdrop_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
+  backdrop_add_js(backdrop_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_current_loc.js');
 
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_CURRENT_VISITOR_MAP_OPTIONS;
   }
   $settings = array(
     'ip_geoloc_current_location_map_div' => $div_id,
-    'ip_geoloc_current_location_map_options' => drupal_json_decode($map_options),
+    'ip_geoloc_current_location_map_options' => backdrop_json_decode($map_options),
     'ip_geoloc_current_location_map_latlng' => array($latitude, $longitude),
     'ip_geoloc_current_location_map_info_text' => $info_text,
   );
-  drupal_add_js($settings, 'setting');
+  backdrop_add_js($settings, 'setting');
 
   if (!isset($map_style)) {
     $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;
@@ -185,8 +185,8 @@ function ip_geoloc_output_map_current_location($div_id = 'ip-geoloc-map-current-
  */
 function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map-multi-locations', $map_options = NULL, $map_style = NULL) {
 
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
-  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_visitor.js');
+  backdrop_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
+  backdrop_add_js(backdrop_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_visitor.js');
 
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
@@ -194,9 +194,9 @@ function ip_geoloc_output_map_multi_visitor($locations, $div_id = 'ip-geoloc-map
   $settings = array(
     'ip_geoloc_locations' => $locations,
     'ip_geoloc_multi_location_map_div' => $div_id,
-    'ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options),
+    'ip_geoloc_multi_location_map_options' => backdrop_json_decode($map_options),
   );
-  drupal_add_js($settings, 'setting');
+  backdrop_add_js($settings, 'setting');
 
   if (!isset($map_style)) {
     $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;
@@ -255,8 +255,8 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
     $map_options = NULL, $map_style = NULL, $marker_color = NULL, $visitor_marker = TRUE,
     $center_option = 0, $center_latlng = array(0, 0), $visitor_location_gps = TRUE) {
 
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
-  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js');
+  backdrop_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
+  backdrop_add_js(backdrop_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_gmap_multi_loc.js');
 
   if (!isset($map_options)) {
     $map_options = IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS;
@@ -266,7 +266,7 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
   $marker_dimensions = explode('x', ip_geoloc_marker_dimensions());
   $marker_width  = (int) $marker_dimensions[0];
   $marker_height = (int) $marker_dimensions[1];
-  switch (variable_get('ip_geoloc_marker_anchor_pos', 'bottom')) {
+  switch (config_get('ip_geoloc.settings', 'ip_geoloc_marker_anchor_pos')) {
     case 'top':
       $marker_anchor = 0;
       break;
@@ -328,18 +328,18 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
 
   $settings = array(
     'ip_geoloc_multi_location_map_div' => $div_id,
-    'ip_geoloc_multi_location_map_options' => drupal_json_decode($map_options),
-    'ip_geoloc_multi_location_center_option' => (int)$center_option,
+    'ip_geoloc_multi_location_map_options' => backdrop_json_decode($map_options),
+    'ip_geoloc_multi_location_center_option' => (int) $center_option,
     'ip_geoloc_multi_location_center_latlng' => $center_latlng,
     'ip_geoloc_multi_location_visitor_marker' => $visitor_marker,
     'ip_geoloc_multi_location_visitor_location_gps' => $visitor_location_gps,
     'ip_geoloc_multi_location_marker_directory' => $marker_directory,
-    'ip_geoloc_multi_location_marker_width' => (int)$marker_width,
-    'ip_geoloc_multi_location_marker_height' => (int)$marker_height,
-    'ip_geoloc_multi_location_marker_anchor' => (int)$marker_anchor,
+    'ip_geoloc_multi_location_marker_width' => (int) $marker_width,
+    'ip_geoloc_multi_location_marker_height' => (int) $marker_height,
+    'ip_geoloc_multi_location_marker_anchor' => (int) $marker_anchor,
     'ip_geoloc_multi_location_marker_default_color' => $marker_color,
   );
-  drupal_add_js(array($settings), 'setting');
+  backdrop_add_js(array($settings), 'setting');
 
   if (!isset($map_style)) {
     $map_style = IP_GEOLOC_MAP_DIV_DEFAULT_STYLE;
@@ -365,38 +365,39 @@ function ip_geoloc_output_map_multi_location($locations, $div_id = 'ip-geoloc-ma
  *       as in maintenance mode menu items are not available.
  */
 function ip_geoloc_get_current_location($menu_callback = NULL, $reverse_geocode = NULL, $refresh_page = NULL) {
+  $config = config('ip_geoloc.settings');
 
-  $throbber_text = variable_get('ip_geoloc_throbber_text2');
+  $throbber_text = $config->get('ip_geoloc_throbber_text2');
   if (empty($throbber_text)) {
     $throbber_text = IP_GEOLOC_THROBBER_DEFAULT_TEXT;
   }
   if ($throbber_text != '<none>') {
-    drupal_set_message(filter_xss_admin($throbber_text));
+    backdrop_set_message(filter_xss_admin($throbber_text));
   }
   _ip_geoloc_set_session_value('last_position_check', time());
   _ip_geoloc_set_session_value('position_pending_since', microtime(TRUE));
 
   // Note that IP_GEOLOC_GOOGLE_MAPS includes Google API or Client key.
   // See ip_geoloc_build_google_api_url().
-  drupal_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
-  drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
+  backdrop_add_js(IP_GEOLOC_GOOGLE_MAPS, array('type' => 'external', 'group' => JS_LIBRARY));
+  backdrop_add_js(backdrop_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_current_location.js');
 
   if (!isset($menu_callback)) {
     global $base_url;
-    $menu_callback = "$base_url/" . (variable_get('clean_url', 0) ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location');
+    $menu_callback = "$base_url/" . (config_get('system.performance', 'clean_url') ? 'js/ip_geoloc/current_location' : '?q=js/ip_geoloc/current_location');
   }
   if (!isset($reverse_geocode)) {
-    $reverse_geocode = variable_get('ip_geoloc_visitor_reverse_geocode', TRUE);
+    $reverse_geocode = $config->get('ip_geoloc_visitor_reverse_geocode');
   }
   if (!isset($refresh_page)) {
-    $refresh_page = variable_get('ip_geoloc_page_refresh', TRUE) && !path_is_admin($_GET['q']);
+    $refresh_page = $config->get('ip_geoloc_page_refresh') && !path_is_admin($_GET['q']);
   }
   $settings = array(
     'ip_geoloc_menu_callback' => $menu_callback,
     'ip_geoloc_refresh_page' => $refresh_page,
     'ip_geoloc_reverse_geocode' => $reverse_geocode,
   );
-  drupal_add_js($settings, 'setting');
+  backdrop_add_js($settings, 'setting');
 }
 
 /**
@@ -433,7 +434,7 @@ function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = F
     $location = array('ip_address' => $ip_address);
     if (ip_geoloc_use_smart_ip_if_enabled($location) || ip_geoloc_use_geoip_api_if_enabled($location)) {
       if (!isset($reverse_geocode)) {
-        $reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', FALSE);
+        $reverse_geocode = config_get('ip_geoloc.settings', 'ip_geoloc_google_to_reverse_geocode');
       }
       if ($reverse_geocode && isset($location['latitude']) && isset($location['longitude'])) {
         if ($google_address = ip_geoloc_reverse_geocode($location['latitude'], $location['longitude'])) {
@@ -445,11 +446,11 @@ function ip_geoloc_get_location_by_ip($ip_address, $resample = FALSE, $store = F
         }
       }
       if ($store) {
-        // Calls drupal_alter().
+        // Calls backdrop_alter().
         ip_geoloc_store_location($location);
       }
       else {
-        drupal_alter('get_ip_geolocation', $location);
+        backdrop_alter('get_ip_geolocation', $location);
       }
     }
   }
@@ -498,7 +499,7 @@ function ip_geoloc_get_address($latitude, $longitude, $lang = NULL) {
  */
 function ip_geoloc_reverse_geocode($latitude, $longitude, $lang = NULL) {
   if (empty($latitude) || empty($latitude)) {
-    drupal_set_message(t('IPGV&M: cannot reverse-geocode to address as no lat/long was specified.'), 'warning');
+    backdrop_set_message(t('IPGV&M: cannot reverse-geocode to address as no lat/long was specified.'), 'warning');
     return FALSE;
   }
   $query_start = microtime(TRUE);
@@ -506,48 +507,58 @@ function ip_geoloc_reverse_geocode($latitude, $longitude, $lang = NULL) {
   if (!empty($lang)) {
     $url .= "&language=$lang";
   }
-  $response = drupal_http_request($url);
+  $response = backdrop_http_request($url);
   if (!empty($response->error)) {
     $msg_args = array(
       '%url' => $url,
       '@code' => $response->code,
       '%error' => $response->error,
     );
-    drupal_set_message(t('IPGV&M: the HTTP request %url returned the following error (code @code): %error.', $msg_args), 'error');
+    backdrop_set_message(t('IPGV&M: the HTTP request %url returned the following error (code @code): %error.', $msg_args), 'error');
     watchdog('IPGV&M', 'Error (code @code): %error. Request: %url', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
-  $data = drupal_json_decode($response->data);
+  $data = backdrop_json_decode($response->data);
   if ($data['status'] == 'OVER_QUERY_LIMIT') {
     $msg_args = array('%url' => $url);
     if (user_access('administer site configuration')) {
-      drupal_set_message(t('IPGV&M: Server is over its query limit. Request: %url', $msg_args), 'error');
+      backdrop_set_message(t('IPGV&M: Server is over its query limit. Request: %url', $msg_args), 'error');
     }
     watchdog('IPGV&M', 'Server is over its query limit. Request: %url', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   if ($data['status'] == 'ZERO_RESULTS' || !isset($data['results'][0])) {
-    $msg_args = array('@protocol' => $response->protocol, '%url' => $url);
-    drupal_set_message(t('IPGV&M: the @protocol request %url succeeded, but returned no results.', $msg_args), 'warning');
+    $msg_args = array(
+      '@protocol' => $response->protocol,
+      '%url' => $url,
+    );
+    backdrop_set_message(t('IPGV&M: the @protocol request %url succeeded, but returned no results.', $msg_args), 'warning');
     watchdog('IPGV&M', 'No results from @protocol request %url.', $msg_args, WATCHDOG_WARNING);
     return FALSE;
   }
   if ($data['status'] != 'OK') {
-    $msg_args = array('%url' => $url, '%error' => $data['status']);
-    drupal_set_message(t('IPGV&M: unknown error %error. Request: %url..', $msg_args), 'error');
+    $msg_args = array(
+      '%url' => $url,
+      '%error' => $data['status'],
+    );
+    backdrop_set_message(t('IPGV&M: unknown error %error. Request: %url..', $msg_args), 'error');
     watchdog('IPGV&M', 'Unknown error %error. Request: %url.', $msg_args, WATCHDOG_ERROR);
     return FALSE;
   }
   $google_address = $data['results'][0];
   if (empty($google_address['formatted_address'])) {
-    $msg_args = array('@lat' => $latitude, '@long' => $longitude);
+    $msg_args = array(
+      '@lat' => $latitude,
+      '@long' => $longitude,
+    );
     ip_geoloc_debug(t('IPGV&M: (@lat, @long) could not be reverse-geocoded to a street address.', $msg_args), 'warning');
     watchdog('IPGV&M', '(@lat, @long) could not be reverse-geocoded to a street address..', $msg_args, WATCHDOG_WARNING);
   }
   else {
     $sec = number_format(microtime(TRUE) - $query_start, 1);
     $msg_args = array(
-      '@lat' => $latitude, '@long' => $longitude,
+      '@lat' => $latitude,
+      '@long' => $longitude,
       '%sec' => $sec,
       '%address' => $google_address['formatted_address'],
     );
@@ -565,7 +576,7 @@ function ip_geoloc_reverse_geocode($latitude, $longitude, $lang = NULL) {
  */
 function ip_geoloc_get_visitor_location() {
   $location = _ip_geoloc_get_session_value('location');
-  drupal_alter('ip_geoloc_get_visitor_location', $location);
+  backdrop_alter('ip_geoloc_get_visitor_location', $location);
   return $location;
 }
 
@@ -731,14 +742,14 @@ function ip_geoloc_earth_distance($longitude1, $latitude1, $longitude2, $latitud
   $radius = ip_geoloc_earth_radius(0.5 * ($latitude1 + $latitude2));
   $distance = acos($cosangle) * $radius;
   /*
-  if ($distance < 1000) {
-  // see http://en.wikipedia.org/wiki/Haversine_formula
-  $sinlat = sin(0.5*($lat1 - $lat2));
-  $sinlong = sin(0.5*($long1 - $long2));
-  $sinangle = $sinlat*$sinlat + cos($long1)*cos($long2)*$sinlong*$sinlong;
-  $distance = 2.0 * asin(sqrt($sinangle)) * $radius;
-  }
-  */
+   if ($distance < 1000) {
+   // see http://en.wikipedia.org/wiki/Haversine_formula
+   $sinlat = sin(0.5*($lat1 - $lat2));
+   $sinlong = sin(0.5*($long1 - $long2));
+   $sinangle = $sinlat*$sinlat + cos($long1)*cos($long2)*$sinlong*$sinlong;
+   $distance = 2.0 * asin(sqrt($sinangle)) * $radius;
+   }
+   */
   return $distance;
 }
 
@@ -816,5 +827,5 @@ function ip_geoloc_add_random_displacement(&$location, $radius_km) {
  * @ee http://php.net/manual/en/function.mt-getrandmax.php
  */
 function ip_geoloc_random($min = 0, $max = 1) {
-    return $min + mt_rand() / mt_getrandmax() * ($max - $min);
+  return $min + mt_rand() / mt_getrandmax() * ($max - $min);
 }

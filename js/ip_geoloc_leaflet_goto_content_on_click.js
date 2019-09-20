@@ -17,7 +17,7 @@ jQuery(document).bind('leaflet.map', function(event, map, lMap) {
         var id = e.target ? e.target.feature_id : null;
         if (!id && e.layer) id = e.layer.feature_id;
         if (id) {
-          document.location.href = Drupal.settings.basePath + 'node/' + id;
+          document.location.href = Backdrop.settings.basePath + 'node/' + id;
         }
       });
     }

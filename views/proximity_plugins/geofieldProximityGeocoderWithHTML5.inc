@@ -41,11 +41,11 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
     // This description is shown on the Geofield FIELD (not FILTER) form.
     $form['geofield_proximity_geocoder']['#description'] = t("Enter a partial address or leave blank to use the visitor's current position as the origin.");
     /* Show/hide works on whole fields only, not on description only...
-    $form['geofield_proximity_geocoder']['#description']['#states'] = array(
-      'visible' => array(
-        'select[name="options[source]"]' => array('value' => 'geocoder_with_HTML5'),
-      ),
-    );*/
+     $form['geofield_proximity_geocoder']['#description']['#states'] = array(
+     'visible' => array(
+     'select[name="options[source]"]' => array('value' => 'geocoder_with_HTML5'),
+     ),
+     );*/
     $form['geofield_proximity_geocoder_engine']['#states'] = array(
       'invisible' => array(
         ':input[name="options[geofield_proximity_geocoder]"]' => array('value' => ''),
@@ -106,14 +106,14 @@ class geofieldProximityGeocoderWithHTML5 extends geofieldProximityGeocoder {
     }
     $origin = isset($exposed_filter['origin']) && is_string($exposed_filter['origin']) ? trim($exposed_filter['origin']) : '';
 
-    $origin_is_visitor = drupal_strlen($origin) <= 1 || in_array($origin, array('visitor', t('visitor'), 'me', t('me')));
+    $origin_is_visitor = backdrop_strlen($origin) <= 1 || in_array($origin, array('visitor', t('visitor'), 'me', t('me')));
 
     if ($origin_is_visitor) {
       $location = ip_geoloc_get_visitor_location();
       if (isset($location['latitude'])) {
         return array(
           'latitude' => $location['latitude'],
-          'longitude' => $location['longitude']
+          'longitude' => $location['longitude'],
         );
       }
       ip_geoloc_debug('IGPV&M proximity: visitor location temporarily not available.', 'warning');

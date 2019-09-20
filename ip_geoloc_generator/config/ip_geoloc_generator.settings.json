@@ -1,0 +1,9 @@
+{
+    "_config_name": "ip_geoloc_generator.settings",
+    "ip_geoloc_generator_views": "dynamic value in file /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 122",
+    "ip_geoloc_generator_center_lat": "IP_GEOLOC_GENERATOR_GREENWICH_OBSERVATORY_LAT",
+    "ip_geoloc_generator_center_lon": "IP_GEOLOC_GENERATOR_GREENWICH_OBSERVATORY_LON",
+    "ip_geoloc_generator_range_lat": "dynamic value in file /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 86",
+    "ip_geoloc_generator_range_lon": "dynamic value in file /ip_geoloc/ip_geoloc_generator/ip_geoloc_generator.module line 93",
+    "ip_geoloc_generator_no_points": "10"
+}

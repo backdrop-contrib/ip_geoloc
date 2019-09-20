@@ -1,5 +1,6 @@
 name = Geolocation Generator
 description = Generates random locations to test IP Geolocation Views & Maps module
-core = 7.x
+backdrop = 1.x
+type = module
 configure = admin/config/system/ip_geoloc_generator
 dependencies[] = views

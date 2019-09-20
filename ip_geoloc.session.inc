@@ -22,7 +22,7 @@
  */
 function _ip_geoloc_set_session_value($name, $value = NULL) {
 
-  if (!variable_get('ip_geoloc_allow_session_storage', TRUE)) {
+  if (!config_get('ip_geoloc.settings', 'ip_geoloc_allow_session_storage')) {
     return NULL;
   }
 

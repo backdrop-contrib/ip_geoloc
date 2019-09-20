@@ -48,7 +48,7 @@ L.Control.ZoomIndicator = L.Control.extend({
 
   onAdd: function(map) {
     this.indicator = L.DomUtil.create('div', 'leaflet-control-zoom-indicator leaflet-bar');
-    this.indicator.setAttribute('title', Drupal.t('Zoom level'));
+    this.indicator.setAttribute('title', Backdrop.t('Zoom level'));
     this.indicator.innerHTML = this.options.prefix + map.getZoom();
     map.on('zoomend', this.update, this);
     return this.indicator;
@@ -80,14 +80,14 @@ L.Control.Reset = L.Control.extend({
       // Assume label is a font-icon specification, e.g. 'fa fa-repeat'.
       L.DomUtil.addClass(button, this.options.label);
     }
-    button.setAttribute('title', Drupal.t('Reset'));
+    button.setAttribute('title', Backdrop.t('Reset'));
 
     // Must pass "this" in as context, or onClick() will not know us.
     L.DomEvent
       .on(button, 'click', this.onClick, this)
       .on(button, 'dblclick', L.DomEvent.stopPropagation)
       .on(button, 'dblclick', function(event) {
-         alert(Drupal.t('A single click is sufficient!'));
+         alert(Backdrop.t('A single click is sufficient!'));
       });
 
     return button;
@@ -108,7 +108,7 @@ L.Control.ClusterToggle = L.Control.extend({
   },
 
   onAdd: function(map) {
-    var leafletSettings = Drupal.settings.leaflet;
+    var leafletSettings = Backdrop.settings.leaflet;
     for (var m = 0; m < leafletSettings.length; m++) {
       // Get here once per map, i.e. once per containing div.
       if (L.DomUtil.get(leafletSettings[m].mapId) === map._container) {
@@ -117,14 +117,14 @@ L.Control.ClusterToggle = L.Control.extend({
       }
     }
     var button = L.DomUtil.create('a', 'leaflet-control-cluster leaflet-bar');
-    button.setAttribute('title', Drupal.t('Toggle clustering'));
+    button.setAttribute('title', Backdrop.t('Toggle clustering'));
 
     // Must pass "this" in as context, or onClick() will not know us.
     L.DomEvent
       .on(button, 'click', this.onClick, this)
       .on(button, 'dblclick', L.DomEvent.stopPropagation)
       .on(button, 'dblclick', function(event) {
-         alert(Drupal.t('A single click is sufficient!'));
+         alert(Backdrop.t('A single click is sufficient!'));
       });
 
     return button;
@@ -160,7 +160,7 @@ L.control.clusterToggle = function(options) {
 
 if (L.Control.MiniMap) {
   L.extend(L.Control.MiniMap.prototype, {
-    hideText: Drupal.t('Hide this inset'),
-    showText: Drupal.t('Show map inset')
+    hideText: Backdrop.t('Hide this inset'),
+    showText: Backdrop.t('Show map inset')
   });
 }

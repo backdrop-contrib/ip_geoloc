@@ -1,6 +1,6 @@
 (function ($) {
 
-  Drupal.behaviors.addGMapCurrentLocation = {
+  Backdrop.behaviors.addGMapCurrentLocation = {
     attach: function (context, settings) {
 
       if (typeof(google) !== 'object') {
@@ -34,7 +34,7 @@
         var infoText = settings.ip_geoloc_current_location_map_info_text;
         var lat = latLng[0].toFixed(4);
         var lon = latLng[1].toFixed(4);
-        var latLongText = Drupal.t('lat. !lat, lon. !lon', { '!lat': lat, '!lon': lon });
+        var latLongText = Backdrop.t('lat. !lat, lon. !lon', { '!lat': lat, '!lon': lon });
         var text = infoText ? infoText + '<br/>' + latLongText : latLongText;
         var infoPopUp = new google.maps.InfoWindow({ content: text });
         google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) });
@@ -61,12 +61,12 @@
             infoText = response[0]['formatted_address'];
           }
           else {
-            alert(Drupal.t('IPGV&M: Google address lookup for HTML5 position failed with status code !code.', { '!code': status }));
+            alert(Backdrop.t('IPGV&M: Google address lookup for HTML5 position failed with status code !code.', { '!code': status }));
           }
           var lat = coords.latitude.toFixed(4);
           var lon = coords.longitude.toFixed(4);
-          var latLongText = Drupal.t('lat. !lat, lon. !lon', { '!lat': lat, '!lon': lon }) + '<br/>' +
-            Drupal.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
+          var latLongText = Backdrop.t('lat. !lat, lon. !lon', { '!lat': lat, '!lon': lon }) + '<br/>' +
+            Backdrop.t('accuracy !accuracy m', { '!accuracy': coords.accuracy });
           var infoPopUp = new google.maps.InfoWindow({ content: infoText + '<br/>' + latLongText });
           google.maps.event.addListener(marker, 'click', function() { infoPopUp.open(map, marker) })
         });

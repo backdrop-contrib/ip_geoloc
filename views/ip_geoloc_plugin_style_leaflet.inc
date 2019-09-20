@@ -35,50 +35,50 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['ip_geoloc_views_plugin_longitude'] = array('default' => $longitude);
 
     $options['default_marker'] = array(
-        'contains' => array(
-            'default_marker_color' => array('default' => ''),
-            'default_marker_special_char' => array('default' => ''),
-            'default_marker_special_char_class' => array('default' => ''),
-        ),
+      'contains' => array(
+        'default_marker_color' => array('default' => ''),
+        'default_marker_special_char' => array('default' => ''),
+        'default_marker_special_char_class' => array('default' => ''),
+      ),
     );
     $options['visitor_marker'] = array(
-        'contains' => array(
-            'visitor_marker_color' => array('default' => ''),
-            'visitor_marker_special_char' => array('default' => ''),
-            'visitor_marker_special_char_class' => array('default' => ''),
-            'visitor_marker_balloon_text' => array('default' => ''),
-            'visitor_marker_accuracy_circle' => array('default' => FALSE),
-        ),
+      'contains' => array(
+        'visitor_marker_color' => array('default' => ''),
+        'visitor_marker_special_char' => array('default' => ''),
+        'visitor_marker_special_char_class' => array('default' => ''),
+        'visitor_marker_balloon_text' => array('default' => ''),
+        'visitor_marker_accuracy_circle' => array('default' => FALSE),
+      ),
     );
 
     $options['differentiator'] = array(
-        'contains' => array(
-            'differentiator_field' => array('default' => ''),
-        ),
+      'contains' => array(
+        'differentiator_field' => array('default' => ''),
+      ),
     );
 
     $options['center_option'] = array('default' => 0);
 
     $options['tags'] = array(
-        'contains' => array(
-            'marker_tag' => array('default' => ''),
-            'tag_css_class' => array('default' => 'tag-inside-marker'),
-        ),
+      'contains' => array(
+        'marker_tag' => array('default' => ''),
+        'tag_css_class' => array('default' => 'tag-inside-marker'),
+      ),
     );
 
     $options['tooltips'] = array(
-        'contains' => array(
-            'marker_tooltip' => array('default' => ''),
-        ),
+      'contains' => array(
+        'marker_tooltip' => array('default' => ''),
+      ),
     );
 
     $options['sync'] = array(
-        'contains' => array(
-            LEAFLET_SYNC_CONTENT_TO_MARKER => array('default' => FALSE),
-            LEAFLET_SYNC_MARKER_TO_CONTENT => array('default' => FALSE),
-            LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP => array('default' => TRUE),
-            LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT => array('default' => TRUE),
-        ),
+      'contains' => array(
+        LEAFLET_SYNC_CONTENT_TO_MARKER => array('default' => FALSE),
+        LEAFLET_SYNC_MARKER_TO_CONTENT => array('default' => FALSE),
+        LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP => array('default' => TRUE),
+        LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT => array('default' => TRUE),
+      ),
     );
     $options['full_screen'] = array('default' => FALSE);
     $options['scale_metric'] = array('default' => FALSE);
@@ -87,9 +87,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
     $options['on_click_options'] = array(
       'contains' => array(
-        'goto_content_on_click'  => array('default' => FALSE),
+        'goto_content_on_click' => array('default' => FALSE),
         'open_balloons_on_click' => array('default' => TRUE),
-      )
+      ),
     );
     $options['on_hover_options'] = array(
       'contains' => array(
@@ -98,8 +98,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'shadow_on_hover_effect' => array('default' => 'animated blur'),
         'use_tweenmax_for_shadow_on_hover' => array('default' => TWEENMAX_VERSION),
         'polygon_fill_opacity_on_hover' => array('default' => '0.6'),
-        'polygon_line_weight_on_hover'=> array('default' => ''),
-      )
+        'polygon_line_weight_on_hover' => array('default' => ''),
+      ),
     );
 
     $options['map_reset'] = array('default' => FALSE);
@@ -121,22 +121,22 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['disable_clustering_at_zoom'] = array('default' => '');
 
     $options['cluster_differentiator'] = array(
-        'contains' => array(
-            'cluster_differentiator_fields' => array('default' => ''),
-            'zoom_ranges' => array('default' => array()),
-            'cluster_tooltips' => array('default' => TRUE),
-            'cluster_outline' => array('default' => 0),
-            'cluster_touch_mode' => array('default' => 1),
-        ),
+      'contains' => array(
+        'cluster_differentiator_fields' => array('default' => ''),
+        'zoom_ranges' => array('default' => array()),
+        'cluster_tooltips' => array('default' => TRUE),
+        'cluster_outline' => array('default' => 0),
+        'cluster_touch_mode' => array('default' => 1),
+      ),
     );
 
     $options['cluster_aggregation'] = array(
-        'contains' => array(
-            'aggregation_field' => array('default' => ''),
-            'aggregation_function' => array('default' => ''),
-            'ranges' => array('contains' => array()),
-            'precision' => array('default' => '')
-        ),
+      'contains' => array(
+        'aggregation_field' => array('default' => ''),
+        'aggregation_function' => array('default' => ''),
+        'ranges' => array('contains' => array()),
+        'precision' => array('default' => ''),
+      ),
     );
     $range = 10;
     foreach (array('small', 'medium', 'large') as $size) {
@@ -148,28 +148,28 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $options['empty_map_center'] = array('default' => '');
 
     $options['map_options'] = array(
-        'contains' => array(
-            'maxzoom' => array('default' => 18),
-            'zoom' => array('default' => 2),
-            'zoom_on_click' => array('default' => ''),
-            'center_lat' => array('default' => ''),
-            'center_lon' => array('default' => ''),
-            'scrollwheelzoom' => array('default' => TRUE),
-            'dragging' => array('default' => TRUE),
-            'separator' => array('default' => '<br/>'),
-        ),
+      'contains' => array(
+        'maxzoom' => array('default' => 18),
+        'zoom' => array('default' => 2),
+        'zoom_on_click' => array('default' => ''),
+        'center_lat' => array('default' => ''),
+        'center_lon' => array('default' => ''),
+        'scrollwheelzoom' => array('default' => TRUE),
+        'dragging' => array('default' => TRUE),
+        'separator' => array('default' => '<br/>'),
+      ),
     );
     $options['vector_display']['contains'] = array(
-        'stroke_override' => array('default' => 0),
-        'stroke' => array('default' => 1),
-        'color' => array('default' => ''),
-        'weight' => array('default' => ''),
-        'opacity' => array('default' => ''),
-        'dashArray' => array('default' => ''),
-        'fill' => array('default' => 1),
-        'fillColor' => array('default' => ''),
-        'fillOpacity' => array('default' => ''),
-        'clickable' => array('default' => 1),
+      'stroke_override' => array('default' => 0),
+      'stroke' => array('default' => 1),
+      'color' => array('default' => ''),
+      'weight' => array('default' => ''),
+      'opacity' => array('default' => ''),
+      'dashArray' => array('default' => ''),
+      'fill' => array('default' => 1),
+      'fillColor' => array('default' => ''),
+      'fillOpacity' => array('default' => ''),
+      'clickable' => array('default' => 1),
     );
     return $options;
   }
@@ -182,13 +182,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
-    $path = drupal_get_path('module', 'ip_geoloc');
+    $path = backdrop_get_path('module', 'ip_geoloc');
     $select_css_file = strpos(ip_geoloc_marker_directory(), 'amarkers') ? 'ip_geoloc_admin_select_amarkers.css' : 'ip_geoloc_admin_select_markers.css';
 
     $form['#attached'] = array('css' => array(
         "$path/css/ip_geoloc_admin.css",
         "$path/css/$select_css_file",
-    ));
+      ));
     $form_state['renderer'] = 'leaflet';
 
     $weight = 1;
@@ -218,185 +218,187 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $maps[$key] = $map['label'];
     }
     $form['map'] = array(
-        '#title' => t('Map'),
-        '#type' => 'select',
-        '#options' => $maps,
-        '#default_value' => $this->options['map'],
-        '#required' => TRUE,
-        '#weight' => $weight++,
+      '#title' => t('Map'),
+      '#type' => 'select',
+      '#options' => $maps,
+      '#default_value' => $this->options['map'],
+      '#required' => TRUE,
+      '#weight' => $weight++,
     );
     $desc1 = t('Examples: <em>250</em> or <em>50em</em> or <em>40vh</em> (percentage of viewport height).');
     $desc2 = t('If left blank, the height defaults to 300 pixels. The width of the map will extend to its bounding container.');
     $desc3 = t('You may enter <em>&lt;none></em>. If you do, then the height attribute must be set through Javascript or CSS elsewhere or the map will not display. CSS example: <em>.ip-geoloc-map .leaflet-container { height: 150px; }</em>');
     $form['map_height'] = array(
-        '#title' => t('Map height'),
-        '#type' => 'textfield',
-        '#size' => 7,
-        '#default_value' => $this->options['map_height'],
-        '#description' =>  $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
-        '#weight' => $weight++,
+      '#title' => t('Map height'),
+      '#type' => 'textfield',
+      '#size' => 7,
+      '#default_value' => $this->options['map_height'],
+      '#description' => $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
+      '#weight' => $weight++,
     );
   }
 
   private function _add_default_marker(&$form, &$weight) {
-    $path = drupal_get_path('module', 'ip_geoloc');
+    $path = backdrop_get_path('module', 'ip_geoloc');
     $desc1 = t('In addition to selecting a color, you may superimpose a special icon on top of each marker. <br><a target="fsymbols" href="!url_fsymbols">fsymbols</a> characters can be copied and pasted straight into the <strong>Font icon character</strong> field. Other libraries like <a target="fontawesome" href="!url_fontawesome">Font Awesome</a> and <a target="flaticon" href="!url_flaticon">flaticon</a> use names that you type in the <strong>Font icon class</strong> field.', array(
-        '!url_fsymbols' => url('http://fsymbols.com'),
-        '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
-        '!url_flaticon' => url('http://flaticon.com'),
+      '!url_fsymbols' => url('http://fsymbols.com'),
+      '!url_fontawesome' => url('http://fortawesome.github.io/Font-Awesome/cheatsheet'),
+      '!url_flaticon' => url('http://flaticon.com'),
     ));
     $desc2 = t('<em>fsymbols</em> require no further installation. For other libraries see the <a target="readme" href="!url_readme">README</a>.', array(
-        '!url_readme' => url("$path/README.txt"),
+      '!url_readme' => url("$path/README.txt"),
     ));
     $desc3 = t('All this works best with the markers from the <em>/amarkers</em> directory, configurable <a target="config" href="!url_config">here</a>.', array(
-        '!url_config' => url('admin/config/system/ip_geoloc'),
+      '!url_config' => url('admin/config/system/ip_geoloc'),
     ));
 
     $form['default_marker'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Default marker style'),
-        '#description' => $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
-        '#weight' => $weight++,
+      '#type' => 'fieldset',
+      '#title' => t('Default marker style'),
+      '#description' => $desc1 . '<br/>' . $desc2 . '<br/>' . $desc3,
+      '#weight' => $weight++,
     );
     $form['default_marker']['default_marker_color'] = array(
-        '#title' => t('Style/color'),
-        '#type' => 'select',
-        '#default_value' => $this->options['default_marker']['default_marker_color'],
-        '#options' => ip_geoloc_marker_colors(),
-        '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>Location differentiator</strong> below.'),
-        '#attributes' => array('class' => array('marker-color')),
+      '#title' => t('Style/color'),
+      '#type' => 'select',
+      '#default_value' => $this->options['default_marker']['default_marker_color'],
+      '#options' => ip_geoloc_marker_colors(),
+      '#description' => t('Select an image to use for all location markers whose images are not overridden by the <strong>Location differentiator</strong> below.'),
+      '#attributes' => array('class' => array('marker-color')),
     );
     $form['default_marker']['default_marker_special_char'] = array(
-        '#title' => t('Font icon character'),
-        '#type' => 'textfield',
-        '#size' => 8,
-        '#default_value' => $this->options['default_marker']['default_marker_special_char'],
-        '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>. If the character displays in color or as a square then it may not save or display correctly.', array(
-            '!url_fsymbols' => url('http://text-symbols.com'),
-        )),
+      '#title' => t('Font icon character'),
+      '#type' => 'textfield',
+      '#size' => 8,
+      '#default_value' => $this->options['default_marker']['default_marker_special_char'],
+      '#description' => t('Paste directly from <a target="fsymbols" href="!url_fsymbols">fsymbols</a>. If the character displays in color or as a square then it may not save or display correctly.', array(
+        '!url_fsymbols' => url('http://text-symbols.com'),
+      )),
     );
     $desc4 =  t('Use the class name from the font icon library you are using. Append <strong>light</strong>, <strong>dark</strong> or <strong>red</strong> to change the color. Examples:<br/>Font Awesome: <strong>fa fa-beer light</strong><br/>flaticon: <strong>flaticon-bicycle12 red</strong>');
     $form['default_marker']['default_marker_special_char_class'] = array(
-        '#title' => t('Font icon class'),
-        '#type' => 'textfield',
-        '#size' => 25,
-        '#default_value' => $this->options['default_marker']['default_marker_special_char_class'],
-        '#description' => $desc4,
+      '#title' => t('Font icon class'),
+      '#type' => 'textfield',
+      '#size' => 25,
+      '#default_value' => $this->options['default_marker']['default_marker_special_char_class'],
+      '#description' => $desc4,
     );
   }
 
   private function _add_visitor_marker(&$form, &$weight) {
     $form['visitor_marker'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Visitor marker style'),
-        '#description' => t('For the visitor marker to show, enable the <em>Set my location</em> block and/or tick the option to periodically reverse-geocode via Google, under the <a href="@config_page">Data collection options</a>.', array(
-            '@config_page' => url('admin/config/system/ip_geoloc'),
-        )),
-        '#weight' => $weight++,
+      '#type' => 'fieldset',
+      '#title' => t('Visitor marker style'),
+      '#description' => t('For the visitor marker to show, enable the <em>Set my location</em> block and/or tick the option to periodically reverse-geocode via Google, under the <a href="@config_page">Data collection options</a>.', array(
+        '@config_page' => url('admin/config/system/ip_geoloc'),
+      )),
+      '#weight' => $weight++,
     );
 
     $visitor_marker_colors = array(
-        'none' => '<' . t('none') . '>') +
+      'none' => '<' . t('none') . '>',
+    ) +
         ip_geoloc_marker_colors();
-        unset($visitor_marker_colors['0']);
+    unset($visitor_marker_colors['0']);
 
-        $form['visitor_marker']['visitor_marker_color'] = array(
-            '#title' => t('Style/color'),
-            '#type' => 'select',
-            '#multiple' => FALSE,
-            '#default_value' => $this->options['visitor_marker']['visitor_marker_color'],
-            '#options' => $visitor_marker_colors,
-            '#attributes' => array('class' => array('marker-color')),
-        );
-        $form['visitor_marker']['visitor_marker_special_char'] = array(
-            '#title' => t('Font icon character'),
-            '#type' => 'textfield',
-            '#size' => 8,
-            '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char'],
-            '#description' => t('As above'),
-        );
-        $form['visitor_marker']['visitor_marker_special_char_class'] = array(
-            '#title' => t('Font icon class'),
-            '#type' => 'textfield',
-            '#size' => 25,
-            '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
-            '#description' => t('As above.'),
-        );
-        $form['visitor_marker']['visitor_marker_balloon_text'] = array(
-            '#title' => t('Visitor balloon text'),
-            '#type' => 'textarea',
-            '#rows' => 3,
-            '#default_value' => $this->options['visitor_marker']['visitor_marker_balloon_text'],
-            '#description' => t("You may use safe HTML and tokens. The special token <em>[visitor-location:surrounding-polygon]</em> returns the title of the node that contains a Geofield polygon that surrounds the visitor's location."),
-        );
-        $form['visitor_marker']['token_browser'] = array(
-            '#type' => 'markup',
-            '#theme' => 'token_tree_link',
-            '#token_types' => array('visitor-location'),
-            '#prefix' => '<div>',
-            '#suffix' => '</div>'
-        );
-        $form['visitor_marker']['visitor_marker_accuracy_circle'] = array(
-            '#title' => t('Accuracy circle'),
-            '#type' => 'checkbox',
-            '#default_value' => $this->options['visitor_marker']['visitor_marker_accuracy_circle'],
-            '#description' => t("Display a circle depicting where the visitor's real location is most likely to be."),
-        );
+    $form['visitor_marker']['visitor_marker_color'] = array(
+      '#title' => t('Style/color'),
+      '#type' => 'select',
+      '#multiple' => FALSE,
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_color'],
+      '#options' => $visitor_marker_colors,
+      '#attributes' => array('class' => array('marker-color')),
+    );
+    $form['visitor_marker']['visitor_marker_special_char'] = array(
+      '#title' => t('Font icon character'),
+      '#type' => 'textfield',
+      '#size' => 8,
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char'],
+      '#description' => t('As above'),
+    );
+    $form['visitor_marker']['visitor_marker_special_char_class'] = array(
+      '#title' => t('Font icon class'),
+      '#type' => 'textfield',
+      '#size' => 25,
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_special_char_class'],
+      '#description' => t('As above.'),
+    );
+    $form['visitor_marker']['visitor_marker_balloon_text'] = array(
+      '#title' => t('Visitor balloon text'),
+      '#type' => 'textarea',
+      '#rows' => 3,
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_balloon_text'],
+      '#description' => t("You may use safe HTML and tokens. The special token <em>[visitor-location:surrounding-polygon]</em> returns the title of the node that contains a Geofield polygon that surrounds the visitor's location."),
+    );
+    $form['visitor_marker']['token_browser'] = array(
+      '#type' => 'markup',
+      '#theme' => 'token_tree_link',
+      '#token_types' => array('visitor-location'),
+      '#prefix' => '<div>',
+      '#suffix' => '</div>',
+    );
+    $form['visitor_marker']['visitor_marker_accuracy_circle'] = array(
+      '#title' => t('Accuracy circle'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['visitor_marker']['visitor_marker_accuracy_circle'],
+      '#description' => t("Display a circle depicting where the visitor's real location is most likely to be."),
+    );
   }
 
   private function _add_marker_tags(&$form, $fields, &$weight) {
     $form['tags'] = array(
-        '#title' => t('Marker tags'),
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => empty($this->options['tags']['marker_tag']),
-        '#description' => t('Each marker may have a tag. A tag is a number or short text shown permanently above, below or inside the marker.'),
-        '#weight' => $weight++,
+      '#title' => t('Marker tags'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($this->options['tags']['marker_tag']),
+      '#description' => t('Each marker may have a tag. A tag is a number or short text shown permanently above, below or inside the marker.'),
+      '#weight' => $weight++,
     );
     $form['tags']['marker_tag'] = array(
-        '#title' => t('Views field to populate tags'),
-        '#type' => 'select',
-        '#default_value' => $this->options['tags']['marker_tag'],
-        '#options' => $fields,
-        '#description' => t('Example: "Content: Title". Use "Global: View result counter" if you want to number your locations.'),
+      '#title' => t('Views field to populate tags'),
+      '#type' => 'select',
+      '#default_value' => $this->options['tags']['marker_tag'],
+      '#options' => $fields,
+      '#description' => t('Example: "Content: Title". Use "Global: View result counter" if you want to number your locations.'),
     );
     $form['tags']['tag_css_class'] = array(
-        '#title' => t('Tag position and style'),
-        '#type' => 'textfield',
-        '#default_value' => $this->options['tags']['tag_css_class'],
-        '#description' => t('The CSS class or classes applied to each tag. Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. If you opted to have <em>no markers</em>, i.e. tags only, you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. You may also create your own CSS classes and use them here.'),
+      '#title' => t('Tag position and style'),
+      '#type' => 'textfield',
+      '#default_value' => $this->options['tags']['tag_css_class'],
+      '#description' => t('The CSS class or classes applied to each tag. Tagged marker CSS classes coming with this module are <strong>tag-above-marker</strong>, <strong>tag-below-marker</strong> and <strong>tag-inside-marker</strong>. If you opted to have <em>no markers</em>, i.e. tags only, you may use <strong>tag-rounded-corners</strong> or <strong>tag-pointy-circle</strong>, which is recommended for numbers. You may also create your own CSS classes and use them here.'),
     );
   }
 
   private function _add_marker_tooltips(&$form, $fields, &$weight) {
     $form['tooltips'] = array(
-        '#title' => t('Marker tooltips'),
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
-        '#description' => t('In addition to balloons, which pop up when markers are <em>clicked</em>, you can have tooltips. A tooltip is a short text that appears when you <em>hover</em> over a marker.'),
-        '#weight' => $weight++,
+      '#title' => t('Marker tooltips'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($this->options['tooltips']['marker_tooltip']),
+      '#description' => t('In addition to balloons, which pop up when markers are <em>clicked</em>, you can have tooltips. A tooltip is a short text that appears when you <em>hover</em> over a marker.'),
+      '#weight' => $weight++,
     );
     $note_polygons = t('Applies to markers. If you want tooltips for lines and polygons too, please use this selector in combination with <a href="@url_leaflet_label">Leaflet Label</a>.', array(
-        '@url_leaflet_label' => url('http://drupal.org/project/leaflet_label'))
+      '@url_leaflet_label' => url('http://drupal.org/project/leaflet_label'),
+    )
         );
     $form['tooltips']['marker_tooltip'] = array(
-        '#title' => t('Views field to populate tooltips'),
-        '#type' => 'select',
-        //'#multiple' => TRUE,
-        //'#size' => 6,
-        '#default_value' => $this->options['tooltips']['marker_tooltip'],
-        '#options' => $fields,
-        '#description' => t('Example: "Content: Title"') . '<br/>' . $note_polygons,
+      '#title' => t('Views field to populate tooltips'),
+      '#type' => 'select',
+      //'#multiple' => TRUE,
+      //'#size' => 6,
+      '#default_value' => $this->options['tooltips']['marker_tooltip'],
+      '#options' => $fields,
+      '#description' => t('Example: "Content: Title"') . '<br/>' . $note_polygons,
     );
   }
 
   private function _add_check_boxes(&$form, $lib_markercluster, &$weight) {
     $form['full_screen'] = array(
-        '#title' => t('Add a full-screen toggle to the map'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['full_screen'],
-        '#weight' => $weight++,
+      '#title' => t('Add a full-screen toggle to the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['full_screen'],
+      '#weight' => $weight++,
     );
     $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
     if ($lib_fullscreen) {
@@ -407,139 +409,138 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     else {
       $form['full_screen']['#description'] = t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
-          '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen'));
+        '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen',
+      ));
     }
 
     $form['scale_imperial'] = array(
-        '#title' => t('Add an imperial (miles) scale'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['scale_imperial'],
-        '#weight' => $weight++,
+      '#title' => t('Add an imperial (miles) scale'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['scale_imperial'],
+      '#weight' => $weight++,
     );
     $form['scale_metric'] = array(
-        '#title' => t('Add a metric (km) scale'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['scale_metric'],
-        '#weight' => $weight++,
+      '#title' => t('Add a metric (km) scale'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['scale_metric'],
+      '#weight' => $weight++,
     );
     $form['zoom_indicator'] = array(
-        '#title' => t('Add an indicator showing the active zoom level'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['zoom_indicator'],
-        '#weight' => $weight++,
+      '#title' => t('Add an indicator showing the active zoom level'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['zoom_indicator'],
+      '#weight' => $weight++,
     );
     $form['map_reset'] = array(
-        '#title' => t('Add a reset button'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['map_reset'],
-        '#description' => t('This button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
-        '#weight' => $weight++,
+      '#title' => t('Add a reset button'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['map_reset'],
+      '#description' => t('This button allows the visitor to reset the map to its initial bounds (center and zoom level).'),
+      '#weight' => $weight++,
     );
     $form['map_reset_css_class'] = array(
-        '#title' => t('CSS class to apply to reset button'),
-        '#type' => 'textfield',
-        '#size' => 40,
-        '#default_value' => $this->options['map_reset_css_class'],
-        '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded for your markers, try <strong>fa fa-repeat</strong>. If you enter only one or two characters, for example <strong>R</strong>, these will be used verbatim as the label instead.'),
-        '#weight' => $weight++,
-        '#states' => array(
-            'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
-        ),
+      '#title' => t('CSS class to apply to reset button'),
+      '#type' => 'textfield',
+      '#size' => 40,
+      '#default_value' => $this->options['map_reset_css_class'],
+      '#description' => t('You can use this to superimpose a font-icon on the button. For instance, if you have the Font Awesome library loaded for your markers, try <strong>fa fa-repeat</strong>. If you enter only one or two characters, for example <strong>R</strong>, these will be used verbatim as the label instead.'),
+      '#weight' => $weight++,
+      '#states' => array(
+        'visible' => array('input[name="style_options[map_reset]"]' => array('checked' => TRUE)),
+      ),
     );
     $form['map_cluster_toggle'] = array(
-        '#title' => t('Add cluster toggle button'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['map_cluster_toggle'],
-        '#description' => t('This button allows the visitor to toggle marker clustering on/off at any time and at any zoom level.') . '<br/>'
+      '#title' => t('Add cluster toggle button'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['map_cluster_toggle'],
+      '#description' => t('This button allows the visitor to toggle marker clustering on/off at any time and at any zoom level.') . '<br/>'
         . t('A cluster radius must be specified below.'),
-        '#weight' => $weight++,
+      '#weight' => $weight++,
     );
 
     $form['on_click_options'] = array(
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#title' => t('Behaviour when clicked'),
-        '#description' => t('These apply to markers, polygons and polylines.'),
-        '#weight' => $weight++,
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Behaviour when clicked'),
+      '#description' => t('These apply to markers, polygons and polylines.'),
+      '#weight' => $weight++,
     );
 
     $form['on_click_options']['goto_content_on_click'] = array(
-        '#title' => t('When <em>clicked</em>, go to the associated content page'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['on_click_options']['goto_content_on_click']
+      '#title' => t('When <em>clicked</em>, go to the associated content page'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['on_click_options']['goto_content_on_click'],
     );
     $form['on_click_options']['open_balloons_on_click'] = array(
-        '#title' => t('When <em>clicked</em>, pop up a balloon showing non-excluded fields'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['on_click_options']['open_balloons_on_click']
+      '#title' => t('When <em>clicked</em>, pop up a balloon showing non-excluded fields'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['on_click_options']['open_balloons_on_click'],
     );
 
     $form['on_hover_options'] = array(
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#title' => t('Behaviour when hovered'),
-        '#weight' => $weight++,
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Behaviour when hovered'),
+      '#weight' => $weight++,
     );
     $form['on_hover_options']['open_balloons_on_hover'] = array(
-        '#title' => t('When <em>hovered</em>, pop up a balloon showing non-excluded fields'),
-        '#description' => t('Applies to markers, polygons and polylines.'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['on_hover_options']['open_balloons_on_hover'],
+      '#title' => t('When <em>hovered</em>, pop up a balloon showing non-excluded fields'),
+      '#description' => t('Applies to markers, polygons and polylines.'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['on_hover_options']['open_balloons_on_hover'],
     );
     $form['on_hover_options']['polygon_add_shadow_on_hover'] = array(
-        '#title' => t('When <em>hovered</em>, add an effect to highlight the hovered element'),
-        '#description' => t('Applies to polygons. Does not apply to markers.'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['on_hover_options']['polygon_add_shadow_on_hover'],
+      '#title' => t('When <em>hovered</em>, add an effect to highlight the hovered element'),
+      '#description' => t('Applies to polygons. Does not apply to markers.'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['on_hover_options']['polygon_add_shadow_on_hover'],
     );
     $form['on_hover_options']['shadow_on_hover_effect'] = array(
-        '#title' => t('Choose hover effect'),
-        '#description' => t('The SURGE effect was designed by Matt Winans for <a href="!url">the SURGE movement</a>.', array('!url' => url('http://surgemovement.com/map'))),
-        '#type' => 'radios',
-        '#options' => array(
-          'animated blur' => t('Blur/shadow, animated'),
-          'surge' => t('SURGE effect, animated'),
-        ),
-        '#default_value' => $this->options['on_hover_options']['shadow_on_hover_effect'],
-        '#states' => array(
-            'invisible' => array(':input[name="style_options[on_hover_options][polygon_add_shadow_on_hover]"]' => array('checked' => FALSE)),
-        ),
+      '#title' => t('Choose hover effect'),
+      '#description' => t('The SURGE effect was designed by Matt Winans for <a href="!url">the SURGE movement</a>.', array('!url' => url('http://surgemovement.com/map'))),
+      '#type' => 'radios',
+      '#options' => array(
+        'animated blur' => t('Blur/shadow, animated'),
+        'surge' => t('SURGE effect, animated'),
+      ),
+      '#default_value' => $this->options['on_hover_options']['shadow_on_hover_effect'],
+      '#states' => array(
+        'invisible' => array(':input[name="style_options[on_hover_options][polygon_add_shadow_on_hover]"]' => array('checked' => FALSE)),
+      ),
     );
     $form['on_hover_options']['use_tweenmax_for_shadow_on_hover'] = array(
-        '#title' => t('Version of <em>TweenMax</em> to use for generating animated hover effects.'),
-        '#description' =>
-           t('You may opt for the <em>TweenMax</em> library to generate anamated drop shadows.') . '<br/>' .
+      '#title' => t('Version of <em>TweenMax</em> to use for generating animated hover effects.'),
+      '#description' => t('You may opt for the <em>TweenMax</em> library to generate anamated drop shadows.') . '<br/>' .
            t('<a href="!url" target="_tween">TweenMax</a> offers higher performance and wider cross-browser support, but does add 0.12MB to your map page download size.', array('!url' => url('https://greensock.com/tweenmax'))) . '<br/>' .
            t("If entered the minimised version of the TweenMax library will be included automatically from the CDN closest to the visitor.") . '<br/>' .
            t("The default version is %version. Leave blank to use pure HTML for animations instead.", array('%version' => TWEENMAX_VERSION)),
-        '#type' => 'textfield',
-        '#size' => 6,
-        '#default_value' => $this->options['on_hover_options']['use_tweenmax_for_shadow_on_hover'],
-        '#states' => array(
-           'invisible' => array(':input[name="style_options[on_hover_options][polygon_add_shadow_on_hover]"]' => array('checked' => FALSE)),
-        ),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['on_hover_options']['use_tweenmax_for_shadow_on_hover'],
+      '#states' => array(
+        'invisible' => array(':input[name="style_options[on_hover_options][polygon_add_shadow_on_hover]"]' => array('checked' => FALSE)),
+      ),
     );
     $form['on_hover_options']['polygon_fill_opacity_on_hover'] = array(
-        '#title' => t('For polygons: when <em>hovered</em> change <em>fill opacity</em> to'),
-        '#description' => t('A fraction between 0 (transparent) and 1 (solid). Leave blank for no change.'),
-        '#type' => 'textfield',
-        '#size' => 4,
-        '#default_value' => $this->options['on_hover_options']['polygon_fill_opacity_on_hover'],
+      '#title' => t('For polygons: when <em>hovered</em> change <em>fill opacity</em> to'),
+      '#description' => t('A fraction between 0 (transparent) and 1 (solid). Leave blank for no change.'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#default_value' => $this->options['on_hover_options']['polygon_fill_opacity_on_hover'],
     );
     $form['on_hover_options']['polygon_line_weight_on_hover'] = array(
-        '#title' => t('For polygons: when <em>hovered</em> change <em>line weight</em> to'),
-        '#description' =>
-           t('Width in pixels, typically 1..10. Use 0 to remove outline altogether. Leave blank for no change.') . '<br/>' .
+      '#title' => t('For polygons: when <em>hovered</em> change <em>line weight</em> to'),
+      '#description' => t('Width in pixels, typically 1..10. Use 0 to remove outline altogether. Leave blank for no change.') . '<br/>' .
            t('Line color, line opacity and line dash pattern remain unchanged from what you specified in the section <em>Options for Polygons, Polylines and Circles</em>, below.'),
-        '#type' => 'textfield',
-        '#size' => 4,
-        '#default_value' => $this->options['on_hover_options']['polygon_line_weight_on_hover'],
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#default_value' => $this->options['on_hover_options']['polygon_line_weight_on_hover'],
     );
     $form['on_hover_options']['tip'] = array(
-        '#type' => 'markup',
-        '#markup' => t('TIP: You can animate the transition of <em>fill opacity</em> and <em>line weight</em> by adding a CCS rule like this to your theme: <br/>  <code>path.leaflet-interactive { transition: all 0.7s linear }</code>')
+      '#type' => 'markup',
+      '#markup' => t('TIP: You can animate the transition of <em>fill opacity</em> and <em>line weight</em> by adding a CCS rule like this to your theme: <br/>  <code>path.leaflet-interactive { transition: all 0.7s linear }</code>'),
     );
     if (!$lib_markercluster) {
       $form['map_cluster_toggle']['#description'] .= '<br/>' .
@@ -549,115 +550,116 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
 
   private function _add_sync(&$form, &$weight) {
     $form['sync'] = array(
-        '#title' => t('Cross-highlighting between map markers and page content outside the map'),
-        '#description' => '<br/>' . t('For the cross-highlighting to work, content outside the map must have the CSS class <em>.sync-id-[nid]</em>, where <em>[nid]</em> represents the content ID.') . ' '
+      '#title' => t('Cross-highlighting between map markers and page content outside the map'),
+      '#description' => '<br/>' . t('For the cross-highlighting to work, content outside the map must have the CSS class <em>.sync-id-[nid]</em>, where <em>[nid]</em> represents the content ID.') . ' '
         . t('For Views content, you can do this by adding a <strong>Row class</strong> to the Grid, Table, HTML or Unformatted list formats of your Views Attachment or Block displays.'),
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => empty($this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER]),
-        '#weight' => $weight++,
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER]),
+      '#weight' => $weight++,
     );
     $note = t('You can redefine this class to change the default look.');
     $form['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] = array(
-        '#title' => t('When hovering markers on the map, highlight associated content on the page'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] && $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
-        '#description' => t('Content is highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
+      '#title' => t('When hovering markers on the map, highlight associated content on the page'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_CONTENT_TO_MARKER] && $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
+      '#description' => t('Content is highlighted dynamically through the automatic addition of the CSS class <em>.synced-marker-hover</em>.') . ' '
         . $note,
-        '#weight' => $weight++,
+      '#weight' => $weight++,
     );
     $caveat = t('For this feature to work in combination with any <em>sorting</em> on the hovered content, the associated Views display must have <em>Use Ajax: No</em>.');
     $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT] = array(
-        '#title' => t('When hovering content, highlight associated markers on the map'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
-        '#description' => t('Markers are highlighted dynamically through the automatic addition of the CSS class <em>.synced-content-hover</em>.') . ' '
+      '#title' => t('When hovering content, highlight associated markers on the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT],
+      '#description' => t('Markers are highlighted dynamically through the automatic addition of the CSS class <em>.synced-content-hover</em>.') . ' '
         . $note . '<br/>' . $caveat,
-        '#weight' => $weight++,
+      '#weight' => $weight++,
     );
     $form['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP] = array(
-        '#title' => t('As above, but also pop up marker balloons'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP],
-        '#states' => array(
-            'visible' => array(':input[name="style_options[sync][4]"]' => array('checked' => TRUE)),
-        ),
-        '#weight' => $weight++,
+      '#title' => t('As above, but also pop up marker balloons'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_MARKER_TO_CONTENT_WITH_POPUP],
+      '#states' => array(
+        'visible' => array(':input[name="style_options[sync][4]"]' => array('checked' => TRUE)),
+      ),
+      '#weight' => $weight++,
     );
     $form['sync'][LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT] = array(
-        '#title' => t('Unhighlight marker and close its balloon when hovering off the map'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['sync'][LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT],
-        '#states' => array(
-            'visible' => array(':input[name="style_options[sync][4]"]' => array('checked' => TRUE)),
-        ),
-        '#weight' => $weight++,
+      '#title' => t('Unhighlight marker and close its balloon when hovering off the map'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['sync'][LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT],
+      '#states' => array(
+        'visible' => array(':input[name="style_options[sync][4]"]' => array('checked' => TRUE)),
+      ),
+      '#weight' => $weight++,
     );
   }
 
   private function _add_mini_map_inset(&$form, &$weight) {
 
     $form['mini_map'] = array(
-        '#title' => t('Mini-map inset'),
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE, // !empty($this->options['mini_map']['on']),
-        '#description' => t('A zoomed-out version of the main map as a mini-map inset in the bottom corner.'),
-        '#weight' => $weight++,
+      '#title' => t('Mini-map inset'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE, // !empty($this->options['mini_map']['on']),
+      '#description' => t('A zoomed-out version of the main map as a mini-map inset in the bottom corner.'),
+      '#weight' => $weight++,
     );
     $form['mini_map']['on'] = array(
-        '#title' => t('Enable mini-map inset'),
-        '#type' => 'checkbox',
-        '#default_value' => !empty($this->options['mini_map']['on']),
+      '#title' => t('Enable mini-map inset'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->options['mini_map']['on']),
     );
     $form['mini_map']['height'] = array(
-        '#title' => t('Height of inset'),
-        '#type' => 'textfield',
-        '#size' => 4,
-        '#field_suffix' => t('px'),
-        '#default_value' => $this->options['mini_map']['height'],
-        '#states' => array(
-            'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
-        ),
+      '#title' => t('Height of inset'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#field_suffix' => t('px'),
+      '#default_value' => $this->options['mini_map']['height'],
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
     );
     $form['mini_map']['width'] = array(
-        '#title' => t('Width of inset'),
-        '#type' => 'textfield',
-        '#size' => 4,
-        '#field_suffix' => t('px'),
-        '#default_value' => $this->options['mini_map']['width'],
-        '#states' => array(
-            'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
-        ),
+      '#title' => t('Width of inset'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#field_suffix' => t('px'),
+      '#default_value' => $this->options['mini_map']['width'],
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
     );
     $form['mini_map']['toggle'] = array(
-        '#title' => t('Allow visitor to minimise inset'),
-        '#type' => 'checkbox',
-        '#default_value' => !empty($this->options['mini_map']['toggle']),
-        '#states' => array(
-            'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
-        ),
+      '#title' => t('Allow visitor to minimise inset'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->options['mini_map']['toggle']),
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
     );
     $form['mini_map']['scope_color'] = array(
-        '#title' => t('Scope rectangle color'),
-        '#type' => 'textfield',
-        '#size' => 10,
-        '#default_value' => $this->options['mini_map']['scope_color'],
-        '#description' => t('<em>#rrggbb</em> or <a target="_colors" href="@url">color name</a>.', array(
-            '@url' => url('http://www.w3schools.com/html/html_colornames.asp'))),
-        '#states' => array(
-            'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
-        ),
+      '#title' => t('Scope rectangle color'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#default_value' => $this->options['mini_map']['scope_color'],
+      '#description' => t('<em>#rrggbb</em> or <a target="_colors" href="@url">color name</a>.', array(
+        '@url' => url('http://www.w3schools.com/html/html_colornames.asp'),
+      )),
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
     );
     $form['mini_map']['zoom_delta'] = array(
-        '#title' => t('Zoom delta'),
-        '#type' => 'textfield',
-        '#size' => 3,
-        '#default_value' => $this->options['mini_map']['zoom_delta'],
-        '#description' => t('The difference between the zoom levels of main map and mini-map.'),
-        '#states' => array(
-            'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
-        ),
+      '#title' => t('Zoom delta'),
+      '#type' => 'textfield',
+      '#size' => 3,
+      '#default_value' => $this->options['mini_map']['zoom_delta'],
+      '#description' => t('The difference between the zoom levels of main map and mini-map.'),
+      '#states' => array(
+        'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
+      ),
     );
     $lib_minimap = libraries_get_path('leaflet-minimap');
     if ($lib_minimap) {
@@ -668,57 +670,58 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     else {
       $form['mini_map']['#description'] .= '<br/>' . t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-minimap</em>.', array(
-          '@js_lib' => 'https://github.com/Norkart/Leaflet-Minimap'));
+        '@js_lib' => 'https://github.com/Norkart/Leaflet-Minimap',
+      ));
     }
   }
 
   private function _add_markercluster(&$form, $lib_markercluster, &$weight) {
     $desc_a = t('A typical cluster radius is 20 to 100 px. When you use a <em>cluster region differentiator</em> (see below), a marker radius of 200 px or more may give superior results. <br/>The visitor marker is excluded from clustering. Enter 0 to disable clustering altogether.');
     $desc_b = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module.', array(
-        '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
+      '!url_project' => url('http://drupal.org/project/leaflet_markercluster'),
     ));
     $form['cluster_radius'] = array(
-        '#title' => t('Marker cluster radius'),
-        '#type' => 'textfield',
-        '#field_suffix' => t('px'),
-        '#size' => 4,
-        '#default_value' => $this->options['cluster_radius'],
-        '#description' => $lib_markercluster ? $desc_a : $desc_b,
-        '#weight' => $weight++,
+      '#title' => t('Marker cluster radius'),
+      '#type' => 'textfield',
+      '#field_suffix' => t('px'),
+      '#size' => 4,
+      '#default_value' => $this->options['cluster_radius'],
+      '#description' => $lib_markercluster ? $desc_a : $desc_b,
+      '#weight' => $weight++,
     );
     $form['disable_clustering_at_zoom'] = array(
-        '#title' => t('Disable clustering at zoom'),
-        '#type' => 'textfield',
-        '#size' => 4,
-        '#default_value' => is_numeric($this->options['disable_clustering_at_zoom']) ? $this->options['disable_clustering_at_zoom'] : '',
-        '#description' => t('If you specify a zoom level, then there will be no clustering beyond that zoom level, regardless of the radius specified.'),
-        '#weight' => $weight++,
+      '#title' => t('Disable clustering at zoom'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#default_value' => is_numeric($this->options['disable_clustering_at_zoom']) ? $this->options['disable_clustering_at_zoom'] : '',
+      '#description' => t('If you specify a zoom level, then there will be no clustering beyond that zoom level, regardless of the radius specified.'),
+      '#weight' => $weight++,
     );
     $form['allow_clusters_of_one'] = array(
-        '#title' => t('Allow clusters of one'),
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['allow_clusters_of_one'],
-        '#description' => t('Especially recommended when your clusters employ aggregation functions.'),
-        '#weight' => $weight++,
+      '#title' => t('Allow clusters of one'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['allow_clusters_of_one'],
+      '#description' => t('Especially recommended when your clusters employ aggregation functions.'),
+      '#weight' => $weight++,
     );
   }
 
   private function _add_cluster_differentiator(&$form, &$form_state, $lib_markercluster, &$weight) {
-    $path = drupal_get_path('module', 'ip_geoloc');
+    $path = backdrop_get_path('module', 'ip_geoloc');
     $intro = t('Region-aware marker clustering with <a target="regionbound" href="!url_regionbound">RegionBound</a>. See the <a target="readme" href="!url_readme">README</a> for details.', array(
-        '!url_regionbound' => url('http://regionbound.com'),
-        '!url_readme' => url("$path/README.txt"),
+      '!url_regionbound' => url('http://regionbound.com'),
+      '!url_readme' => url("$path/README.txt"),
     ));
     $form['cluster_differentiator'] = array(
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => FALSE,
-        '#title' => t('Cluster region differentiator'),
-        '#description' => '<em>' . $intro . '</em><br/>',
-        // The id in the prefix must match the AJAX submit handlers below.
-        '#prefix' => '<div id="cluster-differentiator-wrapper">',
-        '#suffix' => '</div>',
-        '#weight' => $weight++,
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#title' => t('Cluster region differentiator'),
+      '#description' => '<em>' . $intro . '</em><br/>',
+      // The id in the prefix must match the AJAX submit handlers below.
+      '#prefix' => '<div id="cluster-differentiator-wrapper">',
+      '#suffix' => '</div>',
+      '#weight' => $weight++,
     );
     $region_field_names = NULL;
     if (isset($form_state['triggering_element'])) {
@@ -734,35 +737,35 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     if (!module_exists('leaflet_markercluster')) {
       $desc = t('Requires the <a target="project" href="!url_project">Leaflet MarkerCluster</a> module', array(
-          '!url_project' => url('http://drupal.org/project/leaflet_markercluster')
+        '!url_project' => url('http://drupal.org/project/leaflet_markercluster'),
       ));
       $form['cluster_differentiator']['#description'] .= $desc . ' ' . t('and <a href="!url_regionbound">RegionBound</a> JS plugin.', array('!url_regionbound' => url('http://regionbound.com')));
     }
     elseif ($lib_markercluster && (empty($region_field_names) || !reset($region_field_names))) {
       $note_region = t('Download the file %js from <a target="regionbound" href="!url_regionbound">Regionbound</a> and drop it in %directory, without renaming. Then select your region differentiator below.', array(
-          '%js' => IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS,
-          '%directory' => $lib_markercluster,
-          '!url_regionbound' => url('http://regionbound.com'),
+        '%js' => IP_GEOLOC_LEAFLET_MARKERCLUSTER_REGIONBOUND_JS,
+        '%directory' => $lib_markercluster,
+        '!url_regionbound' => url('http://regionbound.com'),
       ));
       $form['cluster_differentiator']['#description'] .= "<p>$note_region</p>";
     }
     $fields = ip_geoloc_get_display_fields($this->display->handler, FALSE, FALSE);
     $form['cluster_differentiator']['cluster_differentiator_fields'] = array(
-        '#title' => t('Region differentiator'),
-        '#type' => 'select',
-        '#multiple' => TRUE,
-        '#size' => 6,
-        '#options' => $fields,
-        '#default_value' => $region_field_names,
-        '#ajax' => array(
-            'callback' => '_ip_geoloc_plugin_style_leaflet_refresh_cluster_fieldset_js',
-            'wrapper' => 'cluster-differentiator-wrapper',
-            'effect' => 'fade',
-            'speed' => 'fast',
-        ),
-        '#description' => t('Select a field (or sequence of fields) that reflect for each location marker the region hierarchy it belongs to. Examples are an <a target="drupal" href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for country, state, city, suburb (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above. Note that region differentiators do <em>not</em> need to be associated with latitudes or longitudes. They are just name fields.', array(
-            '!url_addressfield' => url('http://drupal.org/project/addressfield'),
-        )),
+      '#title' => t('Region differentiator'),
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#size' => 6,
+      '#options' => $fields,
+      '#default_value' => $region_field_names,
+      '#ajax' => array(
+        'callback' => '_ip_geoloc_plugin_style_leaflet_refresh_cluster_fieldset_js',
+        'wrapper' => 'cluster-differentiator-wrapper',
+        'effect' => 'fade',
+        'speed' => 'fast',
+      ),
+      '#description' => t('Select a field (or sequence of fields) that reflect for each location marker the region hierarchy it belongs to. Examples are an <a target="backdrop" href="!url_addressfield">AddressField</a>, a hierarchical taxonomy term based on regions, or individual fields for country, state, city, suburb (<em>in that order</em>). Make sure that the region differentiator you wish to use is included as a field in your view, so it appears in the list above. Note that region differentiators do <em>not</em> need to be associated with latitudes or longitudes. They are just name fields.', array(
+        '!url_addressfield' => url('http://drupal.org/project/addressfield'),
+      )),
     );
     $level = 0;
     if (!empty($region_field_names)) {
@@ -776,11 +779,11 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           $default_value = isset($this->options['cluster_differentiator']['zoom_ranges'][$level])
           ? $this->options['cluster_differentiator']['zoom_ranges'][$level] : '';
           $form['cluster_differentiator']['zoom_ranges'][$level] = array(
-              '#type' => 'textfield',
-              '#title' => filter_xss_admin($title),
-              '#size' => 28,
-              '#default_value' => $default_value,
-              '#element_validate' => array('ip_geoloc_range_widget_validate'),
+            '#type' => 'textfield',
+            '#title' => filter_xss_admin($title),
+            '#size' => 28,
+            '#default_value' => $default_value,
+            '#element_validate' => array('ip_geoloc_range_widget_validate'),
           );
         }
       }
@@ -798,86 +801,86 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         implode('<br/>', array("$desc1 $desc2<br/>$desc3<br/>", $zoom1, $zoom2, $zoom3));
       }
       $form['cluster_differentiator']['cluster_tooltips'] = array(
-          '#title' => t('Add cluster tooltips'),
-          '#type' => 'checkbox',
-          '#default_value' => $this->options['cluster_differentiator']['cluster_tooltips'],
-          '#description' => t("When hovering a cluster, tooltips reveal the cluster region name and the names of its populated subregions."),
+        '#title' => t('Add cluster tooltips'),
+        '#type' => 'checkbox',
+        '#default_value' => $this->options['cluster_differentiator']['cluster_tooltips'],
+        '#description' => t("When hovering a cluster, tooltips reveal the cluster region name and the names of its populated subregions."),
       );
       $form['cluster_differentiator']['cluster_touch_mode'] = array(
-          '#title' => t('Cluster action on touch devices (e.g. mobile phones)'),
-          '#type' => 'radios',
-          '#options' => array(
-              1 => t('Single tap displays cluster regions, double-tap drills into cluster (default)'),
-              0 => t('Single tap drills into cluster. Sub-region names not displayed, but visible on mouse devices.'),
-          ),
-          '#default_value' => $this->options['cluster_differentiator']['cluster_touch_mode'],
-          '#description' => t('Applies only to devices that do not have a mouse, like mobile phones.'),
+        '#title' => t('Cluster action on touch devices (e.g. mobile phones)'),
+        '#type' => 'radios',
+        '#options' => array(
+          1 => t('Single tap displays cluster regions, double-tap drills into cluster (default)'),
+          0 => t('Single tap drills into cluster. Sub-region names not displayed, but visible on mouse devices.'),
+        ),
+        '#default_value' => $this->options['cluster_differentiator']['cluster_touch_mode'],
+        '#description' => t('Applies only to devices that do not have a mouse, like mobile phones.'),
       );
       $form['cluster_differentiator']['cluster_outline'] = array(
-          '#title' => t('Cluster population outline'),
-          '#type' => 'select',
-          '#options' => array(
-              0 => t('Traditional (convex hull)'),
-              1 => t('Avant-garde (heuristic hull)'),
-          ),
-          '#default_value' => $this->options['cluster_differentiator']['cluster_outline'],
-          '#description' => t('When hovering a cluster, a <a target="regionbound" href="!url_regionbound">coverage outline</a> visualises the envelope or footprint of the underlying marker population. Select your preferred style of doing this.', array(
-              '!url_regionbound' => url('http://regionbound.com/enhanced-cluster-envelope-using-heuristic-hull'),
-          )),
+        '#title' => t('Cluster population outline'),
+        '#type' => 'select',
+        '#options' => array(
+          0 => t('Traditional (convex hull)'),
+          1 => t('Avant-garde (heuristic hull)'),
+        ),
+        '#default_value' => $this->options['cluster_differentiator']['cluster_outline'],
+        '#description' => t('When hovering a cluster, a <a target="regionbound" href="!url_regionbound">coverage outline</a> visualises the envelope or footprint of the underlying marker population. Select your preferred style of doing this.', array(
+          '!url_regionbound' => url('http://regionbound.com/enhanced-cluster-envelope-using-heuristic-hull'),
+        )),
       );
     }
     $intro = t('Use clusters to report on region aggregates; requires <a target="regionbound" href="!url_regionbound">RegionBound</a>', array(
-        '!url_regionbound' => url('http://regionbound.com/coffee-prices-across-melbourne'),
+      '!url_regionbound' => url('http://regionbound.com/coffee-prices-across-melbourne'),
     ));
     $desc = t('This feature aggregates values of a selected field across every region and displays the resulting <em>sum/average/min/max</em> on each cluster icon at every zoom level. It also colours each cluster icon based on its aggregated value, rather than its marker count.');
     $form['cluster_aggregation'] = array(
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#title' => t('Cluster aggregation'),
-        '#description' => "<em>$intro</em><p>$desc</p>",
-        '#weight' => $weight++,
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Cluster aggregation'),
+      '#description' => "<em>$intro</em><p>$desc</p>",
+      '#weight' => $weight++,
     );
     $form['cluster_aggregation']['aggregation_field'] = array(
-        '#title' => t('Field to perform aggregation on'),
-        '#type' => 'select',
-        '#default_value' => $this->options['cluster_aggregation']['aggregation_field'],
-        '#options' => $fields,
-        '#description' => t('For aggregation to make sense, the selected field must be numeric or represent a list. If a list, aggregation will be applied to the element <em>count</em>.'),
+      '#title' => t('Field to perform aggregation on'),
+      '#type' => 'select',
+      '#default_value' => $this->options['cluster_aggregation']['aggregation_field'],
+      '#options' => $fields,
+      '#description' => t('For aggregation to make sense, the selected field must be numeric or represent a list. If a list, aggregation will be applied to the element <em>count</em>.'),
     );
     $form['cluster_aggregation']['aggregation_function'] = array(
-        '#title' => t('Aggregation function'),
-        '#type' => 'select',
-        '#default_value' => $this->options['cluster_aggregation']['aggregation_function'],
-        '#options' => array(
-            'average' => t('Average'),
-            'maximum' => t('Maximum'),
-            'minimum' => t('Minimum'),
-            'sum' => t('Sum'),
-        ),
+      '#title' => t('Aggregation function'),
+      '#type' => 'select',
+      '#default_value' => $this->options['cluster_aggregation']['aggregation_function'],
+      '#options' => array(
+        'average' => t('Average'),
+        'maximum' => t('Maximum'),
+        'minimum' => t('Minimum'),
+        'sum' => t('Sum'),
+      ),
     );
     $form['cluster_aggregation']['ranges'] = array(
-        '#type' => 'item',
-        '#description' => t('Edit the above to change the color-coding of cluster icons based on their aggregate values.'),
-        '#prefix' => '<div id="cluster-aggregation-aggregate">',
-        '#suffix' => '</div>',
+      '#type' => 'item',
+      '#description' => t('Edit the above to change the color-coding of cluster icons based on their aggregate values.'),
+      '#prefix' => '<div id="cluster-aggregation-aggregate">',
+      '#suffix' => '</div>',
     );
     foreach (array('small', 'medium', 'large') as $size) {
       $default_value = isset($this->options['cluster_aggregation']['ranges'][$size])
       ? $this->options['cluster_aggregation']['ranges'][$size] : '';
       $form['cluster_aggregation']['ranges'][$size] = array(
-          '#title' => "$size " . t('goes to'),
-          '#type' => 'textfield',
-          '#size' => 8,
-          '#default_value' => $default_value,
+        '#title' => "$size " . t('goes to'),
+        '#type' => 'textfield',
+        '#size' => 8,
+        '#default_value' => $default_value,
       );
     }
     $form['cluster_aggregation']['precision'] = array(
-        '#title' => t('Precision'),
-        '#type' => 'textfield',
-        '#size' => 2,
-        '#default_value' => $this->options['cluster_aggregation']['precision'],
-        '#description' => t('Number of significant digits used to display the aggregate value on the cluster icon. Leave blank for native formatting.'),
+      '#title' => t('Precision'),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['cluster_aggregation']['precision'],
+      '#description' => t('Number of significant digits used to display the aggregate value on the cluster icon. Leave blank for native formatting.'),
     );
   }
 
@@ -888,70 +891,76 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $zoom_top = $selected_map['settings']['maxZoom'];
     }
     $form['map_options'] = array(
-        '#title' => t('More map options'),
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        // Or: empty($this->options['map_options']['zoom']) ?
-        '#collapsed' => TRUE,
-        '#weight' => $weight++,
+      '#title' => t('More map options'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      // Or: empty($this->options['map_options']['zoom']) ?
+      '#collapsed' => TRUE,
+      '#weight' => $weight++,
     );
     $form['map_options']['maxzoom'] = array(
-        '#title' => t('Maximum zoom level (0..@zoomtop)', array('@zoomtop' => $zoom_top)),
-        '#type' => 'textfield',
-        '#size' => 2,
-        '#default_value' => $this->options['map_options']['maxzoom'],
-        '#description' => t('Note that not all maps support all zoom levels.'),
+      '#title' => t('Maximum zoom level (0..@zoomtop)', array('@zoomtop' => $zoom_top)),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['maxzoom'],
+      '#description' => t('Note that not all maps support all zoom levels.'),
     );
     $initial_zoom_max = $zoom_top;
     if (is_numeric($this->options['map_options']['maxzoom'])) {
       $initial_zoom_max = min($zoom_top, $this->options['map_options']['maxzoom']);
     }
     $form['map_options']['zoom'] = array(
-        '#title' => t('Initial zoom level (0..@maxzoom)', array('@maxzoom' => $initial_zoom_max)),
-        '#type' => 'textfield',
-        '#size' => 2,
-        '#default_value' => $this->options['map_options']['zoom'],
-        '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
+      '#title' => t('Initial zoom level (0..@maxzoom)', array('@maxzoom' => $initial_zoom_max)),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['zoom'],
+      '#description' => t('Does not apply to auto-box centering except when only one or no markers are shown.'),
     );
     $form['map_options']['zoom_on_click'] = array(
-        '#title' => t('Zoom-on-click zoom level (1..@maxzoom)', array('@maxzoom' => $zoom_top)),
-        '#type' => 'textfield',
-        '#size' => 2,
-        '#default_value' => $this->options['map_options']['zoom_on_click'],
-        '#description' => t('Level to zoom to when a marker is clicked. Leave blank to disable this feature.'),
+      '#title' => t('Zoom-on-click zoom level (1..@maxzoom)', array('@maxzoom' => $zoom_top)),
+      '#type' => 'textfield',
+      '#size' => 2,
+      '#default_value' => $this->options['map_options']['zoom_on_click'],
+      '#description' => t('Level to zoom to when a marker is clicked. Leave blank to disable this feature.'),
     );
     $form['map_options']['center_lat'] = array(
-        '#title' => t('Latitude of initial center of map'),
-        '#type' => 'textfield',
-        '#size' => 6,
-        '#default_value' => $this->options['map_options']['center_lat'],
-        '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
+      '#title' => t('Latitude of initial center of map'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['map_options']['center_lat'],
+      '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
     );
     $form['map_options']['center_lon'] = array(
-        '#title' => t('Longitude of initial center of map'),
-        '#type' => 'textfield',
-        '#size' => 6,
-        '#default_value' => $this->options['map_options']['center_lon'],
-        '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
+      '#title' => t('Longitude of initial center of map'),
+      '#type' => 'textfield',
+      '#size' => 6,
+      '#default_value' => $this->options['map_options']['center_lon'],
+      '#description' => t('If both latitude and longitude are filled out, these override any centering option until the visitor changes their location.'),
     );
     $form['map_options']['scrollwheelzoom'] = array(
-        '#title' => t('Enable scroll wheel zoom'),
-        '#type' => 'select',
-        '#default_value' => $this->options['map_options']['scrollwheelzoom'],
-        '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
+      '#title' => t('Enable scroll wheel zoom'),
+      '#type' => 'select',
+      '#default_value' => $this->options['map_options']['scrollwheelzoom'],
+      '#options' => array(
+        TRUE => t('Yes'),
+        FALSE => t('No'),
+      ),
     );
     $form['map_options']['dragging'] = array(
-        '#title' => t('Dragging/Panning of the map'),
-        '#type' => 'select',
-        '#default_value' => $this->options['map_options']['dragging'],
-        '#options' => array(TRUE => t('Yes'), FALSE => t('No')),
+      '#title' => t('Dragging/Panning of the map'),
+      '#type' => 'select',
+      '#default_value' => $this->options['map_options']['dragging'],
+      '#options' => array(
+        TRUE => t('Yes'),
+        FALSE => t('No'),
+      ),
     );
     $form['map_options']['separator'] = array(
-        '#title' => t('Separator used in marker balloons'),
-        '#type' => 'textfield',
-        '#size' => 10,
-        '#default_value' => $this->options['map_options']['separator'],
-        '#description' => t('You may use most HTML tags.'),
+      '#title' => t('Separator used in marker balloons'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#default_value' => $this->options['map_options']['separator'],
+      '#description' => t('You may use most HTML tags.'),
     );
   }
 
@@ -962,7 +971,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $form['vector_display']['#title'] = t('Options for Polygons, Polylines and Circles');
     $link_options = array('attributes' => array('target' => 'leaflet-manual'));
     $descr1 = t('These settings will overwrite these !options, that apply to Polygons, Multi-Polygons Polylines and Circles.', array(
-        '!options' => l(t('default Leaflet options'), 'http://leafletjs.com/reference.html#path', $link_options)));
+      '!options' => l(t('default Leaflet options'), 'http://leafletjs.com/reference.html#path', $link_options),
+    ));
     $descr2 = t('You may use tokens. For example, if your location content type has a color field, e.g. [node:field_color], you can use that to assign different colors to your polygons, polylines and circles.');
     $form['vector_display']['#description'] = $descr1 . '<br/>' . $descr2;
     $form['vector_display']['#weight'] = $weight++;
@@ -995,7 +1005,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $max_zoom = $style_options['map_options']['maxzoom'];
     if ($max_zoom != '' && (!is_numeric($max_zoom) || $max_zoom < 0 || $max_zoom > $zoom_top)) {
       form_error($form['map_options']['maxzoom'], t('"Maximum zoom level" for %map must be in range 0..@zoomtop', array(
-          '%map' => $selected_map['label'], '@zoomtop' => $zoom_top)));
+        '%map' => $selected_map['label'],
+        '@zoomtop' => $zoom_top,
+      )));
     }
     $zoom = $style_options['map_options']['zoom'];
     if ($zoom != '' && (!is_numeric($zoom) || $zoom < 0 || $zoom > $max_zoom)) {
@@ -1011,7 +1023,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $aggregation_field_info = field_info_field($cluster_aggregation['aggregation_field']);
         $valid_types = array('number_integer', 'number_decimal', 'number_float', 'entityreference');
         if (!$aggregation_field_info || !in_array($aggregation_field_info['type'], $valid_types)) {
-          drupal_set_message(t('A cluster aggregation field that cannot be interpreted as a number may cause unexpected errors.'));
+          backdrop_set_message(t('A cluster aggregation field that cannot be interpreted as a number may cause unexpected errors.'));
         }
       }
     }
@@ -1066,12 +1078,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     }
     $has_full_screen = !empty($this->options['full_screen']);
     $has_mini_map = !empty($this->options['mini_map']['on']);
-    $zoom_indicator = empty($this->options['zoom_indicator']) ? FALSE : TRUE; /*array('position' => 'topleft')*/;
+    $zoom_indicator = empty($this->options['zoom_indicator']) ? FALSE : TRUE; /*array('position' => 'topleft')*/
     $scale_control = FALSE;
     if (!empty($this->options['scale_metric']) || !empty($this->options['scale_imperial'])) {
       $scale_control = array(
-          'metric' => !empty($this->options['scale_metric']),
-          'imperial' => !empty($this->options['scale_imperial']),
+        'metric' => !empty($this->options['scale_metric']),
+        'imperial' => !empty($this->options['scale_imperial']),
       );
     }
     $reset_control = FALSE;
@@ -1083,9 +1095,9 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (module_exists('leaflet_markercluster') && !empty($this->options['map_cluster_toggle'])) {
       $cluster_control = array('label' => 'C');
     }
-    $cluster_radius = (int)_ip_geoloc_get_session_value('markercluster-radius');
+    $cluster_radius = (int) _ip_geoloc_get_session_value('markercluster-radius');
     if ($cluster_radius < 2) {
-      $cluster_radius = (int)$this->options['cluster_radius'];
+      $cluster_radius = (int) $this->options['cluster_radius'];
     }
     $disable_clustering_at_zoom = $this->options['disable_clustering_at_zoom'];
     $hull_hug_factor = empty($this->options['cluster_differentiator']['cluster_outline']) ? -1 : 'auto';
@@ -1097,10 +1109,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $cluster_aggregate_precision = $this->options['cluster_aggregation']['precision'];
     $allow_clusters_of_one = !empty($this->options['allow_clusters_of_one']);
     $tag_css_classes = $this->options['tags']['tag_css_class'];
-    $module_path = drupal_get_path('module', 'ip_geoloc');
+    $module_path = backdrop_get_path('module', 'ip_geoloc');
     $marker_path = file_create_url(ip_geoloc_marker_directory());
     $max_zoom = (int) $this->options['map_options']['maxzoom'];
-    $zoom = max(1, (int)$this->options['map_options']['zoom']);
+    $zoom = max(1, (int) $this->options['map_options']['zoom']);
     $zoom_on_click = (int) $this->options['map_options']['zoom_on_click'];
     $scroll_wheel_zoom = (bool) $this->options['map_options']['scrollwheelzoom'];
     $dragging = (bool) $this->options['map_options']['dragging'];
@@ -1113,33 +1125,33 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       $visitor_location['popup'] = $this->options['visitor_marker']['visitor_marker_balloon_text'];
     }
     if (strpos($visitor_location['popup'], '[visitor-location:surrounding-polygon]')) {
-      drupal_add_js(drupal_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_pip.js');
+      backdrop_add_js(backdrop_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_pip.js');
     }
 
     $use_specified_center = !empty($this->options['map_options']['center_lat']) && !empty($this->options['map_options']['center_lon'])
       && empty($visitor_location['is_updated']);
     if ($use_specified_center) {
       $map['center'] = array(
-          'lat' => $this->options['map_options']['center_lat'],
-          'lon' => $this->options['map_options']['center_lon'],
+        'lat' => $this->options['map_options']['center_lat'],
+        'lon' => $this->options['map_options']['center_lon'],
       );
     }
     elseif (!empty($locations) &&
         ($center_option == IP_GEOLOC_MAP_CENTER_ON_FIRST_LOCATION ||
             ($visitor_marker_color == 'none' && count($locations) == 1))) {
-              $map['center'] = _ip_geoloc_get_center(reset($locations));
+      $map['center'] = _ip_geoloc_get_center(reset($locations));
     }
     elseif (($center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS || $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED) && !empty($locations)) {
       list($center_lat, $center_lon) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
       $map['center'] = array(
-          'lat' => $center_lat,
-          'lon' => $center_lon,
+        'lat' => $center_lat,
+        'lon' => $center_lon,
       );
     }
     if (!$use_specified_center && (empty($locations) || $center_option == IP_GEOLOC_MAP_CENTER_ON_VISITOR) && isset($visitor_location['latitude'])) {
       $map['center'] = array(
-          'lat' => $visitor_location['latitude'],
-          'lon' => $visitor_location['longitude'],
+        'lat' => $visitor_location['latitude'],
+        'lon' => $visitor_location['longitude'],
       );
     }
 
@@ -1163,7 +1175,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $marker_width  = (int) $marker_dimensions[0];
     $marker_height = (int) $marker_dimensions[1];
 
-    switch (variable_get('ip_geoloc_marker_anchor_pos', 'bottom')) {
+    switch (config_get('ip_geoloc.settings', 'ip_geoloc_marker_anchor_pos')) {
       case 'top':
         $marker_anchor = 0;
         break;
@@ -1214,10 +1226,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         if (!empty($location->random_displacement)) {
           ip_geoloc_add_random_displacement($feature, $location->random_displacement);
           $circle = array(
-              'type'=> 'circle',
-              'lat' => $feature['lat'],
-              'lon' => $feature['lon'],
-              'radius' => $location->random_displacement,
+            'type' => 'circle',
+            'lat' => $feature['lat'],
+            'lon' => $feature['lon'],
+            'radius' => $location->random_displacement,
           );
           $features[] = $circle;
         }
@@ -1262,10 +1274,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         }
       }
       elseif (!empty($this->options['default_marker']['default_marker_special_char'])
-          || !empty($this->options['default_marker']['default_marker_special_char_class'])) {
-            $has_special_markers = TRUE;
-            $feature['specialChar'] = $this->options['default_marker']['default_marker_special_char'];
-            $feature['specialCharClass'] = $this->options['default_marker']['default_marker_special_char_class'];
+           || !empty($this->options['default_marker']['default_marker_special_char_class'])) {
+        $has_special_markers = TRUE;
+        $feature['specialChar'] = $this->options['default_marker']['default_marker_special_char'];
+        $feature['specialCharClass'] = $this->options['default_marker']['default_marker_special_char_class'];
       }
       if (!empty($location->marker_tooltip)) {
         if (module_exists('leaflet_label')) {
@@ -1284,7 +1296,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         $feature['regions'] = array(0 => '') + $location->regions;
 
         if (isset($location->aggregation_value)) {
-          $feature['aggregationValue'] = (float)$location->aggregation_value;
+          $feature['aggregationValue'] = (float) $location->aggregation_value;
         }
         // Note: cannot use <br/>  or HTML in tooltip as separator. Use \n.
         $feature['tooltip'] = empty($feature['tooltip']) ? '' : $feature['tooltip'] . "\n";
@@ -1303,38 +1315,47 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       if ((isset($location->marker_color) && _ip_geoloc_is_no_marker($location->marker_color)) ||
           (!isset($location->marker_color) && _ip_geoloc_is_no_marker($marker_color))) {
-            // "No marker" as opposed to "default" marker.
-            $has_special_markers = TRUE;
-            $feature['icon'] = FALSE;
-          }
-          elseif (!empty($location->marker_color) || !empty($marker_color)) {
-            // Switch from default icon to specified color.
-            $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
-            $feature['icon'] = array(
-                'iconUrl' => $marker_path . "/$color.png",
-                'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
-                'iconAnchor' => array('x' => (int) (($marker_width + 1) / 2), 'y' => $marker_anchor),
-                // Just above topline, center.
-                'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1),
-            );
-          }
-          $features[] = $feature;
+        // "No marker" as opposed to "default" marker.
+        $has_special_markers = TRUE;
+        $feature['icon'] = FALSE;
+      }
+      elseif (!empty($location->marker_color) || !empty($marker_color)) {
+        // Switch from default icon to specified color.
+        $color = empty($location->marker_color) ? $marker_color : $location->marker_color;
+        $feature['icon'] = array(
+          'iconUrl' => $marker_path . "/$color.png",
+          'iconSize' => array(
+            'x' => $marker_width,
+            'y' => $marker_height,
+          ),
+          'iconAnchor' => array(
+            'x' => (int) (($marker_width + 1) / 2),
+            'y' => $marker_anchor,
+          ),
+          // Just above topline, center.
+          'popupAnchor' => array(
+            'x' => 0,
+            'y' => -$marker_height - 1,
+          ),
+        );
+      }
+      $features[] = $feature;
     }
     if (isset($visitor_location['latitude'])) {
       if ($visitor_marker_color != 'none') {
         // See leaflet/README.txt for examples of Leaflet "features"
         $visitor_feature = array(
-            'type' => 'point',
-            'isVisitor' => true,
-            'lat' => $visitor_location['latitude'],
-            'lon' => $visitor_location['longitude'],
-            'specialChar' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char']),
-            'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
-            'popup' => t('Your approximate location'),
-            'tooltip' => !empty($visitor_location['tooltip']) ? $visitor_location['tooltip'] : t('Your approximate location'),
-            'zIndex' => 9999,
-            // See leaflet_markercluster.drupal.js.
-            'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
+          'type' => 'point',
+          'isVisitor' => true,
+          'lat' => $visitor_location['latitude'],
+          'lon' => $visitor_location['longitude'],
+          'specialChar' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char']),
+          'specialCharClass' => filter_xss_admin($this->options['visitor_marker']['visitor_marker_special_char_class']),
+          'popup' => t('Your approximate location'),
+          'tooltip' => !empty($visitor_location['tooltip']) ? $visitor_location['tooltip'] : t('Your approximate location'),
+          'zIndex' => 9999,
+          // See leaflet_markercluster.backdrop.js.
+          'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
         );
 
         if (!empty($visitor_location['popup']) && module_exists('token')) {
@@ -1346,25 +1367,34 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             $has_special_markers = TRUE;
           }
           $visitor_feature['icon'] = array(
-              'iconUrl' => $marker_path . "/$visitor_marker_color.png",
-              'iconSize' => array('x' => $marker_width, 'y' => $marker_height),
-              'iconAnchor' => array('x' => (int) (($marker_width + 1) / 2), 'y' => $marker_anchor),
-              // Just above topline, center.
-              'popupAnchor' => array('x' => 0, 'y' => -$marker_height - 1),
+            'iconUrl' => $marker_path . "/$visitor_marker_color.png",
+            'iconSize' => array(
+              'x' => $marker_width,
+              'y' => $marker_height,
+            ),
+            'iconAnchor' => array(
+              'x' => (int) (($marker_width + 1) / 2),
+              'y' => $marker_anchor,
+            ),
+            // Just above topline, center.
+            'popupAnchor' => array(
+              'x' => 0,
+              'y' => -$marker_height - 1,
+            ),
           );
         }
         $features[] = $visitor_feature;
       }
       if (!empty($this->options['visitor_marker']['visitor_marker_accuracy_circle']) && !empty($visitor_location['accuracy'])) {
         $visitor_accuracy_circle = array(
-            'type' => 'circle',
-            'lat' => $visitor_location['latitude'],
-            'lon' => $visitor_location['longitude'],
-            'radius' => (float) $visitor_location['accuracy'],
-            'popup' => !empty($visitor_location['popup']) ? $visitor_location['popup'] : t("You are within @m meters of the centre of this circle.", array('@m' => $visitor_location['accuracy'])),
-            'label' => !empty($visitor_location['tooltip']) ? $visitor_location['tooltip'] : t('You are within this circle'), // requires Leaflet Label
-            'zIndex' => 9998,
-            'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
+          'type' => 'circle',
+          'lat' => $visitor_location['latitude'],
+          'lon' => $visitor_location['longitude'],
+          'radius' => (float) $visitor_location['accuracy'],
+          'popup' => !empty($visitor_location['popup']) ? $visitor_location['popup'] : t("You are within @m meters of the centre of this circle.", array('@m' => $visitor_location['accuracy'])),
+          'label' => !empty($visitor_location['tooltip']) ? $visitor_location['tooltip'] : t('You are within this circle'), // requires Leaflet Label
+          'zIndex' => 9998,
+          'flags' => LEAFLET_MARKERCLUSTER_EXCLUDE_FROM_CLUSTER,
         );
         $features[] = $visitor_accuracy_circle;
       }
@@ -1377,7 +1407,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     else {
       $map['settings']['zoom'] = $zoom;
       if (!empty($map['center'])) {
-        // A leaflet.drupal.js quirk? Have to specify AND force a center...
+        // A leaflet.backdrop.js quirk? Have to specify AND force a center...
         $map['center']['force'] = TRUE;
       }
     }
@@ -1386,7 +1416,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['dragging'] = $dragging;
 
     $map['settings']['revertLastMarkerOnMapOut'] =
-    (bool)($sync_flags & LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT);
+    (bool) ($sync_flags & LEAFLET_SYNC_REVERT_LAST_MARKER_ON_MAP_OUT);
 
     $map['settings']['maxClusterRadius'] = 0;
     if ($cluster_radius > 0) {
@@ -1401,7 +1431,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
           $map['settings']['clusterAggregationFunction'] = $cluster_aggregation_function;
           $map['settings']['clusterAggregateRanges'] = $cluster_aggregate_ranges;
           $map['settings']['clusterAggregatePrecision'] = $cluster_aggregate_precision;
-          drupal_add_css(leaflet_markercluster_get_library_path() . '/MarkerCluster.Aggregations.css');
+          backdrop_add_css(leaflet_markercluster_get_library_path() . '/MarkerCluster.Aggregations.css');
         }
         if ($allow_clusters_of_one) {
           $map['settings']['allowClustersOfOne'] = TRUE;
@@ -1410,7 +1440,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       }
       else {
         $display_name = $this->view->get_human_name() . ' (' . $this->display->display_title . ')';
-        drupal_set_message(t('Cannot cluster markers in View %display_name, as the module Leaflet MarkerCluster is not enabled.', array('%display_name' => $display_name)), 'warning');
+        backdrop_set_message(t('Cannot cluster markers in View %display_name, as the module Leaflet MarkerCluster is not enabled.', array('%display_name' => $display_name)), 'warning');
       }
     }
 
@@ -1437,42 +1467,42 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     // See [#1802732].
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
-    drupal_add_js(drupal_get_path('module', 'leaflet') . '/leaflet.drupal.js');
+    backdrop_add_js(backdrop_get_path('module', 'leaflet') . '/leaflet.backdrop.js');
 
     // Don't load sync JS and CSS when option is not requested.
     if ($sync_flags !== 0) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_sync_content.js', array('weight' => 2));
-      drupal_add_css($module_path . '/css/ip_geoloc_leaflet_sync_content.css');
+      backdrop_add_js($module_path . '/js/ip_geoloc_leaflet_sync_content.js', array('weight' => 2));
+      backdrop_add_css($module_path . '/css/ip_geoloc_leaflet_sync_content.css');
     }
     if ($has_full_screen) {
       // Load the 'leaflet-fullscreen' library, containing JS and CSS.
-      if (drupal_add_library('ip_geoloc', 'leaflet-fullscreen')) {
+      if (backdrop_add_library('ip_geoloc', 'leaflet-fullscreen')) {
         $map['settings']['fullscreenControl'] = array('position' => 'topright');
       }
     }
     if ($has_mini_map) {
       // Load the 'leaflet-minimap' library, containing JS and CSS.
       // See https://github.com/Norkart/Leaflet-MiniMap for more settings.
-      if (drupal_add_library('ip_geoloc', 'leaflet-minimap')) {
+      if (backdrop_add_library('ip_geoloc', 'leaflet-minimap')) {
         $map['settings']['miniMap'] = array(
-            'autoToggleDisplay' => TRUE,
-            'height' => $this->options['mini_map']['height'],
-            'width' => $this->options['mini_map']['width'],
-            'position' => 'bottomright', // 'bottomright'
-            'toggleDisplay' => !empty($this->options['mini_map']['toggle']),
-            'zoomAnimation' => FALSE,
-            'zoomLevelOffset' => (int)$this->options['mini_map']['zoom_delta'],
-            // Superimposed rectangle showing extent of main map on the inset.
-            'aimingRectOptions' => array(
-                'color' => $this->options['mini_map']['scope_color'],
-                'weight' => 3,
-                'fillOpacity' => 0.1,
-            ),
-            // The "shadow" rectangle that shows the new map outline.
-            'shadowRectOptions' => array(
-                'color' => '#888',
-                'weight' => 1
-            ),
+          'autoToggleDisplay' => TRUE,
+          'height' => $this->options['mini_map']['height'],
+          'width' => $this->options['mini_map']['width'],
+          'position' => 'bottomright', // 'bottomright'
+          'toggleDisplay' => !empty($this->options['mini_map']['toggle']),
+          'zoomAnimation' => FALSE,
+          'zoomLevelOffset' => (int) $this->options['mini_map']['zoom_delta'],
+          // Superimposed rectangle showing extent of main map on the inset.
+          'aimingRectOptions' => array(
+            'color' => $this->options['mini_map']['scope_color'],
+            'weight' => 3,
+            'fillOpacity' => 0.1,
+          ),
+          // The "shadow" rectangle that shows the new map outline.
+          'shadowRectOptions' => array(
+            'color' => '#888',
+            'weight' => 1,
+          ),
         );
       }
     }
@@ -1482,8 +1512,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['clusterControl'] = $cluster_control;
     $map['settings']['scaleControl'] = $scale_control;
     if ($has_mini_map || $zoom_indicator || $reset_control || $cluster_control || $scale_control) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js', array('weight' => 1));
-      drupal_add_css($module_path . '/css/ip_geoloc_leaflet_controls.css');
+      backdrop_add_js($module_path . '/js/ip_geoloc_leaflet_controls.js', array('weight' => 1));
+      backdrop_add_css($module_path . '/css/ip_geoloc_leaflet_controls.css');
     }
     $map['settings']['gotoContentOnClick'] = $goto_content_on_click;
     $map['settings']['openBalloonsOnHover'] = $open_balloons_on_hover;
@@ -1494,50 +1524,50 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     $map['settings']['polygonLineWeightOnHover'] = $polygon_line_weight_on_hover;
 
     if ($goto_content_on_click) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_goto_content_on_click.js', array('scope' => 'footer'));
+      backdrop_add_js($module_path . '/js/ip_geoloc_leaflet_goto_content_on_click.js', array('scope' => 'footer'));
     }
     if ($open_balloons_on_hover || $polygon_add_shadow_on_hover || is_numeric($polygon_fill_opacity_on_hover) || is_numeric($polygon_line_weight_on_hover)) {
       if ($polygon_add_shadow_on_hover && $use_tweenmax_for_shadow_on_hover) {
         $version = $use_tweenmax_for_shadow_on_hover;
-        drupal_add_js("https://cdnjs.cloudflare.com/ajax/libs/gsap/$version/TweenMax.min.js", array('scope' => 'footer'));
+        backdrop_add_js("https://cdnjs.cloudflare.com/ajax/libs/gsap/$version/TweenMax.min.js", array('scope' => 'footer'));
       }
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_hover.js', array('scope' => 'footer'));
+      backdrop_add_js($module_path . '/js/ip_geoloc_leaflet_hover.js', array('scope' => 'footer'));
     }
     $settings = array(
-        'mapId' => $map_id,
-        'map' => $map,
-        'features' => $features,
+      'mapId' => $map_id,
+      'map' => $map,
+      'features' => $features,
     );
     $options = array(
-        'type' => 'setting',
-        // 'footer' only works for type 'inline'.
-        'scope' => 'footer',
+      'type' => 'setting',
+      // 'footer' only works for type 'inline'.
+      'scope' => 'footer',
     );
-    drupal_add_js(array('leaflet' => array($settings)), $options);
+    backdrop_add_js(array('leaflet' => array($settings)), $options);
 
     libraries_load('leaflet');
 
     // Little hacky this, but can't see another way to load libraries for
     // Leaflet More Maps, Leaflet MarkerCluster, Leaflet Hash...
-    drupal_alter('leaflet_map_prebuild', $settings);
+    backdrop_alter('leaflet_map_prebuild', $settings);
 
     if ($reset_control || $cluster_control || !empty($has_special_markers)) {
       // Load the CSS that comes with the font icon library which in return
       // tells the browser to fetch either the WOFF, TTF or SVG files that
       // define the font faces.
-      drupal_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
-      drupal_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js', array('weight' => 1));
+      backdrop_add_library('ip_geoloc', 'ip_geoloc_font_icon_libs');
+      backdrop_add_css($module_path . '/css/ip_geoloc_leaflet_markers.css');
+      backdrop_add_js($module_path . '/js/ip_geoloc_leaflet_tagged_marker.js', array('weight' => 1));
     }
     if ($zoom_on_click) {
-      drupal_add_js($module_path . '/js/ip_geoloc_leaflet_zoom_on_click.js', array('scope' => 'footer'));
+      backdrop_add_js($module_path . '/js/ip_geoloc_leaflet_zoom_on_click.js', array('scope' => 'footer'));
     }
-    // drupal_alter('leaflet_build_map', $build); // @todo [#2567391]
+    // backdrop_alter('leaflet_build_map', $build); // @todo [#2567391]
 
     $output = theme('ip_geoloc_leaflet', array(
-        'map_id' => $map_id,
-        'height' => trim($this->options['map_height']),
-        'view' => $this->view,
+      'map_id' => $map_id,
+      'height' => trim($this->options['map_height']),
+      'view' => $this->view,
     ));
 
     ip_geoloc_debug(t('-- Leaflet map preparation time: %sec s', array('%sec' => number_format(microtime(TRUE) - $render_start, 2))));
@@ -1580,12 +1610,12 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       return $titles;
     }
     $pos_colon = strrpos($label, ':');
-    $label = drupal_substr($label, $pos_colon > 0 ? $pos_colon + 1 : 0);
+    $label = backdrop_substr($label, $pos_colon > 0 ? $pos_colon + 1 : 0);
     if ($field_type === 'taxonomy_term_reference') {
       for ($level = 1; $level <= $region_depth; $level++) {
         $titles[] = t('Zoom range for %field level @level', array(
-            '%field' => $label,
-            '@level' => $level
+          '%field' => $label,
+          '@level' => $level,
         ));
       }
     }
@@ -1615,7 +1645,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     switch ($field_type) {
 
       case 'taxonomy_term_reference':
-        $region_hierarchy = taxonomy_get_parents_all($region);
+        $region_hierarchy = taxonomy_term_load_parents_all($region);
         // Reverse, to order region hierarchy from large region to small.
         foreach (array_reverse($region_hierarchy) as $region_term) {
           $location->regions[$level++] = trim($region_term->name);
@@ -1639,13 +1669,13 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
             }
           }
           else {
-            //drupal_set_message(t('IPGV&M: cannot flesh out countries and states on locations. Format callback %name is not available.', array('%name' => $format_callback)), 'warning', FALSE);
+            //backdrop_set_message(t('IPGV&M: cannot flesh out countries and states on locations. Format callback %name is not available.', array('%name' => $format_callback)), 'warning', FALSE);
           }
           $location->regions = array(
-              1 => isset($region['country']) ? trim($region['country']) : '',
-              2 => isset($region['administrative_area']) ? trim($region['administrative_area']) : '',
-              3 => isset($region['locality']) ? trim($region['locality']) : '',
-              4 => isset($region['postal_code']) ? trim($region['postal_code']) : '',
+            1 => isset($region['country']) ? trim($region['country']) : '',
+            2 => isset($region['administrative_area']) ? trim($region['administrative_area']) : '',
+            3 => isset($region['locality']) ? trim($region['locality']) : '',
+            4 => isset($region['postal_code']) ? trim($region['postal_code']) : '',
           );
           $level = 5;
         }

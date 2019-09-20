@@ -9,9 +9,11 @@
  * Menu callback for admin settings.
  */
 function ip_geoloc_admin_configure() {
+  $config = config('ip_geoloc.settings');
 
   global $base_url;
 
+  $form['#config'] = 'ip_geoloc.settings';
   $form['ip_geoloc_google_auth'] = array(
     '#type' => 'fieldset',
     '#title' => t('Authentication of maps and geolocation services'),
@@ -24,8 +26,8 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_google_auth']['ip_geoloc_auth_method'] = array(
     '#type' => 'select',
     '#title' => t('Google API Authentication Method'),
-  //'#description' => t('Google API Authentication Method'),
-    '#default_value' => variable_get('ip_geoloc_auth_method', 0),
+    //'#description' => t('Google API Authentication Method'),
+    '#default_value' => $config->get('ip_geoloc_auth_method'),
     '#options' => array(
       0 => t("I don't use the Google API"),
       1 => t('Use Google API via API Key'),
@@ -39,7 +41,7 @@ function ip_geoloc_admin_configure() {
     '#description' => t('Obtain a Google Maps Javascript API key <a href="!url">here</a>.', array(
       '!url' => url('https://developers.google.com/maps/documentation/javascript/get-api-key'),
     )),
-    '#default_value' => variable_get('ip_geoloc_apikey', ''),
+    '#default_value' => $config->get('ip_geoloc_apikey'),
     '#required' => FALSE,
     '#states' => array(
       'visible' => array(
@@ -53,12 +55,12 @@ function ip_geoloc_admin_configure() {
     '#title' => t('Google Client ID'),
     '#description' => t('For more information, visit <a href="!url">this page</a>.', array(
       '!url' => url('https://developers.google.com/maps/documentation/javascript/get-api-key#client-id'),
-     )),
-    '#default_value' => variable_get('ip_geoloc_client_id', ''),
+    )),
+    '#default_value' => $config->get('ip_geoloc_client_id'),
     '#required' => FALSE,
     '#states' => array(
       'visible' => array(
-         ':input[name="ip_geoloc_auth_method"]' => array('value' => 2),
+        ':input[name="ip_geoloc_auth_method"]' => array('value' => 2),
       ),
     ),
   );
@@ -67,7 +69,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'textfield',
     '#title' => t('Google Signature'),
     '#description' => t('May not be required. Check the Google documentation.'),
-    '#default_value' => variable_get('ip_geoloc_signature', ''),
+    '#default_value' => $config->get('ip_geoloc_signature'),
     '#required' => FALSE,
     '#states' => array(
       'visible' => array(
@@ -82,7 +84,7 @@ function ip_geoloc_admin_configure() {
     '#collapsed' => TRUE,
     '#title' => t('Alternative markers'),
   );
-  $markers_path = drupal_get_path('module', 'ip_geoloc');
+  $markers_path = backdrop_get_path('module', 'ip_geoloc');
   $form['markers']['ip_geoloc_marker_directory'] = array(
     '#type' => 'textfield',
     '#title' => t('<strong>Google Maps, Leaflet</strong>: path to marker images'),
@@ -103,7 +105,7 @@ function ip_geoloc_admin_configure() {
   $form['markers']['ip_geoloc_marker_anchor_pos'] = array(
     '#title' => t('<strong>Google Maps, Leaflet</strong>: marker image anchor position'),
     '#type' => 'select',
-    '#default_value' => variable_get('ip_geoloc_marker_anchor_pos', 'bottom'),
+    '#default_value' => $config->get('ip_geoloc_marker_anchor_pos'),
     '#options' => array(
       'top' => t('Center of topline'),
       'middle' => t('Center of image'),
@@ -114,11 +116,11 @@ function ip_geoloc_admin_configure() {
   $form['markers']['ip_geoloc_num_location_marker_layers'] = array(
     '#type' => 'textfield',
     '#title' => t('<strong>OpenLayers only</strong>: maximum number of marker layers you may need'),
-    '#default_value' => variable_get('ip_geoloc_num_location_marker_layers', IP_GEOLOC_DEF_NUM_MARKER_LAYERS),
+    '#default_value' => $config->get('ip_geoloc_num_location_marker_layers'),
     '#description' => t('Only relevant when you have selected "differentiator" fields in your view.'),
   );
   $benefits = t('Some of the benefits of font icons are explained <a target="flink" href="!url_flink">here</a>.', array(
-    '!url_flink' => url('http://flink.com.au/ramblings/spruce-your-map-markers-font-icons')
+    '!url_flink' => url('http://flink.com.au/ramblings/spruce-your-map-markers-font-icons'),
   ));
   $form['font_icons'] = array(
     '#type' => 'fieldset',
@@ -147,8 +149,8 @@ function ip_geoloc_admin_configure() {
   }
   $form['font_icons']["ip_geoloc_font_icon_lib$count"]['#description'] =
     t('<strong>Note:</strong> as explained in this <a target="issue" href="!url_issue">issue</a>, you cannot have identical leaf names amongst the CSS filespecs. Rename .css files if there are clashes.', array(
-      '!url_issue' => url('https://www.drupal.org/node/1885838#comment-8996119'),
-    ));
+    '!url_issue' => url('https://www.drupal.org/node/1885838#comment-8996119'),
+  ));
 
   if (ip_geoloc_diagnose() > 0) {
     // Form for sync-ing the geolocation table with the system accesslog.
@@ -157,7 +159,7 @@ function ip_geoloc_admin_configure() {
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
       '#title' => t('Update IP geolocation database using past visitor IP addresses from the system access log'),
-      '#description'  => t('You can update the IP geolocation database in batches by pressing the button below. As a rough guide, count on a 1 minute wait for every 100 IP addresses, when executing a web service like IPInfoDB, as employed by Smart IP. Add another 2 minutes per 100 IP addresses if you ticked the option to employ the Google Maps API to reverse-geocode to street addresses. If your server interrupts the process you can continue from where it stopped by refreshing this page and pressing the button again. You will not lose any data.'),
+      '#description' => t('You can update the IP geolocation database in batches by pressing the button below. As a rough guide, count on a 1 minute wait for every 100 IP addresses, when executing a web service like IPInfoDB, as employed by Smart IP. Add another 2 minutes per 100 IP addresses if you ticked the option to employ the Google Maps API to reverse-geocode to street addresses. If your server interrupts the process you can continue from where it stopped by refreshing this page and pressing the button again. You will not lose any data.'),
     );
     $form['ip_geoloc_db_options']['ip_geoloc_sync_with_accesslog'] = array(
       '#type' => 'submit',
@@ -168,7 +170,7 @@ function ip_geoloc_admin_configure() {
       '#type' => 'textfield',
       '#size' => 4,
       '#title' => t('Batch size'),
-      '#default_value'  => variable_get('ip_geoloc_sync_batch_size', 500),
+      '#default_value' => $config->get('ip_geoloc_sync_batch_size'),
       '#description' => t('To change the default batch size, press "Save configuration".'),
     );
   }
@@ -182,7 +184,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_allow_session_storage'] = array(
     '#type' => 'checkbox',
     '#title' => t('Allow session storage'),
-    '#default_value' => variable_get('ip_geoloc_allow_session_storage', TRUE),
+    '#default_value' => $config->get('ip_geoloc_allow_session_storage'),
     '#description' => t('The current visitor\'s location data is temporarily stored in either the $_SESSION variable or via the module <a target="_project" href="@url_project">Session Cache API</a>, if enabled. <br/>To disable both of these session storage functions, untick this box. However unticking this box means you will lose all functions regarding Wifi/GPS-based visitor geolocation. Location of the visitor based on IP address through either the <strong>Smart IP</strong> or <strong>GeoIP</strong> modules will continue to operate normally, if enabled.', array(
       '@url_project' => url('http://drupal.org/project/session_cache'),
     )),
@@ -190,7 +192,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_store_addresses'] = array(
     '#type' => 'checkbox',
     '#title' => t('Store reverse-geocoded addresses with their corresponding latitude/longitude on the database'),
-    '#default_value' => variable_get('ip_geoloc_store_addresses', TRUE),
+    '#default_value' => $config->get('ip_geoloc_store_addresses'),
     '#description' => t('This allows you to create maps of recent visitors to your site.'),
   );
   $note1 = t('Untick, if you do not need periodic visitor location updates. Consider the <em>Set my location</em> block as an alternative.');
@@ -199,7 +201,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_google_to_reverse_geocode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ a free Google service to <em>periodically</em> auto reverse-geocode visitor locations to street addresses'),
-    '#default_value' => variable_get('ip_geoloc_google_to_reverse_geocode', FALSE),
+    '#default_value' => $config->get('ip_geoloc_google_to_reverse_geocode'),
     '#description' => "$note1<br>$note2<br/>"
       . t('Reverse-geocoding takes place via the Javascript version of the Google Maps API and the HTML5 way of obtaining a visitor\'s location. This involves visitors being prompted to accept sharing of their location.<br/>For the upload of historic visitor location data the server-side version of the Google Maps API is used. The latter is subject to a Google-imposed daily limit on the number of calls coming from the same server.')
       . '<br/>' . $note3,
@@ -212,7 +214,7 @@ function ip_geoloc_admin_configure() {
     '#size' => 10,
     '#field_suffix' => t('seconds'),
     '#title' => t('Minimum elapsed time before geolocation data for the same user will be collected again'),
-    '#default_value' => variable_get('ip_geoloc_location_check_interval', IP_GEOLOC_LOCATION_CHECK_INTERVAL),
+    '#default_value' => $config->get('ip_geoloc_location_check_interval'),
     '#description' => t('Operates in combination with the checkbox above. Geolocation information associated with an IP address may change over time, for instance when the visitor is using a mobile device and is moving. Use zero to geolocate the visitor <em>once</em> and then refrain from repeat location collection until their session has expired.'),
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
@@ -222,7 +224,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'textarea',
     '#rows' => 2,
     '#title' => t("Pages on which the visitor's HTML5 location may be sampled and reverse-geocoded to a street address"),
-    '#default_value' => variable_get('ip_geoloc_include_pages', '*'),
+    '#default_value' => $config->get('ip_geoloc_include_pages'),
     '#description' => t("Enter relative paths, one per line. Where they exist use the URL aliases rather than the node numbers. <strong>&lt;front&gt;</strong> means the front page.<br/>The asterisk <em>*</em> is the wildcard character, i.e. <em>recipes/mains*</em> denotes all pages that have a path starting with <em>recipes/mains</em><br/>The asterisk by itself means any page on your site."),
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
@@ -232,7 +234,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'textarea',
     '#rows' => 3,
     '#title' => t('Exceptions: pages excluded from the set of pages specified above'),
-    '#default_value' => variable_get('ip_geoloc_exclude_pages', IP_GEOLOC_DEFAULT_PAGE_EXCLUSIONS),
+    '#default_value' => $config->get('ip_geoloc_exclude_pages'),
     '#description' => t('As above, one path specification per line.'),
     '#states' => array(
       'visible' => array('input[name="ip_geoloc_allow_session_storage"]' => array('checked' => TRUE)),
@@ -241,7 +243,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_roles_to_reverse_geocode'] = array(
     '#type' => 'checkboxes',
     '#title' => t("User roles for which the HTML5 location may be sampled and reverse-geocoded to a street address"),
-    '#default_value' => variable_get('ip_geoloc_roles_to_reverse_geocode', array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID)),
+    '#default_value' => $config->get('ip_geoloc_roles_to_reverse_geocode'),
     '#options' => user_roles(),
     '#description' => t('Selected roles are effective only when the check box on the data collection option above is also ticked.'),
     '#states' => array(
@@ -252,7 +254,7 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_data_collection_options']['ip_geoloc_smart_ip_as_backup'] = array(
     '#type' => 'checkbox',
     '#title' => t('Employ Smart IP as a backup to the Google Maps JS API as well as declined or failed HTML5 location retrievals in Views'),
-    '#default_value' => variable_get('ip_geoloc_smart_ip_as_backup', FALSE),
+    '#default_value' => $config->get('ip_geoloc_smart_ip_as_backup'),
     '#description' => t('This refers to situations where the lat/long coords could not be established. An example is the user declining to share their location. Another is when the Google Maps API reverse-geocode function fails or is not enabled through the tick box at the top of this section.<br/>Smart IP lookups tend to be less detailed than the Google Maps reverse-geocoded results.<br/>If this box is <strong>not</strong> ticked, but the <a href="@geoip">GeoIP API module</a> is enabled, then GeoIP will be used as the Google Maps API fallback and to load historic lat/long coordinates.', array(
       '@geoip' => url('http://drupal.org/project/geoip'),
     )),
@@ -264,7 +266,7 @@ function ip_geoloc_admin_configure() {
     '#type' => 'textfield',
     '#title' => t('Message displayed while visitor is being geolocated'),
     '#size' => 30,
-    '#default_value' => variable_get('ip_geoloc_throbber_text2', ''),
+    '#default_value' => $config->get('ip_geoloc_throbber_text2'),
     '#description' => t('A standard status message to show the visitor that geolocation was initiated and is in progress. </br/>Defaults to %default <br/>You may use most HTML tags. Use <em>&lt;none&gt;</em> to have no message shown, which is probably the preferred choice if the <strong>Auto-refresh</strong> box below is unticked.', array(
       '%default' => IP_GEOLOC_THROBBER_DEFAULT_TEXT,
     )),
@@ -279,13 +281,13 @@ function ip_geoloc_admin_configure() {
   $form['ip_geoloc_advanced']['ip_geoloc_page_refresh'] = array(
     '#type' => 'checkbox',
     '#title' => t('Auto-refresh the page as soon as an HTML5 location update has come in'),
-    '#default_value' => variable_get('ip_geoloc_page_refresh', TRUE),
+    '#default_value' => $config->get('ip_geoloc_page_refresh'),
     '#description' => t('The above tick box does not apply to administration pages.'),
   );
   $form['ip_geoloc_advanced']['ip_geoloc_debug'] = array(
     '#type' => 'textfield',
     '#title' => t('Detail execution progress with status messages'),
-    '#default_value' => variable_get('ip_geoloc_debug'),
+    '#default_value' => $config->get('ip_geoloc_debug'),
     '#description' => t('Enter a comma-separated list of names of users that should see status messages coming from this module, e.g., for debugging purposes. Use <strong>anon</strong> for the anonymous user.'),
   );
   $form['ip_geoloc_advanced']['ip_geoloc_erase_session'] = array(
@@ -313,19 +315,20 @@ function ip_geoloc_admin_configure() {
  */
 function ip_geoloc_diagnose() {
   $geoloc_count = db_query('SELECT COUNT(DISTINCT ip_address) FROM {ip_geoloc}')->fetchField();
-  drupal_set_message(t("The IP geolocation database currently contains information for %geoloc_count visited IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
+  backdrop_set_message(t("The IP geolocation database currently contains information for %geoloc_count visited IP addresses.", array('%geoloc_count' => $geoloc_count)), 'status', FALSE);
 
   if (!db_table_exists('accesslog')) {
-    drupal_set_message(t("The <strong>accesslog</strong> database table does not exist, probably because core's <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The visitor location map blocks are not affected and should still display."), 'warning');
+    backdrop_set_message(t("The <strong>accesslog</strong> database table does not exist, probably because core's <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The visitor location map blocks are not affected and should still display."), 'warning');
   }
   elseif (!module_exists('statistics')) {
-    drupal_set_message(t('The <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The visitor location map blocks are not affected and should still display.'), 'warning');
+    backdrop_set_message(t('The <strong>Statistics</strong> module is not enabled. Views and maps of visitors will not be available or display errors until you enable the <strong>Statistics</strong> module and its <strong>access log</strong>. The visitor location map blocks are not affected and should still display.'), 'warning');
   }
   else {
     $ip_address_count = db_query('SELECT COUNT(DISTINCT hostname) FROM {accesslog}')->fetchField();
-    drupal_set_message(t("The system access log currently contains entries from %ip_address_count IP addresses.", array('%ip_address_count' => $ip_address_count)), 'status', FALSE);
+    backdrop_set_message(t("The system access log currently contains entries from %ip_address_count IP addresses.", array('%ip_address_count' => $ip_address_count)), 'status', FALSE);
+    // TODO This variable was removed in Backdrop without replacement.
     if (!variable_get('statistics_enable_access_log', FALSE)) {
-      drupal_set_message(t('The <strong>Statistics</strong> module is enabled, but its system <strong>access log</strong> is not. Therefore all visitor Views are frozen and will not grow. The visitor location map blocks are not affected and should still display. You can enable the <strong>access log</strong> at <a href="!url">Configuration >> Statistics</a>.',
+      backdrop_set_message(t('The <strong>Statistics</strong> module is enabled, but its system <strong>access log</strong> is not. Therefore all visitor Views are frozen and will not grow. The visitor location map blocks are not affected and should still display. You can enable the <strong>access log</strong> at <a href="!url">Configuration >> Statistics</a>.',
         array('!url' => url('admin/config/system/statistics'))), 'warning');
     }
     else {
@@ -334,12 +337,13 @@ function ip_geoloc_diagnose() {
       if ($count > 0) {
         $t = t("%count IP addresses in the system access log currently have no associated lat/long or address information on the IP geolocation database. These are the most recent ones: %ips",
           array(
-            '%count' => $count,
-            '%ips' => implode(', ', array_slice($non_synched_ips, 0, 10, TRUE))));
-        drupal_set_message($t, 'status', FALSE);
+          '%count' => $count,
+          '%ips' => implode(', ', array_slice($non_synched_ips, 0, 10, TRUE)),
+        ));
+        backdrop_set_message($t, 'status', FALSE);
       }
       else {
-        drupal_set_message(t("The IP geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
+        backdrop_set_message(t("The IP geolocation database is up to date and in sync with the system access log."), 'status', FALSE);
       }
       return $count;
     }
@@ -364,16 +368,17 @@ function ip_geoloc_diagnose() {
  *   custom modules that implement hook_get_ip_geolocation_alter().
  */
 function ip_geoloc_sync_with_accesslog() {
+  $config = config('ip_geoloc.settings');
   // Wipe previous message to avoid confusion.
-  drupal_get_messages();
+  backdrop_get_messages();
 
-  $use_smart_ip = variable_get('ip_geoloc_smart_ip_as_backup', FALSE) && module_exists('smart_ip');
-  $use_google_to_reverse_geocode = variable_get('ip_geoloc_google_to_reverse_geocode', FALSE);
+  $use_smart_ip = $config->get('ip_geoloc_smart_ip_as_backup') && module_exists('smart_ip');
+  $use_google_to_reverse_geocode = $config->get('ip_geoloc_google_to_reverse_geocode');
 
   // From Configuration >> IP Geolocation form.
   $batch_size = check_plain($_POST['ip_geoloc_sync_batch_size']);
   if (empty($batch_size)) {
-    $batch_size = variable_get('ip_geoloc_sync_batch_size', 500);
+    $batch_size = $config->get('ip_geoloc_sync_batch_size');
   }
   $ips_to_be_processed = ip_geoloc_ips_to_be_synched();
   if (count($ips_to_be_processed) > $batch_size) {
@@ -382,11 +387,15 @@ function ip_geoloc_sync_with_accesslog() {
   $count = count($ips_to_be_processed);
 
   $batch = array(
-    'file' => drupal_get_path('module', 'ip_geoloc') . '/ip_geoloc.admin.inc',
+    'file' => backdrop_get_path('module', 'ip_geoloc') . '/ip_geoloc.admin.inc',
     'operations' => array(array('_ip_geoloc_process_access_log', array(
-      $ips_to_be_processed, $use_smart_ip, $use_google_to_reverse_geocode))),
+          $ips_to_be_processed,
+          $use_smart_ip,
+          $use_google_to_reverse_geocode,
+        ))),
     'title' => t('Processing next %count IP addresses from access log', array(
-      '%count' => $count)),
+      '%count' => $count,
+    )),
     'progress_message' => t('Time elapsed: @elapsed. Time remaining: @estimate.'),
     'error_message' => t('An error occurred while processing the access log.'),
     'finished' => '_ip_geoloc_process_access_log_finished',
@@ -417,9 +426,9 @@ function ip_geoloc_ips_to_be_synched() {
  * Erase geoloc data from session.
  */
 function ip_geoloc_erase_session() {
-  drupal_get_messages();
+  backdrop_get_messages();
   _ip_geoloc_set_session_value(FALSE);
-  drupal_set_message(t('Geolocation data erased from session.'));
+  backdrop_set_message(t('Geolocation data erased from session.'));
 }
 
 /**
@@ -427,7 +436,7 @@ function ip_geoloc_erase_session() {
  */
 function ip_geoloc_erase_db() {
   // Wipe previous messages to avoid confusion.
-  drupal_get_messages();
+  backdrop_get_messages();
   db_delete('ip_geoloc')->execute();
 }
 
@@ -491,13 +500,13 @@ function _ip_geoloc_process_access_log($ips_to_be_processed, $use_smart_ip, $use
  */
 function _ip_geoloc_process_access_log_finished($success, $results, $operations, $elapsed) {
   if ($success) {
-    drupal_set_message(t('%count new IP geolocation records compiled and stored in %elapsed-time.',
+    backdrop_set_message(t('%count new IP geolocation records compiled and stored in %elapsed-time.',
       array('%count' => count($results), '%elapsed-time' => $elapsed)));
   }
   else {
-    drupal_set_message(t('An error occurred. Processing of the access log did not complete.'), 'error');
+    backdrop_set_message(t('An error occurred. Processing of the access log did not complete.'), 'error');
     $message = format_plural(count($results), 'One IP address successfully processed:', '@count IP addresses successfully processed:');
     $message .= theme('item_list', array('items' => $results));
-    drupal_set_message($message);
+    backdrop_set_message($message);
   }
 }

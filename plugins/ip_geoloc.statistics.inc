@@ -243,17 +243,17 @@ function _ip_geoloc_key_map($db_field_name = NULL, $ip_geoloc_key = NULL) {
   static $keys;
   if (!isset($keys)) {
     $keys = array(
-      'geoloc_latitude'           => array('latitude', 'float', 'big'),
-      'geoloc_longitude'          => array('longitude', 'float', 'big'),
-      'geoloc_country'            => array('country', 'string', 64),
-      'geoloc_country_code'       => array('country_code', 'string', 3),
-      'geoloc_region'             => array('region', 'string', 64),
-      'geoloc_region_code'        => array('region_code', 'string', 3),
-      'geoloc_city'               => array('city', 'string', 64),
-      'geoloc_postal_code'        => array('postal_code', 'string', 12),
-      'geoloc_locality'           => array('locality', 'string', 64),
-      'geoloc_street'             => array('route', 'string', 64),
-      'geoloc_street_number'      => array('street_number', 'string', 32),
+      'geoloc_latitude' => array('latitude', 'float', 'big'),
+      'geoloc_longitude' => array('longitude', 'float', 'big'),
+      'geoloc_country' => array('country', 'string', 64),
+      'geoloc_country_code' => array('country_code', 'string', 3),
+      'geoloc_region' => array('region', 'string', 64),
+      'geoloc_region_code' => array('region_code', 'string', 3),
+      'geoloc_city' => array('city', 'string', 64),
+      'geoloc_postal_code' => array('postal_code', 'string', 12),
+      'geoloc_locality' => array('locality', 'string', 64),
+      'geoloc_street' => array('route', 'string', 64),
+      'geoloc_street_number' => array('street_number', 'string', 32),
       'geoloc_admin_area_level_1' => array(
         'administrative_area_level_1',
         'string',
@@ -269,9 +269,9 @@ function _ip_geoloc_key_map($db_field_name = NULL, $ip_geoloc_key = NULL) {
         'string',
         64,
       ),
-      'geoloc_formatted_address'  => array('formatted_address', 'string', 128),
-      'geoloc_provider'           => array('provider', 'string', 64),
-      'geoloc_accuracy'           => array('accuracy', 'float', 'big'),
+      'geoloc_formatted_address' => array('formatted_address', 'string', 128),
+      'geoloc_provider' => array('provider', 'string', 64),
+      'geoloc_accuracy' => array('accuracy', 'float', 'big'),
     );
   }
   if ($db_field_name) {
@@ -317,18 +317,18 @@ function _ip_geoloc_get_field_value($db_field_name) {
     }
     else {
       // Include common.inc.
-      require_once DRUPAL_ROOT . '/includes/common.inc';
+      require_once BACKDROP_ROOT . '/includes/common.inc';
       $list = system_list('module_enabled');
       // Include 'IP Geolocation Views & Maps' module file.
-      require_once DRUPAL_ROOT . '/' . $list['ip_geoloc']->filename;
+      require_once BACKDROP_ROOT . '/' . $list['ip_geoloc']->filename;
       // If 'Smart IP' module is enabled and set up as backup, include its
       // module file.
-      if (variable_get('ip_geoloc_smart_ip_as_backup', FALSE) && isset($list['smart_ip'])) {
-        require_once DRUPAL_ROOT . '/' . $list['smart_ip']->filename;
+      if (config_get('ip_geoloc.settings', 'ip_geoloc_smart_ip_as_backup') && isset($list['smart_ip'])) {
+        require_once BACKDROP_ROOT . '/' . $list['smart_ip']->filename;
       }
       // If 'GeoIP API' module is enabled, include its module file.
       if (isset($list['geoip'])) {
-        require_once DRUPAL_ROOT . '/' . $list['geoip']->filename;
+        require_once BACKDROP_ROOT . '/' . $list['geoip']->filename;
       }
       // Retrieve geolocation.
       // ip_geoloc_get_location_by_ip() will either fetch a stored geolocation
@@ -389,7 +389,7 @@ function _ip_geoloc_get_location_field_value($db_field_name, $location) {
   switch ($type) {
     case 'string':
       if ($size) {
-        return drupal_substr($location[$ip_geoloc_key], 0, $size);
+        return backdrop_substr($location[$ip_geoloc_key], 0, $size);
       }
       else {
         return (string) $location[$ip_geoloc_key];
@@ -422,11 +422,13 @@ function _ip_geoloc_get_location_field_value($db_field_name, $location) {
 function _ip_geoloc_statistics_backfill($from_timestamp, $location) {
 
   // If Better Statistics is set to skip logging to the database, then exit now.
+  // TODO This variable was probably removed in Backdrop without replacement.
   if (!variable_get('statistics_log_to_db', TRUE)) {
     return;
   }
 
   // Fetch the database fields currently active for {accesslog}.
+  // TODO This variable was probably removed in Backdrop without replacement.
   $accesslog_db_fields = variable_get('better_statistics_fields', better_statistics_get_default_fields());
 
   // Fetch the database fields managed by ip_geoloc.
@@ -453,7 +455,8 @@ function _ip_geoloc_statistics_backfill($from_timestamp, $location) {
     }
     catch (Exception $e) {
       watchdog('IPGV&M', 'There was an error updating statistics data:<br/>@error', array(
-        '@error' => $e->getMessage()), WATCHDOG_ERROR);
+        '@error' => $e->getMessage(),
+      ), WATCHDOG_ERROR);
     }
   }
 }

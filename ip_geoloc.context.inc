@@ -7,8 +7,8 @@ function ip_geoloc_context_plugins() {
   $plugins = array();
   $plugins['ip_geoloc_context_reaction_locate_visitor'] = array(
     'handler' => array(
-      'path' => drupal_get_path('module', 'ip_geoloc') . '/plugins',
-      'file'  => 'ip_geoloc_context_reaction_locate_visitor.inc',
+      'path' => backdrop_get_path('module', 'ip_geoloc') . '/plugins',
+      'file' => 'ip_geoloc_context_reaction_locate_visitor.inc',
       'class' => 'ip_geoloc_context_reaction_locate_visitor',
       'parent' => 'context_reaction',
     ),

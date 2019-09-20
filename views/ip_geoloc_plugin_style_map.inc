@@ -33,8 +33,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['visitor_marker'] = array('default' => '<none>');
     $options['gps_roles'] = array(
       'default' => array(
-        DRUPAL_ANONYMOUS_RID => DRUPAL_ANONYMOUS_RID,
-        DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID,
+        BACKDROP_ANONYMOUS_RID => BACKDROP_ANONYMOUS_RID,
+        BACKDROP_AUTHENTICATED_RID => BACKDROP_AUTHENTICATED_RID,
       ),
     );
     $options['map_options'] = array('default' => '');
@@ -66,12 +66,14 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#description' => t("If left blank, the default %default_options will produce a world map zoomed in to level 2 (subject to the centering option selected). A list of map options can be found <a href='!google_map_docs'>here</a>. Remember to separate options with comma's, not semi-colons, and make sure your (double) quotes match.<br/>These options apply a grey hue to all roads and set the marker balloon separator as well:<br/>%example_options", array(
         '%default_options' => IP_GEOLOC_RECENT_VISITORS_MAP_OPTIONS,
         '%example_options' => IP_GEOLOC_EXAMPLE_MAP_OPTIONS,
-        '!google_map_docs' => IP_GEOLOC_DOC_GOOGLE_MAP_OPTIONS)),
+        '!google_map_docs' => IP_GEOLOC_DOC_GOOGLE_MAP_OPTIONS,
+      )),
       '#weight' => 35,
     );
 
     $desc1 = t('If left blank, the default %default_style will result in a map of 300 pixels high, with a width bounded by the element that contains it. Separate style settings with semi-colons. Do not enter quotes or equal signs.', array(
-      '%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE));
+      '%default_style' => IP_GEOLOC_MAP_DIV_DEFAULT_STYLE,
+    ));
     $desc2 = t('You may also enter <em>&lt;none&gt;</em>. In this case you <em>must</em> set the height through CSS or the map will not show. You can use this selector to target the map: <em>#ip-geoloc-map-of-view-VIEWNAME-DISPLAYNAME</em>');
     $form['map_div_style'] = array(
       '#title' => t('Map style (CSS attributes)'),
@@ -107,7 +109,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       '#type' => 'textfield',
       '#default_value' => $this->options['open_balloons'],
       '#description' => t("Comma-separated list of numbers of markers that have their info balloons opened upon initial display of the map. <br/>The first marker has number 1. You may use <strong>&lt;@last&gt;</strong> to indicate the last marker among the view results. <br>Note that opening a marker balloon may cause the map to pan.", array(
-        '@last' => t('last')
+        '@last' => t('last'),
       )),
       '#weight' => 115,
     );
@@ -132,11 +134,11 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
 
     ip_geoloc_plugin_style_render_fields($this);
     $locations = ip_geoloc_plugin_style_extract_locations($this);
-    
+
     $open_balloon_nos = array();
     $t_last = '<' . t('last') . '>';
     foreach (explode(',', $this->options['open_balloons']) as $no) {
-      $open_balloon_nos[] = (trim($no) == $t_last ? count($locations) - 1 : (int)$no - 1);
+      $open_balloon_nos[] = (trim($no) == $t_last ? count($locations) - 1 : (int) $no - 1);
     }
     foreach ($locations as $key => $location) {
       $location->open = in_array($key, $open_balloon_nos);
@@ -200,12 +202,12 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
       list($center_lat, $center_lng) = ip_geoloc_center_of_locations($locations, $center_option == IP_GEOLOC_MAP_CENTER_OF_LOCATIONS_WEIGHTED);
     }
     if (isset($center_lat) && isset($center_lng)) {
-      $map_options = drupal_substr($map_options, 0, strrpos($map_options, '}'));
+      $map_options = backdrop_substr($map_options, 0, strrpos($map_options, '}'));
       $map_options = $map_options . ', "centerLat":' . $center_lat . ', "centerLng":' . $center_lng . '}';
     }
 
     global $user;
-    $gps_roles = empty($this->options['gps_roles']) ? array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID) : $this->options['gps_roles'];
+    $gps_roles = empty($this->options['gps_roles']) ? array(BACKDROP_ANONYMOUS_RID, BACKDROP_AUTHENTICATED_RID) : $this->options['gps_roles'];
     $gps_roles_applicable = array_intersect($gps_roles, array_keys($user->roles));
 
     $output = theme(array('ip_geoloc_map'), array(
