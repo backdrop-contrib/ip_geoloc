@@ -33,8 +33,8 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     $options['visitor_marker'] = array('default' => '<none>');
     $options['gps_roles'] = array(
       'default' => array(
-        BACKDROP_ANONYMOUS_RID => BACKDROP_ANONYMOUS_RID,
-        BACKDROP_AUTHENTICATED_RID => BACKDROP_AUTHENTICATED_RID,
+        BACKDROP_ANONYMOUS_ROLE => BACKDROP_ANONYMOUS_ROLE,
+        BACKDROP_AUTHENTICATED_ROLE => BACKDROP_AUTHENTICATED_ROLE,
       ),
     );
     $options['map_options'] = array('default' => '');
@@ -207,7 +207,7 @@ class ip_geoloc_plugin_style_map extends views_plugin_style {
     }
 
     global $user;
-    $gps_roles = empty($this->options['gps_roles']) ? array(BACKDROP_ANONYMOUS_RID, BACKDROP_AUTHENTICATED_RID) : $this->options['gps_roles'];
+    $gps_roles = empty($this->options['gps_roles']) ? array(BACKDROP_ANONYMOUS_ROLE, BACKDROP_AUTHENTICATED_ROLE) : $this->options['gps_roles'];
     $gps_roles_applicable = array_intersect($gps_roles, array_keys($user->roles));
 
     $output = theme(array('ip_geoloc_map'), array(
