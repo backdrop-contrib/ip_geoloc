@@ -400,19 +400,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       '#default_value' => $this->options['full_screen'],
       '#weight' => $weight++,
     );
-    $lib_fullscreen = libraries_get_path('leaflet-fullscreen');
-    if ($lib_fullscreen) {
-      $file_fullscreen = $lib_fullscreen . '/dist/Leaflet.fullscreen.min.js';
-      if (!file_exists($file_fullscreen)) {
-        $form['full_screen']['#description'] = t('Error: <em>leaflet-fullscreen</em> library found, but %js_file is missing.', array('%js_file' => $file_fullscreen));
-      }
-    }
-    else {
-      $form['full_screen']['#description'] = t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-fullscreen</em>.', array(
-        '@js_lib' => 'https://github.com/Leaflet/Leaflet.fullscreen',
-      ));
-    }
-
     $form['scale_imperial'] = array(
       '#title' => t('Add an imperial (miles) scale'),
       '#type' => 'checkbox',
@@ -1475,10 +1462,8 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
       backdrop_add_css($module_path . '/css/ip_geoloc_leaflet_sync_content.css');
     }
     if ($has_full_screen) {
-      // Load the 'leaflet-fullscreen' library, containing JS and CSS.
-      if (backdrop_add_library('ip_geoloc', 'leaflet-fullscreen')) {
-        $map['settings']['fullscreenControl'] = array('position' => 'topright');
-      }
+      // The 'leaflet-fullscreen' library is already included in the leaflet module.
+      $map['settings']['fullscreenControl'] = array('position' => 'topright');
     }
     if ($has_mini_map) {
       // Load the 'leaflet-minimap' library, containing JS and CSS.
