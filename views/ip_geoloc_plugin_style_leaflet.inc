@@ -1467,7 +1467,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     // See [#1802732].
     $map_id = 'ip-geoloc-map-of-view-' . $this->view->name . '-' . $this->display->id . '-' . md5(serialize($features));
 
-    backdrop_add_js(backdrop_get_path('module', 'leaflet') . '/leaflet.backdrop.js');
+    backdrop_add_js(backdrop_get_path('module', 'leaflet') . '/js/leaflet.backdrop.js');
 
     // Don't load sync JS and CSS when option is not requested.
     if ($sync_flags !== 0) {
@@ -1545,7 +1545,7 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     );
     backdrop_add_js(array('leaflet' => array($settings)), $options);
 
-    libraries_load('leaflet');
+    backdrop_add_library('leaflet', 'leaflet');
 
     // Little hacky this, but can't see another way to load libraries for
     // Leaflet More Maps, Leaflet MarkerCluster, Leaflet Hash...
