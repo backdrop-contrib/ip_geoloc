@@ -721,7 +721,7 @@ function ip_geoloc_openlayers_marker_layers() {
 function ip_geoloc_form_views_ui_edit_display_form_alter(&$form, &$form_state) {
   // Append our own handler to deal with saving of the differentiator table.
   if (isset($form['options']['style_options']['differentiator'])) {
-    $form['buttons']['submit']['#submit'][] = 'ip_geoloc_plugin_style_diff_color_ass_submit';
+    $form['actions']['submit']['#submit'][] = 'ip_geoloc_plugin_style_diff_color_ass_submit';
   }
 }
 
