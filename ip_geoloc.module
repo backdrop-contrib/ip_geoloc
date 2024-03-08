@@ -197,6 +197,7 @@ function ip_geoloc_config_info() {
     'label' => t('Module name settings'),
     'group' => t('Configuration'),
   );
+  return $prefixes;
 }
 
 /**
