@@ -73,7 +73,7 @@ function ip_geoloc_help($path, $arg) {
 }
 
 /**
- * Implements hook_library().
+ * Implements hook_library_info().
  */
 function ip_geoloc_library_info() {
   $libraries = array();
