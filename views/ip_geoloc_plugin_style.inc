@@ -333,7 +333,7 @@ function ip_geoloc_plugin_style_diff_color_ass_submit($form, &$form_state) {
   }
   $view_id = $form_state['view']->name;
   $display_id = $form_state['display_id'];
-  $differentiator = $form_state['values']['style_options']['differentiator']['differentiator_field'];
+  $differentiator = $form_state['differentiator'];
 
   // Erase differentiator values for this display, then rebuild based on form.
   $diff_color_ass = config_get('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings');
@@ -386,6 +386,12 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
   $view_id = $form_state['view']->name;
   $display_id = $form_state['display_id'];
   $differentiator = $form_state['differentiator'];
+
+  // $form_state['num_associations'] is not available after closing settings,
+  // so we define it here based on the number of input values
+  if (!isset($form_state['num_associations']) && isset($form_state['input']['color_table'])) {
+    $form_state['num_associations'] = count($form_state['input']['color_table']);
+  }
 
   $diff_color_ass = config_get('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings');
   if (empty($diff_color_ass[$display_id][$differentiator])) {
