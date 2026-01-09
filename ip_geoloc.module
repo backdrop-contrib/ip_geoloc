@@ -61,18 +61,6 @@ function ip_geoloc_ctools_plugin_api($module, $api) {
 }
 
 /**
- * Implements hook-help().
- */
-function ip_geoloc_help($path, $arg) {
-  if ($path == 'admin/help#ip_geoloc') {
-    return t('Detailed information is on the <a href="@ip_geoloc">IP Geolocation project page</a> and in the <a href="@README">README</a> file', array(
-      '@ip_geoloc' => url('http://drupal.org/project/ip_geoloc'),
-      '@README' => url(backdrop_get_path('module', 'ip_geoloc') . '/README.txt'),
-    ));
-  }
-}
-
-/**
  * Implements hook_library_info().
  */
 function ip_geoloc_library_info() {

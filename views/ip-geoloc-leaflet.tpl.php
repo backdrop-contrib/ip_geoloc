@@ -13,9 +13,9 @@
  */
 
   $marker_set = ip_geoloc_marker_directory();
-  $marker_set = drupal_substr($marker_set, strrpos($marker_set, '/') + 1);
+  $marker_set = backdrop_substr($marker_set, strrpos($marker_set, '/') + 1);
   $height = empty($height) ? '300px' : (is_numeric($height) ? $height . 'px' : trim($height));
-  $style = (drupal_substr($height, 0, 6) == '<none>') ? '' : ' style="height:' . check_plain($height) .'"';
+  $style = (backdrop_substr($height, 0, 6) == '<none>') ? '' : ' style="height:' . check_plain($height) .'"';
 ?>
 <div class="ip-geoloc-map leaflet-view <?php echo $marker_set; ?>">
   <div id="<?php echo $map_id; ?>" <?php echo $style; ?>></div>
