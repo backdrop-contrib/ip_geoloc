@@ -2,7 +2,7 @@
 // Inspired by the code by Rainer Halbmann
 // https://github.com/heliogabal/hk_leaflet/blob/master/hk_leaflet_script.js
 
-jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
+jQuery(document).on('leaflet.feature', function(event, marker, feature) {
   marker.on('click', function(event) {
     var options = {
       zoom: { animate: true },

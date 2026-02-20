@@ -13,7 +13,7 @@ function point_in_polygon(latlng, polygon) {
   return c;
 }
 
-jQuery(document).bind('leaflet.feature', function(event, lFeature, feature) {
+jQuery(document).on('leaflet.feature', function(event, lFeature, feature) {
   if (feature.title) {
     lFeature.title = feature.title;
   }
@@ -22,7 +22,7 @@ jQuery(document).bind('leaflet.feature', function(event, lFeature, feature) {
   }
 })
 
-jQuery(document).bind('leaflet.map', function(event, map, lMap) {
+jQuery(document).on('leaflet.map', function(event, map, lMap) {
 
     if (!visitorMarker || !visitorMarker._popup) {
       return
