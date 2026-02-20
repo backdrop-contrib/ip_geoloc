@@ -81,8 +81,7 @@ L.Sync =  L.Class.extend({
       }
     });
 
-    // Using bind() as D7 core's jQuery is old and does not support on()
-    jQuery(contentSelector).bind('mouseover', function(event) {
+    jQuery(contentSelector).on('mouseover', function(event) {
       sync.handleContentMouseOver(marker);
     });
   },
@@ -171,7 +170,7 @@ L.Sync =  L.Class.extend({
 });
 
 // Gets triggered before 'leaflet.map'. Extend marker data for further use.
-jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
+jQuery(document).on('leaflet.feature', function(event, marker, feature) {
   // marker is the feature just added to the map, it could be a polygon too.
   // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
   if (feature.feature_id) {
@@ -182,7 +181,7 @@ jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
   }
 });
 
-jQuery(document).bind('leaflet.map', function(event, map, lMap) {
+jQuery(document).on('leaflet.map', function(event, map, lMap) {
 
   var sync = new L.Sync(lMap, {});
 
