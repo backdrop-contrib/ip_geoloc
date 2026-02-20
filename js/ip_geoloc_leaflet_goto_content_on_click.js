@@ -1,5 +1,5 @@
 
-jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
+jQuery(document).on('leaflet.feature', function(event, marker, feature) {
   // marker is the lFeature just added to the map, it could be a polygon too.
   // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
   // The same code is used for cross-highlighting. See ip_geoloc_leaflet_sync_content.js
@@ -8,7 +8,7 @@ jQuery(document).bind('leaflet.feature', function(event, marker, feature) {
   }
 });
 
-jQuery(document).bind('leaflet.map', function(event, map, lMap) {
+jQuery(document).on('leaflet.map', function(event, map, lMap) {
 
   // Handle click event.
   if (map.settings.gotoContentOnClick) {

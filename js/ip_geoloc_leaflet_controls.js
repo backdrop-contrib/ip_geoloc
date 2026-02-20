@@ -4,7 +4,7 @@
 
 (function ($) {
 
-  $(document).bind('leaflet.map', function(event, map_and_features, lMap) {
+  $(document).on('leaflet.map', function(event, map_and_features, lMap) {
     var mapSettings = map_and_features.settings;
     // Use a flag on the map object to prevent controls being added multiple
     // times. This can happen in AJAX contexts.

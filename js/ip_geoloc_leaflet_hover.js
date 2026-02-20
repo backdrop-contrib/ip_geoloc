@@ -1,5 +1,5 @@
 
-jQuery(document).bind('leaflet.feature', function(event, lFeature, feature) {
+jQuery(document).on('leaflet.feature', function(event, lFeature, feature) {
   // lFeature is the Leaflet feature just added to the map, eg a polygon.
   // feature.feature_id is the node ID, as set by ip_geoloc_plugin_style_leaflet.inc
   // lFeature.feature_id is used in the leaflet.map "hook" below, which is
@@ -20,7 +20,7 @@ jQuery(document).bind('leaflet.feature', function(event, lFeature, feature) {
  * when the mouse is moved IN over the next polygon. For this we keep track
  * of the "active" highlighted polygon in the variable activeFeature.
  */
-jQuery(document).bind('leaflet.map', function(event, map, lMap) {
+jQuery(document).on('leaflet.map', function(event, map, lMap) {
 
   const useTween = map.settings.useTweenMaxForShadowOnHover;
   let activeFeature = null;
