@@ -66,10 +66,11 @@ function ip_geoloc_ctools_plugin_api($module, $api) {
 function ip_geoloc_library_info() {
   $libraries = array();
 
-  $path_minimap = libraries_get_path('leaflet-minimap') . '/dist';
+  $module_path = backdrop_get_path('module', 'ip_geoloc');
+  $path_minimap = $module_path . '/libraries/leaflet-minimap/dist';
   $libraries['leaflet-minimap'] = array(
     'title' => 'Leaflet MiniMap',
-    'version' => '2.1.0',
+    'version' => '3.6.1',
     'js' => array(
       array(
         'type' => 'file',

@@ -649,18 +649,6 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
         'visible' => array('input[name="style_options[mini_map][on]"]' => array('checked' => TRUE)),
       ),
     );
-    $lib_minimap = libraries_get_path('leaflet-minimap');
-    if ($lib_minimap) {
-      $file_minimap = $lib_minimap . '/dist/Control.MiniMap.min.js';
-      if (!file_exists($file_minimap)) {
-        $form['mini_map']['#description'] .= '<br/>' . t('Error: <em>leaflet-minimap</em> library found, but %js_file is missing.', array('%js_file' => $file_minimap));
-      }
-    }
-    else {
-      $form['mini_map']['#description'] .= '<br/>' . t('Requires this <a target="_js" href="@js_lib">JS library</a> to be downloaded to <em>/sites/all/libraries</em>. Change the directory name to <em>leaflet-minimap</em>.', array(
-        '@js_lib' => 'https://github.com/Norkart/Leaflet-Minimap',
-      ));
-    }
   }
 
   private function _add_markercluster(&$form, $lib_markercluster, &$weight) {
