@@ -785,6 +785,10 @@ function ip_geoloc_range_widget_validate($element, &$form_state) {
 
   $range = $element['#value'];
 
+  if (is_array($range)) {
+    $range = current($range);
+  }
+
   $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR1, $range);
   if (count($from_to) < 2) {
     $from_to = explode(IP_GEOLOC_RANGE_SEPARATOR2, $range);

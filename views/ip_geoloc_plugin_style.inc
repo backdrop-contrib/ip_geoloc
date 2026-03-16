@@ -328,12 +328,13 @@ function _ip_geoloc_plugin_style_refresh_color_table_js($form, &$form_state) {
  * ip_geoloc_form_views_ui_edit_display_form_alter().
  */
 function ip_geoloc_plugin_style_diff_color_ass_submit($form, &$form_state) {
-  if (empty($form_state['view']) || empty($form_state['display_id']) || empty($form_state['differentiator'])) {
+  if (empty($form_state['view']) || empty($form_state['display_id']) || empty($form_state['input']['style_options']['differentiator']['differentiator_field'])) {
     return;
   }
   $view_id = $form_state['view']->name;
   $display_id = $form_state['display_id'];
-  $differentiator = $form_state['differentiator'];
+  // Somehow, $form_state['differentiator'] does not have the correct value at this point
+  $differentiator = $form_state['input']['style_options']['differentiator']['differentiator_field'];
 
   // Erase differentiator values for this display, then rebuild based on form.
   $diff_color_ass = config_get('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings');
@@ -342,40 +343,34 @@ function ip_geoloc_plugin_style_diff_color_ass_submit($form, &$form_state) {
   if (!empty($form_state['input']['color_table'])) {
     $i = 0;
     foreach ($form_state['input']['color_table'] as $association) {
-
-      if (is_array($association[$differentiator])) {
-        // E.g association['field_address']['und'][0]['postal_code']
-        foreach ($association[$differentiator][LANGUAGE_NONE] as $values) {
+      if (isset($association[$differentiator][LANGUAGE_NONE])) {
+        if (is_array($association[$differentiator][LANGUAGE_NONE])) {
+          // E.g association['field_address']['und'][0]['postal_code']
           $differentiator_value = array();
-          if (is_array($values)) {
-            foreach ($values as $name => $value) {
-              if (isset($value) && strpos($value, '|') === FALSE) {
-                $differentiator_value[$name] = $value;
-              }
+          foreach ($association[$differentiator][LANGUAGE_NONE] as $value) {
+            if (!empty($value)) {
+                $differentiator_value[] = $value;
             }
           }
-          else {
-            $differentiator_value[] = $values;
-          }
-          if (!empty($differentiator_value)) {
-            $diff_color_ass[$display_id][$differentiator][$i]['differentiator_value'] = $differentiator_value;
-            $diff_color_ass[$display_id][$differentiator][$i]['color'] = $association['color'];
-            $diff_color_ass[$display_id][$differentiator][$i]['special char'] = $association['special char'];
-            $diff_color_ass[$display_id][$differentiator][$i]['special char class'] = $association['special char class'];
-            $i++;
-          }
+        }
+        else {
+          // E.g association['field_address']['und']
+          $differentiator_value = array(trim($association[$differentiator][LANGUAGE_NONE]));
         }
       }
-      else {
+      elseif (is_string($association[$differentiator])) {
         // Plain text field or plain taxonomy select.
-        $differentiator_value = trim($association[$differentiator]);
-        if (!empty($differentiator_value) || $differentiator_value == 0) {
-          $diff_color_ass[$display_id][$differentiator][$i]['differentiator_value'] = array($differentiator_value);
-          $diff_color_ass[$display_id][$differentiator][$i]['color'] = $association['color'];
-          $diff_color_ass[$display_id][$differentiator][$i]['special char'] = $association['special char'];
-          $diff_color_ass[$display_id][$differentiator][$i]['special char class'] = $association['special char class'];
-          $i++;
-        }
+        $differentiator_value = array(trim($association[$differentiator]));
+      }
+      else {
+        $differentiator_value = array();
+      }
+      if (!empty($differentiator_value)) {
+        $diff_color_ass[$display_id][$differentiator][$i]['differentiator_value'] = $differentiator_value;
+        $diff_color_ass[$display_id][$differentiator][$i]['color'] = $association['color'];
+        $diff_color_ass[$display_id][$differentiator][$i]['special char'] = $association['special char'];
+        $diff_color_ass[$display_id][$differentiator][$i]['special char class'] = $association['special char class'];
+        $i++;
       }
     }
   }
@@ -395,6 +390,12 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
   $view_id = $form_state['view']->name;
   $display_id = $form_state['display_id'];
   $differentiator = $form_state['differentiator'];
+
+  // $form_state['num_associations'] is not available after closing settings,
+  // so we define it here based on the number of input values
+  if (!isset($form_state['num_associations']) && isset($form_state['input']['color_table'])) {
+    $form_state['num_associations'] = count($form_state['input']['color_table']);
+  }
 
   $diff_color_ass = config_get('ip_geoloc.settings', 'ip_geoloc_' . $view_id . '_color_mappings');
   if (empty($diff_color_ass[$display_id][$differentiator])) {
@@ -427,17 +428,15 @@ function _ip_geoloc_plugin_style_differentiator_color_table_form(&$form, &$form_
  */
 function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row, $differentiator, $association = NULL) {
 
-  $differentiator_value = empty($association) ? NULL : $association['differentiator_value'];
+  $differentiator_value = empty($association) ? array() : $association['differentiator_value'];
   $attr_class = $is_openlayers ? array('differentiator ol') : array('differentiator');
 
   if (strpos($differentiator, 'field_') === 0) {
     $field = field_info_field($differentiator);
     $instances = ip_geoloc_get_field_instances($differentiator);
     $instance = reset($instances);
-    $widget = $instance['widget']['type'];
-
-    if (strpos($widget, 'taxonomy') !== FALSE) {
-      // Covers core and Autocomplete Deluxe.
+    if ($field['type'] == 'taxonomy_term_reference') {
+      // Covers core Taxonomy.
       $vid = 0;
       $vocabulary_name = $field['settings']['allowed_values'][0]['vocabulary'];
       foreach (taxonomy_get_vocabularies() as $vid => $vocabulary) {
@@ -466,19 +465,25 @@ function _ip_geoloc_plugin_style_diff_color_table_row_form($is_openlayers, $row,
       if (isset($instance['widget']['settings']['size']) && $instance['widget']['settings']['size'] < 15) {
         $instance['widget']['settings']['size'] = 15;
       }
-      $items[0] = empty($differentiator_value) ? array() : (is_array($differentiator_value) ? $differentiator_value : array($differentiator_value));
-      if (isset($instance['default_value'])) {
-        $items[0] += is_array($instance['default_value']) && !empty($instance['default_value']) ? reset($instance['default_value']) : $instance['default_value'];
+      $items = array();
+      foreach ($differentiator_value as $value) {
+        $items[] = array('value' => $value);
+      }
+      // Add empty value to avoid getting default values
+      if (empty($items)) {
+          $items = array('value' => '');
       }
       $form['#parents'] = array();
       $form_state = array();
 
       $form = field_default_form($instance['entity_type'], NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
+      // Set current differentiator value as default value in form
+      $form[$field['field_name']][LANGUAGE_NONE]['#default_value'] = $differentiator_value;
 
       if ($field['module'] == 'number' || $field['module'] == 'text') {
         $form[$differentiator][LANGUAGE_NONE][0][key($field['columns'])]['#element_validate'] = array('ip_geoloc_range_widget_validate');
       }
-      $form[$differentiator]['#attributes']['class'][] = $attr_class;
+      $form[$differentiator]['#attributes']['class'] = $attr_class;
     }
   }
   else {
@@ -1046,7 +1051,17 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
           $association = _ip_geoloc_plugin_style_match_on_taxonomy_term_or_parent($differentiator_value, $diff_color_ass);
           $is_match = !empty($association);
         }
-        elseif (is_array($differentiator_value)) {
+        // Entityreference - taxonomy term or other
+        elseif (is_array($differentiator_value) && isset($differentiator_value['target_id'])) {
+          if (get_class($differentiator_value['entity']) == 'xTaxonomyTerm') {
+            $differentiator_value = $differentiator_value['target_id'];
+            $association = _ip_geoloc_plugin_style_match_on_taxonomy_term_or_parent($differentiator_value, $diff_color_ass);
+            $is_match = !empty($association);
+          } else {
+            $is_match = ($differentiator_value['target_id'] == reset($association['differentiator_value']));
+          }
+        }
+        elseif (is_array($differentiator_value) && count($differentiator_value) > 1) {
           // Eg AddressField, has multiple subvalues. All must match the
           // corresponding differentiator subvalues.
           $is_match = TRUE;
@@ -1059,6 +1074,7 @@ function _ip_geoloc_plugin_style_set_marker_color(&$location, $row, $differentia
         }
         else {
           // Single value, either as a simple value or an array of length 1.
+          $differentiator_value = is_array($differentiator_value) ? reset($differentiator_value) : $differentiator_value;
           $range = $association['differentiator_value'];
           $is_match = ip_geoloc_is_in_range($differentiator_value, $range, $view_args);
         }
