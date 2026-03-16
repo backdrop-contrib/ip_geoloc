@@ -1093,10 +1093,10 @@ class ip_geoloc_plugin_style_leaflet extends views_plugin_style {
     if (!isset($visitor_location['latitude'])) {
       $visitor_location = db_query('SELECT * FROM {ip_geoloc} WHERE ip_address = :ip_address', array(':ip_address' => ip_address()))->fetchAssoc();
     }
-    if (empty($visitor_location['popup'])) {
+    if (is_array($visitor_location) && empty($visitor_location['popup'])) {
       $visitor_location['popup'] = $this->options['visitor_marker']['visitor_marker_balloon_text'];
     }
-    if (strpos($visitor_location['popup'], '[visitor-location:surrounding-polygon]')) {
+    if (isset($visitor_location['popup']) && strpos($visitor_location['popup'], '[visitor-location:surrounding-polygon]')) {
       backdrop_add_js(backdrop_get_path('module', 'ip_geoloc') . '/js/ip_geoloc_pip.js');
     }
 
